@@ -191,7 +191,7 @@ def build_engine(confirm, config: dict = None) -> Engine:
                               config["tools"]["read_file_max_bytes"])
     register_brain_tools(registry, brain, retriever, config["memory"]["top_k"])
     register_calc_tools(registry)  # units-safe arithmetic (don't make the model do math)
-    register_project_tools(registry, gate, brain, projects_root)
+    project_resolver = register_project_tools(registry, gate, brain, projects_root)
 
     tracker = CommitmentTracker(brain)
     register_commitment_tools(registry, tracker, gate)
@@ -303,6 +303,7 @@ def build_engine(confirm, config: dict = None) -> Engine:
                     InteractionLogger(logs_path), persona, preferences)
     engine.gate = gate                    # taint escalation (invariant #2)
     engine.observations = observations    # Phase-3 typed-observation backbone
+    engine.project_resolver = project_resolver  # Notes-10 P3 §1 resolution hint
     engine.tracker = tracker              # service/frontends reach these here
     engine.senses = senses
     engine.timelines = timelines

@@ -68,6 +68,11 @@ class Engine:
         # Typed-observation store (Phase 3 memory backbone). Set by bootstrap.
         # May stay None (a sandbox that doesn't wire it), so every use guards.
         self.observations = None
+        # Deterministic project resolver (Notes-10 Phase 3, §1). Set by bootstrap;
+        # may stay None (a bare sandbox), so the per-turn hint below guards. When
+        # present, Jack's free-text project references resolve to a real note+
+        # folder in CODE before the model can guess a path.
+        self.project_resolver = None
         # True while the heavier deep-mode model is engaged (future use; the
         # status console shows "deep mode" so Jack knows why it's slower).
         self.deep_active = False
@@ -371,6 +376,25 @@ class Engine:
             voice = self._voice_head()
             if voice:
                 ref_block = (ref_block + "\n\n" if ref_block else "") + voice
+
+        # Entity-resolution hint (Notes-10 Phase 3, §1 — the JARVIS layer). Jack's
+        # phrasing ("look at the doc ock project") is fuzzy-matched in CODE
+        # against his real projects; a confident single match injects the note+
+        # folder so the 14B proceeds instead of guessing a path (transcript B),
+        # and genuine ambiguity tells her to ask which. Conservative by design —
+        # `hint_for` returns "" on anything but a STRONG match, so bare questions
+        # and the golden suite are unchanged. Guarded getattr: absent resolver
+        # (a bare sandbox) = no behaviour change, same posture as observations.
+        self._entity_hint = ""
+        resolver = getattr(self, "project_resolver", None)
+        if resolver is not None:
+            try:
+                self._entity_hint = resolver.hint_for(user_input)
+            except Exception:
+                self._entity_hint = ""  # resolution is best-effort, never fatal
+            if self._entity_hint:
+                ref_block = (ref_block + "\n\n" + self._entity_hint
+                             if ref_block else self._entity_hint)
 
         # Offer ledger (Notes-10 Phase 2, §1). A bare affirmative to a standing
         # offer means "do it" — resolve it in CODE so a "Yes please" can't be
@@ -931,6 +955,11 @@ class Engine:
             # Phase 2 (Notes-10, §4): True on a turn where evicted history was
             # compacted into the running session summary (vs silently dropped).
             "history_compacted": history_compacted,
+            # Phase 3 (Notes-10, §1): True when the deterministic project
+            # resolver injected a resolution hint this turn — the measure of how
+            # often Jack's free-text project references were resolved in CODE
+            # (so the model didn't have to guess a path). Additive; schema stable.
+            "entity_resolved": bool(getattr(self, "_entity_hint", "")),
         })
         return reply
 

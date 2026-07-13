@@ -39,7 +39,10 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      Phases 1-2, 5) sit after the tool loop, each catching a
                      prompt-immune failure and regenerating once: phantom-
                      review (reviews a never-shared artifact), anti-dodge
-                     (clarification-request to a resolvable follow-up),
+                     (clarification-request to a resolvable follow-up — since
+                     Notes-10 Phase 2 it ALSO fires on a bare affirmative that
+                     ACCEPTED a standing offer but got a re-ask, the transcript-B
+                     "Yes please -> provide me the file" failure),
                      calendar-first (event-date question answered without a
                      live read — the engine runs read_calendar itself and
                      re-answers from the result), citation (Phase 5 — the
@@ -58,12 +61,25 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      "coming up today". On a
                      turn where a barrier may replace the reply, the stream is
                      HELD and the vetted reply emitted once, so no fabrication
-                     flickers on screen. Each interaction-log record carries
-                     additive observability (referents, taint, date_grounding,
-                     calendar_corrective, citation/citation_corrective,
-                     retrieved_obs — the observation ids that grounded a reply —
-                     plus Notes-10 Phase 1: date_floor_corrective, unsolicited_action,
-                     and proactive_grounded on greeting/briefing records).
+                     flickers on screen. CONVERSATIONAL CONTINUITY (Notes-10
+                     Phase 2): an OFFER LEDGER (self.offer) records the one
+                     concrete offer a reply made and, when the next message is a
+                     bare affirmative, injects a "do it now, don't re-ask"
+                     directive (the anti-dodge barrier is the backstop); and
+                     HISTORY COMPACTION replaces the old silent 40-message trim —
+                     evicted turns are folded (one tool-less call) into a running
+                     digest (self.history_summary) injected at the head of
+                     context, so a long session never loses what scrolled off
+                     (best-effort: a summarize failure falls back to the plain
+                     trim, never blocking a reply). Each interaction-log record
+                     carries additive observability (referents, taint,
+                     date_grounding, calendar_corrective, citation/
+                     citation_corrective, retrieved_obs — the observation ids
+                     that grounded a reply — plus Notes-10 Phase 1:
+                     date_floor_corrective, unsolicited_action, and
+                     proactive_grounded on greeting/briefing records; Phase 2:
+                     offer_accepted, offer_armed, offer_dodge_corrective,
+                     history_compacted).
                      After each durably-writing turn the memory pass records ONE
                      typed observation, and session_greeting resumes from the
                      recent observation stream ("where we left off") — the
@@ -117,7 +133,13 @@ core\artifacts.py    artifact perception (Task 6): perceive() turns a file
                      cannot be separated. The engine keeps a per-conversation
                      REFERENT STACK (every tool-touched artifact/entity, with
                      content excerpts) injected late in the system prompt with
-                     resolution rules — plus a CODE barrier that catches the
+                     resolution rules. Referents come from tool ARGS
+                     (read_file/read_brain/…) and from tool RESULTS
+                     (_track_result_referents): read_calendar pushes events, and
+                     — Notes-10 Phase 2 §3 — list_dir pushes each FILE it lists
+                     with its real absolute path, so "the pdf" resolves one turn
+                     after a folder listing instead of the model guessing a path.
+                     Plus a CODE barrier that catches the
                      model reviewing artifacts that were never shared
                      (prompt-immune fabrication; one corrective retry, then a
                      fail-safe honest reply).
@@ -316,6 +338,20 @@ core\tools\          the registry pattern: every capability is a tool
                      what code can do.
 
 core\project_meta.py field lines in notes (- **Status:** ...), slug()
+core\project_resolver.py  ProjectResolver (Notes-10 Phase 3, §1): deterministic
+                     free-text -> project matching (stdlib difflib + normalized
+                     compact strings; no new dep). Reads projects\ notes (+
+                     orphan folders) and scores each by containment / distinctive-
+                     token cover / fuzzy window ratio. `resolve_one` decides:
+                     act on a confident single match, ASK which on genuine
+                     ambiguity (the licensed JARVIS confirm), stay silent when
+                     nothing is strong. Backs `projects.py:_find_folder`, the
+                     `resolve_project` tool, AND the engine's per-turn resolution
+                     hint (bootstrap wires engine.project_resolver; respond()
+                     appends hint_for(user_input) to the referent block so the
+                     model never guesses a project path — transcript-B fix). The
+                     hint is conservative (empty on anything but a strong match),
+                     so bare questions and the golden suite are unchanged.
 core\bootstrap.py    wires ALL of the above from config\friday_config.yaml;
                      both frontends call build_engine(confirm_callback)
 core\logging_utils.py actions.log + interactions\*.jsonl (also the future

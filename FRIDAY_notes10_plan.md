@@ -1,9 +1,23 @@
 # FRIDAY Notes-10 Plan — temporal integrity, conversational continuity, intent resolution, memory method port
 
-**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) IN PROGRESS: §1 offer ledger + §2 widen-anti-dodge + §3 file-surfacing referents DONE (2026-07-13). §4 (history compaction) next. Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
+**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution) IN PROGRESS — §1 (entity resolver) done 2026-07-13. Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
 **Source: Jack's "Friday Notes 10" (live-usage transcripts, 2026-07-11/12) + code diagnosis of the current repo.**
 
 > **Progress at a glance** (newest first — a fresh session reads this line, then §3):
+> - **P3 §1 done 2026-07-13** — Entity resolver (`core/project_resolver.py`):
+>   stdlib fuzzy-matches Jack's free-text project references against real
+>   projects; a confident single match injects the real note+folder into the
+>   prompt (engine `hint_for`, `None`-guarded) so the 14B stops guessing paths
+>   (transcript-B root), ambiguity asks which (JARVIS confirm), weak = silent.
+>   New `resolve_project` tool + `entity_resolved` log field. RESOLVE-001..008
+>   pass; 192 non-model pass. GT-C3 LOCK rides with §6. **§2–§6 next.** (Running
+>   in parallel with the P7/P8 worktree — see the parallel note under the header.)
+> - **P2 COMPLETE 2026-07-13 (§4 last)** — History compaction replaces the silent
+>   40-msg trim: evicted turns are summarised (one tool-less call) into a running
+>   digest injected at the head of context, so nothing scrolled-off is lost.
+>   Cheap cadence, fail-safe fallback. COMPACT-001..004 + live smoke (the digest
+>   kept a planted early fact + she recalled it post-eviction). **All four Phase 2
+>   §§ done; GT golden 8/8, baseline HELD.** Phase 3 (intent resolution) next.
 > - **P2 §3 done 2026-07-13** — `list_dir` results now push their FILES onto the
 >   referent stack (joined absolute paths, folders/tail excluded, capped) so "the
 >   pdf" resolves one turn after a listing (transcript-B gap). `_track_result_
@@ -396,7 +410,31 @@ Promote GT-C1/C2 to LOCKED. Suite + GT baseline green.
 - [x] **§1 Offer ledger — DONE (2026-07-13).** See "§1 findings" below.
 - [x] **§2 Widen anti-dodge to affirmatives — DONE (2026-07-13).** See "§2 findings" below.
 - [x] **§3 Referents from every file-surfacing tool — DONE (2026-07-13).** See "§3 findings" below.
-- [ ] **§4 History compaction — next.**
+- [x] **§4 History compaction — DONE (2026-07-13).** See "§4 findings" below.
+
+> **§4 findings (History compaction).** The silent `self.history =
+> self.history[-40:]` trim dropped the oldest turns outright — a fact established
+> early in a long session vanished the moment it scrolled off. Replaced with the
+> Claude Code compaction mechanism at FRIDAY's scale (`_compact_history`): when
+> the trim triggers, the evicted turns are rendered as plain dialogue and folded
+> — via ONE tool-less summarize call — into a running ≤150-word digest
+> (`self.history_summary`) that rides at the HEAD of context next turn as
+> established-context (never new instructions). `_compact_keep` (24) sits below
+> `max_history` (40) so the trim re-triggers only after the margin refills =
+> compaction runs at most once per several turns, not every turn. Best-effort by
+> contract: the call is wrapped in try/except and the plain trim runs regardless,
+> so a summarize failure never blocks or loses a reply (the reply is already
+> streamed by then — the only cost is a small post-reply pause every few turns).
+> New `history_compacted` log field. **Tests:** `test_history_compaction.py`
+> COMPACT-001..004 pass (no model) — digest built + counted, prior summary folded
+> in, empty/blank no-ops, and the trim swallows a summarize failure while still
+> bounding history. **Live smoke** (`test_history_compaction_live.py`
+> COMPACT-LIVE-001, thresholds lowered to fire fast, 83s): compaction fired, the
+> digest captured the planted early fact ("load cell rated at 37 kg") AFTER that
+> turn was evicted, and she recalled it correctly on a later turn — the session
+> kept what scrolled off. 184 non-model pass, no regressions. (Recording the
+> compaction summary as a session-end OBSERVATION for the NEXT session's index is
+> Phase 4's job, per the plan — §4 is the in-session half.)
 
 > **§3 findings (Referents from file-surfacing tools).** The gap the transcript
 > named: `list_dir` surfaced a folder's files but pushed NOTHING onto the
@@ -510,6 +548,45 @@ Promote GT-C1/C2 to LOCKED. Suite + GT baseline green.
 Promote GT-C3 (partially — resolution lands in Phase 3) and GT-C4 to LOCKED.
 
 ### Phase 3 — Intent resolution, the JARVIS layer (clusters B+C)
+
+**Per-section progress (a fresh session resumes from here):**
+- [x] **§1 resolve_project / entity resolver — DONE (2026-07-13).** See "§1 findings" below.
+- [ ] **§2 list_projects tool — not started.**
+- [ ] **§3 merge_projects tool (gated) — not started.**
+- [ ] **§4 near-duplicate guard in create_project — not started.**
+- [ ] **§5 fuzzy recall floor — not started.**
+- [ ] **§6 consolidate_projects playbook + promote GT-C3/C5/C6 to LOCKED — not started.**
+
+> **§1 findings (resolve_project / entity resolver).** New module
+> `core/project_resolver.py`: `ProjectResolver` reads the brain's `projects/`
+> notes (+ orphan folders under the projects root) and fuzzy-matches free text
+> against each project's slug/title/folder-name using ONLY the stdlib
+> (`difflib` + normalized compact strings — no new dep). Three match tiers,
+> strongest first: **containment** (the project's compact name sits inside the
+> message, e.g. `marlinrig` within "…the marlin rig project" → 1.0),
+> **full-token cover** (every *distinctive* word of the name is present; "rig"/
+> "project" are treated as generic so a shared word alone never resolves →
+> 0.95), and a **difflib window ratio** for typos ("marln rig" still lands).
+> `resolve_one()` collapses matches into a decision: a lone strong match (or a
+> strong top that beats the runner-up by a margin) → act on it; two close strong
+> matches → **ask which** (the licensed JARVIS confirm, invariant 4); nothing
+> strong → silent. **Wiring:** `_find_folder` in `projects.py` now delegates to
+> the resolver (one implementation of "where does this project live"), a new
+> `resolve_project` TOOL (kind `internal`) exposes it to the model on demand
+> (returns note+folder+status+file-listing, or asks which), and — the key half
+> — the ENGINE injects a resolution hint per turn: `engine.project_resolver`
+> (wired in bootstrap, `None`-guarded like `observations`) runs `hint_for(user_
+> input)` and, on a STRONG single match, appends the real note+folder to the
+> referent block so the 14B proceeds instead of guessing a path (transcript-B
+> root cause). `hint_for` returns `""` on anything but a strong match, so bare
+> questions and the golden suite are unchanged (conservative by construction).
+> New additive log field `entity_resolved` makes the resolution rate countable.
+> **Tests:** `test_project_resolver.py` RESOLVE-001..008 pass (no model) — single
+> match, recorded-folder resolution (NOT a guess), separator-insensitivity,
+> ambiguity→ask-which, silence on unrelated/bare messages, typo tolerance, the
+> hint carrying note+folder, and orphan-folder resolution. **192 non-model pass
+> (+8), no regressions.** GT-C3's `resolved-real-folder` promotion to LOCKED
+> rides with §6 (needs the whole surface: resolver + the engine hint together).
 
 1. **`resolve_project` / entity resolver (code, deterministic).** Extract
    `_find_folder` into a shared resolver: given a free-text name, fuzzy-match
@@ -880,8 +957,8 @@ held; non-model suite green.
 |-------|--------|------|-------|-------------|-------|
 | P0    | **DONE** | 2026-07-13 | GT-C 6/6 green (all TARGET, no LOCKED yet) | GT-A/GT-B unchanged (not re-run — no code touched) | GT-C golden set + baseline landed. Table below. |
 | P1    | **§1–§4 done (code)** | 2026-07-13 | Full suite 205/252 (all 16 P1 targets PASS; GT-C1 LOCKED, GT-C2 LOCKED×2, GT-A/GT-B LOCKED held); 166 non-model pass. 47 failures = PRE-EXISTING model-suite (calc/injection/variance), NOT caused by P1 (A/B-proven) | **GT baseline HELD** (GT-A/GT-B LOCKED green; GT-C1/C2 now LOCKED) | All four §§ landed. Live calendar-mirror migration DEFERRED (Jack). 47 pre-existing model-suite failures flagged for Jack — see "Phase 1 regression notes". |
-| P2    | not started | | | | |
-| P3    | not started | | | | |
+| P2    | **§1–§4 DONE** | 2026-07-13 | 184 non-model pass (+15 new: OFFER-001..006, REF-001..005, COMPACT-001..004); GT golden 8/8 (GT-C4 gains LOCKED offer-ledger-accepts); COMPACT-LIVE-001 live smoke green | **GT baseline HELD** (GT-A/GT-B LOCKED + GT-C1/C2 LOCKED green; GT-C4 offer-ledger LOCKED) | Offer ledger + widened anti-dodge + list_dir referents + history compaction. All four §§ landed & verified. Full model suite not re-run (frozen-code rule; the 47 pre-existing P1 failures are unrelated). |
+| P3    | **§1 done (code)** | 2026-07-13 | 192 non-model pass (+8: RESOLVE-001..008) | **GT baseline HELD** (non-model only; GT-C model goldens not re-run — frozen-code / single-GPU shared with the p78 session) | §1 entity resolver landed: `core/project_resolver.py` + `resolve_project` tool + engine per-turn hint. §2–§6 pending. GT-C3 LOCK promotion rides with §6. |
 | P4    | not started | | | | |
 | P5    | not started | | | | |
 | P6    | not started | | | | Decision-gated: report to Jack, verdict is his |
