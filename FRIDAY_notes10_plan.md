@@ -1,9 +1,20 @@
 # FRIDAY Notes-10 Plan — temporal integrity, conversational continuity, intent resolution, memory method port
 
-**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) IN PROGRESS (2026-07-13): §1 (session-start compact observation index) + §2 (get_observations fetch-by-id tool) DONE; §3 FTS search / §4 compaction→observation next. Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
+**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) IN PROGRESS (2026-07-13): §1 (session-start compact observation index) + §2 (get_observations fetch-by-id tool) + §3 (search_observations FTS5) DONE; §4 (compaction summary → session-end observation) next — the last section. Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
 **Source: Jack's "Friday Notes 10" (live-usage transcripts, 2026-07-11/12) + code diagnosis of the current repo.**
 
 > **Progress at a glance** (newest first — a fresh session reads this line, then §3):
+> - **P4 §3 done 2026-07-13** — `search_observations` on SQLite FTS5. Real
+>   full-text recall across every past session, stdlib sqlite3+FTS5 (no new dep),
+>   in a derived, rebuildable, git-ignored index under data\ (new
+>   `core/memory/observation_index.py`). Wired onto the store (incremental on
+>   record; ensure() builds once). Test-session uses a separate db (isolation is
+>   structural). Tool kind internal, registers only when FTS5 is present.
+>   **The Retriever seam is left untouched** (FTS reached only via the explicit
+>   tool), so the GT recall baseline + the deferred embedding decision are
+>   unchanged. FTS-001..004 pass; suite 238 passed, sole failure is an unrelated
+>   concurrent Phase-5 skill-count collision in the shared brain (not Phase 4).
+>   **§4 (compaction summary → observation at session end) next — the last §.**
 > - **P4 §2 done 2026-07-13** — `get_observations(ids)` tool (fetch-by-id).
 >   `ObservationStore.get(id)` + new `core/tools/observation_tools.py` register a
 >   kind-**internal** tool that pulls a full observation body on demand (the
@@ -770,8 +781,47 @@ verified live (see "§6 findings" above).
 **Per-section progress (a fresh session resumes from here):**
 - [x] **§1 Session-start compact index — DONE (2026-07-13).** See "§1 findings" below.
 - [x] **§2 `get_observations(ids)` tool — DONE (2026-07-13).** See "§2 findings" below.
-- [ ] **§3 `search_observations` on SQLite FTS5 — TODO.**
+- [x] **§3 `search_observations` on SQLite FTS5 — DONE (2026-07-13).** See "§3 findings" below.
 - [ ] **§4 Wire compaction summary → observation at session end — TODO.**
+
+> **§3 findings (`search_observations` on SQLite FTS5).** Real full-text recall
+> across every past session, using **stdlib sqlite3 + FTS5 — no new dependency**
+> (verified the Python build has FTS5). New `core/memory/observation_index.py`:
+> `ObservationIndex` is a DERIVED, rebuildable index over observation
+> titles+bodies, living under `data\` (already git-ignored). It carries no fact
+> the markdown doesn't — `rebuild()` reconstructs it from the brain, so the
+> observation files stay the one source of truth (one fact, one place). Wired
+> onto the store (`observations.index`, set in bootstrap): every `record()` calls
+> `index_one` best-effort (wrapped — a memory-index write can never break a live
+> turn), and `ensure()` builds the index once at startup if absent. **Test-session
+> isolation is structural, not prompted:** a test session uses a SEPARATE db file
+> (`obs_fts_test.db`) over its own `test_archive/` view (the db name is chosen from
+> `brain.test_session`), so a test memory can never surface in a real session's
+> search — the same wall the store and retriever already enforce. Queries are made
+> safe by extracting `\w+` terms and OR-joining quoted terms (bm25 floats the best
+> matches up), so raw FTS operators / punctuation in Jack's phrasing can never
+> become a malformed MATCH (the FTS analogue of a parameterised query). The tool
+> `search_observations` (kind **internal**) registers ONLY when the index is
+> available (FTS5 present) — otherwise it is simply ABSENT rather than
+> present-but-broken (honest capability surface); it returns id + title + snippet
+> per hit and points at `get_observations` for the full body, honest empty on no
+> match. **Deliberate scope choice:** the `Retriever` seam is left UNTOUCHED — FTS
+> is reached only through the explicit tool, NOT silently folded into `layered`
+> recall — so the GT recall baseline is unchanged and Jack's deferred
+> embedding/vector decision stays exactly where it was (the plan's "may consult
+> FTS as an additional layer" is available but intentionally not wired, same
+> posture as every other Jack-gated recall change). **Tests:**
+> `test_search_observations.py` FTS-001..004 pass (no model) — find-by-body-term +
+> honest empty, a from-scratch `rebuild()` reproducing the incremental state (the
+> correctness anchor the plan names), real-session search never surfacing a
+> test-archive observation, and punctuation/empty/operator queries staying safe
+> (no crash, no malformed MATCH). Each skips cleanly if a build lacks FTS5.
+> **Suite:** all Phase-4 tests green; the full `--quick` run shows **238 passed**
+> with ONE unrelated failure — `test_skills.py::test_seeding` expects 6 shipped
+> skills but a CONCURRENT Phase-5 session committed a 7th (`verify_before_done.md`)
+> into the shared live brain at 14:59 (the documented parallel-worktree hazard,
+> CLAUDE.md). NOT caused by Phase 4 — my changes touch no skills — and left for the
+> Phase-5 session to reconcile (bump the expected count / de-hardcode).
 
 > **§2 findings (`get_observations(ids)` tool).** The fetch-by-id half of the
 > progressive-disclosure bargain §1 set up: the index lists ids cheaply, this

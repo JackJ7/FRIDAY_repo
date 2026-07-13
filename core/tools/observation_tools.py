@@ -20,7 +20,7 @@ nor pushes referents (same posture as read_brain over her own notes).
 _MAX_IDS = 20
 
 
-def register_observation_tools(registry, store):
+def register_observation_tools(registry, store, index=None):
 
     def _as_id_list(ids) -> list:
         """Accept the ids however the model hands them over — a real JSON array,
@@ -94,5 +94,52 @@ def register_observation_tools(registry, store):
             "required": ["ids"],
         },
         get_observations,
+        kind="internal",
+    )
+
+    # search_observations (Phase 4 §3) — full-text recall across every past
+    # session, backed by the derived SQLite FTS5 index. Registers only when an
+    # index is wired AND this Python build actually has FTS5; otherwise the tool
+    # is simply ABSENT rather than present-but-broken (honest capability surface).
+    if index is None or not getattr(index, "available", False):
+        return
+
+    def search_observations(query: str, limit: int = 6) -> str:
+        """Search FRIDAY's observation stream by keywords across all sessions.
+        Honest empty result when nothing matches (never a weak guess)."""
+        try:
+            limit = max(1, min(int(limit), 15))
+        except (TypeError, ValueError):
+            limit = 6
+        hits = index.search(query, limit)
+        if not hits:
+            return (f"No observations matched '{query}'. (Full-text search over "
+                    "your recorded observations found nothing — say so plainly.)")
+        out = [f"{len(hits)} observation(s) matched '{query}':"]
+        for h in hits:
+            day = (h.get("ts") or "")[:10]
+            out.append(f"- {h['id']} | {day} | {h.get('type','')} | "
+                       f"{h['title']}\n    {h.get('snippet','').strip()}")
+        out.append("(Use get_observations to pull the full body of any of these.)")
+        return "\n".join(out)
+
+    registry.register(
+        "search_observations",
+        "Full-text search across ALL of your past observations (every session), "
+        "by keywords. Use this to answer 'have we discussed X before?' or to find "
+        "an old thread the session-start index doesn't still show. Returns the "
+        "matching observation ids + titles + snippets; pull full detail with "
+        "get_observations. Honest empty when nothing matches.",
+        {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string",
+                          "description": "Keywords to search for"},
+                "limit": {"type": "integer",
+                          "description": "Max results (default 6)"},
+            },
+            "required": ["query"],
+        },
+        search_observations,
         kind="internal",
     )

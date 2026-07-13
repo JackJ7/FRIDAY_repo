@@ -81,6 +81,11 @@ class ObservationStore:
 
     def __init__(self, brain):
         self.brain = brain
+        # Optional FTS index (Notes-10 Phase 4 §3), wired in bootstrap. Kept
+        # optional and duck-typed so the store stays decoupled from sqlite: a
+        # bare sandbox with no index set simply skips incremental indexing, and
+        # the markdown files remain the source of truth regardless.
+        self.index = None
 
     # ---------- writing ----------
 
@@ -111,6 +116,15 @@ class ObservationStore:
         # mode="create" — the git summary doubles as a readable history line.
         self.brain.write_note(f"{OBS_DIR}/{obs_id}.md", content, mode="create",
                               summary=f"observation ({front['type']}): {title[:80]}")
+        # Keep the derived FTS index current (Phase 4 §3). Best-effort by
+        # contract: the durable record is the markdown just written; a failed
+        # index write must never surface here. `all()`/the retriever still work
+        # without it, and rebuild() reconstructs it from these files.
+        if self.index is not None:
+            try:
+                self.index.index_one(self.get(obs_id))
+            except Exception:
+                pass
         return obs_id
 
     # Which write tools mean a durable change happened, and the type each

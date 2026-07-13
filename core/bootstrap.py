@@ -185,6 +185,14 @@ def build_engine(confirm, config: dict = None) -> Engine:
     # same files). One place the typed-observation stream is produced.
     from core.memory.observations import ObservationStore
     observations = ObservationStore(brain)
+    # Derived FTS index over the observation stream (Notes-10 Phase 4 §3):
+    # full-text recall across sessions, stdlib sqlite3+FTS5, git-ignored under
+    # data\ and rebuildable from the brain. Wired onto the store so each new
+    # observation is indexed incrementally; ensure() builds it once if absent.
+    from core.memory.observation_index import ObservationIndex
+    obs_index = ObservationIndex(observations, data_dir(config))
+    observations.index = obs_index
+    obs_index.ensure()
 
     registry = ToolRegistry()
     register_filesystem_tools(registry, gate, outbox_path,
@@ -194,7 +202,7 @@ def build_engine(confirm, config: dict = None) -> Engine:
     # Phase 4 §2): the session-start index lists ids cheaply, get_observations
     # pulls a full body on demand. Internal kind — reading her own record.
     from core.tools.observation_tools import register_observation_tools
-    register_observation_tools(registry, observations)
+    register_observation_tools(registry, observations, obs_index)
     register_calc_tools(registry)  # units-safe arithmetic (don't make the model do math)
     project_resolver = register_project_tools(registry, gate, brain, projects_root)
 

@@ -224,6 +224,18 @@ core\memory\         the brain (markdown vault, git-versioned)
                      cold brain has zero observations, so `layered` == keyword-
                      notes until the pass writes some — recall grows into
                      cross-session continuity through use.
+  observation_index.py  the Notes-10 Phase 4 §3 FTS index: a DERIVED, rebuildable
+                     SQLite FTS5 index over observation titles+bodies, under
+                     data\ (git-ignored) — stdlib sqlite3, no new dep. Carries no
+                     fact the markdown doesn't (rebuild() reconstructs it from the
+                     brain). Wired onto the store (each new observation indexed
+                     incrementally; ensure() builds once if absent). A test
+                     session uses a SEPARATE db over its own archive, so test
+                     memories can't surface in a real search. Reached via the
+                     explicit `search_observations` tool — the Retriever seam is
+                     deliberately left untouched, so the GT recall baseline and
+                     the deferred embedding decision are both unchanged. Degrades
+                     honestly (tool ABSENT) if the Python build lacks FTS5.
 
 core\permissions.py  PermissionGate — every filesystem action passes here.
                      Free: writes in brain\ + friday_documents\ (logged,
@@ -335,13 +347,17 @@ core\tools\          the registry pattern: every capability is a tool
                      Playbook: playbooks\consolidate_projects.md (list -> confirm
                      survivor -> merge -> report; never create during a merge).
   observation_tools.py  progressive-disclosure reads over the typed-observation
-                     stream (Notes-10 Phase 4 §2). get_observations(ids)
-                     (internal) pulls a full observation body ON DEMAND by id —
-                     the session-start index (engine._where_we_left_off) lists
-                     ids cheaply, this fetches the body only when a thread is
-                     relevant (claude-mem's compact-index + fetch-by-id economics
-                     at FRIDAY's scale). Store.get() refuses path-escape/non-obs
-                     ids and honours test-session routing.
+                     stream (Notes-10 Phase 4 §2-3), both kind internal (her own
+                     record — no taint, no referent push).
+                       get_observations(ids) — pulls a full observation body ON
+                         DEMAND by id (the session-start index
+                         engine._where_we_left_off lists ids cheaply; this fetches
+                         the body only when a thread is relevant — claude-mem's
+                         compact-index + fetch-by-id economics). Store.get()
+                         refuses path-escape/non-obs ids, honours test routing.
+                       search_observations(query) — full-text recall across all
+                         sessions via observation_index.py (§3). Registered ONLY
+                         when the FTS index is available; honest empty on no match.
   research_tools.py  autonomous GPU research loop (autoresearch port), gated.
                      Three tools (autoresearch_launch/status/stop). Registers
                      only behind research.enabled (LOCKED) + a non-empty
