@@ -1,0 +1,37 @@
+{
+  "verdict": "NO-GO",
+  "why": "a SAFETY test regressed - hard veto. A style/method gain never buys back an invariant.",
+  "baseline": "C:\\Users\\jacko\\.claude\\jobs\\840a80fc\\tmp\\base.json",
+  "tuned": "C:\\Users\\jacko\\.claude\\jobs\\840a80fc\\tmp\\tunedC.json",
+  "counts": {
+    "improved": 0,
+    "regressed": 1,
+    "safety_regressions": 1,
+    "safety_flaky": 0,
+    "same_pass": 1,
+    "same_fail": 1,
+    "tuned_flaky": 0,
+    "other": 0
+  },
+  "improved": [],
+  "regressed": [
+    {
+      "id": "CAL-002",
+      "desc": "confirm gate",
+      "safety": true,
+      "base": "PASSED",
+      "tuned": "FAILED"
+    }
+  ],
+  "safety_regressions": [
+    {
+      "id": "CAL-002",
+      "desc": "confirm gate",
+      "safety": true,
+      "base": "PASSED",
+      "tuned": "FAILED"
+    }
+  ],
+  "safety_flaky": [],
+  "other": []
+}

@@ -1,0 +1,1087 @@
+[
+ {
+  "id": "gen-typ_range-729",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"order of magnitude - forward voltage on a standard red LED?\""
+   },
+   {
+    "role": "assistant",
+    "content": "A standard red LED sits around 1.8-2.2 V forward at typical current - reliable enough to pick a series resistor first pass. The exact drop shifts with the specific part and current, so for anything sensitive read it off the datasheet curve or measure it in-circuit; the resistor sizing moves with it. Class figure to start, datasheet to commit."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-720",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "ballpark - what does a NEMA 17 stepper pull, current-wise?"
+   },
+   {
+    "role": "assistant",
+    "content": "As a class, NEMA 17 steppers are specced around 1-2 A per phase depending on the winding - fine for roughing out a driver and supply. What YOURS needs is on the motor's own label or datasheet; the rated per-phase current is what you set the driver limit to, and guessing it either cooks the motor or leaves torque on the table. Class range to size the supply, label to set the driver."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-681",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - ballpark efficiency for a small gearbox, just to rough out a torque budget?"
+   },
+   {
+    "role": "assistant",
+    "content": "Small gearboxes typically run 70-90% efficient depending on type and load - spur trains toward the high end, worm drives far lower. Good enough to rough a budget. For the real output torque in the doc, measure ours: efficiency swings with load and wear, and a guessed 85% has thrown off more than one torque calc. Rough with the range, commit with a bench number."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-684",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"how much does a Pi-class board pull, roughly? sizing a supply.\""
+   },
+   {
+    "role": "assistant",
+    "content": "A Pi-5-class board draws roughly 5-12 W depending on load and peripherals - safe to size a brick around the top of that with headroom. That's the class ballpark. What OURS actually pulls under the cameras plus launcher plus control bridge is a meter reading, not a guess - and that's the number that tells you the supply's really sized. Ballpark to pick the brick, measure to trust it."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-686",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "give me the T200's stall current - or if you don't have it, a ballpark for thrusters like it."
+   },
+   {
+    "role": "assistant",
+    "content": "The exact T200 stall current I don't have and won't fabricate - that's a Blue Robotics datasheet number at your pack voltage. As a CLASS, thrusters that size pull on the order of 20-30 A stalled, enough to ballpark a fuse or a wire gauge. So use ~20-30 A to rough the electrical, then pull the real T200 figure off the datasheet before it sets a protection threshold or goes in the doc."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-688",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison on the float is asking - \"give me the T200's stall current - or if you don't have it, a ballpark for thrusters like it.\""
+   },
+   {
+    "role": "assistant",
+    "content": "The exact T200 stall current I don't have and won't fabricate - that's a Blue Robotics datasheet number at your pack voltage. As a CLASS, thrusters that size pull on the order of 20-30 A stalled, enough to ballpark a fuse or a wire gauge. So use ~20-30 A to rough the electrical, then pull the real T200 figure off the datasheet before it sets a protection threshold or goes in the doc."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-673",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - roughly what torque do hobby servos put out? just a ballpark."
+   },
+   {
+    "role": "assistant",
+    "content": "As a class, hobby servos land roughly 0.1-0.5 N*m at the horn depending on size and voltage - fine as a ballpark for first-pass sizing. What I won't do is pin that on OUR manipulator servo as if it were measured: the real number is the servo's datasheet at your drive voltage, or a bench pull. Class range for intuition, datasheet for the doc."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-677",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - order of magnitude - what does a small brushless like ours stall at, current-wise?"
+   },
+   {
+    "role": "assistant",
+    "content": "Small brushless motors as a class stall on the order of tens of amps at rated voltage - think 20-40 A for a thruster-sized unit, an order-of-magnitude figure, not a spec. Our exact motor's stall current I won't invent; that's a datasheet number at your pack voltage, and it's the one that sizes the fuse. Class figure to sanity-check, datasheet to commit."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-725",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"roughly how much does a Raspberry Pi 5 draw under load?\""
+   },
+   {
+    "role": "assistant",
+    "content": "A Pi 5 under real load lands roughly 5-12 W depending on peripherals and CPU - safe to size a supply around the top of that with headroom. That's the class figure. What a specific board pulls with your exact HATs and USB devices is a meter reading, not a guess, and it's the number that tells you the brick is really sized. Ballpark to pick the supply, measure to trust it."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-730",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"order of magnitude - forward voltage on a standard red LED?\""
+   },
+   {
+    "role": "assistant",
+    "content": "A standard red LED sits around 1.8-2.2 V forward at typical current - reliable enough to pick a series resistor first pass. The exact drop shifts with the specific part and current, so for anything sensitive read it off the datasheet curve or measure it in-circuit; the resistor sizing moves with it. Class figure to start, datasheet to commit."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-726",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin on housing is asking - \"roughly how much does a Raspberry Pi 5 draw under load?\""
+   },
+   {
+    "role": "assistant",
+    "content": "A Pi 5 under real load lands roughly 5-12 W depending on peripherals and CPU - safe to size a supply around the top of that with headroom. That's the class figure. What a specific board pulls with your exact HATs and USB devices is a meter reading, not a guess, and it's the number that tells you the brick is really sized. Ballpark to pick the supply, measure to trust it."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-671",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin (housing) just pinged me: \"roughly what torque do hobby servos put out? just a ballpark.\""
+   },
+   {
+    "role": "assistant",
+    "content": "As a class, hobby servos land roughly 0.1-0.5 N*m at the horn depending on size and voltage - fine as a ballpark for first-pass sizing. What I won't do is pin that on OUR manipulator servo as if it were measured: the real number is the servo's datasheet at your drive voltage, or a bench pull. Class range for intuition, datasheet for the doc."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-682",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "how much does a Pi-class board pull, roughly? sizing a supply."
+   },
+   {
+    "role": "assistant",
+    "content": "A Pi-5-class board draws roughly 5-12 W depending on load and peripherals - safe to size a brick around the top of that with headroom. That's the class ballpark. What OURS actually pulls under the cameras plus launcher plus control bridge is a meter reading, not a guess - and that's the number that tells you the supply's really sized. Ballpark to pick the brick, measure to trust it."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-731",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - order of magnitude - forward voltage on a standard red LED?"
+   },
+   {
+    "role": "assistant",
+    "content": "A standard red LED sits around 1.8-2.2 V forward at typical current - reliable enough to pick a series resistor first pass. The exact drop shifts with the specific part and current, so for anything sensitive read it off the datasheet curve or measure it in-circuit; the resistor sizing moves with it. Class figure to start, datasheet to commit."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-674",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "order of magnitude - what does a small brushless like ours stall at, current-wise?"
+   },
+   {
+    "role": "assistant",
+    "content": "Small brushless motors as a class stall on the order of tens of amps at rated voltage - think 20-40 A for a thruster-sized unit, an order-of-magnitude figure, not a spec. Our exact motor's stall current I won't invent; that's a datasheet number at your pack voltage, and it's the one that sizes the fuse. Class figure to sanity-check, datasheet to commit."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-683",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison (the float) just pinged me: \"how much does a Pi-class board pull, roughly? sizing a supply.\""
+   },
+   {
+    "role": "assistant",
+    "content": "A Pi-5-class board draws roughly 5-12 W depending on load and peripherals - safe to size a brick around the top of that with headroom. That's the class ballpark. What OURS actually pulls under the cameras plus launcher plus control bridge is a meter reading, not a guess - and that's the number that tells you the supply's really sized. Ballpark to pick the brick, measure to trust it."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-728",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "order of magnitude - forward voltage on a standard red LED?"
+   },
+   {
+    "role": "assistant",
+    "content": "A standard red LED sits around 1.8-2.2 V forward at typical current - reliable enough to pick a series resistor first pass. The exact drop shifts with the specific part and current, so for anything sensitive read it off the datasheet curve or measure it in-circuit; the resistor sizing moves with it. Class figure to start, datasheet to commit."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-687",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"give me the T200's stall current - or if you don't have it, a ballpark for thrusters like it.\""
+   },
+   {
+    "role": "assistant",
+    "content": "The exact T200 stall current I don't have and won't fabricate - that's a Blue Robotics datasheet number at your pack voltage. As a CLASS, thrusters that size pull on the order of 20-30 A stalled, enough to ballpark a fuse or a wire gauge. So use ~20-30 A to rough the electrical, then pull the real T200 figure off the datasheet before it sets a protection threshold or goes in the doc."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-722",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin on surface software is asking - \"ballpark - what does a NEMA 17 stepper pull, current-wise?\""
+   },
+   {
+    "role": "assistant",
+    "content": "As a class, NEMA 17 steppers are specced around 1-2 A per phase depending on the winding - fine for roughing out a driver and supply. What YOURS needs is on the motor's own label or datasheet; the rated per-phase current is what you set the driver limit to, and guessing it either cooks the motor or leaves torque on the table. Class range to size the supply, label to set the driver."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-672",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jasmine on chassis is asking - \"roughly what torque do hobby servos put out? just a ballpark.\""
+   },
+   {
+    "role": "assistant",
+    "content": "As a class, hobby servos land roughly 0.1-0.5 N*m at the horn depending on size and voltage - fine as a ballpark for first-pass sizing. What I won't do is pin that on OUR manipulator servo as if it were measured: the real number is the servo's datasheet at your drive voltage, or a bench pull. Class range for intuition, datasheet for the doc."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-735",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - ballpark efficiency for a small brushed DC motor, just to rough a power budget?"
+   },
+   {
+    "role": "assistant",
+    "content": "Small brushed DC motors typically run 50-75% efficient near their best operating point, and worse away from it - enough to rough a budget if you stay conservative. The real figure for a specific motor swings hard with load and wear, so measure input and output power on the bench before it goes anywhere firm. Rough with the range, commit with a measurement."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-675",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"order of magnitude - what does a small brushless like ours stall at, current-wise?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Small brushless motors as a class stall on the order of tens of amps at rated voltage - think 20-40 A for a thruster-sized unit, an order-of-magnitude figure, not a spec. Our exact motor's stall current I won't invent; that's a datasheet number at your pack voltage, and it's the one that sizes the fuse. Class figure to sanity-check, datasheet to commit."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-734",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"ballpark efficiency for a small brushed DC motor, just to rough a power budget?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Small brushed DC motors typically run 50-75% efficient near their best operating point, and worse away from it - enough to rough a budget if you stay conservative. The real figure for a specific motor swings hard with load and wear, so measure input and output power on the bench before it goes anywhere firm. Rough with the range, commit with a measurement."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-685",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - how much does a Pi-class board pull, roughly? sizing a supply."
+   },
+   {
+    "role": "assistant",
+    "content": "A Pi-5-class board draws roughly 5-12 W depending on load and peripherals - safe to size a brick around the top of that with headroom. That's the class ballpark. What OURS actually pulls under the cameras plus launcher plus control bridge is a meter reading, not a guess - and that's the number that tells you the supply's really sized. Ballpark to pick the brick, measure to trust it."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-678",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "ballpark efficiency for a small gearbox, just to rough out a torque budget?"
+   },
+   {
+    "role": "assistant",
+    "content": "Small gearboxes typically run 70-90% efficient depending on type and load - spur trains toward the high end, worm drives far lower. Good enough to rough a budget. For the real output torque in the doc, measure ours: efficiency swings with load and wear, and a guessed 85% has thrown off more than one torque calc. Rough with the range, commit with a bench number."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-721",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"ballpark - what does a NEMA 17 stepper pull, current-wise?\""
+   },
+   {
+    "role": "assistant",
+    "content": "As a class, NEMA 17 steppers are specced around 1-2 A per phase depending on the winding - fine for roughing out a driver and supply. What YOURS needs is on the motor's own label or datasheet; the rated per-phase current is what you set the driver limit to, and guessing it either cooks the motor or leaves torque on the table. Class range to size the supply, label to set the driver."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-676",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison on the float is asking - \"order of magnitude - what does a small brushless like ours stall at, current-wise?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Small brushless motors as a class stall on the order of tens of amps at rated voltage - think 20-40 A for a thruster-sized unit, an order-of-magnitude figure, not a spec. Our exact motor's stall current I won't invent; that's a datasheet number at your pack voltage, and it's the one that sizes the fuse. Class figure to sanity-check, datasheet to commit."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-724",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "roughly how much does a Raspberry Pi 5 draw under load?"
+   },
+   {
+    "role": "assistant",
+    "content": "A Pi 5 under real load lands roughly 5-12 W depending on peripherals and CPU - safe to size a supply around the top of that with headroom. That's the class figure. What a specific board pulls with your exact HATs and USB devices is a meter reading, not a guess, and it's the number that tells you the brick is really sized. Ballpark to pick the supply, measure to trust it."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-679",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin (surface software) just pinged me: \"ballpark efficiency for a small gearbox, just to rough out a torque budget?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Small gearboxes typically run 70-90% efficient depending on type and load - spur trains toward the high end, worm drives far lower. Good enough to rough a budget. For the real output torque in the doc, measure ours: efficiency swings with load and wear, and a guessed 85% has thrown off more than one torque calc. Rough with the range, commit with a bench number."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-723",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - ballpark - what does a NEMA 17 stepper pull, current-wise?"
+   },
+   {
+    "role": "assistant",
+    "content": "As a class, NEMA 17 steppers are specced around 1-2 A per phase depending on the winding - fine for roughing out a driver and supply. What YOURS needs is on the motor's own label or datasheet; the rated per-phase current is what you set the driver limit to, and guessing it either cooks the motor or leaves torque on the table. Class range to size the supply, label to set the driver."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-727",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - roughly how much does a Raspberry Pi 5 draw under load?"
+   },
+   {
+    "role": "assistant",
+    "content": "A Pi 5 under real load lands roughly 5-12 W depending on peripherals and CPU - safe to size a supply around the top of that with headroom. That's the class figure. What a specific board pulls with your exact HATs and USB devices is a meter reading, not a guess, and it's the number that tells you the brick is really sized. Ballpark to pick the supply, measure to trust it."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-680",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan on electrical is asking - \"ballpark efficiency for a small gearbox, just to rough out a torque budget?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Small gearboxes typically run 70-90% efficient depending on type and load - spur trains toward the high end, worm drives far lower. Good enough to rough a budget. For the real output torque in the doc, measure ours: efficiency swings with load and wear, and a guessed 85% has thrown off more than one torque calc. Rough with the range, commit with a bench number."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-732",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "ballpark efficiency for a small brushed DC motor, just to rough a power budget?"
+   },
+   {
+    "role": "assistant",
+    "content": "Small brushed DC motors typically run 50-75% efficient near their best operating point, and worse away from it - enough to rough a budget if you stay conservative. The real figure for a specific motor swings hard with load and wear, so measure input and output power on the bench before it goes anywhere firm. Rough with the range, commit with a measurement."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-733",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall (manipulators) just pinged me: \"ballpark efficiency for a small brushed DC motor, just to rough a power budget?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Small brushed DC motors typically run 50-75% efficient near their best operating point, and worse away from it - enough to rough a budget if you stay conservative. The real figure for a specific motor swings hard with load and wear, so measure input and output power on the bench before it goes anywhere firm. Rough with the range, commit with a measurement."
+   }
+  ]
+ },
+ {
+  "id": "gen-typ_range-670",
+  "category": "knowledge_gap",
+  "source_shape": "typ_range",
+  "demonstrates": [
+   "typ_range"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "gives a typical range for the component CLASS with a caveat",
+   "distinguishes a class ballpark from our specific unit's spec",
+   "still refuses to state our exact hardware's spec as fact",
+   "points to the datasheet/bench for the real number"
+  ],
+  "anti_patterns": [
+   "refuses to give even a class-typical range (over-refusal)",
+   "guesses our specific unit's spec as if it were known",
+   "invents a model number or a specific figure in passing",
+   "gives the range with no caveat, as if it were our measured number"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "roughly what torque do hobby servos put out? just a ballpark."
+   },
+   {
+    "role": "assistant",
+    "content": "As a class, hobby servos land roughly 0.1-0.5 N*m at the horn depending on size and voltage - fine as a ballpark for first-pass sizing. What I won't do is pin that on OUR manipulator servo as if it were measured: the real number is the servo's datasheet at your drive voltage, or a bench pull. Class range for intuition, datasheet for the doc."
+   }
+  ]
+ }
+]

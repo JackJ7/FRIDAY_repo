@@ -1,0 +1,180 @@
+# FRIDAY configuration
+# Everything tunable lives here so code never hardcodes models or paths.
+
+model:
+  # Primary model served by Ollama. Swap this line to change FRIDAY's brain-stem.
+  name: qwen2.5:14b
+  # Lighter fallback if the primary is too slow or VRAM is tight (swap into `name`).
+  fallback: llama3.1:8b
+  # Ollama's local API endpoint (default install).
+  host: http://localhost:11434
+  # Context window per request, in tokens. 8192 leaves room for the persona,
+  # retrieved notes, and conversation while fitting the 12 GB VRAM budget.
+  num_ctx: 8192
+  # Lower = more focused/consistent, higher = more creative. Kept low because
+  # qwen2.5 drifts into other languages at higher temperatures.
+  temperature: 0.4
+
+# Paths are relative to the FRIDAY root folder (absolute paths also work).
+paths:
+  brain: brain
+  outbox: friday_documents
+  logs: logs
+
+persona_file: config/persona.md
+preferences_file: config/preferences.json
+# Character brief — voice/personality, editable in Obsidian (path inside brain).
+character_note: character/friday.md
+
+ui:
+  hotkey: ctrl+alt+f      # global "summon FRIDAY" key
+  window_title: FRIDAY
+  width: 1180
+  height: 800
+
+senses:
+  # A sense is active when its OAuth token exists in data\secrets\
+  # (created by: python scripts\connect_senses.py). No token = "not
+  # connected" and FRIDAY works fully offline, unchanged.
+  gmail_accounts:
+    - name: personal
+      email: jackorjack05@gmail.com
+    - name: uci
+      email: jackoj@uci.edu            # fill in the UCI address before connecting
+  calendar_account: personal
+  event_color_id: "6"      # Tangerine (spec §6A)
+  poll_minutes: 5          # background refresh of mail/calendar cache
+  ping_event_minutes: 15   # "event starting soon" toast window
+  web_max_bytes: 200000    # cap per web_fetch
+
+accountability:
+  staleness_days: 14   # project notes untouched this long show up in "Needs You"
+  briefing_hour: 9     # daily briefing fires at the first idle moment after this hour
+  poll_seconds: 60     # background loop cadence (panel refresh / due-date pings)
+
+reasoning:
+  # How much explicit problem-solving discipline FRIDAY applies to
+  # non-trivial tasks (chitchat is always exempt):
+  #   off      — none
+  #   light    — quick plan + once-over
+  #   standard — restate/assume, plan-then-execute, self-check, name gaps
+  #   rigorous — standard, plus visible Assumptions/Plan/Result/Checked
+  #              structure in substantial answers
+  scaffold: standard
+
+deep_mode:
+  # Heavier model for hard reasoning. FRIDAY ALWAYS has the deep_think tool and
+  # engages "deep mode" on her own judgment for genuinely hard problems — the
+  # main (14B) model keeps doing tools/conversation and offloads the heavy
+  # reasoning to this model on demand. The status box shows "deep mode" while
+  # it runs so you know the reply will be slower. Until the model below is
+  # pulled, deep_think reports it's unavailable and she answers at normal depth
+  # (honestly labelled) — so pull it to actually enable the deeper reasoning:
+  #   ollama pull qwen2.5:32b   (~20 GB, will part-offload to CPU)
+  # `enabled` is now advisory only (kept for reference; no longer gates the tool).
+  enabled: false
+  model: qwen2.5:32b
+  # Budget ceiling: deep calls allowed per session. JACK's number (locked in
+  # config governance) — FRIDAY chooses when to spend within it and
+  # hard-stops at the ceiling, saying so.
+  max_calls_per_session: 8
+
+memory:
+  # keyword — notes only (pre-Phase-3). layered — notes + the typed-observation
+  # stream, self-citing (Phase 3 memory backbone). vector — RESERVED seam for a
+  # local embedding index; not wired (needs a heavy on-device dep, Jack's call —
+  # see FRIDAY_coherence_plan.md Phase 4). Locked tier.
+  retriever: layered
+  top_k: 4               # how many brain notes get auto-injected per reply
+  min_score: 2.0         # relevance floor: notes below this are dropped, not
+                         # served as a weak guess (Phase 1, Symptom 6). 0 = off.
+  git_autocommit: true   # commit brain\ after every write FRIDAY makes
+
+projects:
+  # Where create_project scaffolds new project folders (created on first use).
+  default_root: C:\Users\jacko\Documents\Projects
+
+permissions:
+  # Creating a file bigger than this (MB) asks for confirmation, even inside
+  # FRIDAY's own domain (brain\ / friday_documents\).
+  large_file_mb: 50
+  # Extra folders FRIDAY may write into with per-write confirmation, beyond
+  # projects.default_root (which is always writable-with-confirmation).
+  # Absolute paths, one per line:
+  writable_project_roots: []
+  #  - D:\SomeOtherProjectArea
+
+repo:
+  # Repo review (Task 5) is read-only: FRIDAY syncs/maps/reads code in her
+  # workspace but has no write/commit/push capability. This LOCKED flag is
+  # the only door to her ever emitting .patch files (to the outbox, for you
+  # to apply) — flip it by editing this file yourself, not through her.
+  allow_patches: true
+
+  # --- GitHub write (coherence plan Phase 4 / D6): commit + push, gated. ---
+  # The master switch. While false, git_commit_push does not register at all
+  # (bootstrap). Every push still asks for confirmation even when this is on;
+  # this only decides whether the capability EXISTS. LOCKED — flip it yourself.
+  allow_git_write: true
+  # The allowlist of repos FRIDAY may commit/push to (absolute paths, or a
+  # workspace name under data\workspaces\). EMPTY = nothing is writable, even
+  # with allow_git_write true — two independent locks by design. LOCKED.
+  writable_repos: [C:\Users\jacko\Documents\testing]
+  #  - C:\Users\jacko\Documents\Projects\some_repo
+  # Branches that are auto-blocked BEFORE any confirm card — she can't push to
+  # these, confirm or not. Commit to a feature branch and open a PR. LOCKED.
+  protected_branches:
+    - main
+    - master
+    - release/*
+
+video:
+  # /watch (claude-video), coherence plan Phase 4 / D5. Transcript-first, fully
+  # local (yt-dlp + ffmpeg + local Whisper), with opt-in local Qwen2.5-VL frame
+  # description. Those are HEAVYWEIGHT deps — per CLAUDE.md they need your OK
+  # before install, so the tools stay unregistered until you flip this. Even
+  # then each tool degrades honestly ("not available") if its dep is missing.
+  # An outbound vision API is deliberately NOT an option (invariant 1). LOCKED.
+  enabled: true
+  # Budget ceiling: refuse videos longer than this many minutes (download +
+  # transcription cost). Jack's number, spent within. LOCKED.
+  max_minutes: 90
+  # LOCAL vision model for describe_frames (the opt-in frame path). Served by
+  # Ollama alongside the main model; an outbound vision API is never an option
+  # (invariant 1). Pull with: ollama pull qwen2.5vl. LOCKED.
+  vl_model: qwen2.5vl:latest
+  # LOCAL Whisper size for the transcript fallback (captions are tried first).
+  # Bigger = more accurate + slower; runs on the GPU/CPU on-machine, never a
+  # cloud API (invariant 1). tiny/base/small/medium/large-v3. LOCKED.
+  whisper_model: base
+
+research:
+  # Autonomous GPU research loop (autoresearch port). Clones an allowlisted repo
+  # into an ISOLATED workspace (its own uv venv) and iteratively tunes its
+  # train.py to minimise val_bpb — commit / train / score / keep-or-discard,
+  # unattended, within the ceilings below. This EXECUTES cloned, self-modified
+  # code — a new risk class — so it ships DISABLED behind two independent LOCKED
+  # locks. Flip BOTH yourself to activate; needs git + uv + an NVIDIA GPU.
+  #
+  # Lock 1 — master switch. While false, the tools don't register at all.
+  enabled: true
+  # Lock 2 — the allowlist of repos FRIDAY may clone + run (URLs or local
+  # paths). EMPTY = nothing runnable even with enabled true. LOCKED.
+  allowed_repos: [https://github.com/JackJ7/FRIDAY_repo.git]
+  #  - https://github.com/karpathy/autoresearch
+  # The model that proposes each train.py edit. A SEPARATE, tool-less call — the
+  # main chat model by default (cheapest, already resident). PROPOSE tier.
+  edit_model: qwen2.5:14b
+  edit_model_num_ctx: 8192     # context for the edit call; raise if train.py is
+                               # large enough to truncate. PROPOSE tier.
+  # Budget CEILINGS — Jack's numbers, spent within (like deep_mode.max_calls).
+  # All LOCKED. A run stops at whichever it hits first.
+  max_budget_hours: 8          # wall-clock ceiling per run
+  max_iters_per_run: 200       # attempt ceiling per run
+  train_window_minutes: 5      # upstream's own per-attempt training window
+  iter_timeout_minutes: 10     # HARD kill if one attempt overruns
+  max_crash_retries: 3         # consecutive crashes before the run gives up
+
+tools:
+  read_file_max_bytes: 100000   # cap so a huge file can't flood the context
+  max_tool_rounds: 6            # safety stop for runaway tool-call loops

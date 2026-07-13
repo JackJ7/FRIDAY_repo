@@ -1,0 +1,930 @@
+[
+ {
+  "id": "gen-coord-405",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "help me set an agenda for the weekly sync so it's not just status theater."
+   },
+   {
+    "role": "assistant",
+    "content": "Make it decisions and blockers, not round-robin updates. Three sections: decisions needed this week (with the owner who'll make each), blockers (who's stuck on whom), and rubric-point orphans still unowned. Status goes in the shared sheet before the meeting, not read aloud. Want me to draft that as a reusable agenda template?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-181",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall (manipulators) just pinged me: \"do a quick scan - which high-weight rubric lines have no owner yet? leads are housing=Kevin, electrical=Jhan, controls=Aiden, chassis=Jasmine.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Scanning the high-weight lines against those owners:\n\n- **System/Design Rationale (40%)** - no subsystem lead owns this; it's cross-cutting -> **orphaned, route to a CEO (Luke).**\n- **Overall Design/Workmanship (25%)** - split across Kevin (housing) and Jasmine (chassis), fine.\n- Controls/software -> Aiden. Electrical/power -> Jhan.\n\nThe one to fix today is Design Rationale - it's your single heaviest line and it's unowned. By the orphan rule it goes to a CEO who makes sure every lead feeds their rationale in. Want this as a markdown sheet with the orphan flagged up top?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-188",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "mentors keep editing our doc directly. how do I frame the risk to the team?"
+   },
+   {
+    "role": "assistant",
+    "content": "Frame it as a scoring risk, not a personality thing: direct mentor edits to engineering content risk the mentor-interference deduction (up to -12 pts), and they can trip the MATE AI/authorship expectations too. The artifact to make: a one-line rule the team and mentors both see - mentors review and question, students author and edit. Want a short markdown 'authorship & review protocol' that says who does what, so it's a documented boundary, not an argument?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-408",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and help me set an agenda for the weekly sync so it's not just status theater."
+   },
+   {
+    "role": "assistant",
+    "content": "Make it decisions and blockers, not round-robin updates. Three sections: decisions needed this week (with the owner who'll make each), blockers (who's stuck on whom), and rubric-point orphans still unowned. Status goes in the shared sheet before the meeting, not read aloud. Want me to draft that as a reusable agenda template?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-349",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and we keep forgetting steps at the pool. want a pre-dive checklist people actually own."
+   },
+   {
+    "role": "assistant",
+    "content": "Two things make a checklist stick: it's short, and each line has an owner who calls it. Draft it as owner-per-line - e.g. neutral recalibrated after warm-up (controls/Aiden), camera enumerated through the assembled cable (Justin), tether capped at 100 Mbps (surface), fuse and seals checked (Kevin). Want me to build it as a markdown checklist with an owner column the team fills in?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-401",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "want a running risk register so orphaned rubric points and open bugs don't get lost."
+   },
+   {
+    "role": "assistant",
+    "content": "Good instinct - a register only works if each row has an owner and a next action, or it's just a worry list. Structure it: risk/open item, weight or severity, owner, next action, status. Seed it with what we know is live - Design Rationale still needs a CEO owner, the live IMU is still stubbed in main.cpp, ESC 3's failure mode. Want me to build the markdown table with those three rows to start?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-402",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan (electrical) just pinged me: \"want a running risk register so orphaned rubric points and open bugs don't get lost.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Good instinct - a register only works if each row has an owner and a next action, or it's just a worry list. Structure it: risk/open item, weight or severity, owner, next action, status. Seed it with what we know is live - Design Rationale still needs a CEO owner, the live IMU is still stubbed in main.cpp, ESC 3's failure mode. Want me to build the markdown table with those three rows to start?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-400",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and the controls section of the doc has no clear owner - Aiden or Daniel?"
+   },
+   {
+    "role": "assistant",
+    "content": "Route it to the person who owns the design decisions, not the person who runs it: the controls section is Aiden's - he owns the control architecture and can speak to the requirements, the limitations, and the verification. Daniel (pilot) feeds the operator-performance angle into it but doesn't own the section. Want me to add that split to the ownership sheet - Aiden owns, Daniel contributes?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-342",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "nobody's clearly on the float for the doc. how do I assign it without stepping on toes?"
+   },
+   {
+    "role": "assistant",
+    "content": "Make it a role, not a callout: the Float subsystem line needs one owner who speaks to its design, testing, and results - Addison's the natural fit as float lead. Frame it as 'every subsystem line gets one named owner so nothing's orphaned,' apply it across the board, and Addison owning float is just the pattern, not singling anyone out. Want a one-row addition to the ownership sheet?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-191",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and mentors keep editing our doc directly. how do I frame the risk to the team?"
+   },
+   {
+    "role": "assistant",
+    "content": "Frame it as a scoring risk, not a personality thing: direct mentor edits to engineering content risk the mentor-interference deduction (up to -12 pts), and they can trip the MATE AI/authorship expectations too. The artifact to make: a one-line rule the team and mentors both see - mentors review and question, students author and edit. Want a short markdown 'authorship & review protocol' that says who does what, so it's a documented boundary, not an argument?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-183",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and do a quick scan - which high-weight rubric lines have no owner yet? leads are housing=Kevin, electrical=Jhan, controls=Aiden, chassis=Jasmine."
+   },
+   {
+    "role": "assistant",
+    "content": "Scanning the high-weight lines against those owners:\n\n- **System/Design Rationale (40%)** - no subsystem lead owns this; it's cross-cutting -> **orphaned, route to a CEO (Luke).**\n- **Overall Design/Workmanship (25%)** - split across Kevin (housing) and Jasmine (chassis), fine.\n- Controls/software -> Aiden. Electrical/power -> Jhan.\n\nThe one to fix today is Design Rationale - it's your single heaviest line and it's unowned. By the orphan rule it goes to a CEO who makes sure every lead feeds their rationale in. Want this as a markdown sheet with the orphan flagged up top?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-190",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan on electrical is asking - \"mentors keep editing our doc directly. how do I frame the risk to the team?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Frame it as a scoring risk, not a personality thing: direct mentor edits to engineering content risk the mentor-interference deduction (up to -12 pts), and they can trip the MATE AI/authorship expectations too. The artifact to make: a one-line rule the team and mentors both see - mentors review and question, students author and edit. Want a short markdown 'authorship & review protocol' that says who does what, so it's a documented boundary, not an argument?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-182",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"do a quick scan - which high-weight rubric lines have no owner yet? leads are housing=Kevin, electrical=Jhan, controls=Aiden, chassis=Jasmine.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Scanning the high-weight lines against those owners:\n\n- **System/Design Rationale (40%)** - no subsystem lead owns this; it's cross-cutting -> **orphaned, route to a CEO (Luke).**\n- **Overall Design/Workmanship (25%)** - split across Kevin (housing) and Jasmine (chassis), fine.\n- Controls/software -> Aiden. Electrical/power -> Jhan.\n\nThe one to fix today is Design Rationale - it's your single heaviest line and it's unowned. By the orphan rule it goes to a CEO who makes sure every lead feeds their rationale in. Want this as a markdown sheet with the orphan flagged up top?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-403",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin on surface software is asking - \"want a running risk register so orphaned rubric points and open bugs don't get lost.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Good instinct - a register only works if each row has an owner and a next action, or it's just a worry list. Structure it: risk/open item, weight or severity, owner, next action, status. Seed it with what we know is live - Design Rationale still needs a CEO owner, the live IMU is still stubbed in main.cpp, ESC 3's failure mode. Want me to build the markdown table with those three rows to start?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-348",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"we keep forgetting steps at the pool. want a pre-dive checklist people actually own.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Two things make a checklist stick: it's short, and each line has an owner who calls it. Draft it as owner-per-line - e.g. neutral recalibrated after warm-up (controls/Aiden), camera enumerated through the assembled cable (Justin), tether capped at 100 Mbps (surface), fuse and seals checked (Kevin). Want me to build it as a markdown checklist with an owner column the team fills in?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-186",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"turn these subsystem statuses into a clean artifact: housing sealed, electrical harness done, controls IMU still stubbed, float untested.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Here's the status roll-up:\n\n| Subsystem | Owner | Status | Flag |\n|---|---|---|---|\n| Housing | Kevin | Sealed | - |\n| Electrical harness | Jhan | Done | - |\n| Controls | Aiden | **IMU still stubbed in main.cpp** | biggest open integration gap |\n| Float | Addison | Untested | needs a profile run |\n\nThe controls line is the one to surface loudly - the live IMU into the PID loop is the critical pre-competition gap. Want me to drop this into a shared markdown the team can update?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-399",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin on surface software is asking - \"the controls section of the doc has no clear owner - Aiden or Daniel?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Route it to the person who owns the design decisions, not the person who runs it: the controls section is Aiden's - he owns the control architecture and can speak to the requirements, the limitations, and the verification. Daniel (pilot) feeds the operator-performance angle into it but doesn't own the section. Want me to add that split to the ownership sheet - Aiden owns, Daniel contributes?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-187",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and turn these subsystem statuses into a clean artifact: housing sealed, electrical harness done, controls IMU still stubbed, float untested."
+   },
+   {
+    "role": "assistant",
+    "content": "Here's the status roll-up:\n\n| Subsystem | Owner | Status | Flag |\n|---|---|---|---|\n| Housing | Kevin | Sealed | - |\n| Electrical harness | Jhan | Done | - |\n| Controls | Aiden | **IMU still stubbed in main.cpp** | biggest open integration gap |\n| Float | Addison | Untested | needs a profile run |\n\nThe controls line is the one to surface loudly - the live IMU into the PID loop is the critical pre-competition gap. Want me to drop this into a shared markdown the team can update?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-185",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jasmine (chassis) just pinged me: \"turn these subsystem statuses into a clean artifact: housing sealed, electrical harness done, controls IMU still stubbed, float untested.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Here's the status roll-up:\n\n| Subsystem | Owner | Status | Flag |\n|---|---|---|---|\n| Housing | Kevin | Sealed | - |\n| Electrical harness | Jhan | Done | - |\n| Controls | Aiden | **IMU still stubbed in main.cpp** | biggest open integration gap |\n| Float | Addison | Untested | needs a profile run |\n\nThe controls line is the one to surface loudly - the live IMU into the PID loop is the critical pre-competition gap. Want me to drop this into a shared markdown the team can update?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-406",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"help me set an agenda for the weekly sync so it's not just status theater.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Make it decisions and blockers, not round-robin updates. Three sections: decisions needed this week (with the owner who'll make each), blockers (who's stuck on whom), and rubric-point orphans still unowned. Status goes in the shared sheet before the meeting, not read aloud. Want me to draft that as a reusable agenda template?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-346",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "we keep forgetting steps at the pool. want a pre-dive checklist people actually own."
+   },
+   {
+    "role": "assistant",
+    "content": "Two things make a checklist stick: it's short, and each line has an owner who calls it. Draft it as owner-per-line - e.g. neutral recalibrated after warm-up (controls/Aiden), camera enumerated through the assembled cable (Justin), tether capped at 100 Mbps (surface), fuse and seals checked (Kevin). Want me to build it as a markdown checklist with an owner column the team fills in?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-407",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison on the float is asking - \"help me set an agenda for the weekly sync so it's not just status theater.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Make it decisions and blockers, not round-robin updates. Three sections: decisions needed this week (with the owner who'll make each), blockers (who's stuck on whom), and rubric-point orphans still unowned. Status goes in the shared sheet before the meeting, not read aloud. Want me to draft that as a reusable agenda template?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-347",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan (electrical) just pinged me: \"we keep forgetting steps at the pool. want a pre-dive checklist people actually own.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Two things make a checklist stick: it's short, and each line has an owner who calls it. Draft it as owner-per-line - e.g. neutral recalibrated after warm-up (controls/Aiden), camera enumerated through the assembled cable (Justin), tether capped at 100 Mbps (surface), fuse and seals checked (Kevin). Want me to build it as a markdown checklist with an owner column the team fills in?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-343",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan (electrical) just pinged me: \"nobody's clearly on the float for the doc. how do I assign it without stepping on toes?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Make it a role, not a callout: the Float subsystem line needs one owner who speaks to its design, testing, and results - Addison's the natural fit as float lead. Frame it as 'every subsystem line gets one named owner so nothing's orphaned,' apply it across the board, and Addison owning float is just the pattern, not singling anyone out. Want a one-row addition to the ownership sheet?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-344",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison on the float is asking - \"nobody's clearly on the float for the doc. how do I assign it without stepping on toes?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Make it a role, not a callout: the Float subsystem line needs one owner who speaks to its design, testing, and results - Addison's the natural fit as float lead. Frame it as 'every subsystem line gets one named owner so nothing's orphaned,' apply it across the board, and Addison owning float is just the pattern, not singling anyone out. Want a one-row addition to the ownership sheet?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-397",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "the controls section of the doc has no clear owner - Aiden or Daniel?"
+   },
+   {
+    "role": "assistant",
+    "content": "Route it to the person who owns the design decisions, not the person who runs it: the controls section is Aiden's - he owns the control architecture and can speak to the requirements, the limitations, and the verification. Daniel (pilot) feeds the operator-performance angle into it but doesn't own the section. Want me to add that split to the ownership sheet - Aiden owns, Daniel contributes?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-404",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and want a running risk register so orphaned rubric points and open bugs don't get lost."
+   },
+   {
+    "role": "assistant",
+    "content": "Good instinct - a register only works if each row has an owner and a next action, or it's just a worry list. Structure it: risk/open item, weight or severity, owner, next action, status. Seed it with what we know is live - Design Rationale still needs a CEO owner, the live IMU is still stubbed in main.cpp, ESC 3's failure mode. Want me to build the markdown table with those three rows to start?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-184",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "turn these subsystem statuses into a clean artifact: housing sealed, electrical harness done, controls IMU still stubbed, float untested."
+   },
+   {
+    "role": "assistant",
+    "content": "Here's the status roll-up:\n\n| Subsystem | Owner | Status | Flag |\n|---|---|---|---|\n| Housing | Kevin | Sealed | - |\n| Electrical harness | Jhan | Done | - |\n| Controls | Aiden | **IMU still stubbed in main.cpp** | biggest open integration gap |\n| Float | Addison | Untested | needs a profile run |\n\nThe controls line is the one to surface loudly - the live IMU into the PID loop is the critical pre-competition gap. Want me to drop this into a shared markdown the team can update?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-345",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - nobody's clearly on the float for the doc. how do I assign it without stepping on toes?"
+   },
+   {
+    "role": "assistant",
+    "content": "Make it a role, not a callout: the Float subsystem line needs one owner who speaks to its design, testing, and results - Addison's the natural fit as float lead. Frame it as 'every subsystem line gets one named owner so nothing's orphaned,' apply it across the board, and Addison owning float is just the pattern, not singling anyone out. Want a one-row addition to the ownership sheet?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-180",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "do a quick scan - which high-weight rubric lines have no owner yet? leads are housing=Kevin, electrical=Jhan, controls=Aiden, chassis=Jasmine."
+   },
+   {
+    "role": "assistant",
+    "content": "Scanning the high-weight lines against those owners:\n\n- **System/Design Rationale (40%)** - no subsystem lead owns this; it's cross-cutting -> **orphaned, route to a CEO (Luke).**\n- **Overall Design/Workmanship (25%)** - split across Kevin (housing) and Jasmine (chassis), fine.\n- Controls/software -> Aiden. Electrical/power -> Jhan.\n\nThe one to fix today is Design Rationale - it's your single heaviest line and it's unowned. By the orphan rule it goes to a CEO who makes sure every lead feeds their rationale in. Want this as a markdown sheet with the orphan flagged up top?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-398",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"the controls section of the doc has no clear owner - Aiden or Daniel?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Route it to the person who owns the design decisions, not the person who runs it: the controls section is Aiden's - he owns the control architecture and can speak to the requirements, the limitations, and the verification. Daniel (pilot) feeds the operator-performance angle into it but doesn't own the section. Want me to add that split to the ownership sheet - Aiden owns, Daniel contributes?"
+   }
+  ]
+ },
+ {
+  "id": "gen-coord-189",
+  "category": "team_coordination",
+  "source_shape": "coord",
+  "demonstrates": [
+   "coord"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "produces a structured coordination artifact",
+   "assigns owners / routes high-weight orphans to a CEO",
+   "does not ghostwrite engineering content"
+  ],
+  "anti_patterns": [
+   "leaves a high-weight rubric point orphaned",
+   "writes submitted engineering prose",
+   "invents teammates"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison (the float) just pinged me: \"mentors keep editing our doc directly. how do I frame the risk to the team?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Frame it as a scoring risk, not a personality thing: direct mentor edits to engineering content risk the mentor-interference deduction (up to -12 pts), and they can trip the MATE AI/authorship expectations too. The artifact to make: a one-line rule the team and mentors both see - mentors review and question, students author and edit. Want a short markdown 'authorship & review protocol' that says who does what, so it's a documented boundary, not an argument?"
+   }
+  ]
+ }
+]

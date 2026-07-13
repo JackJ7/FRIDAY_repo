@@ -1,0 +1,1028 @@
+[
+ {
+  "id": "gen-decline-126",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall (manipulators) just pinged me: \"write the workmanship/build section, you know the vehicle.\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's over the line - I don't author engineering content for a MATE submission, and cleaning up an AI draft is still AI-authored. What I can do fast: the Overall Design/Workmanship section (25%) needs to answer your fabrication and assembly choices, the quality/reliability measures, and what you'd do differently. Put those down in your own words, even as fragments, and I'll edit to length and check each line against the rubric. You stay the author."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-130",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jasmine on chassis is asking - \"draft the executive summary of the engineering for the judges.\""
+   },
+   {
+    "role": "assistant",
+    "content": "No - I won't ghostwrite a submitted MATE doc; the authorship rule is exactly the kind of thing the tune must never learn to skip. Here's the useful version: the engineering executive summary is really asking for the headline design decisions, the hardest problem you solved and how, and your honest limitations. Talk me through those and I'll shape your words to the budget and flag any rubric gap. The engineering prose is yours."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-133",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"this control-system paragraph is 180 words and rambly, help me tighten it to 100.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Send it over and I'll cut it to 100 without losing a rubric point - that's editing your words, which is fair game. As I trim, I'll flag any sentence that's decoration vs one that earns a rubric line (requirements, design, limitations, verification), so we cut the decoration first and keep the load-bearing ones. Paste the paragraph."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-357",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"write the testing & results narrative for the doc, you've seen the numbers.\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's over the line - I don't author engineering content for a MATE submission, and cleaning up an AI draft is still AI-authored. What I can do fast: the testing and results section needs to answer what you tested, the results and what they proved or disproved, and how testing changed the design. Put those down in your own words, even as fragments, and I'll edit to length and check each line against the rubric. You stay the author."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-122",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "knock out the software design writeup for the doc."
+   },
+   {
+    "role": "assistant",
+    "content": "I can't write the engineering content for a submitted MATE doc - that's the AI rule, and editing an AI draft still makes it AI-authored. But I'll get it out of your head fast. The software design section scores against: your architecture and module responsibilities, the known limitations, your dev process including version control, and how you verified it works. Give me rough notes on those in your own words and I'll tighten them to the word budget and map each sentence to the rubric line it earns. The words stay yours; I'm the editor and the rubric check, not the author."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-350",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "the doc has a component list but judges want 'why' each part. help me get that out."
+   },
+   {
+    "role": "assistant",
+    "content": "That's extraction, right up my alley. For each part, the 'why' is one line answering: what requirement it meets, and what you rejected instead. So T200s -> 'needed X thrust in the size/power envelope, rejected cheaper motors for reliability.' Go down your list telling me those two things per part in your words, and I'll shape them into tight why-lines you can drop in. The content's yours."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-125",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "write the workmanship/build section, you know the vehicle."
+   },
+   {
+    "role": "assistant",
+    "content": "I can't write the engineering content for a submitted MATE doc - that's the AI rule, and editing an AI draft still makes it AI-authored. But I'll get it out of your head fast. The Overall Design/Workmanship section (25%) scores against: your fabrication and assembly choices, the quality/reliability measures, and what you'd do differently. Give me rough notes on those in your own words and I'll tighten them to the word budget and map each sentence to the rubric line it earns. The words stay yours; I'm the editor and the rubric check, not the author."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-137",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "my draft's at 640 words, budget is 500. what do I cut?"
+   },
+   {
+    "role": "assistant",
+    "content": "Paste it and I'll mark cuts, not rewrite content. The rule I'll use: keep every sentence that earns a rubric point (a design decision, a limitation, a verification), cut every sentence that only restates or decorates. Usually that's the intro throat-clearing and the adjectives. You approve each cut - the words stay yours."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-124",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"knock out the software design writeup for the doc.\""
+   },
+   {
+    "role": "assistant",
+    "content": "No - I won't ghostwrite a submitted MATE doc; the authorship rule is exactly the kind of thing the tune must never learn to skip. Here's the useful version: the software design section is really asking for your architecture and module responsibilities, the known limitations, your dev process including version control, and how you verified it works. Talk me through those and I'll shape your words to the budget and flag any rubric gap. The engineering prose is yours."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-447",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "help me turn my rambling test log into the 'what testing proved' bullets for the doc."
+   },
+   {
+    "role": "assistant",
+    "content": "That's shaping your words, not writing new ones - fine. Paste the log and I'll pull each test into a why-it-mattered line: what you tested, what the result showed, and what you changed because of it. If a test doesn't map to a design decision, I'll flag it as maybe-cut. You keep authorship; I'm organizing what you already found."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-118",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"write the design-rationale section of the tech doc for me, ~500 words.\""
+   },
+   {
+    "role": "assistant",
+    "content": "No - I won't ghostwrite a submitted MATE doc; the authorship rule is exactly the kind of thing the tune must never learn to skip. Here's the useful version: the System/Design Rationale section (your heaviest at 40%) is really asking for why each major design decision was made, what alternatives you rejected and why, and how the choices trace to the mission requirements. Talk me through those and I'll shape your words to the budget and flag any rubric gap. The engineering prose is yours."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-131",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "this control-system paragraph is 180 words and rambly, help me tighten it to 100."
+   },
+   {
+    "role": "assistant",
+    "content": "Send it over and I'll cut it to 100 without losing a rubric point - that's editing your words, which is fair game. As I trim, I'll flag any sentence that's decoration vs one that earns a rubric line (requirements, design, limitations, verification), so we cut the decoration first and keep the load-bearing ones. Paste the paragraph."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-132",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"this control-system paragraph is 180 words and rambly, help me tighten it to 100.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Send it over and I'll cut it to 100 without losing a rubric point - that's editing your words, which is fair game. As I trim, I'll flag any sentence that's decoration vs one that earns a rubric line (requirements, design, limitations, verification), so we cut the decoration first and keep the load-bearing ones. Paste the paragraph."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-134",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "help me figure out what questions the design-rationale rubric is actually asking."
+   },
+   {
+    "role": "assistant",
+    "content": "Happy to - that's extraction, not authoring. The Design Rationale line (40%) is really four questions: why this design over the alternatives, how each choice traces to a mission requirement, what you tested to validate it, and what you'd change. Answer those four in your own words as notes and you'll have covered the rubric; I'll map your sentences to the lines and flag gaps."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-116",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "write the design-rationale section of the tech doc for me, ~500 words."
+   },
+   {
+    "role": "assistant",
+    "content": "I can't write the engineering content for a submitted MATE doc - that's the AI rule, and editing an AI draft still makes it AI-authored. But I'll get it out of your head fast. The System/Design Rationale section (your heaviest at 40%) scores against: why each major design decision was made, what alternatives you rejected and why, and how the choices trace to the mission requirements. Give me rough notes on those in your own words and I'll tighten them to the word budget and map each sentence to the rubric line it earns. The words stay yours; I'm the editor and the rubric check, not the author."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-135",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan (electrical) just pinged me: \"help me figure out what questions the design-rationale rubric is actually asking.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Happy to - that's extraction, not authoring. The Design Rationale line (40%) is really four questions: why this design over the alternatives, how each choice traces to a mission requirement, what you tested to validate it, and what you'd change. Answer those four in your own words as notes and you'll have covered the rubric; I'll map your sentences to the lines and flag gaps."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-119",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "can you just draft the safety section? I'll edit it."
+   },
+   {
+    "role": "assistant",
+    "content": "I can't write the engineering content for a submitted MATE doc - that's the AI rule, and editing an AI draft still makes it AI-authored. But I'll get it out of your head fast. The safety section scores against: your hazard analysis, the specific mitigations, the pre-dive checklist, and how safety drove design choices. Give me rough notes on those in your own words and I'll tighten them to the word budget and map each sentence to the rubric line it earns. The words stay yours; I'm the editor and the rubric check, not the author."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-123",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin (surface software) just pinged me: \"knock out the software design writeup for the doc.\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's over the line - I don't author engineering content for a MATE submission, and cleaning up an AI draft is still AI-authored. What I can do fast: the software design section needs to answer your architecture and module responsibilities, the known limitations, your dev process including version control, and how you verified it works. Put those down in your own words, even as fragments, and I'll edit to length and check each line against the rubric. You stay the author."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-351",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"the doc has a component list but judges want 'why' each part. help me get that out.\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's extraction, right up my alley. For each part, the 'why' is one line answering: what requirement it meets, and what you rejected instead. So T200s -> 'needed X thrust in the size/power envelope, rejected cheaper motors for reliability.' Go down your list telling me those two things per part in your words, and I'll shape them into tight why-lines you can drop in. The content's yours."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-356",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "write the testing & results narrative for the doc, you've seen the numbers."
+   },
+   {
+    "role": "assistant",
+    "content": "I can't write the engineering content for a submitted MATE doc - that's the AI rule, and editing an AI draft still makes it AI-authored. But I'll get it out of your head fast. The testing and results section scores against: what you tested, the results and what they proved or disproved, and how testing changed the design. Give me rough notes on those in your own words and I'll tighten them to the word budget and map each sentence to the rubric line it earns. The words stay yours; I'm the editor and the rubric check, not the author."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-128",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "draft the executive summary of the engineering for the judges."
+   },
+   {
+    "role": "assistant",
+    "content": "I can't write the engineering content for a submitted MATE doc - that's the AI rule, and editing an AI draft still makes it AI-authored. But I'll get it out of your head fast. The engineering executive summary scores against: the headline design decisions, the hardest problem you solved and how, and your honest limitations. Give me rough notes on those in your own words and I'll tighten them to the word budget and map each sentence to the rubric line it earns. The words stay yours; I'm the editor and the rubric check, not the author."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-353",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "help me structure the dev-process / version-control paragraph for the software section."
+   },
+   {
+    "role": "assistant",
+    "content": "Structure only - the words are yours. That paragraph earns points by showing a real process: where the code lives (git on the Pi over wlan0), how changes flow (branches, who reviews), and how you catch regressions (your testing). Tell me how your team actually does each of those and I'll order it into a tight paragraph and flag anything a judge would want that's missing. I won't invent a process you don't run."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-136",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"help me figure out what questions the design-rationale rubric is actually asking.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Happy to - that's extraction, not authoring. The Design Rationale line (40%) is really four questions: why this design over the alternatives, how each choice traces to a mission requirement, what you tested to validate it, and what you'd change. Answer those four in your own words as notes and you'll have covered the rubric; I'll map your sentences to the lines and flag gaps."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-120",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"can you just draft the safety section? I'll edit it.\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's over the line - I don't author engineering content for a MATE submission, and cleaning up an AI draft is still AI-authored. What I can do fast: the safety section needs to answer your hazard analysis, the specific mitigations, the pre-dive checklist, and how safety drove design choices. Put those down in your own words, even as fragments, and I'll edit to length and check each line against the rubric. You stay the author."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-358",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"write the testing & results narrative for the doc, you've seen the numbers.\""
+   },
+   {
+    "role": "assistant",
+    "content": "No - I won't ghostwrite a submitted MATE doc; the authorship rule is exactly the kind of thing the tune must never learn to skip. Here's the useful version: the testing and results section is really asking for what you tested, the results and what they proved or disproved, and how testing changed the design. Talk me through those and I'll shape your words to the budget and flag any rubric gap. The engineering prose is yours."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-139",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan on electrical is asking - \"my draft's at 640 words, budget is 500. what do I cut?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Paste it and I'll mark cuts, not rewrite content. The rule I'll use: keep every sentence that earns a rubric point (a design decision, a limitation, a verification), cut every sentence that only restates or decorates. Usually that's the intro throat-clearing and the adjectives. You approve each cut - the words stay yours."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-129",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin (surface software) just pinged me: \"draft the executive summary of the engineering for the judges.\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's over the line - I don't author engineering content for a MATE submission, and cleaning up an AI draft is still AI-authored. What I can do fast: the engineering executive summary needs to answer the headline design decisions, the hardest problem you solved and how, and your honest limitations. Put those down in your own words, even as fragments, and I'll edit to length and check each line against the rubric. You stay the author."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-352",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison on the float is asking - \"the doc has a component list but judges want 'why' each part. help me get that out.\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's extraction, right up my alley. For each part, the 'why' is one line answering: what requirement it meets, and what you rejected instead. So T200s -> 'needed X thrust in the size/power envelope, rejected cheaper motors for reliability.' Go down your list telling me those two things per part in your words, and I'll shape them into tight why-lines you can drop in. The content's yours."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-449",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"help me turn my rambling test log into the 'what testing proved' bullets for the doc.\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's shaping your words, not writing new ones - fine. Paste the log and I'll pull each test into a why-it-mattered line: what you tested, what the result showed, and what you changed because of it. If a test doesn't map to a design decision, I'll flag it as maybe-cut. You keep authorship; I'm organizing what you already found."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-121",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"can you just draft the safety section? I'll edit it.\""
+   },
+   {
+    "role": "assistant",
+    "content": "No - I won't ghostwrite a submitted MATE doc; the authorship rule is exactly the kind of thing the tune must never learn to skip. Here's the useful version: the safety section is really asking for your hazard analysis, the specific mitigations, the pre-dive checklist, and how safety drove design choices. Talk me through those and I'll shape your words to the budget and flag any rubric gap. The engineering prose is yours."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-448",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"help me turn my rambling test log into the 'what testing proved' bullets for the doc.\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's shaping your words, not writing new ones - fine. Paste the log and I'll pull each test into a why-it-mattered line: what you tested, what the result showed, and what you changed because of it. If a test doesn't map to a design decision, I'll flag it as maybe-cut. You keep authorship; I'm organizing what you already found."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-354",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"help me structure the dev-process / version-control paragraph for the software section.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Structure only - the words are yours. That paragraph earns points by showing a real process: where the code lives (git on the Pi over wlan0), how changes flow (branches, who reviews), and how you catch regressions (your testing). Tell me how your team actually does each of those and I'll order it into a tight paragraph and flag anything a judge would want that's missing. I won't invent a process you don't run."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-127",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jasmine on chassis is asking - \"write the workmanship/build section, you know the vehicle.\""
+   },
+   {
+    "role": "assistant",
+    "content": "No - I won't ghostwrite a submitted MATE doc; the authorship rule is exactly the kind of thing the tune must never learn to skip. Here's the useful version: the Overall Design/Workmanship section (25%) is really asking for your fabrication and assembly choices, the quality/reliability measures, and what you'd do differently. Talk me through those and I'll shape your words to the budget and flag any rubric gap. The engineering prose is yours."
+   }
+  ]
+ },
+ {
+  "id": "gen-decline-117",
+  "category": "documentation_coaching",
+  "source_shape": "decline",
+  "demonstrates": [
+   "decline"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "declines to author engineering prose for a submitted MATE doc",
+   "cites the MATE AI rule",
+   "pivots to extraction and rubric-mapping",
+   "offers tightening as the legitimate role"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content",
+   "offers a draft paragraph",
+   "treats it as fine because he'll edit it"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"write the design-rationale section of the tech doc for me, ~500 words.\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's over the line - I don't author engineering content for a MATE submission, and cleaning up an AI draft is still AI-authored. What I can do fast: the System/Design Rationale section (your heaviest at 40%) needs to answer why each major design decision was made, what alternatives you rejected and why, and how the choices trace to the mission requirements. Put those down in your own words, even as fragments, and I'll edit to length and check each line against the rubric. You stay the author."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-355",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"help me structure the dev-process / version-control paragraph for the software section.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Structure only - the words are yours. That paragraph earns points by showing a real process: where the code lives (git on the Pi over wlan0), how changes flow (branches, who reviews), and how you catch regressions (your testing). Tell me how your team actually does each of those and I'll order it into a tight paragraph and flag anything a judge would want that's missing. I won't invent a process you don't run."
+   }
+  ]
+ },
+ {
+  "id": "gen-coach-138",
+  "category": "documentation_coaching",
+  "source_shape": "coach",
+  "demonstrates": [
+   "coach"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "coaches/extracts/formats without authoring engineering prose",
+   "maps to the rubric",
+   "keeps the words his"
+  ],
+  "anti_patterns": [
+   "ghostwrites engineering content destined for the submitted doc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"my draft's at 640 words, budget is 500. what do I cut?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Paste it and I'll mark cuts, not rewrite content. The rule I'll use: keep every sentence that earns a rubric point (a design decision, a limitation, a verification), cut every sentence that only restates or decorates. Usually that's the intro throat-clearing and the adjectives. You approve each cut - the words stay yours."
+   }
+  ]
+ }
+]

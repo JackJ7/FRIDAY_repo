@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FRIDAY</title>
+<!-- Fonts are bundled locally (see scripts/fetch_fonts.py) — no CDN at runtime. -->
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+  <!-- LEFT RAIL -->
+  <aside class="rail">
+    <div class="brand">
+      <div class="mark">F</div>
+      <div>
+        <h1>FRIDAY</h1>
+      </div>
+    </div>
+
+    <div class="console" role="status" aria-label="System status">
+      <div class="hd"><span class="dot"></span> System
+        <svg id="mem-glyph" viewBox="0 0 24 24" aria-label="Memory write">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 5v-2M12 21v-2M5 12H3M21 12h-2M7 7 5.5 5.5M17 17l1.5 1.5M17 7l1.5-1.5M7 17l-1.5 1.5"/>
+        </svg>
+        <span id="mem-note">committed</span>
+      </div>
+      <div class="row"><span>Activity</span><b id="st-activity">starting…</b></div>
+      <div class="row"><span>Needs you</span><b id="st-needs" class="st-link" title="Jump to the panel">—</b></div>
+      <div class="row"><span>DND</span><b id="st-dnd" class="st-link" title="Toggle Do Not Disturb">off</b></div>
+      <!-- Live state only. Config/connection facts live in Settings (Jack chip). -->
+    </div>
+
+    <nav aria-label="Sections">
+      <div class="nav-label">Workspace</div>
+      <div class="nav-item active" data-view="chat">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/></svg>
+        Chat
+      </div>
+      <div class="nav-item" data-view="projects">
+        <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Projects <span class="count" id="nav-projects-count"></span>
+      </div>
+      <div class="nav-item" data-view="brain">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 5v-2M12 21v-2M5 12H3M21 12h-2M7 7 5.5 5.5M17 17l1.5 1.5M17 7l1.5-1.5M7 17l-1.5 1.5"/></svg>
+        Brain <span class="count" id="nav-brain-count"></span>
+      </div>
+      <div class="nav-item" data-view="uploads">
+        <svg viewBox="0 0 24 24"><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4M12 3v13M7 8l5-5 5 5"/></svg>
+        Uploads
+      </div>
+      <div class="nav-item" data-view="history">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        History
+      </div>
+    </nav>
+
+    <div class="rail-foot">
+      <div class="user-chip" id="user-chip" title="Settings & connections" role="button" tabindex="0">
+        <div class="avatar j">J</div>
+        <div class="who">Jack<small>jacko · this machine</small></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <h2 id="view-title">Chat</h2>
+    </div>
+
+    <!-- CHAT VIEW -->
+    <div class="view active" id="view-chat">
+    <div class="stream" id="stream">
+      <div class="thread" id="thread"></div>
+    </div>
+
+    <!-- COMPOSER -->
+    <div class="composer-wrap">
+      <div class="composer" id="composer">
+        <div class="drop-hint">
+          <svg viewBox="0 0 24 24"><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4M12 3v13M7 8l5-5 5 5"/></svg>
+          Drop a file anywhere to have FRIDAY read it
+        </div>
+        <div id="attachments"></div>
+        <div class="composer-in">
+          <textarea id="ta" rows="1" placeholder="Ask FRIDAY, or drop a file…"></textarea>
+          <div class="tools">
+            <button class="icon-btn" id="attach-btn" title="Attach file" aria-label="Attach file">
+              <svg viewBox="0 0 24 24"><path d="M21 12.5 12.5 21a5 5 0 0 1-7-7l8.5-8.5a3.5 3.5 0 0 1 5 5L10.5 18a2 2 0 0 1-3-3l7.5-7.5"/></svg>
+            </button>
+            <button class="icon-btn mic" title="Voice — coming later" aria-label="Voice, coming later">
+              <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+            </button>
+            <button class="send" id="send-btn" title="Send" aria-label="Send">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div><!-- /view-chat -->
+
+    <!-- PROJECTS VIEW -->
+    <div class="view" id="view-projects">
+      <div class="workpane" id="projects-list"></div>
+      <div class="workpane" id="project-detail" hidden></div>
+    </div>
+
+    <!-- BRAIN VIEW -->
+    <div class="view" id="view-brain">
+      <div class="split">
+        <div class="brain-list" id="brain-list"></div>
+        <div class="workpane brain-read" id="brain-read">
+          <div class="n-empty">Pick a note.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY VIEW -->
+    <div class="view" id="view-history">
+      <div class="split">
+        <div class="brain-list" id="history-list"></div>
+        <div class="workpane" id="history-read">
+          <div class="n-empty">Pick a conversation.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPLOADS VIEW -->
+    <div class="view" id="view-uploads">
+      <div class="workpane">
+        <div class="upzone">
+          <svg viewBox="0 0 24 24"><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4M12 3v13M7 8l5-5 5 5"/></svg>
+          <div>Drop files anywhere in this window — FRIDAY reads them in place.</div>
+        </div>
+        <div id="uploads-list"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- NEEDS YOU — the quiet accountability panel (spec §4) -->
+  <aside class="needs" aria-label="Needs You">
+    <div class="needs-hd"><span class="dot"></span> Needs You</div>
+    <div class="needs-body" id="needs-body">
+      <div class="n-empty">Nothing needs you.</div>
+    </div>
+  </aside>
+
+  <!-- SETTINGS & ABOUT (opens from the Jack chip) -->
+  <div class="overlay" id="settings-overlay" hidden>
+    <div class="modal" role="dialog" aria-label="Settings">
+      <div class="detail-hd">
+        <h3>Settings</h3>
+        <button class="btn" id="settings-close">Close</button>
+      </div>
+      <div class="sect-label">Connections</div>
+      <div id="conn-list"></div>
+      <div class="sect-label">System</div>
+      <div id="sys-list"></div>
+    </div>
+  </div>
+
+<script src="app.js"></script>
+</body>
+</html>

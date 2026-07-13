@@ -1,0 +1,1082 @@
+[
+ {
+  "id": "gen-style-192",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick - which port is the control channel?"
+   },
+   {
+    "role": "assistant",
+    "content": "UDP 5005. (Camera's TCP 5000/5001, launcher's 5010.)"
+   }
+  ]
+ },
+ {
+  "id": "gen-style-197",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - do I really need to keep D+/D- twisted through the splice?"
+   },
+   {
+    "role": "assistant",
+    "content": "Yes. Untwisting at the splice is where USB enumeration dies in this EMI bay - keep the pair twisted through the joint, strain-relieve at the epoxy exit, and wiggle-test before you pot it. Cheap discipline, expensive to skip."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-439",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "which build actually has the live IMU?"
+   },
+   {
+    "role": "assistant",
+    "content": "The OneServo target - it reads the live MPU-6050. main.cpp still runs the PID off a hardcoded-zero IMU stub; wiring the live read into the loop is the big open gap."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-339",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - is the pi the git box?"
+   },
+   {
+    "role": "assistant",
+    "content": "Yes - git rides wlan0 (internet side). The wired eth0 link to the pilot laptop stays gateway-less and never touches git or the internet."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-330",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "what radio's the float using again?"
+   },
+   {
+    "role": "assistant",
+    "content": "HC-12, 433 MHz. It transmits the depth-over-time record after recovery, not during the dive - no line to the surface."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-200",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "what's neutral pulse for the ESCs?"
+   },
+   {
+    "role": "assistant",
+    "content": "1500 µs. Just remember the usable range is 1228-1772, not the old 1100-1900 in some comments - and check neutral after warm-up, the PCA9685 drifts."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-440",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - which build actually has the live IMU?"
+   },
+   {
+    "role": "assistant",
+    "content": "The OneServo target - it reads the live MPU-6050. main.cpp still runs the PID off a hardcoded-zero IMU stub; wiring the live read into the loop is the big open gap."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-196",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "do I really need to keep D+/D- twisted through the splice?"
+   },
+   {
+    "role": "assistant",
+    "content": "Yes. Untwisting at the splice is where USB enumeration dies in this EMI bay - keep the pair twisted through the joint, strain-relieve at the epoxy exit, and wiggle-test before you pot it. Cheap discipline, expensive to skip."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-199",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - epoxy the camera connector now or test first?"
+   },
+   {
+    "role": "assistant",
+    "content": "Test first, always. Enumerate and stream through the fully assembled cable before any epoxy - once it's potted a bad D+/D- joint is unfixable. Confirm, then pot."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-334",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "does the float need a fuse?"
+   },
+   {
+    "role": "assistant",
+    "content": "Yes - a 3 A blade fuse on the Tenergy 12 V pack. Cheap protection for a sealed can you don't want thermal-running underwater."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-195",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - is 100 Mbps actually enough for camera plus control?"
+   },
+   {
+    "role": "assistant",
+    "content": "Yes, comfortably - MJPEG camera plus the control packets are nowhere near 100 Mbps. The cap is for EMI stability, not bandwidth; you're not giving anything up."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-336",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "which subnet is the wired link on?"
+   },
+   {
+    "role": "assistant",
+    "content": "192.168.8.x, static, no gateway - that's what keeps it isolated from the internet. The Pi's 192.168.8.1 on eth0."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-205",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - can I disable the router's wifi to stop it routing?"
+   },
+   {
+    "role": "assistant",
+    "content": "No - you'd kill the AP with it. Demote it instead: turn off repeater/uplink so it stops routing but stays a local hub. Piloting rides the Pi's wired link regardless."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-193",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - quick - which port is the control channel?"
+   },
+   {
+    "role": "assistant",
+    "content": "UDP 5005. (Camera's TCP 5000/5001, launcher's 5010.)"
+   }
+  ]
+ },
+ {
+  "id": "gen-style-435",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "what runs the float's ballast pump?"
+   },
+   {
+    "role": "assistant",
+    "content": "A DRV8833 H-bridge - it runs the peristaltic pump both directions for ballast in and out. On the Tenergy 12 V pack, fused at 3 A."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-204",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "can I disable the router's wifi to stop it routing?"
+   },
+   {
+    "role": "assistant",
+    "content": "No - you'd kill the AP with it. Demote it instead: turn off repeater/uplink so it stops routing but stays a local hub. Piloting rides the Pi's wired link regardless."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-202",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "float has to be under what height again?"
+   },
+   {
+    "role": "assistant",
+    "content": "Under 1 m tall and under 18 cm diameter, no line to the surface. Two profiles to 2.5 m, holds, then it transmits after recovery."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-337",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - which subnet is the wired link on?"
+   },
+   {
+    "role": "assistant",
+    "content": "192.168.8.x, static, no gateway - that's what keeps it isolated from the internet. The Pi's 192.168.8.1 on eth0."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-335",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - does the float need a fuse?"
+   },
+   {
+    "role": "assistant",
+    "content": "Yes - a 3 A blade fuse on the Tenergy 12 V pack. Cheap protection for a sealed can you don't want thermal-running underwater."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-207",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - gigabit vs 100 on the tether, quick call?"
+   },
+   {
+    "role": "assistant",
+    "content": "100. Gigabit flaps under motor EMI and drops comms mid-run; you don't need the bandwidth. `ethtool -s eth0 speed 100 duplex full autoneg off`."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-333",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - max depth for the profile task?"
+   },
+   {
+    "role": "assistant",
+    "content": "2.5 m, ±33 cm on the hold, then up to 40 cm and hold again. Two profiles, 30 s holds."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-201",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - what's neutral pulse for the ESCs?"
+   },
+   {
+    "role": "assistant",
+    "content": "1500 µs. Just remember the usable range is 1228-1772, not the old 1100-1900 in some comments - and check neutral after warm-up, the PCA9685 drifts."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-203",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - float has to be under what height again?"
+   },
+   {
+    "role": "assistant",
+    "content": "Under 1 m tall and under 18 cm diameter, no line to the surface. Two profiles to 2.5 m, holds, then it transmits after recovery."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-341",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - do I actually need a star ground?"
+   },
+   {
+    "role": "assistant",
+    "content": "For the EMI you're fighting, yes - a single ground point stops the return-current loops that couple thruster noise into I2C and USB. It's the cheap half of the conducted-noise fix, before cap banks."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-198",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "epoxy the camera connector now or test first?"
+   },
+   {
+    "role": "assistant",
+    "content": "Test first, always. Enumerate and stream through the fully assembled cable before any epoxy - once it's potted a bad D+/D- joint is unfixable. Confirm, then pot."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-441",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "is gigabit ever ok on the tether, or never?"
+   },
+   {
+    "role": "assistant",
+    "content": "Never in the water under motor load - it flaps on EMI. On the bench with motors off it'll negotiate fine, which is exactly what fools you. Cap it 100 for anything real."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-436",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - what runs the float's ballast pump?"
+   },
+   {
+    "role": "assistant",
+    "content": "A DRV8833 H-bridge - it runs the peristaltic pump both directions for ballast in and out. On the Tenergy 12 V pack, fused at 3 A."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-206",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "gigabit vs 100 on the tether, quick call?"
+   },
+   {
+    "role": "assistant",
+    "content": "100. Gigabit flaps under motor EMI and drops comms mid-run; you don't need the bandwidth. `ethtool -s eth0 speed 100 duplex full autoneg off`."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-194",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "is 100 Mbps actually enough for camera plus control?"
+   },
+   {
+    "role": "assistant",
+    "content": "Yes, comfortably - MJPEG camera plus the control packets are nowhere near 100 Mbps. The cap is for EMI stability, not bandwidth; you're not giving anything up."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-437",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "which pressure sensor are we on?"
+   },
+   {
+    "role": "assistant",
+    "content": "Bar30 (MS5837) over I2C. It's the depth source for the float's profile - watch for jumpy reads, it's usually noise/read-timing, not the sensor."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-442",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - is gigabit ever ok on the tether, or never?"
+   },
+   {
+    "role": "assistant",
+    "content": "Never in the water under motor load - it flaps on EMI. On the bench with motors off it'll negotiate fine, which is exactly what fools you. Cap it 100 for anything real."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-438",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - which pressure sensor are we on?"
+   },
+   {
+    "role": "assistant",
+    "content": "Bar30 (MS5837) over I2C. It's the depth source for the float's profile - watch for jumpy reads, it's usually noise/read-timing, not the sensor."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-338",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "is the pi the git box?"
+   },
+   {
+    "role": "assistant",
+    "content": "Yes - git rides wlan0 (internet side). The wired eth0 link to the pilot laptop stays gateway-less and never touches git or the internet."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-340",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "do I actually need a star ground?"
+   },
+   {
+    "role": "assistant",
+    "content": "For the EMI you're fighting, yes - a single ground point stops the return-current loops that couple thruster noise into I2C and USB. It's the cheap half of the conducted-noise fix, before cap banks."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-331",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - what radio's the float using again?"
+   },
+   {
+    "role": "assistant",
+    "content": "HC-12, 433 MHz. It transmits the depth-over-time record after recovery, not during the dive - no line to the surface."
+   }
+  ]
+ },
+ {
+  "id": "gen-style-332",
+  "category": "style",
+  "source_shape": "style",
+  "demonstrates": [
+   "style"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "concise, prose not bullets",
+   "gives the why",
+   "no overclaiming",
+   "correct if a command is included"
+  ],
+  "anti_patterns": [
+   "long-winded or bulleted",
+   "omits the reason",
+   "overclaims"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "max depth for the profile task?"
+   },
+   {
+    "role": "assistant",
+    "content": "2.5 m, ±33 cm on the hold, then up to 40 cm and hold again. Two profiles, 30 s holds."
+   }
+  ]
+ }
+]

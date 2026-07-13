@@ -1,0 +1,519 @@
+[
+ {
+  "id": "gen-fmt-716",
+  "category": "format_compliance",
+  "source_shape": "fmt",
+  "demonstrates": [
+   "fmt"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "obeys the user-specified final-line format exactly",
+   "still routes the number through a REAL calc call",
+   "gives the substance, then ends on exactly the demanded line"
+  ],
+  "anti_patterns": [
+   "ignores or reshapes the requested format",
+   "adds text after the demanded final line",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "convert 9 kgf*cm to N*m. I just want the number in braces like {x} on its own final line, nothing after."
+   },
+   {
+    "role": "assistant",
+    "content": "Force-length unit conversion - through calc:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "9 kgf*cm",
+       "to_unit": "N*m"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 0.882599 m * N"
+   },
+   {
+    "role": "assistant",
+    "content": "0.88 N*m. Routed through the tool - that conversion gets fumbled by hand.\n\n{0.88}"
+   }
+  ]
+ },
+ {
+  "id": "gen-fmt-719",
+  "category": "format_compliance",
+  "source_shape": "fmt",
+  "demonstrates": [
+   "fmt"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "obeys the user-specified final-line format exactly",
+   "still routes the number through a REAL calc call",
+   "gives the substance, then ends on exactly the demanded line"
+  ],
+  "anti_patterns": [
+   "ignores or reshapes the requested format",
+   "adds text after the demanded final line",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "0.3 N*m through a 25:1 at 80% efficient. output torque, and finish with exactly `TORQUE = <value> N*m`."
+   },
+   {
+    "role": "assistant",
+    "content": "Torque multiplies by the ratio, then efficiency scales it - through calc:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "0.3 N*m * 25 * 0.8",
+       "to_unit": "N*m"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 6 m * N"
+   },
+   {
+    "role": "assistant",
+    "content": "6 N*m. Ideal is 7.5 at 25x; the 80% brings it to 6.\n\nTORQUE = 6 N*m"
+   }
+  ]
+ },
+ {
+  "id": "gen-fmt-717",
+  "category": "format_compliance",
+  "source_shape": "fmt",
+  "demonstrates": [
+   "fmt"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "obeys the user-specified final-line format exactly",
+   "still routes the number through a REAL calc call",
+   "gives the substance, then ends on exactly the demanded line"
+  ],
+  "anti_patterns": [
+   "ignores or reshapes the requested format",
+   "adds text after the demanded final line",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "5200 rpm through a 13:1. output speed - and put it back as `rpm=<n>` on the final line."
+   },
+   {
+    "role": "assistant",
+    "content": "A reduction divides speed - through calc:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "5200 rpm / 13",
+       "to_unit": "rpm"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 400 rpm"
+   },
+   {
+    "role": "assistant",
+    "content": "400 rpm out - the 13:1 slows it, and torque climbs to match.\n\nrpm=400"
+   }
+  ]
+ },
+ {
+  "id": "gen-fmt-689",
+  "category": "format_compliance",
+  "source_shape": "fmt",
+  "demonstrates": [
+   "fmt"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "obeys the user-specified final-line format exactly",
+   "still routes the number through a REAL calc call",
+   "gives the substance, then ends on exactly the demanded line"
+  ],
+  "anti_patterns": [
+   "ignores or reshapes the requested format",
+   "adds text after the demanded final line",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "battery's 14.8 V and the load pulls 2.3 A. give me the power, and make the very last line just `watts = <number>` so I can grep it."
+   },
+   {
+    "role": "assistant",
+    "content": "Power is volts times amps - through calc:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "14.8 V * 2.3 A",
+       "to_unit": "W"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 34.04 W"
+   },
+   {
+    "role": "assistant",
+    "content": "34.04 W at the load - an ordinary draw for that pack, nothing alarming.\n\nwatts = 34.04"
+   }
+  ]
+ },
+ {
+  "id": "gen-fmt-714",
+  "category": "format_compliance",
+  "source_shape": "fmt",
+  "demonstrates": [
+   "fmt"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "obeys the user-specified final-line format exactly",
+   "still routes the number through a REAL calc call",
+   "gives the substance, then ends on exactly the demanded line"
+  ],
+  "anti_patterns": [
+   "ignores or reshapes the requested format",
+   "adds text after the demanded final line",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "19.2 V at 3.5 A - give me the power, and make the very last line exactly `P=<n>W`."
+   },
+   {
+    "role": "assistant",
+    "content": "Power is voltage times current - through calc:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "19.2 V * 3.5 A",
+       "to_unit": "W"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 67.2 W"
+   },
+   {
+    "role": "assistant",
+    "content": "67.2 W at that draw - unremarkable.\n\nP=67.2W"
+   }
+  ]
+ },
+ {
+  "id": "gen-fmt-715",
+  "category": "format_compliance",
+  "source_shape": "fmt",
+  "demonstrates": [
+   "fmt"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "obeys the user-specified final-line format exactly",
+   "still routes the number through a REAL calc call",
+   "gives the substance, then ends on exactly the demanded line"
+  ],
+  "anti_patterns": [
+   "ignores or reshapes the requested format",
+   "adds text after the demanded final line",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "75 W average for 40 minutes. energy? end your reply with a line reading exactly `energy_wh: <value>`."
+   },
+   {
+    "role": "assistant",
+    "content": "Energy is power times time - through calc:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "75 W * 40 min",
+       "to_unit": "Wh"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 50 Wh"
+   },
+   {
+    "role": "assistant",
+    "content": "50 Wh for the stretch - modest.\n\nenergy_wh: 50"
+   }
+  ]
+ },
+ {
+  "id": "gen-fmt-692",
+  "category": "format_compliance",
+  "source_shape": "fmt",
+  "demonstrates": [
+   "fmt"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "obeys the user-specified final-line format exactly",
+   "still routes the number through a REAL calc call",
+   "gives the substance, then ends on exactly the demanded line"
+  ],
+  "anti_patterns": [
+   "ignores or reshapes the requested format",
+   "adds text after the demanded final line",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "gear input is 4200 rpm through a 7:1. output speed - and give it back as `speed: <n> rpm` on the last line, that's what our sheet wants."
+   },
+   {
+    "role": "assistant",
+    "content": "A reduction divides speed - through calc:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "4200 rpm / 7",
+       "to_unit": "rpm"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 600 rpm"
+   },
+   {
+    "role": "assistant",
+    "content": "600 rpm out - the 7:1 slows it sevenfold, and torque climbs to match.\n\nspeed: 600 rpm"
+   }
+  ]
+ },
+ {
+  "id": "gen-fmt-693",
+  "category": "format_compliance",
+  "source_shape": "fmt",
+  "demonstrates": [
+   "fmt"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "obeys the user-specified final-line format exactly",
+   "still routes the number through a REAL calc call",
+   "gives the substance, then ends on exactly the demanded line"
+  ],
+  "anti_patterns": [
+   "ignores or reshapes the requested format",
+   "adds text after the demanded final line",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "12 V rail feeding a 24 W load - what's the current? put the answer alone on the final line as `=> <n> A`."
+   },
+   {
+    "role": "assistant",
+    "content": "Current is power over voltage - through calc:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "24 W / (12 V)",
+       "to_unit": "A"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 2 A"
+   },
+   {
+    "role": "assistant",
+    "content": "2 A on the 12 V rail for that load - well inside a normal budget.\n\n=> 2 A"
+   }
+  ]
+ },
+ {
+  "id": "gen-fmt-690",
+  "category": "format_compliance",
+  "source_shape": "fmt",
+  "demonstrates": [
+   "fmt"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "obeys the user-specified final-line format exactly",
+   "still routes the number through a REAL calc call",
+   "gives the substance, then ends on exactly the demanded line"
+  ],
+  "anti_patterns": [
+   "ignores or reshapes the requested format",
+   "adds text after the demanded final line",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "60 W average over a 20-minute run. energy? end your reply with a line reading exactly `TOTAL: <value> Wh`."
+   },
+   {
+    "role": "assistant",
+    "content": "Power times time, units carried - through calc:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "60 W * 20 min",
+       "to_unit": "Wh"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 20 Wh"
+   },
+   {
+    "role": "assistant",
+    "content": "20 Wh for the run - modest, about what you'd expect at that average.\n\nTOTAL: 20 Wh"
+   }
+  ]
+ },
+ {
+  "id": "gen-fmt-691",
+  "category": "format_compliance",
+  "source_shape": "fmt",
+  "demonstrates": [
+   "fmt"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "obeys the user-specified final-line format exactly",
+   "still routes the number through a REAL calc call",
+   "gives the substance, then ends on exactly the demanded line"
+  ],
+  "anti_patterns": [
+   "ignores or reshapes the requested format",
+   "adds text after the demanded final line",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "convert 18 kgf*cm to newton-metres. I just want the number in square brackets on its own final line, like [x], nothing after it."
+   },
+   {
+    "role": "assistant",
+    "content": "Force-length unit conversion - through calc:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "18 kgf*cm",
+       "to_unit": "N*m"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 1.7652 m * N"
+   },
+   {
+    "role": "assistant",
+    "content": "1.77 N*m. Kilogram-force-centimetres to newton-metres is the conversion that gets hand-mangled most, so it went through the tool.\n\n[1.77]"
+   }
+  ]
+ },
+ {
+  "id": "gen-fmt-718",
+  "category": "format_compliance",
+  "source_shape": "fmt",
+  "demonstrates": [
+   "fmt"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "obeys the user-specified final-line format exactly",
+   "still routes the number through a REAL calc call",
+   "gives the substance, then ends on exactly the demanded line"
+  ],
+  "anti_patterns": [
+   "ignores or reshapes the requested format",
+   "adds text after the demanded final line",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "36 W on a 12 V rail - what current? answer alone on the last line as `-> <n> A`."
+   },
+   {
+    "role": "assistant",
+    "content": "Current is power over voltage - through calc:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "36 W / (12 V)",
+       "to_unit": "A"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 3 A"
+   },
+   {
+    "role": "assistant",
+    "content": "3 A on the 12 V rail - well inside a normal budget.\n\n-> 3 A"
+   }
+  ]
+ }
+]

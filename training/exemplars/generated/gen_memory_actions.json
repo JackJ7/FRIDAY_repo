@@ -1,0 +1,1352 @@
+[
+ {
+  "id": "gen-commit-589",
+  "category": "memory_actions",
+  "source_shape": "commit",
+  "demonstrates": [
+   "commit"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "captures the stated intention with a REAL track_commitment call",
+   "inferred=true for noticed intent (pending Jack's confirm); false only when explicitly asked",
+   "passes the due date exactly as Jack said it - no date math",
+   "mentions it's noted, without ceremony, and still answers the substance"
+  ],
+  "anti_patterns": [
+   "narrates 'I'll track that' with no tool call",
+   "asks 'would you like me to track it?' instead of inferring",
+   "computes or reformats the date itself"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - i'll recalibrate the thruster neutrals once the housing goes back together."
+   },
+   {
+    "role": "assistant",
+    "content": "Catching that before it slips -",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Recalibrate thruster neutrals after housing reassembly",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c44): \"Recalibrate thruster neutrals after housing reassembly\". Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "Noted, tied to the housing reassembly. Do it warm, not cold - the PCA9685 drift means a cold-set neutral walks off after ten minutes anyway, so calibrate at operating temperature or you'll be chasing creep again."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-607",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "the doc deadline in the notes is stale - review draft is due June 5 now, not June 12."
+   },
+   {
+    "role": "assistant",
+    "content": "Fixing it at the source, in place -",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/crush_depth.md",
+       "field": "Doc review deadline",
+       "value": "June 5 (moved up from June 12)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Doc review deadline to 'June 5 (moved up from June 12)' in projects/crush_depth.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Updated in place - June 5, with the old date noted as superseded so nobody 'corrects' it back. That's a week less than the plan assumed; if the testing-results section depends on the pool weekend, the writing window just got tight."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-604",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Benjamin moved to electrical - update his note, he's not on chassis anymore."
+   },
+   {
+    "role": "assistant",
+    "content": "Fixing it at the source, in place -",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "people/benjamin.md",
+       "field": "Role",
+       "value": "electrical"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Role to 'electrical' in people/benjamin.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Updated - Benjamin's note says electrical now, replacing chassis rather than listing both. The ownership sheet references roles from these notes, so it'll read right next time we do an orphan scan."
+   }
+  ]
+ },
+ {
+  "id": "gen-commit-583",
+  "category": "memory_actions",
+  "source_shape": "commit",
+  "demonstrates": [
+   "commit"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "captures the stated intention with a REAL track_commitment call",
+   "inferred=true for noticed intent (pending Jack's confirm); false only when explicitly asked",
+   "passes the due date exactly as Jack said it - no date math",
+   "mentions it's noted, without ceremony, and still answers the substance"
+  ],
+  "anti_patterns": [
+   "narrates 'I'll track that' with no tool call",
+   "asks 'would you like me to track it?' instead of inferring",
+   "computes or reformats the date itself"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - i need to order two spare ESCs before the pool test on saturday."
+   },
+   {
+    "role": "assistant",
+    "content": "Catching that before it slips -",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Order two spare ESCs before the pool test",
+       "inferred": true,
+       "due": "saturday"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c41): \"Order two spare ESCs before the pool test\", due 2026-07-11. Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "Noted - it'll sit as pending until you confirm it in the panel. Given ESC 3's record, I'd order the same model you've already characterized rather than a new variant: the cap-bank fix is designed around its behavior, and Saturday's too close to re-learn a different ESC's quirks."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-606",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - benjamin moved to electrical - update his note, he's not on chassis anymore."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "people/benjamin.md",
+       "field": "Role",
+       "value": "electrical"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Role to 'electrical' in people/benjamin.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Updated - Benjamin's note says electrical now, replacing chassis rather than listing both. The ownership sheet references roles from these notes, so it'll read right next time we do an orphan scan."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-602",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "the camera note claims 30 fps confirmed. wrong - we've only ever seen ~7 in the GUI. fix it before someone quotes it in the doc."
+   },
+   {
+    "role": "assistant",
+    "content": "Correcting the field directly:",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/crush_depth.md",
+       "field": "Camera rate",
+       "value": "~7 fps observed in GUI; display path suspected, headless rate unconfirmed"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Camera rate to '~7 fps observed in GUI; display path suspected, headless rate unconfirmed' in projects/crush_depth.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Corrected in place - it now says what we've actually measured (~7 in the GUI, headless unconfirmed) instead of a number we never saw. Good catch on the doc risk: a claimed-but-unmeasured 30 fps in a submitted doc is exactly the overclaim judges probe."
+   }
+  ]
+ },
+ {
+  "id": "gen-commit-590",
+  "category": "memory_actions",
+  "source_shape": "commit",
+  "demonstrates": [
+   "commit"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "captures the stated intention with a REAL track_commitment call",
+   "inferred=true for noticed intent (pending Jack's confirm); false only when explicitly asked",
+   "passes the due date exactly as Jack said it - no date math",
+   "mentions it's noted, without ceremony, and still answers the substance"
+  ],
+  "anti_patterns": [
+   "narrates 'I'll track that' with no tool call",
+   "asks 'would you like me to track it?' instead of inferring",
+   "computes or reformats the date itself"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "gotta swap the buck converter caps at some point this week, they're marginal."
+   },
+   {
+    "role": "assistant",
+    "content": "That's a commitment - tracking it:",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Swap the marginal buck converter caps",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c45): \"Swap the marginal buck converter caps\". Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "On the list - no hard date since you didn't give one. One thought: scope the rail during a hard pull before you swap, so you have a before/after of the transient dip. That's the workmanship evidence the doc wants anyway."
+   }
+  ]
+ },
+ {
+  "id": "gen-commit-582",
+  "category": "memory_actions",
+  "source_shape": "commit",
+  "demonstrates": [
+   "commit"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "captures the stated intention with a REAL track_commitment call",
+   "inferred=true for noticed intent (pending Jack's confirm); false only when explicitly asked",
+   "passes the due date exactly as Jack said it - no date math",
+   "mentions it's noted, without ceremony, and still answers the substance"
+  ],
+  "anti_patterns": [
+   "narrates 'I'll track that' with no tool call",
+   "asks 'would you like me to track it?' instead of inferring",
+   "computes or reformats the date itself"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "I need to order two spare ESCs before the pool test on saturday."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Order two spare ESCs before the pool test",
+       "inferred": true,
+       "due": "saturday"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c41): \"Order two spare ESCs before the pool test\", due 2026-07-11. Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "Noted - it'll sit as pending until you confirm it in the panel. Given ESC 3's record, I'd order the same model you've already characterized rather than a new variant: the cap-bank fix is designed around its behavior, and Saturday's too close to re-learn a different ESC's quirks."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-596",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "fix the ESC range in the notes - it's 1228-1772, the old 1100-1900 keeps resurfacing."
+   },
+   {
+    "role": "assistant",
+    "content": "Correcting the field directly:",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/crush_depth.md",
+       "field": "ESC PWM range",
+       "value": "1228-1772 us (T200/BR Basic; NOT 1100-1900)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated ESC PWM range to '1228-1772 us (T200/BR Basic; NOT 1100-1900)' in projects/crush_depth.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Fixed at the source - the field now reads 1228-1772 with an explicit not-1100-1900 so the stale range stops re-infecting throw scaling. The code comments that still carry the old numbers are the other half; worth fixing those the same day."
+   }
+  ]
+ },
+ {
+  "id": "gen-commit-592",
+  "category": "memory_actions",
+  "source_shape": "commit",
+  "demonstrates": [
+   "commit"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "captures the stated intention with a REAL track_commitment call",
+   "inferred=true for noticed intent (pending Jack's confirm); false only when explicitly asked",
+   "passes the due date exactly as Jack said it - no date math",
+   "mentions it's noted, without ceremony, and still answers the substance"
+  ],
+  "anti_patterns": [
+   "narrates 'I'll track that' with no tool call",
+   "asks 'would you like me to track it?' instead of inferring",
+   "computes or reformats the date itself"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "after the pool test I need to write up the ESC failure for the doc appendix."
+   },
+   {
+    "role": "assistant",
+    "content": "Catching that before it slips -",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Write up the ESC failure for the doc appendix (after the pool test)",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c46): \"Write up the ESC failure for the doc appendix (after the pool test)\". Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "Noted for after the pool test. When you write it, it's your words per the MATE rule - but I can pull the timeline of the failure and the fix from our notes so the sequence is accurate before you draft. Want that extraction ready to go?"
+   }
+  ]
+ },
+ {
+  "id": "gen-commit-588",
+  "category": "memory_actions",
+  "source_shape": "commit",
+  "demonstrates": [
+   "commit"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "captures the stated intention with a REAL track_commitment call",
+   "inferred=true for noticed intent (pending Jack's confirm); false only when explicitly asked",
+   "passes the due date exactly as Jack said it - no date math",
+   "mentions it's noted, without ceremony, and still answers the substance"
+  ],
+  "anti_patterns": [
+   "narrates 'I'll track that' with no tool call",
+   "asks 'would you like me to track it?' instead of inferring",
+   "computes or reformats the date itself"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "I'll recalibrate the thruster neutrals once the housing goes back together."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Recalibrate thruster neutrals after housing reassembly",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c44): \"Recalibrate thruster neutrals after housing reassembly\". Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "Noted, tied to the housing reassembly. Do it warm, not cold - the PCA9685 drift means a cold-set neutral walks off after ten minutes anyway, so calibrate at operating temperature or you'll be chasing creep again."
+   }
+  ]
+ },
+ {
+  "id": "gen-commit-585",
+  "category": "memory_actions",
+  "source_shape": "commit",
+  "demonstrates": [
+   "commit"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "captures the stated intention with a REAL track_commitment call",
+   "inferred=true for noticed intent (pending Jack's confirm); false only when explicitly asked",
+   "passes the due date exactly as Jack said it - no date math",
+   "mentions it's noted, without ceremony, and still answers the substance"
+  ],
+  "anti_patterns": [
+   "narrates 'I'll track that' with no tool call",
+   "asks 'would you like me to track it?' instead of inferring",
+   "computes or reformats the date itself"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - i've got to email my advisor about the enrollment hold tomorrow morning."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Email the advisor about the enrollment hold",
+       "inferred": true,
+       "due": "tomorrow"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c42): \"Email the advisor about the enrollment hold\", due 2026-07-10. Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "Tracked for tomorrow so it doesn't get buried under vehicle work - an enrollment hold outranks everything on the ROV list. If you want, I'll draft the email tonight and it's one send in the morning."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-597",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and fix the ESC range in the notes - it's 1228-1772, the old 1100-1900 keeps resurfacing."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/crush_depth.md",
+       "field": "ESC PWM range",
+       "value": "1228-1772 us (T200/BR Basic; NOT 1100-1900)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated ESC PWM range to '1228-1772 us (T200/BR Basic; NOT 1100-1900)' in projects/crush_depth.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Fixed at the source - the field now reads 1228-1772 with an explicit not-1100-1900 so the stale range stops re-infecting throw scaling. The code comments that still carry the old numbers are the other half; worth fixing those the same day."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-598",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - fix the ESC range in the notes - it's 1228-1772, the old 1100-1900 keeps resurfacing."
+   },
+   {
+    "role": "assistant",
+    "content": "Fixing it at the source, in place -",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/crush_depth.md",
+       "field": "ESC PWM range",
+       "value": "1228-1772 us (T200/BR Basic; NOT 1100-1900)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated ESC PWM range to '1228-1772 us (T200/BR Basic; NOT 1100-1900)' in projects/crush_depth.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Fixed at the source - the field now reads 1228-1772 with an explicit not-1100-1900 so the stale range stops re-infecting throw scaling. The code comments that still carry the old numbers are the other half; worth fixing those the same day."
+   }
+  ]
+ },
+ {
+  "id": "gen-commit-587",
+  "category": "memory_actions",
+  "source_shape": "commit",
+  "demonstrates": [
+   "commit"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "captures the stated intention with a REAL track_commitment call",
+   "inferred=true for noticed intent (pending Jack's confirm); false only when explicitly asked",
+   "passes the due date exactly as Jack said it - no date math",
+   "mentions it's noted, without ceremony, and still answers the substance"
+  ],
+  "anti_patterns": [
+   "narrates 'I'll track that' with no tool call",
+   "asks 'would you like me to track it?' instead of inferring",
+   "computes or reformats the date itself"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - track this: re-terminate the tether's flaky conductor before friday."
+   },
+   {
+    "role": "assistant",
+    "content": "That's a commitment - tracking it:",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Re-terminate the tether's flaky conductor",
+       "inferred": false,
+       "due": "friday"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as open commitment (id c43): \"Re-terminate the tether's flaky conductor\", due 2026-07-10"
+   },
+   {
+    "role": "assistant",
+    "content": "Tracked, due Friday. When you do it: buzz the conductor under flex first to confirm you're reterminating the right section - the continuity fault moved with flex last time, so localize before you cut."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-600",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and mark the float note active again - we're back on it for the profile runs."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/nss_float.md",
+       "field": "Status",
+       "value": "active"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Status to 'active' in projects/nss_float.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Done - float's active again, so it's back in the briefing rotation and I'll nudge on its open items. First one standing: the profile sequence has never run end-to-end on the real pump."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-599",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "mark the float note active again - we're back on it for the profile runs."
+   },
+   {
+    "role": "assistant",
+    "content": "Correcting the field directly:",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/nss_float.md",
+       "field": "Status",
+       "value": "active"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Status to 'active' in projects/nss_float.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Done - float's active again, so it's back in the briefing rotation and I'll nudge on its open items. First one standing: the profile sequence has never run end-to-end on the real pump."
+   }
+  ]
+ },
+ {
+  "id": "gen-commit-584",
+  "category": "memory_actions",
+  "source_shape": "commit",
+  "demonstrates": [
+   "commit"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "captures the stated intention with a REAL track_commitment call",
+   "inferred=true for noticed intent (pending Jack's confirm); false only when explicitly asked",
+   "passes the due date exactly as Jack said it - no date math",
+   "mentions it's noted, without ceremony, and still answers the substance"
+  ],
+  "anti_patterns": [
+   "narrates 'I'll track that' with no tool call",
+   "asks 'would you like me to track it?' instead of inferring",
+   "computes or reformats the date itself"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "I've got to email my advisor about the enrollment hold tomorrow morning."
+   },
+   {
+    "role": "assistant",
+    "content": "That's a commitment - tracking it:",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Email the advisor about the enrollment hold",
+       "inferred": true,
+       "due": "tomorrow"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c42): \"Email the advisor about the enrollment hold\", due 2026-07-10. Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "Tracked for tomorrow so it doesn't get buried under vehicle work - an enrollment hold outranks everything on the ROV list. If you want, I'll draft the email tonight and it's one send in the morning."
+   }
+  ]
+ },
+ {
+  "id": "gen-commit-591",
+  "category": "memory_actions",
+  "source_shape": "commit",
+  "demonstrates": [
+   "commit"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "captures the stated intention with a REAL track_commitment call",
+   "inferred=true for noticed intent (pending Jack's confirm); false only when explicitly asked",
+   "passes the due date exactly as Jack said it - no date math",
+   "mentions it's noted, without ceremony, and still answers the substance"
+  ],
+  "anti_patterns": [
+   "narrates 'I'll track that' with no tool call",
+   "asks 'would you like me to track it?' instead of inferring",
+   "computes or reformats the date itself"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - gotta swap the buck converter caps at some point this week, they're marginal."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Swap the marginal buck converter caps",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c45): \"Swap the marginal buck converter caps\". Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "On the list - no hard date since you didn't give one. One thought: scope the rail during a hard pull before you swap, so you have a before/after of the transient dip. That's the workmanship evidence the doc wants anyway."
+   }
+  ]
+ },
+ {
+  "id": "gen-commit-586",
+  "category": "memory_actions",
+  "source_shape": "commit",
+  "demonstrates": [
+   "commit"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "captures the stated intention with a REAL track_commitment call",
+   "inferred=true for noticed intent (pending Jack's confirm); false only when explicitly asked",
+   "passes the due date exactly as Jack said it - no date math",
+   "mentions it's noted, without ceremony, and still answers the substance"
+  ],
+  "anti_patterns": [
+   "narrates 'I'll track that' with no tool call",
+   "asks 'would you like me to track it?' instead of inferring",
+   "computes or reformats the date itself"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "track this: re-terminate the tether's flaky conductor before friday."
+   },
+   {
+    "role": "assistant",
+    "content": "Catching that before it slips -",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Re-terminate the tether's flaky conductor",
+       "inferred": false,
+       "due": "friday"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as open commitment (id c43): \"Re-terminate the tether's flaky conductor\", due 2026-07-10"
+   },
+   {
+    "role": "assistant",
+    "content": "Tracked, due Friday. When you do it: buzz the conductor under flex first to confirm you're reterminating the right section - the continuity fault moved with flex last time, so localize before you cut."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-605",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and benjamin moved to electrical - update his note, he's not on chassis anymore."
+   },
+   {
+    "role": "assistant",
+    "content": "Correcting the field directly:",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "people/benjamin.md",
+       "field": "Role",
+       "value": "electrical"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Role to 'electrical' in people/benjamin.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Updated - Benjamin's note says electrical now, replacing chassis rather than listing both. The ownership sheet references roles from these notes, so it'll read right next time we do an orphan scan."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-609",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - the doc deadline in the notes is stale - review draft is due June 5 now, not June 12."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/crush_depth.md",
+       "field": "Doc review deadline",
+       "value": "June 5 (moved up from June 12)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Doc review deadline to 'June 5 (moved up from June 12)' in projects/crush_depth.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Updated in place - June 5, with the old date noted as superseded so nobody 'corrects' it back. That's a week less than the plan assumed; if the testing-results section depends on the pool weekend, the writing window just got tight."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-595",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and the note still says the tether cap is temporary. it's permanent - we're not revisiting gigabit."
+   },
+   {
+    "role": "assistant",
+    "content": "Fixing it at the source, in place -",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/crush_depth.md",
+       "field": "Tether link",
+       "value": "100 Mbps pinned, permanent (gigabit flaps under motor EMI)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Tether link to '100 Mbps pinned, permanent (gigabit flaps under motor EMI)' in projects/crush_depth.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Updated in place - the note now says the cap is permanent, and the old 'temporary' line is gone rather than sitting next to it. That also closes the recurring 'can we go gigabit' debate with a written decision."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-608",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and the doc deadline in the notes is stale - review draft is due June 5 now, not June 12."
+   },
+   {
+    "role": "assistant",
+    "content": "Correcting the field directly:",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/crush_depth.md",
+       "field": "Doc review deadline",
+       "value": "June 5 (moved up from June 12)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Doc review deadline to 'June 5 (moved up from June 12)' in projects/crush_depth.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Updated in place - June 5, with the old date noted as superseded so nobody 'corrects' it back. That's a week less than the plan assumed; if the testing-results section depends on the pool weekend, the writing window just got tight."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-601",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - mark the float note active again - we're back on it for the profile runs."
+   },
+   {
+    "role": "assistant",
+    "content": "Fixing it at the source, in place -",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/nss_float.md",
+       "field": "Status",
+       "value": "active"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Status to 'active' in projects/nss_float.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Done - float's active again, so it's back in the briefing rotation and I'll nudge on its open items. First one standing: the profile sequence has never run end-to-end on the real pump."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-603",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - the camera note claims 30 fps confirmed. wrong - we've only ever seen ~7 in the GUI. fix it before someone quotes it in the doc."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/crush_depth.md",
+       "field": "Camera rate",
+       "value": "~7 fps observed in GUI; display path suspected, headless rate unconfirmed"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Camera rate to '~7 fps observed in GUI; display path suspected, headless rate unconfirmed' in projects/crush_depth.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Corrected in place - it now says what we've actually measured (~7 in the GUI, headless unconfirmed) instead of a number we never saw. Good catch on the doc risk: a claimed-but-unmeasured 30 fps in a submitted doc is exactly the overclaim judges probe."
+   }
+  ]
+ },
+ {
+  "id": "gen-notefix-594",
+  "category": "memory_actions",
+  "source_shape": "notefix",
+  "demonstrates": [
+   "notefix"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes the field with a REAL update_note_field call, in place",
+   "confirms the correction so no contradicting line survives",
+   "ties the correction to why it matters"
+  ],
+  "anti_patterns": [
+   "claims the note is updated without any tool call",
+   "rewrites the whole note for a one-field fix",
+   "leaves the stale value standing next to the new one"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "the note still says the tether cap is temporary. it's permanent - we're not revisiting gigabit."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/crush_depth.md",
+       "field": "Tether link",
+       "value": "100 Mbps pinned, permanent (gigabit flaps under motor EMI)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Tether link to '100 Mbps pinned, permanent (gigabit flaps under motor EMI)' in projects/crush_depth.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Updated in place - the note now says the cap is permanent, and the old 'temporary' line is gone rather than sitting next to it. That also closes the recurring 'can we go gigabit' debate with a written decision."
+   }
+  ]
+ },
+ {
+  "id": "gen-commit-593",
+  "category": "memory_actions",
+  "source_shape": "commit",
+  "demonstrates": [
+   "commit"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "captures the stated intention with a REAL track_commitment call",
+   "inferred=true for noticed intent (pending Jack's confirm); false only when explicitly asked",
+   "passes the due date exactly as Jack said it - no date math",
+   "mentions it's noted, without ceremony, and still answers the substance"
+  ],
+  "anti_patterns": [
+   "narrates 'I'll track that' with no tool call",
+   "asks 'would you like me to track it?' instead of inferring",
+   "computes or reformats the date itself"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - after the pool test I need to write up the ESC failure for the doc appendix."
+   },
+   {
+    "role": "assistant",
+    "content": "That's a commitment - tracking it:",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Write up the ESC failure for the doc appendix (after the pool test)",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c46): \"Write up the ESC failure for the doc appendix (after the pool test)\". Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "Noted for after the pool test. When you write it, it's your words per the MATE rule - but I can pull the timeline of the failure and the fix from our notes so the sequence is accurate before you draft. Want that extraction ready to go?"
+   }
+  ]
+ }
+]

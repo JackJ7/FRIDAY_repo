@@ -1,0 +1,44 @@
+# FRIDAY runtime dependencies — install with: python -m pip install -r requirements.txt
+pyyaml==6.0.3
+requests==2.34.2
+
+# App shell (window, tray, notifications). The global hotkey uses the native
+# Windows RegisterHotKey API (interface\hotkey.py) — no package needed.
+pywebview==6.2.1
+pystray==0.19.5
+pillow==12.3.0
+windows-toasts==1.3.1
+
+# Stage 3 — senses (Gmail + Calendar OAuth; data only, cognition stays local)
+google-api-python-client==2.198.0
+google-auth-oauthlib==1.4.0
+
+# Regression test suite (tests\ + run_suite.py)
+pytest==9.1.1
+hypothesis==6.156.1
+pint==0.25.3
+
+# Artifact comprehension (upgrade plan Task 6): text extraction from PDFs
+# so "ingest implies comprehend" can actually read what Jack uploads.
+pypdf==6.14.2
+
+# --- /watch (video.enabled) — coherence plan Phase 4/6, cleared by Jack ---
+# HEAVYWEIGHT deps for local video comprehension. Installed and pinned once
+# Jack approved them (2026-07-12); the tools degrade honestly if any go missing
+# again. Fully local — no cloud transcription or vision, ever (invariant 1).
+yt-dlp==2026.7.4          # video download (fully local)
+faster-whisper==1.2.1     # LOCAL transcription on the GPU/CPU — never a cloud API
+# Two deps are NOT pip-installable and must be present out-of-band:
+#   ffmpeg  — system binary on PATH (winget install Gyan.FFmpeg). Frames + audio.
+#   ollama pull qwen2.5vl  — LOCAL vision model for describe_frames (opt-in path).
+# GitHub write (repo.allow_git_write) needs NO new Python deps — just `git`.
+
+# --- Autonomous research (research.enabled) — autoresearch port ---
+# NO new Python packages for FRIDAY itself. Each run installs the cloned repo's
+# OWN deps (torch+cu128 / rustbpe / kernels) into a per-run ISOLATED uv venv
+# inside data\research\<tag>\repo\.venv\ via `uv sync` — never FRIDAY's own
+# interpreter. Three things must be present out-of-band for research.enabled to
+# be usable at all:
+#   git            — on PATH (clones + commits each attempt)
+#   uv             — on PATH (astral.sh/uv; builds the isolated venv)
+#   an NVIDIA GPU  — nvidia-smi on PATH and exiting cleanly (it trains a model)

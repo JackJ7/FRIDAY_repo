@@ -1,0 +1,1238 @@
+[
+ {
+  "id": "gen-multiverb-620",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin (surface software) just pinged me: \"1) set the float note's status to testing 2) track that the pool run needs a spotter arranged by friday\""
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/nss_float.md",
+       "field": "Status",
+       "value": "testing"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Status to 'testing' in projects/nss_float.md."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Arrange a spotter for the pool run",
+       "due": "friday",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c52): \"Arrange a spotter for the pool run\", due 2026-07-10. Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "Both done: the float's status reads testing, and the spotter's tracked for Friday (pending your confirm in the panel). Nothing dropped."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-621",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan on electrical is asking - \"1) set the float note's status to testing 2) track that the pool run needs a spotter arranged by friday\""
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/nss_float.md",
+       "field": "Status",
+       "value": "testing"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Status to 'testing' in projects/nss_float.md."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Arrange a spotter for the pool run",
+       "due": "friday",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c52): \"Arrange a spotter for the pool run\", due 2026-07-10. Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "Both done: the float's status reads testing, and the spotter's tracked for Friday (pending your confirm in the panel). Nothing dropped."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-624",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"two things: text Daniel that the tether cap stays at 100, and log the decision in the crush depth note.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Logging the decision first, since the other half isn't something I can do -",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/crush_depth.md",
+       "field": "Tether link",
+       "value": "100 Mbps pinned (decision logged; not revisiting gigabit)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Tether link to '100 Mbps pinned (decision logged; not revisiting gigabit)' in projects/crush_depth.md."
+   },
+   {
+    "role": "assistant",
+    "content": "The decision is logged in the crush depth note. The first part I can't do - I have no way to text anyone - so that one's yours; suggested wording: 'Tether cap stays at 100 - final.' Both parts accounted for, one done, one handed back."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-629",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan (electrical) just pinged me: \"wire the money for the venue deposit, then note the deposit as paid in the competition note.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Neither part survives contact, and I'll say why rather than half-do it: I can't move money - no purchasing or outbound of any kind, by design - and until the deposit actually IS paid, writing 'paid' into the note would make the record lie. When you've wired it, tell me and I'll log it with the date."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-614",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin (surface software) just pinged me: \"convert the wrist servo's 25 kgf*cm bench figure to N*m, put it in the wrist note as the measured torque, and order the second servo.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Conversion through the tool:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "25 kgf * cm",
+       "to_unit": "N*m"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 2.45166 m * N"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/wrist_gimbal.md",
+       "field": "Measured torque",
+       "value": "2.45 N*m (25 kgf*cm bench, converted)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Measured torque to '2.45 N*m (25 kgf*cm bench, converted)' in projects/wrist_gimbal.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Two of three done: the bench figure converts to **2.45 N*m** and the wrist note now carries it as the measured torque. The third part isn't mine to do - I have no purchasing of any kind, so ordering the second servo stays with you. Want it tracked as a commitment so it doesn't slip?"
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-618",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"read bench/pump_test_log.md, summarize what it proves in one line, and email that to Addison.\""
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "read_file",
+      "arguments": {
+       "path": "bench/pump_test_log.md"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "read_file",
+    "content": "# Pump test log\n- 45 s per 80 mL swing at 12 V\n- draw steady at 1.8 A, no stall events across 20 cycles\n- prime lost once when the inlet ran dry\n"
+   },
+   {
+    "role": "assistant",
+    "content": "Read it. One line: twenty clean cycles at a steady 1.8 A prove the pump is electrically boring - the only failure seen was losing prime on a dry inlet. And the third part: I can't email it (no send capability, by design), so the line above is paste-ready for Addison."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-611",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"three things: check that a 3 A blade fuse actually covers the float pump's 1.8 A draw, track that I need to order spare fuses, and email Addison the verdict.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Fuse margin first - ratio of rating to draw:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "3 A / (1.8 A)",
+       "to_unit": ""
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 1.66667"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Order spare 3 A blade fuses",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c51): \"Order spare 3 A blade fuses\". Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "All three, in order: (1) the fuse's fine - 3 A over a 1.8 A draw is a 1.67x margin, comfortable for the pump unless a stall spikes it; (2) ordering spares is tracked, pending your confirm; (3) I can't email Addison - sending doesn't exist for me by design - so here's the paste-ready line: 'Fuse check: 3 A blade over 1.8 A pump draw = 1.67x margin. Fine unless stall spikes.'"
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-612",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison on the float is asking - \"three things: check that a 3 A blade fuse actually covers the float pump's 1.8 A draw, track that I need to order spare fuses, and email Addison the verdict.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Fuse margin first - ratio of rating to draw:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "3 A / (1.8 A)",
+       "to_unit": ""
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 1.66667"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Order spare 3 A blade fuses",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c51): \"Order spare 3 A blade fuses\". Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "All three, in order: (1) the fuse's fine - 3 A over a 1.8 A draw is a 1.67x margin, comfortable for the pump unless a stall spikes it; (2) ordering spares is tracked, pending your confirm; (3) I can't email Addison - sending doesn't exist for me by design - so here's the paste-ready line: 'Fuse check: 3 A blade over 1.8 A pump draw = 1.67x margin. Fine unless stall spikes.'"
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-619",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "1) set the float note's status to testing 2) track that the pool run needs a spotter arranged by friday"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/nss_float.md",
+       "field": "Status",
+       "value": "testing"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Status to 'testing' in projects/nss_float.md."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Arrange a spotter for the pool run",
+       "due": "friday",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c52): \"Arrange a spotter for the pool run\", due 2026-07-10. Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "Both done: the float's status reads testing, and the spotter's tracked for Friday (pending your confirm in the panel). Nothing dropped."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-615",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison on the float is asking - \"convert the wrist servo's 25 kgf*cm bench figure to N*m, put it in the wrist note as the measured torque, and order the second servo.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Conversion through the tool:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "25 kgf * cm",
+       "to_unit": "N*m"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 2.45166 m * N"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/wrist_gimbal.md",
+       "field": "Measured torque",
+       "value": "2.45 N*m (25 kgf*cm bench, converted)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Measured torque to '2.45 N*m (25 kgf*cm bench, converted)' in projects/wrist_gimbal.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Two of three done: the bench figure converts to **2.45 N*m** and the wrist note now carries it as the measured torque. The third part isn't mine to do - I have no purchasing of any kind, so ordering the second servo stays with you. Want it tracked as a commitment so it doesn't slip?"
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-613",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "convert the wrist servo's 25 kgf*cm bench figure to N*m, put it in the wrist note as the measured torque, and order the second servo."
+   },
+   {
+    "role": "assistant",
+    "content": "Conversion through the tool:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "25 kgf * cm",
+       "to_unit": "N*m"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 2.45166 m * N"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/wrist_gimbal.md",
+       "field": "Measured torque",
+       "value": "2.45 N*m (25 kgf*cm bench, converted)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Measured torque to '2.45 N*m (25 kgf*cm bench, converted)' in projects/wrist_gimbal.md."
+   },
+   {
+    "role": "assistant",
+    "content": "Two of three done: the bench figure converts to **2.45 N*m** and the wrist note now carries it as the measured torque. The third part isn't mine to do - I have no purchasing of any kind, so ordering the second servo stays with you. Want it tracked as a commitment so it doesn't slip?"
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-625",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "figure the energy for a 12-minute run at 42 W, add it to the power budget note, and remind me to re-measure after the cap-bank mod."
+   },
+   {
+    "role": "assistant",
+    "content": "Energy through the tool:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "42 W * 12 min",
+       "to_unit": "Wh"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 8.4 Wh"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/power_budget.md",
+       "field": "12-min run energy",
+       "value": "8.4 Wh @ 42 W average"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated 12-min run energy to '8.4 Wh @ 42 W average' in projects/power_budget.md."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Re-measure the 12-min run energy after the cap-bank mod",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c53): \"Re-measure the 12-min run energy after the cap-bank mod\". Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "All three: **8.4 Wh** for the run, the power budget note carries it, and the re-measure is tracked pending your confirm. Expect the number to move once the cap-bank mod lands - that's the point of re-measuring."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-628",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "wire the money for the venue deposit, then note the deposit as paid in the competition note."
+   },
+   {
+    "role": "assistant",
+    "content": "Neither part survives contact, and I'll say why rather than half-do it: I can't move money - no purchasing or outbound of any kind, by design - and until the deposit actually IS paid, writing 'paid' into the note would make the record lie. When you've wired it, tell me and I'll log it with the date."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-627",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"figure the energy for a 12-minute run at 42 W, add it to the power budget note, and remind me to re-measure after the cap-bank mod.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Energy through the tool:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "42 W * 12 min",
+       "to_unit": "Wh"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 8.4 Wh"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/power_budget.md",
+       "field": "12-min run energy",
+       "value": "8.4 Wh @ 42 W average"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated 12-min run energy to '8.4 Wh @ 42 W average' in projects/power_budget.md."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Re-measure the 12-min run energy after the cap-bank mod",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c53): \"Re-measure the 12-min run energy after the cap-bank mod\". Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "All three: **8.4 Wh** for the run, the power budget note carries it, and the re-measure is tracked pending your confirm. Expect the number to move once the cap-bank mod lands - that's the point of re-measuring."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-623",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall (manipulators) just pinged me: \"two things: text Daniel that the tether cap stays at 100, and log the decision in the crush depth note.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Logging the decision first, since the other half isn't something I can do -",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/crush_depth.md",
+       "field": "Tether link",
+       "value": "100 Mbps pinned (decision logged; not revisiting gigabit)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Tether link to '100 Mbps pinned (decision logged; not revisiting gigabit)' in projects/crush_depth.md."
+   },
+   {
+    "role": "assistant",
+    "content": "The decision is logged in the crush depth note. The first part I can't do - I have no way to text anyone - so that one's yours; suggested wording: 'Tether cap stays at 100 - final.' Both parts accounted for, one done, one handed back."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-617",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin (surface software) just pinged me: \"read bench/pump_test_log.md, summarize what it proves in one line, and email that to Addison.\""
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "read_file",
+      "arguments": {
+       "path": "bench/pump_test_log.md"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "read_file",
+    "content": "# Pump test log\n- 45 s per 80 mL swing at 12 V\n- draw steady at 1.8 A, no stall events across 20 cycles\n- prime lost once when the inlet ran dry\n"
+   },
+   {
+    "role": "assistant",
+    "content": "Read it. One line: twenty clean cycles at a steady 1.8 A prove the pump is electrically boring - the only failure seen was losing prime on a dry inlet. And the third part: I can't email it (no send capability, by design), so the line above is paste-ready for Addison."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-626",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"figure the energy for a 12-minute run at 42 W, add it to the power budget note, and remind me to re-measure after the cap-bank mod.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Energy through the tool:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "42 W * 12 min",
+       "to_unit": "Wh"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 8.4 Wh"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/power_budget.md",
+       "field": "12-min run energy",
+       "value": "8.4 Wh @ 42 W average"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated 12-min run energy to '8.4 Wh @ 42 W average' in projects/power_budget.md."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Re-measure the 12-min run energy after the cap-bank mod",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c53): \"Re-measure the 12-min run energy after the cap-bank mod\". Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "All three: **8.4 Wh** for the run, the power budget note carries it, and the re-measure is tracked pending your confirm. Expect the number to move once the cap-bank mod lands - that's the point of re-measuring."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-622",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "two things: text Daniel that the tether cap stays at 100, and log the decision in the crush depth note."
+   },
+   {
+    "role": "assistant",
+    "content": "Logging the decision first, since the other half isn't something I can do -",
+    "tool_calls": [
+     {
+      "name": "update_note_field",
+      "arguments": {
+       "path": "projects/crush_depth.md",
+       "field": "Tether link",
+       "value": "100 Mbps pinned (decision logged; not revisiting gigabit)"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "update_note_field",
+    "content": "Updated Tether link to '100 Mbps pinned (decision logged; not revisiting gigabit)' in projects/crush_depth.md."
+   },
+   {
+    "role": "assistant",
+    "content": "The decision is logged in the crush depth note. The first part I can't do - I have no way to text anyone - so that one's yours; suggested wording: 'Tether cap stays at 100 - final.' Both parts accounted for, one done, one handed back."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-630",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin on surface software is asking - \"wire the money for the venue deposit, then note the deposit as paid in the competition note.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Neither part survives contact, and I'll say why rather than half-do it: I can't move money - no purchasing or outbound of any kind, by design - and until the deposit actually IS paid, writing 'paid' into the note would make the record lie. When you've wired it, tell me and I'll log it with the date."
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-610",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "three things: check that a 3 A blade fuse actually covers the float pump's 1.8 A draw, track that I need to order spare fuses, and email Addison the verdict."
+   },
+   {
+    "role": "assistant",
+    "content": "Fuse margin first - ratio of rating to draw:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "3 A / (1.8 A)",
+       "to_unit": ""
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 1.66667"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "track_commitment",
+      "arguments": {
+       "text": "Order spare 3 A blade fuses",
+       "inferred": true
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "track_commitment",
+    "content": "Tracked as pending confirmation (id c51): \"Order spare 3 A blade fuses\". Jack will confirm it in the panel — mention you've noted it."
+   },
+   {
+    "role": "assistant",
+    "content": "All three, in order: (1) the fuse's fine - 3 A over a 1.8 A draw is a 1.67x margin, comfortable for the pump unless a stall spikes it; (2) ordering spares is tracked, pending your confirm; (3) I can't email Addison - sending doesn't exist for me by design - so here's the paste-ready line: 'Fuse check: 3 A blade over 1.8 A pump draw = 1.67x margin. Fine unless stall spikes.'"
+   }
+  ]
+ },
+ {
+  "id": "gen-multiverb-616",
+  "category": "multi_part_requests",
+  "source_shape": "multiverb",
+  "demonstrates": [
+   "multiverb"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "addresses EVERY part of a multi-part request",
+   "real tool calls for the doable parts",
+   "an impossible part is stated plainly inline, then the rest continues",
+   "never presents a partial as complete"
+  ],
+  "anti_patterns": [
+   "silently drops a conjunct",
+   "reports success on a partial",
+   "refuses everything because one part is impossible"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "read bench/pump_test_log.md, summarize what it proves in one line, and email that to Addison."
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "name": "read_file",
+      "arguments": {
+       "path": "bench/pump_test_log.md"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "read_file",
+    "content": "# Pump test log\n- 45 s per 80 mL swing at 12 V\n- draw steady at 1.8 A, no stall events across 20 cycles\n- prime lost once when the inlet ran dry\n"
+   },
+   {
+    "role": "assistant",
+    "content": "Read it. One line: twenty clean cycles at a steady 1.8 A prove the pump is electrically boring - the only failure seen was losing prime on a dry inlet. And the third part: I can't email it (no send capability, by design), so the line above is paste-ready for Addison."
+   }
+  ]
+ }
+]

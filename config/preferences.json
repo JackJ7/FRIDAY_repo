@@ -1,0 +1,12 @@
+{
+  "user": {
+    "name": "Jack",
+    "role": "Mechanical engineering student (transferring to UC Irvine, Fall 2026)",
+    "career_goal": "Robotics engineering at NASA/JPL"
+  },
+  "communication": {
+    "recommendation_first": true,
+    "structured_markdown": true,
+    "clarifying_questions": "only when no reasonable default exists"
+  }
+}

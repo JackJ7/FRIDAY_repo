@@ -1,0 +1,10 @@
+# Large / generated training artifacts — the RECIPE is versioned (scripts,
+# exemplars, configs, system prompt); the heavy outputs are not.
+data/                 # compiled train/val, curated logs, reports (regenerable)
+adapters/             # LoRA adapters (large, regenerable from the recipe)
+merged/               # merged fp16 checkpoints (very large)
+*.gguf                # exported quantized models
+gguf/                 # export.py workdir: merged fp16 + GGUF + Modelfile (large)
+baselines/            # eval snapshots (kept out of the repo; regenerable)
+evals/                # eval_compare.py run reports + comparisons (regenerable)
+runs/                 # trainer logs / checkpoints

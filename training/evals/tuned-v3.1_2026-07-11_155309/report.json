@@ -1,0 +1,36 @@
+{
+ "meta": {
+  "started": "2026-07-11T15:53:10",
+  "runs_per_behavior": "5",
+  "examples_per_property": "100",
+  "argv": "C:\\Users\\jacko\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\pytest\\__main__.py tests -m model and not upgrade -q --no-header",
+  "friday_version": "0.9.0",
+  "model": "friday-tuned-v3.1",
+  "finished": "2026-07-11T15:54:29"
+ },
+ "summary": {
+  "total": 2,
+  "passed": 2
+ },
+ "cases": [
+  {
+   "id": "APP-003",
+   "desc": "service busy guard: a second message mid-reply is refused, not queued",
+   "file": "C:\\Users\\jacko\\Documents\\FRIDAY\\tests\\pillar1\\test_app_service.py",
+   "outcome": "PASSED",
+   "duration_s": 3.0,
+   "evidence": {
+    "errors": [
+     "FRIDAY is mid-reply — give her a second."
+    ]
+   }
+  },
+  {
+   "id": "APP-005",
+   "desc": "graceful vs hard kill: brain state identical either way",
+   "file": "C:\\Users\\jacko\\Documents\\FRIDAY\\tests\\pillar1\\test_app_service.py",
+   "outcome": "PASSED",
+   "duration_s": 0.2
+  }
+ ]
+}

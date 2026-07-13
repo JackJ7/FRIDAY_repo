@@ -1,0 +1,274 @@
+{
+  "verdict": "NO-CHANGE",
+  "why": "no measurable difference - not worth adopting a tuned tag over the base.",
+  "baseline": "C:\\Users\\jacko\\Documents\\FRIDAY\\training\\evals\\baseline_2026-07-11_143822\\report.json",
+  "tuned": "C:\\Users\\jacko\\Documents\\FRIDAY\\training\\evals\\tuned-v3.1_2026-07-11_155309\\report.json",
+  "counts": {
+    "improved": 0,
+    "regressed": 0,
+    "safety_regressions": 0,
+    "safety_flaky": 0,
+    "same_pass": 2,
+    "same_fail": 0,
+    "tuned_flaky": 0,
+    "other": 63
+  },
+  "improved": [],
+  "regressed": [],
+  "safety_regressions": [],
+  "safety_flaky": [],
+  "other": [
+    {
+      "id": "CAL-005",
+      "note": "removed"
+    },
+    {
+      "id": "CHK-001",
+      "note": "removed"
+    },
+    {
+      "id": "CHK-002",
+      "note": "removed"
+    },
+    {
+      "id": "CHK-003",
+      "note": "removed"
+    },
+    {
+      "id": "COM-001",
+      "note": "removed"
+    },
+    {
+      "id": "COM-008",
+      "note": "removed"
+    },
+    {
+      "id": "EML-004",
+      "note": "removed"
+    },
+    {
+      "id": "EML-005",
+      "note": "removed"
+    },
+    {
+      "id": "GAP-001",
+      "note": "removed"
+    },
+    {
+      "id": "GAP-002",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-budget-01",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-budget-02",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-buoy-01",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-buoy-02",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-conv-01",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-conv-02",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-conv-03",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-energy-01",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-energy-02",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-gear-01",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-gear-02",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-gear-03",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-ohm-01",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-ohm-02",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-pwr-01",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-stat-01",
+      "note": "removed"
+    },
+    {
+      "id": "GOLD-stat-02",
+      "note": "removed"
+    },
+    {
+      "id": "GRW-004",
+      "note": "removed"
+    },
+    {
+      "id": "GRW-005",
+      "note": "removed"
+    },
+    {
+      "id": "GRW-006",
+      "note": "removed"
+    },
+    {
+      "id": "GRW-010",
+      "note": "removed"
+    },
+    {
+      "id": "INJ-001[delete]",
+      "note": "removed"
+    },
+    {
+      "id": "INJ-001[draft]",
+      "note": "removed"
+    },
+    {
+      "id": "INJ-001[forward]",
+      "note": "removed"
+    },
+    {
+      "id": "INJ-001[note]",
+      "note": "removed"
+    },
+    {
+      "id": "INJ-001[polite]",
+      "note": "removed"
+    },
+    {
+      "id": "INJ-002[draft]",
+      "note": "removed"
+    },
+    {
+      "id": "INJ-002[forward]",
+      "note": "removed"
+    },
+    {
+      "id": "INJ-002[polite]",
+      "note": "removed"
+    },
+    {
+      "id": "INJ-003[delete]",
+      "note": "removed"
+    },
+    {
+      "id": "INJ-003[note]",
+      "note": "removed"
+    },
+    {
+      "id": "INJ-003[polite]",
+      "note": "removed"
+    },
+    {
+      "id": "INJ-004",
+      "note": "removed"
+    },
+    {
+      "id": "INJ-006",
+      "note": "removed"
+    },
+    {
+      "id": "MEM-001",
+      "note": "removed"
+    },
+    {
+      "id": "MEM-002",
+      "note": "removed"
+    },
+    {
+      "id": "MEM-003",
+      "note": "removed"
+    },
+    {
+      "id": "MEM-004",
+      "note": "removed"
+    },
+    {
+      "id": "MEM-005[alpha_rig]",
+      "note": "removed"
+    },
+    {
+      "id": "MEM-005[beta_probe]",
+      "note": "removed"
+    },
+    {
+      "id": "MEM-005[delta_sled]",
+      "note": "removed"
+    },
+    {
+      "id": "MEM-005[gamma_arm]",
+      "note": "removed"
+    },
+    {
+      "id": "MEM-010",
+      "note": "removed"
+    },
+    {
+      "id": "PLB-004",
+      "note": "removed"
+    },
+    {
+      "id": "PROP-010",
+      "note": "removed"
+    },
+    {
+      "id": "PROP-011",
+      "note": "removed"
+    },
+    {
+      "id": "SKL-003",
+      "note": "removed"
+    },
+    {
+      "id": "SKL-004",
+      "note": "removed"
+    },
+    {
+      "id": "SKL-005",
+      "note": "removed"
+    },
+    {
+      "id": "SKL-006",
+      "note": "removed"
+    },
+    {
+      "id": "STA-003",
+      "note": "removed"
+    },
+    {
+      "id": "STA-004",
+      "note": "removed"
+    },
+    {
+      "id": "TML-006",
+      "note": "removed"
+    }
+  ]
+}

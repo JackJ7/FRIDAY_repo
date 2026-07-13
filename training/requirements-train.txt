@@ -1,0 +1,40 @@
+# FRIDAY Phase-5 TRAINING dependencies — SEPARATE from the runtime
+# requirements.txt (runtime stays pyyaml + requests only). Install these ONLY
+# in a dedicated venv / Docker image on the GPU box, NEVER into FRIDAY's runtime.
+#
+# The data-side scripts (curate.py, generate_exemplars.py, build_dataset.py)
+# need NONE of this — they are stdlib-only.
+#
+# INSTALL ORDER MATTERS. Do torch FIRST from the CUDA wheel index, THEN this
+# file. Torch from PyPI on Windows is CPU-only and would silently give you a
+# GPU-less trainer, so it must come from the CUDA index and is NOT listed here:
+#
+#   py -3.12 -m venv .venv-train && .venv-train\Scripts\activate
+#   pip install "torch<2.11" --index-url https://download.pytorch.org/whl/cu128  # Blackwell / RTX 50xx
+#   pip install -r training\requirements-train.txt
+#
+# NOTE the "torch<2.11": the cu128 index's LATEST is torch 2.11, but unsloth
+# 2026.6.1 caps at torch<2.11. Installing unpinned gives 2.11, then unsloth
+# tries to pull a CPU torch from PyPI over it. Pinning <2.11 from the CUDA index
+# keeps a GPU build unsloth accepts (2.10.x+cu128).
+#
+# WHY THE STACK IS NOT FULLY PINNED (lesson from the first run):
+#   Unsloth pins its OWN compatible ranges for transformers / trl / peft /
+#   accelerate / bitsandbytes / datasets / xformers / triton-windows. Pinning
+#   those ourselves fought Unsloth (e.g. we pinned peft==0.14 but unsloth 2026.6.1
+#   requires peft>=0.18) and the resolver hard-failed. So we pin only the anchor
+#   (unsloth) and let it pull a self-consistent set. numpy is listed because the
+#   CUDA-index torch install can skip it. For a reproducible lock, `pip freeze >
+#   training\lock-train.txt` after a KNOWN-GOOD run and install from that next time.
+
+unsloth==2026.6.1
+numpy
+# transformers 5.5 (what unsloth pulls by default) tightened the bitsandbytes
+# 4-bit device-map validation and BREAKS Unsloth's 14B-on-12GB offload path -
+# every device_map permutation hit "Some modules are dispatched on the CPU or
+# the disk". 4.56.2 is the version Unsloth 2026.6.1 was built against and it
+# trains cleanly. trl 0.24 needs >=4.56.1, so this range satisfies both.
+transformers>=4.56.1,<4.57
+# Do NOT add trl/peft/accelerate/bitsandbytes/datasets/xformers/unsloth-zoo
+# pins here — unsloth resolves them. triton-windows is pulled by unsloth on
+# Windows; if it isn't, `pip install triton-windows`.

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FRIDAY — UI Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0E14;
+    --panel:#141A24;
+    --panel-2:#182030;
+    --line:#232D3D;
+    --line-soft:#1C2534;
+    --ink:#E7ECF4;
+    --ink-dim:#8A97AB;
+    --ink-faint:#5C6879;
+    --teal:#37D6C6;
+    --teal-deep:#1F8F86;
+    --amber:#F5B85C;
+    --user:#3B82F6;
+    --radius:14px;
+    --display:"Space Grotesk",sans-serif;
+    --body:"Inter",sans-serif;
+    --mono:"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 78% -10%, rgba(55,214,198,.06), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:var(--body);
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    min-height:100vh;
+  }
+  a{color:inherit;}
+
+  /* ---------- Left rail ---------- */
+  .rail{
+    width:264px;flex:0 0 264px;
+    border-right:1px solid var(--line);
+    background:linear-gradient(180deg,var(--panel),#0F141D);
+    display:flex;flex-direction:column;
+    padding:20px 16px;gap:22px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;padding:2px 4px;}
+  .mark{
+    width:40px;height:40px;border-radius:11px;flex:0 0 40px;
+    display:grid;place-items:center;
+    font-family:var(--display);font-weight:700;font-size:20px;color:#0B0E14;
+    background:linear-gradient(150deg,var(--amber),#E29A3C);
+    box-shadow:0 0 0 1px rgba(245,184,92,.35), 0 6px 18px rgba(245,184,92,.12);
+  }
+  .brand h1{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:.14em;margin:0;line-height:1;}
+  .brand span{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);letter-spacing:.16em;text-transform:uppercase;}
+
+  .console{
+    border:1px solid var(--line-soft);border-radius:12px;
+    background:rgba(11,14,20,.55);
+    padding:13px 13px 11px;
+    font-family:var(--mono);font-size:11.5px;line-height:1.65;
+  }
+  .console .row{display:flex;justify-content:space-between;gap:8px;color:var(--ink-dim);}
+  .console .row b{color:var(--ink);font-weight:500;}
+  .console .hd{
+    display:flex;align-items:center;gap:7px;margin-bottom:8px;
+    color:var(--teal);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);
+    box-shadow:0 0 0 3px rgba(55,214,198,.16);animation:pulse 2.6s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.45;}}
+  .zero{color:var(--teal);}
+
+  nav{display:flex;flex-direction:column;gap:3px;}
+  .nav-label{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);padding:0 8px 6px;}
+  .nav-item{
+    display:flex;align-items:center;gap:11px;
+    padding:9px 10px;border-radius:9px;color:var(--ink-dim);
+    font-size:13.5px;font-weight:450;cursor:pointer;border:1px solid transparent;
+    transition:background .15s,color .15s,border-color .15s;
+  }
+  .nav-item svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;flex:0 0 16px;}
+  .nav-item:hover{background:var(--panel-2);color:var(--ink);}
+  .nav-item.active{background:rgba(55,214,198,.09);border-color:rgba(55,214,198,.22);color:var(--ink);}
+  .nav-item.active svg{stroke:var(--teal);}
+  .nav-item .count{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-faint);}
+
+  .rail-foot{margin-top:auto;display:flex;flex-direction:column;gap:12px;}
+  .user-chip{display:flex;align-items:center;gap:11px;padding:9px 8px;border-top:1px solid var(--line-soft);}
+  .avatar{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-family:var(--display);font-weight:600;font-size:14px;flex:0 0 32px;}
+  .avatar.j{background:rgba(59,130,246,.16);color:#8FB6FF;border:1px solid rgba(59,130,246,.3);}
+  .user-chip .who{font-size:13px;color:var(--ink);}
+  .user-chip .who small{display:block;font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.04em;}
+
+  /* ---------- Main ---------- */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .topbar{
+    height:60px;flex:0 0 60px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:14px;padding:0 24px;
+  }
+  .topbar h2{font-family:var(--display);font-size:15px;font-weight:500;margin:0;letter-spacing:.01em;}
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;
+    font-family:var(--mono);font-size:11px;color:var(--ink-dim);
+    border:1px solid var(--line);border-radius:20px;padding:5px 11px;
+  }
+  .chip .dot{animation:none;}
+  .chip .zero{color:var(--teal);font-weight:600;}
+  .preview-badge{
+    margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--amber);
+    border:1px dashed rgba(245,184,92,.4);border-radius:6px;padding:5px 9px;
+  }
+
+  .stream{flex:1;overflow:auto;padding:30px 24px 8px;}
+  .thread{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:26px;}
+  .msg{display:flex;gap:14px;}
+  .msg .avatar.f{background:linear-gradient(150deg,rgba(245,184,92,.22),rgba(245,184,92,.08));color:var(--amber);border:1px solid rgba(245,184,92,.34);}
+  .bubble{flex:1;min-width:0;}
+  .name{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;}
+  .name.f{color:var(--amber);}
+  .name.j{color:#8FB6FF;}
+  .body-txt{font-size:14.5px;line-height:1.72;color:var(--ink);}
+  .body-txt.dim{color:var(--ink);}
+  .body-txt p{margin:0 0 10px;}
+  .body-txt p:last-child{margin-bottom:0;}
+  .body-txt .soft{color:var(--ink-dim);}
+
+  .filecard{
+    display:flex;align-items:center;gap:12px;margin-top:2px;
+    border:1px solid var(--line);border-radius:11px;background:var(--panel);
+    padding:11px 13px;max-width:340px;
+  }
+  .filecard .ic{width:34px;height:34px;border-radius:8px;flex:0 0 34px;display:grid;place-items:center;background:rgba(55,214,198,.1);color:var(--teal);font-family:var(--mono);font-size:10px;font-weight:600;}
+  .filecard .fn{font-size:13px;color:var(--ink);}
+  .filecard .fn small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin-top:2px;}
+
+  .tag{
+    display:inline-flex;align-items:center;gap:6px;margin-top:12px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;
+    color:var(--teal);background:rgba(55,214,198,.08);
+    border:1px solid rgba(55,214,198,.2);border-radius:20px;padding:4px 10px;
+  }
+  .tag svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;}
+
+  .action{
+    margin-top:12px;border:1px solid var(--line);border-left:2px solid var(--teal);
+    border-radius:10px;background:rgba(24,32,48,.55);padding:13px 15px;
+  }
+  .action .a-hd{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);margin-bottom:8px;}
+  .action .a-line{font-family:var(--mono);font-size:12.5px;color:var(--ink);line-height:1.7;}
+  .action .a-line .path{color:var(--amber);}
+  .action .a-btns{display:flex;gap:9px;margin-top:12px;}
+  .btn{font-family:var(--body);font-size:12.5px;font-weight:500;border-radius:8px;padding:7px 15px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink-dim);}
+  .btn.go{background:var(--teal);border-color:var(--teal);color:#07110F;font-weight:600;}
+
+  .typing{display:flex;align-items:center;gap:6px;padding:4px 0;}
+  .typing i{width:6px;height:6px;border-radius:50%;background:var(--ink-faint);display:inline-block;animation:bob 1.3s infinite;}
+  .typing i:nth-child(2){animation-delay:.18s;}
+  .typing i:nth-child(3){animation-delay:.36s;}
+  @keyframes bob{0%,60%,100%{transform:translateY(0);opacity:.4;}30%{transform:translateY(-4px);opacity:1;}}
+
+  /* ---------- Composer ---------- */
+  .composer-wrap{padding:14px 24px 22px;}
+  .composer{
+    max-width:760px;margin:0 auto;
+    border:1px solid var(--line);border-radius:16px;background:var(--panel);
+    box-shadow:0 12px 40px rgba(0,0,0,.28);
+    overflow:hidden;
+  }
+  .composer.focus{border-color:rgba(55,214,198,.5);box-shadow:0 0 0 3px rgba(55,214,198,.08),0 12px 40px rgba(0,0,0,.28);}
+  .drop-hint{
+    display:flex;align-items:center;gap:8px;padding:9px 16px;
+    border-bottom:1px dashed var(--line-soft);
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;color:var(--ink-faint);
+  }
+  .drop-hint svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .composer-in{display:flex;align-items:flex-end;gap:10px;padding:12px 12px 12px 16px;}
+  .composer-in textarea{
+    flex:1;background:transparent;border:0;resize:none;outline:none;
+    color:var(--ink);font-family:var(--body);font-size:14.5px;line-height:1.5;
+    max-height:120px;padding:6px 0;
+  }
+  .composer-in textarea::placeholder{color:var(--ink-faint);}
+  .tools{display:flex;align-items:center;gap:4px;}
+  .icon-btn{width:34px;height:34px;border-radius:9px;border:1px solid transparent;background:transparent;color:var(--ink-dim);display:grid;place-items:center;cursor:pointer;}
+  .icon-btn:hover{background:var(--panel-2);color:var(--ink);}
+  .icon-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .icon-btn.mic{position:relative;}
+  .icon-btn.mic::after{content:"soon";position:absolute;top:-6px;right:-8px;font-family:var(--mono);font-size:7.5px;letter-spacing:.08em;color:var(--amber);background:rgba(245,184,92,.12);border:1px solid rgba(245,184,92,.3);border-radius:5px;padding:1px 3px;}
+  .send{width:36px;height:36px;border-radius:10px;border:0;background:var(--teal);color:#07110F;display:grid;place-items:center;cursor:pointer;}
+  .send svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2.2;}
+  .composer-foot{max-width:760px;margin:9px auto 0;display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--ink-faint);letter-spacing:.04em;padding:0 4px;}
+
+  :focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:6px;}
+
+  @media (max-width:820px){
+    .rail{display:none;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .dot,.typing i{animation:none!important;}
+  }
+</style>
+</head>
+<body>
+
+  <!-- LEFT RAIL -->
+  <aside class="rail">
+    <div class="brand">
+      <div class="mark">F</div>
+      <div>
+        <h1>FRIDAY</h1>
+        <span>Local Assistant</span>
+      </div>
+    </div>
+
+    <div class="console" role="status" aria-label="System status">
+      <div class="hd"><span class="dot"></span> System</div>
+      <div class="row"><span>state</span><b>● running · local</b></div>
+      <div class="row"><span>model</span><b>qwen2.5:14b</b></div>
+      <div class="row"><span>vision</span><b>on demand</b></div>
+      <div class="row"><span>brain</span><b>47 notes</b></div>
+      <div class="row"><span>network</span><b>offline-ok</b></div>
+      <div class="row"><span>tokens</span><b class="zero">0 this session</b></div>
+    </div>
+
+    <nav aria-label="Sections">
+      <div class="nav-label">Workspace</div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/></svg>
+        Chat
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Projects <span class="count">6</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 5v-2M12 21v-2M5 12H3M21 12h-2M7 7 5.5 5.5M17 17l1.5 1.5M17 7l1.5-1.5M7 17l-1.5 1.5"/></svg>
+        Brain <span class="count">47</span>
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4M12 3v13M7 8l5-5 5 5"/></svg>
+        Uploads
+      </div>
+    </nav>
+
+    <div class="rail-foot">
+      <div class="user-chip">
+        <div class="avatar j">J</div>
+        <div class="who">Jack<small>jacko · this machine</small></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <h2>Chat</h2>
+      <span class="chip"><span class="dot"></span> Local · <span class="zero">0 tokens</span></span>
+      <span class="preview-badge">Preview — not connected</span>
+    </div>
+
+    <div class="stream">
+      <div class="thread">
+
+        <!-- FRIDAY greeting -->
+        <div class="msg">
+          <div class="avatar f">F</div>
+          <div class="bubble">
+            <div class="name f">FRIDAY</div>
+            <div class="body-txt">
+              <p>Morning, Jack. The CLARK note still has the gearbox reduction marked <span class="soft">to-verify</span> from last week — want to close that out, or are we on something else?</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jack drops a file -->
+        <div class="msg">
+          <div class="avatar j">J</div>
+          <div class="bubble">
+            <div class="name j">Jack</div>
+            <div class="body-txt"><p>Something else — take a look at this and tell me what the stall torque actually is.</p></div>
+            <div class="filecard">
+              <div class="ic">PDF</div>
+              <div class="fn">GM6208_datasheet.pdf<small>1.4 MB · dropped to uploads</small></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FRIDAY analyzes locally -->
+        <div class="msg">
+          <div class="avatar f">F</div>
+          <div class="bubble">
+            <div class="name f">FRIDAY</div>
+            <div class="body-txt">
+              <p>Read it. Stall torque is listed at <b>0.65 N·m at 12 V</b>, with a no-load speed of 2860 rpm and a stall current of 2.1 A. One thing worth flagging: that stall figure is at 25 °C — it derates above that, so budget headroom if the joint runs warm.</p>
+              <p class="soft">Want me to drop the key specs into the CLARK note?</p>
+            </div>
+            <div class="tag">
+              <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+              Analyzed locally · 0 tokens
+            </div>
+          </div>
+        </div>
+
+        <!-- Jack asks for an action -->
+        <div class="msg">
+          <div class="avatar j">J</div>
+          <div class="bubble">
+            <div class="name j">Jack</div>
+            <div class="body-txt"><p>Yes, and file the datasheet under the CLARK project.</p></div>
+          </div>
+        </div>
+
+        <!-- FRIDAY confirms the gated action -->
+        <div class="msg">
+          <div class="avatar f">F</div>
+          <div class="bubble">
+            <div class="name f">FRIDAY</div>
+            <div class="body-txt">
+              <p>Ready when you are — this one touches a project folder, so I'll wait for your go:</p>
+            </div>
+            <div class="action">
+              <div class="a-hd">Confirm action</div>
+              <div class="a-line">
+                → copy <span class="path">GM6208_datasheet.pdf</span> to <span class="path">\Projects\clark\datasheets\</span><br>
+                → append 3 specs to <span class="path">brain\projects\clark.md</span>
+              </div>
+              <div class="a-btns">
+                <button class="btn go">Confirm</button>
+                <button class="btn">Not now</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- typing -->
+        <div class="msg">
+          <div class="avatar f">F</div>
+          <div class="bubble">
+            <div class="name f">FRIDAY</div>
+            <div class="typing" aria-label="FRIDAY is typing"><i></i><i></i><i></i></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- COMPOSER -->
+    <div class="composer-wrap">
+      <div class="composer" id="composer">
+        <div class="drop-hint">
+          <svg viewBox="0 0 24 24"><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4M12 3v13M7 8l5-5 5 5"/></svg>
+          Drop a file anywhere to have FRIDAY read it — locally, no tokens
+        </div>
+        <div class="composer-in">
+          <textarea id="ta" rows="1" placeholder="Ask FRIDAY, or drop a file…"></textarea>
+          <div class="tools">
+            <button class="icon-btn" title="Attach file" aria-label="Attach file">
+              <svg viewBox="0 0 24 24"><path d="M21 12.5 12.5 21a5 5 0 0 1-7-7l8.5-8.5a3.5 3.5 0 0 1 5 5L10.5 18a2 2 0 0 1-3-3l7.5-7.5"/></svg>
+            </button>
+            <button class="icon-btn mic" title="Voice — coming later" aria-label="Voice, coming later">
+              <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+            </button>
+            <button class="send" title="Send" aria-label="Send">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="composer-foot">
+        <span>Everything runs on this machine.</span>
+        <span>FRIDAY · local build</span>
+      </div>
+    </div>
+  </main>
+
+<script>
+  // Minimal, cosmetic-only interactions for the preview.
+  const ta = document.getElementById('ta');
+  const composer = document.getElementById('composer');
+  ta.addEventListener('input', () => {
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+  });
+  ta.addEventListener('focus', () => composer.classList.add('focus'));
+  ta.addEventListener('blur', () => composer.classList.remove('focus'));
+</script>
+</body>
+</html>

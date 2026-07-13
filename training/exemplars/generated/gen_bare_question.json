@@ -1,0 +1,942 @@
+[
+ {
+  "id": "gen-bare-702",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "5 watts continuous for two days - how many watt-hours?"
+   },
+   {
+    "role": "assistant",
+    "content": "Energy is power times time:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "5 W * 2 day",
+       "to_unit": "Wh"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 240 Wh"
+   },
+   {
+    "role": "assistant",
+    "content": "240 Wh. Two days is 48 hours, times 5 W is 240 - checks."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-700",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "a 40 W load on a 16 V rail draws how much current?"
+   },
+   {
+    "role": "assistant",
+    "content": "Current is power over voltage:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "40 W / (16 V)",
+       "to_unit": "A"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 2.5 A"
+   },
+   {
+    "role": "assistant",
+    "content": "2.5 A. Power over voltage, and 40 over 16 is 2.5 - sanity holds."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-707",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "how many joules in 3.3 watt-hours?"
+   },
+   {
+    "role": "assistant",
+    "content": "Energy unit conversion:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "3.3 Wh",
+       "to_unit": "J"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 11880 J"
+   },
+   {
+    "role": "assistant",
+    "content": "11,880 J. A watt-hour is 3,600 J, so 3.3 of them is about 11.9 kJ - checks."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-710",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "5 volts across a 220 ohm resistor - current in milliamps?"
+   },
+   {
+    "role": "assistant",
+    "content": "Current is voltage over resistance:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "5 V / (220 ohm)",
+       "to_unit": "mA"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 22.7273 mA"
+   },
+   {
+    "role": "assistant",
+    "content": "22.7 mA. Ohm's law - five over two-twenty, in the tens-of-mA range you'd expect."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-701",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "something runs at 40 W for 90 minutes. energy in watt-hours?"
+   },
+   {
+    "role": "assistant",
+    "content": "Energy is power times time:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "40 W * 90 min",
+       "to_unit": "Wh"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 60 Wh"
+   },
+   {
+    "role": "assistant",
+    "content": "60 Wh. Ninety minutes is an hour and a half, times 40 W is 60 - lines up."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-705",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "4800 rpm through a 16:1 reduction - output speed?"
+   },
+   {
+    "role": "assistant",
+    "content": "A reduction divides speed:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "4800 rpm / 16",
+       "to_unit": "rpm"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 300 rpm"
+   },
+   {
+    "role": "assistant",
+    "content": "300 rpm. Speed divides through a reduction, so 4800 over 16 is 300 - and torque climbs 16x in exchange."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-694",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "what's 2.5 atmospheres in kilopascals?"
+   },
+   {
+    "role": "assistant",
+    "content": "Unit conversion:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "2.5 atm",
+       "to_unit": "kPa"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 253.312 kPa"
+   },
+   {
+    "role": "assistant",
+    "content": "253 kPa. That's about two and a half times sea-level pressure, which is the sanity check."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-698",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "1.5 amps at 12 volts - what's the power?"
+   },
+   {
+    "role": "assistant",
+    "content": "Power is current times voltage:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "1.5 A * 12 V",
+       "to_unit": "W"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 18 W"
+   },
+   {
+    "role": "assistant",
+    "content": "18 W. Current times voltage, and 1.5 times 12 is 18 - arithmetic and units both check."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-709",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "what's 1.5 atmospheres in kilopascals?"
+   },
+   {
+    "role": "assistant",
+    "content": "Pressure unit conversion:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "1.5 atm",
+       "to_unit": "kPa"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 151.988 kPa"
+   },
+   {
+    "role": "assistant",
+    "content": "152 kPa. Sea level is about 101 kPa, so half again on top of that lands here."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-704",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "0.6 N*m through an 8:1 at 90% efficient - torque out?"
+   },
+   {
+    "role": "assistant",
+    "content": "Torque multiplies by the ratio, then efficiency takes its cut:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "0.6 N*m * 8 * 0.9",
+       "to_unit": "N*m"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 4.32 m * N"
+   },
+   {
+    "role": "assistant",
+    "content": "4.32 N*m. Eight times the input is the ideal 4.8; the 90% knocks it to 4.32. Speed went the other way - down 8x."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-703",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "0.4 N*m into a 20:1 reduction, ideal. output torque?"
+   },
+   {
+    "role": "assistant",
+    "content": "Torque multiplies through a reduction:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "0.4 N*m * 20",
+       "to_unit": "N*m"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 8 m * N"
+   },
+   {
+    "role": "assistant",
+    "content": "8 N*m. A reduction multiplies torque by the ratio, so 0.4 times 20 is 8 at 100% - a real gearbox lands a bit under once efficiency's in."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-712",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "230 V mains, 0.26 A draw - power?"
+   },
+   {
+    "role": "assistant",
+    "content": "Power is voltage times current:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "230 V * 0.26 A",
+       "to_unit": "W"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 59.8 W"
+   },
+   {
+    "role": "assistant",
+    "content": "59.8 W. Right at 60 W, which is what a quarter-amp off mains comes to."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-711",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "a 2200 mAh pack at 7.4 V holds how many watt-hours?"
+   },
+   {
+    "role": "assistant",
+    "content": "Energy is charge times voltage:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "2200 mAh * 7.4 V",
+       "to_unit": "Wh"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 16.28 Wh"
+   },
+   {
+    "role": "assistant",
+    "content": "16.3 Wh. Amp-hours times volts - 2.2 Ah at 7.4 V is about 16 Wh, the usual way to read a pack."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-713",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "1200 W for 25 minutes - energy used, watt-hours?"
+   },
+   {
+    "role": "assistant",
+    "content": "Energy is power times time:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "1200 W * 25 min",
+       "to_unit": "Wh"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 500 Wh"
+   },
+   {
+    "role": "assistant",
+    "content": "500 Wh. 1.2 kW for a bit under half an hour is 500 Wh, or half a kWh - checks."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-697",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "convert 30 metres to feet."
+   },
+   {
+    "role": "assistant",
+    "content": "Length conversion:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "30 m",
+       "to_unit": "ft"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 98.4252 ft"
+   },
+   {
+    "role": "assistant",
+    "content": "98.4 ft. About 3.28 feet to the metre, so ~98 checks out."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-695",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "how many joules in 3 watt-hours?"
+   },
+   {
+    "role": "assistant",
+    "content": "Energy unit conversion:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "3 Wh",
+       "to_unit": "J"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 10800 J"
+   },
+   {
+    "role": "assistant",
+    "content": "10,800 J. A watt-hour is 3,600 J, so three of them is 10.8 kJ - lines up."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-696",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "18 amps at 14.8 volts - how many watts?"
+   },
+   {
+    "role": "assistant",
+    "content": "Power is current times voltage:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "18 A * 14.8 V",
+       "to_unit": "W"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 266.4 W"
+   },
+   {
+    "role": "assistant",
+    "content": "266.4 W. Roughly a quarter-kilowatt, which is what those two numbers should give."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-699",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "how many watts is 0.8 A drawn at 48 V?"
+   },
+   {
+    "role": "assistant",
+    "content": "Power is current times voltage:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "0.8 A * 48 V",
+       "to_unit": "W"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 38.4 W"
+   },
+   {
+    "role": "assistant",
+    "content": "38.4 W. Under 40 W at that voltage, which is the ballpark a sub-amp draw at 48 V should land in."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-706",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "convert 2.2 kgf*cm to newton-metres."
+   },
+   {
+    "role": "assistant",
+    "content": "Force-length unit conversion:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "2.2 kgf*cm",
+       "to_unit": "N*m"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 0.215746 m * N"
+   },
+   {
+    "role": "assistant",
+    "content": "0.216 N*m. Kilogram-force-centimetres to N*m is the one that gets hand-mangled most, so it went through the tool."
+   }
+  ]
+ },
+ {
+  "id": "gen-bare-708",
+  "category": "bare_question",
+  "source_shape": "bare",
+  "demonstrates": [
+   "bare"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "answers with the number and units, routed through calc",
+   "adds at most one GENERAL plausibility line",
+   "invents no project or scenario context the user did not give"
+  ],
+  "anti_patterns": [
+   "wraps the answer in invented project context (a drawing, a limit, the pod)",
+   "omits units",
+   "hand-computes instead of calling calc"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "12 feet in metres?"
+   },
+   {
+    "role": "assistant",
+    "content": "Length conversion:",
+    "tool_calls": [
+     {
+      "name": "calc",
+      "arguments": {
+       "expression": "12 ft",
+       "to_unit": "m"
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "calc",
+    "content": "= 3.6576 m"
+   },
+   {
+    "role": "assistant",
+    "content": "3.66 m. Roughly 0.3 m to the foot, so ~3.6 is right."
+   }
+  ]
+ }
+]

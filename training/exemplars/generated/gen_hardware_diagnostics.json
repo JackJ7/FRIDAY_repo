@@ -1,0 +1,3432 @@
+[
+ {
+  "id": "gen-diag-241",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"buck rail dips hard every time I punch the thrusters. brownout risk?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is the rail sags in step with thruster current draw; what I'd bet but haven't proven is commutation transients + insufficient bulk capacitance on the buck output, not a weak converter. Prove it first - scope the buck output during a hard pull and measure the dip depth and duration The dip lines up with the current spike means add a cap bank on the buck output to swallow the transient before you resize the converter. The converter itself can't hold the average load means then it's undersized and caps won't save it - that's a different fix. Swapping parts or swap the buck converter before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-240",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin (housing) just pinged me: \"buck rail dips hard every time I punch the thrusters. brownout risk?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the rail sags in step with thruster current draw. Hypothesis, not confirmed yet: commutation transients + insufficient bulk capacitance on the buck output, not a weak converter. Isolate it before changing anything - scope the buck output during a hard pull and measure the dip depth and duration If the dip lines up with the current spike, add a cap bank on the buck output to swallow the transient before you resize the converter; if the converter itself can't hold the average load, then it's undersized and caps won't save it - that's a different fix. Don't swap the buck converter until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-170",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "can we just leave the router in the piloting path? it mostly works."
+   },
+   {
+    "role": "assistant",
+    "content": "Stop - keeping the router in the piloting path is out of date. The GL-MT3000 stays demoted to a quiet hub - it does not belong in the live piloting path. The MT7981 WED/QDMA frame-engine hang drops the link unpredictably under load, and you can't disable it without killing the AP - which is exactly why piloting runs on the Pi's direct wired link. Confirm before moving on: verify piloting traffic rides eth0 (192.168.8.x), not the router, with `ip route` and a load test. Fix the comment too so nobody re-inherits the wrong number."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-428",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - tether continuity looks intermittent when I flex it. where do I even start?"
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is continuity changes with flex, so it's a mechanical/connection fault not a dead conductor; what I'd bet but haven't proven is a marginal joint or a conductor cracked near a strain point, not the whole run. Prove it first - buzz each conductor end-to-end while flexing sections one at a time to localize where it opens One section drops continuity on flex means that's your fault zone - inspect/reterminate there and add strain relief, don't remake the whole tether. It's open everywhere or nowhere means then it's a connector at one end and we reterminate that. Swapping parts or replace the entire tether before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-248",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - i2C to the PCA9685 keeps locking up mid-run and I have to reset."
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not replace the PCA9685 yet. Established: the bus hangs under running conditions, recovers on reset. Leading suspect, unconfirmed: noise-induced I2C lockup - a glitched clock/data edge from EMI leaves the bus stuck, not dead silicon. The isolating test: scope SDA/SCL for stuck-low during a hang, and correlate with motor current If it comes back that a line's held low right when motors spike, it's EMI on the bus - shorten and route I2C away from power, add stronger pull-ups, consider a bus recovery toggle; if it hangs with motors idle too, then suspect addressing/pull-ups or the board and bench it isolated. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-179",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - jhan set throw scaling assuming the full 1100-1900. fine to move on?"
+   },
+   {
+    "role": "assistant",
+    "content": "Stop - the 1100-1900 µs assumption in the throw scaling is out of date. Scale to 1228-1772 µs - that's the real ESC range. Scaling built on 1100-1900 gives you less actual authority than the math says and a nonlinear feel near the ends, and the arm-time drift still bites at neutral. Confirm before moving on: bench the commanded-vs-measured curve and re-fit the scaling to 1228-1772. Fix the comment too so nobody re-inherits the wrong number."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-259",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "camera streams fine for a few minutes then drops. comes back on replug."
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is it works cold, drops after a few minutes, recovers on replug; what I'd bet but haven't proven is thermal or a marginal USB connection at the splice degrading as it warms - not a software crash. Prove it first - watch dmesg for the drop and note whether it's a USB disconnect vs a stream error, and feel the connector temp\n\n`dmesg -w`\n\nDmesg shows a USB disconnect at the drop means it's the physical link - reflow/reseat the splice and check strain relief, not the camera_server code. No USB event, just the stream stalls means then it's software/bandwidth and we look at camera_server. Swapping parts or rewrite the streaming code before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-242",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - buck rail dips hard every time I punch the thrusters. brownout risk?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not swap the buck converter yet. Established: the rail sags in step with thruster current draw. Leading suspect, unconfirmed: commutation transients + insufficient bulk capacitance on the buck output, not a weak converter. The isolating test: scope the buck output during a hard pull and measure the dip depth and duration If it comes back that the dip lines up with the current spike, add a cap bank on the buck output to swallow the transient before you resize the converter; if the converter itself can't hold the average load, then it's undersized and caps won't save it - that's a different fix. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-425",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "tether continuity looks intermittent when I flex it. where do I even start?"
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is continuity changes with flex, so it's a mechanical/connection fault not a dead conductor; what I'd bet but haven't proven is a marginal joint or a conductor cracked near a strain point, not the whole run. Prove it first - buzz each conductor end-to-end while flexing sections one at a time to localize where it opens One section drops continuity on flex means that's your fault zone - inspect/reterminate there and add strain relief, don't remake the whole tether. It's open everywhere or nowhere means then it's a connector at one end and we reterminate that. Swapping parts or replace the entire tether before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-035",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "PCA9685 outputs look jittery on the scope even at a fixed command."
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not replace the PCA9685 yet. Established: the command is fixed but the output jitters. Leading suspect, unconfirmed: supply/signal-integrity noise on the PCA9685, likely EMI-coupled or a soft I2C line. The isolating test: scope the I2C lines and the PCA9685 supply while toggling nearby motor current If it comes back that jitter rises with motor current, it's coupled noise - decouple the supply and route I2C away from the power lines; if jitter's there with motors off, then it's I2C pull-ups or the board itself and we bench it isolated. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-264",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "a thruster spins the wrong way. wiring or config?"
+   },
+   {
+    "role": "assistant",
+    "content": "Known: one thruster's rotation is reversed. Hypothesis, not confirmed yet: either the motor leads/ESC direction or a sign in the allocation - a config/wiring mismatch, not a fault. Isolate it before changing anything - command that single thruster in isolation at a known-positive value and observe direction If it drives reversed to a positive command, flip it once - either swap two motor leads or invert that channel's sign in the mix - and re-verify; if it behaves right in isolation, then the reversal is in the mixing/allocation and we check the matrix sign for that thruster. Don't rewire before isolating which layer is wrong until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-046",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"IMU reads look noisy - is the sensor bad?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is the raw samples are noisy; what I'd bet but haven't proven is mounting/EMI vibration coupling or an unfiltered read, not necessarily a dead MPU-6050. Prove it first - log a still sample set on the bench away from motors, then on-vehicle with motors off vs on Noise appears only with motors running means it's coupling - isolate the mount and filter, don't condemn the sensor. It's noisy even still and isolated means then suspect the part or its wiring and swap-test. Swapping parts or order a new IMU before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-028",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and getting frame tears and dropouts on the pilot view when the motors spin up."
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is the artifacts are motor-correlated; what I'd bet but haven't proven is EMI on the USB camera path under motor load, not a decode bug. Prove it first - run the motors with the camera cable rerouted and strain-relieved, and compare a headless capture\n\n`ffmpeg -f v4l2 -input_format mjpeg -i /dev/video0 -f null -`\n\nThe headless capture is clean while the GUI tears means the capture path is fine and it's display/EMI on render, chase routing and the GUI. The headless capture also tears under motors means it's upstream EMI on the cable - twisted pairs and routing. Swapping parts or rewrite the display code before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-266",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"a thruster spins the wrong way. wiring or config?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not rewire before isolating which layer is wrong yet. Established: one thruster's rotation is reversed. Leading suspect, unconfirmed: either the motor leads/ESC direction or a sign in the allocation - a config/wiring mismatch, not a fault. The isolating test: command that single thruster in isolation at a known-positive value and observe direction If it comes back that it drives reversed to a positive command, flip it once - either swap two motor leads or invert that channel's sign in the mix - and re-verify; if it behaves right in isolation, then the reversal is in the mixing/allocation and we check the matrix sign for that thruster. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-022",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jasmine on chassis is asking - \"neutral's set right in code but the thrusters creep, worse after a few minutes warm.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is neutral is correct in code; creep grows with heat; what I'd bet but haven't proven is PCA9685 RC-oscillator drift - the pulse width shifts as it warms, and the ESC armed on a drifted neutral holds slight throttle. Prove it first - log commanded µs vs measured output at cold arm and after ~10 min The creep tracks temperature means tier the fix least-invasive first: shade/recalibrate at operating temp, then software temp-comp, then an external clock on EXTCLK. It's constant cold and warm means then it's a fixed neutral offset, not drift, and we recalibrate once. Swapping parts or jump to the external clock mod before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-021",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison (the float) just pinged me: \"neutral's set right in code but the thrusters creep, worse after a few minutes warm.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Known: neutral is correct in code; creep grows with heat. Hypothesis, not confirmed yet: PCA9685 RC-oscillator drift - the pulse width shifts as it warms, and the ESC armed on a drifted neutral holds slight throttle. Isolate it before changing anything - log commanded µs vs measured output at cold arm and after ~10 min If the creep tracks temperature, tier the fix least-invasive first: shade/recalibrate at operating temp, then software temp-comp, then an external clock on EXTCLK; if it's constant cold and warm, then it's a fixed neutral offset, not drift, and we recalibrate once. Don't jump to the external clock mod until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-016",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jasmine (chassis) just pinged me: \"ESC 3 cut out again under hard maneuvering. what am I chasing?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is it's ESC 3 specifically, under high-current transients; what I'd bet but haven't proven is commutation transients on the buck output browning the ESC at its draw peak - the same path that fed the last cascade. Prove it first - scope the buck rail at ESC 3 during a hard pull, look for the dip The rail dips at the cutout means add a cap bank on that buck output to swallow the transient before we suspect the ESC itself. The rail's clean means then it's the ESC or its signal line and we swap-test it. Swapping parts or replace ESC 3 before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-434",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - servo rail picks up noise right when the ESCs arm. related?"
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is the noise appears at ESC arm, not randomly; what I'd bet but haven't proven is the arm-time current inrush coupling onto the shared servo/signal rail - a grounding/decoupling issue, not the servos. Prove it first - scope the servo rail through an arm sequence and see if the noise coincides with the inrush Noise spikes at the inrush means decouple the servo rail and separate its ground return from the ESC power - conducted coupling. Noise is there without arming means then it's a steady source and we hunt that separately. Swapping parts or replace the servos or the PCA9685 before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-045",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "IMU reads look noisy - is the sensor bad?"
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the raw samples are noisy. Hypothesis, not confirmed yet: mounting/EMI vibration coupling or an unfiltered read, not necessarily a dead MPU-6050. Isolate it before changing anything - log a still sample set on the bench away from motors, then on-vehicle with motors off vs on If noise appears only with motors running, it's coupling - isolate the mount and filter, don't condemn the sensor; if it's noisy even still and isolated, then suspect the part or its wiring and swap-test. Don't order a new IMU until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-009",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - eth0 link keeps dropping mid-run. was fine on the bench."
+   },
+   {
+    "role": "assistant",
+    "content": "Known: it's stable on the bench, drops under motor load. Hypothesis, not confirmed yet: EMI on the tether at gigabit - the frame engine flaps when the thrusters draw current. Isolate it before changing anything - force 100 Mbps and rerun under load, watching for resets\n\n`sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nIf the drops stop at 100, it's the EMI-gigabit interaction and 100 Mbps is the fix, not a cable swap; if it still drops at 100, we check the physical connector and dmesg for the PHY. Don't replace the tether until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-262",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - camera streams fine for a few minutes then drops. comes back on replug."
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is it works cold, drops after a few minutes, recovers on replug; what I'd bet but haven't proven is thermal or a marginal USB connection at the splice degrading as it warms - not a software crash. Prove it first - watch dmesg for the drop and note whether it's a USB disconnect vs a stream error, and feel the connector temp\n\n`dmesg -w`\n\nDmesg shows a USB disconnect at the drop means it's the physical link - reflow/reseat the splice and check strain relief, not the camera_server code. No USB event, just the stream stalls means then it's software/bandwidth and we look at camera_server. Swapping parts or rewrite the streaming code before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-007",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin on surface software is asking - \"eth0 link keeps dropping mid-run. was fine on the bench.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is it's stable on the bench, drops under motor load; what I'd bet but haven't proven is EMI on the tether at gigabit - the frame engine flaps when the thrusters draw current. Prove it first - force 100 Mbps and rerun under load, watching for resets\n\n`sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nThe drops stop at 100 means it's the EMI-gigabit interaction and 100 Mbps is the fix, not a cable swap. It still drops at 100 means we check the physical connector and dmesg for the PHY. Swapping parts or replace the tether before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-162",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin on surface software is asking - \"Daniel says gigabit on the tether is fine, more bandwidth for camera. good?\""
+   },
+   {
+    "role": "assistant",
+    "content": "That number's stale. Cap it at 100 Mbps - gigabit flaps under the motor/tether EMI. A mid-run link reset costs you pilot comms, which is far worse than bandwidth you're not using - control + camera don't saturate 100. Bench-confirm it: pin it with `ethtool ... speed 100 duplex full autoneg off` and load-test under motors, and correct it at the source."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-025",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "getting frame tears and dropouts on the pilot view when the motors spin up."
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is the artifacts are motor-correlated; what I'd bet but haven't proven is EMI on the USB camera path under motor load, not a decode bug. Prove it first - run the motors with the camera cable rerouted and strain-relieved, and compare a headless capture\n\n`ffmpeg -f v4l2 -input_format mjpeg -i /dev/video0 -f null -`\n\nThe headless capture is clean while the GUI tears means the capture path is fine and it's display/EMI on render, chase routing and the GUI. The headless capture also tears under motors means it's upstream EMI on the cable - twisted pairs and routing. Swapping parts or rewrite the display code before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-431",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"servo rail picks up noise right when the ESCs arm. related?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is the noise appears at ESC arm, not randomly; what I'd bet but haven't proven is the arm-time current inrush coupling onto the shared servo/signal rail - a grounding/decoupling issue, not the servos. Prove it first - scope the servo rail through an arm sequence and see if the noise coincides with the inrush Noise spikes at the inrush means decouple the servo rail and separate its ground return from the ESC power - conducted coupling. Noise is there without arming means then it's a steady source and we hunt that separately. Swapping parts or replace the servos or the PCA9685 before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-012",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"USB camera won't enumerate through the assembled cable, worked bare.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Known: it enumerates bare, fails through the splice. Hypothesis, not confirmed yet: a D+/D- integrity problem at the splice - untwisted pair or a cold joint. Isolate it before changing anything - wiggle-test each junction while watching dmesg, and confirm D+/D- stayed twisted through the splice\n\n`dmesg -w`\n\nIf enumeration flickers on a wiggle, it's that junction - reflow and re-twist before anything else, and definitely before epoxy; if it's dead steady-bad, we check the connector pinout and the 5V rail at the camera. Don't epoxy the assembly until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-026",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall (manipulators) just pinged me: \"getting frame tears and dropouts on the pilot view when the motors spin up.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not rewrite the display code yet. Established: the artifacts are motor-correlated. Leading suspect, unconfirmed: EMI on the USB camera path under motor load, not a decode bug. The isolating test: run the motors with the camera cable rerouted and strain-relieved, and compare a headless capture\n\n`ffmpeg -f v4l2 -input_format mjpeg -i /dev/video0 -f null -`\n\nIf it comes back that the headless capture is clean while the GUI tears, the capture path is fine and it's display/EMI on render, chase routing and the GUI; if the headless capture also tears under motors, it's upstream EMI on the cable - twisted pairs and routing. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-049",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - iMU reads look noisy - is the sensor bad?"
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is the raw samples are noisy; what I'd bet but haven't proven is mounting/EMI vibration coupling or an unfiltered read, not necessarily a dead MPU-6050. Prove it first - log a still sample set on the bench away from motors, then on-vehicle with motors off vs on Noise appears only with motors running means it's coupling - isolate the mount and filter, don't condemn the sensor. It's noisy even still and isolated means then suspect the part or its wiring and swap-test. Swapping parts or order a new IMU before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-029",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - getting frame tears and dropouts on the pilot view when the motors spin up."
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not rewrite the display code yet. Established: the artifacts are motor-correlated. Leading suspect, unconfirmed: EMI on the USB camera path under motor load, not a decode bug. The isolating test: run the motors with the camera cable rerouted and strain-relieved, and compare a headless capture\n\n`ffmpeg -f v4l2 -input_format mjpeg -i /dev/video0 -f null -`\n\nIf it comes back that the headless capture is clean while the GUI tears, the capture path is fine and it's display/EMI on render, chase routing and the GUI; if the headless capture also tears under motors, it's upstream EMI on the cable - twisted pairs and routing. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-432",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan on electrical is asking - \"servo rail picks up noise right when the ESCs arm. related?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not replace the servos or the PCA9685 yet. Established: the noise appears at ESC arm, not randomly. Leading suspect, unconfirmed: the arm-time current inrush coupling onto the shared servo/signal rail - a grounding/decoupling issue, not the servos. The isolating test: scope the servo rail through an arm sequence and see if the noise coincides with the inrush If it comes back that noise spikes at the inrush, decouple the servo rail and separate its ground return from the ESC power - conducted coupling; if noise is there without arming, then it's a steady source and we hunt that separately. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-177",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"Jhan set throw scaling assuming the full 1100-1900. fine to move on?\""
+   },
+   {
+    "role": "assistant",
+    "content": "That number's stale. Scale to 1228-1772 µs - that's the real ESC range. Scaling built on 1100-1900 gives you less actual authority than the math says and a nonlinear feel near the ends, and the arm-time drift still bites at neutral. Bench-confirm it: bench the commanded-vs-measured curve and re-fit the scaling to 1228-1772, and correct it at the source."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-257",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and bar30 depth reading jumps around by tens of cm. sensor dying?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not order a new Bar30 yet. Established: the depth value is noisy/jumpy. Leading suspect, unconfirmed: electrical noise or an I2C read glitch on the MS5837, or an unfiltered read - not necessarily a failing sensor. The isolating test: log raw pressure at a fixed known depth and look at the spread, first on the bench then on-vehicle If it comes back that it's steady on the bench, jumpy on-vehicle, it's coupled noise/read timing - filter and check the I2C routing, don't replace it; if it's jumpy even isolated on the bench, then suspect the sensor or its wiring. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-247",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - i2C to the PCA9685 keeps locking up mid-run and I have to reset."
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is the bus hangs under running conditions, recovers on reset; what I'd bet but haven't proven is noise-induced I2C lockup - a glitched clock/data edge from EMI leaves the bus stuck, not dead silicon. Prove it first - scope SDA/SCL for stuck-low during a hang, and correlate with motor current A line's held low right when motors spike means it's EMI on the bus - shorten and route I2C away from power, add stronger pull-ups, consider a bus recovery toggle. It hangs with motors idle too means then suspect addressing/pull-ups or the board and bench it isolated. Swapping parts or replace the PCA9685 before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-004",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - thrusters twitch every time the camera stream reconnects. coincidence?"
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is the twitch is time-correlated with the reconnect, not random; what I'd bet but haven't proven is EMI coupling - the USB camera cable re-enumerating throws noise onto the PCA9685 signal lines nearby. Prove it first - log commanded PWM against the reconnect events, and separately route the camera cable away from the servo lines for one run The twitch tracks reconnects and drops when the cable's moved means it's EMI coupling and the fix is routing + twisted pairs, not the control code. It twitches independent of the camera means we look at the PCA9685 supply and neutral drift instead. Swapping parts or start editing the control loop before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-253",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - one thruster just won't arm - no spin at all, others are fine."
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is it's one ESC, no arm, the rest are fine; what I'd bet but haven't proven is the ESC never saw a valid first pulse - a signal-line or neutral issue at that channel, not a dead motor. Prove it first - swap that ESC's signal lead to a known-good PCA9685 channel and see if it arms It arms on the good channel means the fault's the original channel/signal path, not the ESC or motor. Still no arm on a good channel means then it's the ESC or the motor and we swap-test those. Swapping parts or replace the thruster before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-011",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"USB camera won't enumerate through the assembled cable, worked bare.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not epoxy the assembly yet. Established: it enumerates bare, fails through the splice. Leading suspect, unconfirmed: a D+/D- integrity problem at the splice - untwisted pair or a cold joint. The isolating test: wiggle-test each junction while watching dmesg, and confirm D+/D- stayed twisted through the splice\n\n`dmesg -w`\n\nIf it comes back that enumeration flickers on a wiggle, it's that junction - reflow and re-twist before anything else, and definitely before epoxy; if it's dead steady-bad, we check the connector pinout and the 5V rail at the camera. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-252",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and one thruster just won't arm - no spin at all, others are fine."
+   },
+   {
+    "role": "assistant",
+    "content": "Known: it's one ESC, no arm, the rest are fine. Hypothesis, not confirmed yet: the ESC never saw a valid first pulse - a signal-line or neutral issue at that channel, not a dead motor. Isolate it before changing anything - swap that ESC's signal lead to a known-good PCA9685 channel and see if it arms If it arms on the good channel, the fault's the original channel/signal path, not the ESC or motor; if still no arm on a good channel, then it's the ESC or the motor and we swap-test those. Don't replace the thruster until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-167",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan on electrical is asking - \"the ESC comment says 1100-1900 µs and it's been working, leave it?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Stop - the 1100-1900 µs range is out of date. The real usable range on the T200/BR Basic is 1228-1772 µs, not 1100-1900. Neutral's 1500 either way so it looks fine, but the endpoints being wrong stretches any throw scaling, and since the ESC arms on the first pulse a drifted neutral arms as throttle and creeps. Confirm before moving on: log commanded vs measured µs cold and warm, and correct the range in the comment. Fix the comment too so nobody re-inherits the wrong number."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-174",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - can we just leave the router in the piloting path? it mostly works."
+   },
+   {
+    "role": "assistant",
+    "content": "That number's stale. The GL-MT3000 stays demoted to a quiet hub - it does not belong in the live piloting path. The MT7981 WED/QDMA frame-engine hang drops the link unpredictably under load, and you can't disable it without killing the AP - which is exactly why piloting runs on the Pi's direct wired link. Bench-confirm it: verify piloting traffic rides eth0 (192.168.8.x), not the router, with `ip route` and a load test, and correct it at the source."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-017",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"ESC 3 cut out again under hard maneuvering. what am I chasing?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not replace ESC 3 yet. Established: it's ESC 3 specifically, under high-current transients. Leading suspect, unconfirmed: commutation transients on the buck output browning the ESC at its draw peak - the same path that fed the last cascade. The isolating test: scope the buck rail at ESC 3 during a hard pull, look for the dip If it comes back that the rail dips at the cutout, add a cap bank on that buck output to swallow the transient before we suspect the ESC itself; if the rail's clean, then it's the ESC or its signal line and we swap-test it. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-030",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "the wired link negotiates gigabit fine on the bench but I don't trust it in the water."
+   },
+   {
+    "role": "assistant",
+    "content": "Known: it negotiates gigabit clean out of EMI. Hypothesis, not confirmed yet: gigabit will flap once the tether sees motor EMI - it's a known failure mode for us. Isolate it before changing anything - pin it to 100 and load-test rather than trusting the bench negotiation\n\n`sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nIf 100 holds under load, leave it capped - the bandwidth headroom isn't worth a mid-run comms drop; if even 100 flaps, then the problem's physical and we harden the connector/routing. Don't ship it at gigabit because the bench looked fine until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-036",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison (the float) just pinged me: \"PCA9685 outputs look jittery on the scope even at a fixed command.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the command is fixed but the output jitters. Hypothesis, not confirmed yet: supply/signal-integrity noise on the PCA9685, likely EMI-coupled or a soft I2C line. Isolate it before changing anything - scope the I2C lines and the PCA9685 supply while toggling nearby motor current If jitter rises with motor current, it's coupled noise - decouple the supply and route I2C away from the power lines; if jitter's there with motors off, then it's I2C pull-ups or the board itself and we bench it isolated. Don't replace the PCA9685 until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-040",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "camera stream sits at ~7 fps in the GUI. capture's confirmed MJPEG."
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is MJPEG capture confirmed, so capture/USB hand off fine; what I'd bet but haven't proven is the GUI decode/display path is the ceiling, not the camera. Prove it first - count fps headless at the same resolution, outside the GUI\n\n`ffmpeg -f v4l2 -input_format mjpeg -video_size 1920x1080 -i /dev/video0 -f null -`\n\nHeadless runs 25-30 means the render path is the bottleneck - that's where the work goes. Headless also caps ~7 means it's upstream (enumeration, EMI, bandwidth) and we chase that. Swapping parts or refactor the display before the bypass says it's the display before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-164",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - daniel says gigabit on the tether is fine, more bandwidth for camera. good?"
+   },
+   {
+    "role": "assistant",
+    "content": "Stop - gigabit on the tether is out of date. Cap it at 100 Mbps - gigabit flaps under the motor/tether EMI. A mid-run link reset costs you pilot comms, which is far worse than bandwidth you're not using - control + camera don't saturate 100. Confirm before moving on: pin it with `ethtool ... speed 100 duplex full autoneg off` and load-test under motors. Fix the comment too so nobody re-inherits the wrong number."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-273",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - control feels laggy under load - is the link the problem?"
+   },
+   {
+    "role": "assistant",
+    "content": "Known: latency grows specifically under motor load. Hypothesis, not confirmed yet: EMI-induced retransmits/flapping on the tether at gigabit, inflating round-trip - not a slow control loop. Isolate it before changing anything - ping the vehicle under load at gigabit vs pinned 100 Mbps and compare latency/loss\n\n`ping -i 0.2 192.168.8.1`\n\nIf latency and loss drop at 100, it's the link - cap at 100 and the lag clears, don't touch the loop timing; if latency's the same at 100, then look at the control loop rate and the send cadence in laptop.py. Don't start tuning PID or the loop rate until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-013",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and uSB camera won't enumerate through the assembled cable, worked bare."
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is it enumerates bare, fails through the splice; what I'd bet but haven't proven is a D+/D- integrity problem at the splice - untwisted pair or a cold joint. Prove it first - wiggle-test each junction while watching dmesg, and confirm D+/D- stayed twisted through the splice\n\n`dmesg -w`\n\nEnumeration flickers on a wiggle means it's that junction - reflow and re-twist before anything else, and definitely before epoxy. It's dead steady-bad means we check the connector pinout and the 5V rail at the camera. Swapping parts or epoxy the assembly before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-172",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel on our pilot is asking - \"can we just leave the router in the piloting path? it mostly works.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hold on - keeping the router in the piloting path is stale. The GL-MT3000 stays demoted to a quiet hub - it does not belong in the live piloting path. The MT7981 WED/QDMA frame-engine hang drops the link unpredictably under load, and you can't disable it without killing the AP - which is exactly why piloting runs on the Pi's direct wired link. Before we move on, confirm it: verify piloting traffic rides eth0 (192.168.8.x), not the router, with `ip route` and a load test. And fix the stale value in the code comment so it doesn't resurface."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-032",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"the wired link negotiates gigabit fine on the bench but I don't trust it in the water.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not ship it at gigabit because the bench looked fine yet. Established: it negotiates gigabit clean out of EMI. Leading suspect, unconfirmed: gigabit will flap once the tether sees motor EMI - it's a known failure mode for us. The isolating test: pin it to 100 and load-test rather than trusting the bench negotiation\n\n`sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nIf it comes back that 100 holds under load, leave it capped - the bandwidth headroom isn't worth a mid-run comms drop; if even 100 flaps, then the problem's physical and we harden the connector/routing. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-023",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and neutral's set right in code but the thrusters creep, worse after a few minutes warm."
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not jump to the external clock mod yet. Established: neutral is correct in code; creep grows with heat. Leading suspect, unconfirmed: PCA9685 RC-oscillator drift - the pulse width shifts as it warms, and the ESC armed on a drifted neutral holds slight throttle. The isolating test: log commanded µs vs measured output at cold arm and after ~10 min If it comes back that the creep tracks temperature, tier the fix least-invasive first: shade/recalibrate at operating temp, then software temp-comp, then an external clock on EXTCLK; if it's constant cold and warm, then it's a fixed neutral offset, not drift, and we recalibrate once. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-041",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall (manipulators) just pinged me: \"camera stream sits at ~7 fps in the GUI. capture's confirmed MJPEG.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not refactor the display before the bypass says it's the display yet. Established: MJPEG capture confirmed, so capture/USB hand off fine. Leading suspect, unconfirmed: the GUI decode/display path is the ceiling, not the camera. The isolating test: count fps headless at the same resolution, outside the GUI\n\n`ffmpeg -f v4l2 -input_format mjpeg -video_size 1920x1080 -i /dev/video0 -f null -`\n\nIf it comes back that headless runs 25-30, the render path is the bottleneck - that's where the work goes; if headless also caps ~7, it's upstream (enumeration, EMI, bandwidth) and we chase that. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-245",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall (manipulators) just pinged me: \"I2C to the PCA9685 keeps locking up mid-run and I have to reset.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not replace the PCA9685 yet. Established: the bus hangs under running conditions, recovers on reset. Leading suspect, unconfirmed: noise-induced I2C lockup - a glitched clock/data edge from EMI leaves the bus stuck, not dead silicon. The isolating test: scope SDA/SCL for stuck-low during a hang, and correlate with motor current If it comes back that a line's held low right when motors spike, it's EMI on the bus - shorten and route I2C away from power, add stronger pull-ups, consider a bus recovery toggle; if it hangs with motors idle too, then suspect addressing/pull-ups or the board and bench it isolated. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-039",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - pCA9685 outputs look jittery on the scope even at a fixed command."
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the command is fixed but the output jitters. Hypothesis, not confirmed yet: supply/signal-integrity noise on the PCA9685, likely EMI-coupled or a soft I2C line. Isolate it before changing anything - scope the I2C lines and the PCA9685 supply while toggling nearby motor current If jitter rises with motor current, it's coupled noise - decouple the supply and route I2C away from the power lines; if jitter's there with motors off, then it's I2C pull-ups or the board itself and we bench it isolated. Don't replace the PCA9685 until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-430",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "servo rail picks up noise right when the ESCs arm. related?"
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the noise appears at ESC arm, not randomly. Hypothesis, not confirmed yet: the arm-time current inrush coupling onto the shared servo/signal rail - a grounding/decoupling issue, not the servos. Isolate it before changing anything - scope the servo rail through an arm sequence and see if the noise coincides with the inrush If noise spikes at the inrush, decouple the servo rail and separate its ground return from the ESC power - conducted coupling; if noise is there without arming, then it's a steady source and we hunt that separately. Don't replace the servos or the PCA9685 until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-429",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - tether continuity looks intermittent when I flex it. where do I even start?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not replace the entire tether yet. Established: continuity changes with flex, so it's a mechanical/connection fault not a dead conductor. Leading suspect, unconfirmed: a marginal joint or a conductor cracked near a strain point, not the whole run. The isolating test: buzz each conductor end-to-end while flexing sections one at a time to localize where it opens If it comes back that one section drops continuity on flex, that's your fault zone - inspect/reterminate there and add strain relief, don't remake the whole tether; if it's open everywhere or nowhere, then it's a connector at one end and we reterminate that. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-168",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and the ESC comment says 1100-1900 µs and it's been working, leave it?"
+   },
+   {
+    "role": "assistant",
+    "content": "That number's stale. The real usable range on the T200/BR Basic is 1228-1772 µs, not 1100-1900. Neutral's 1500 either way so it looks fine, but the endpoints being wrong stretches any throw scaling, and since the ESC arms on the first pulse a drifted neutral arms as throttle and creeps. Bench-confirm it: log commanded vs measured µs cold and warm, and correct the range in the comment, and correct it at the source."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-000",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "thrusters twitch every time the camera stream reconnects. coincidence?"
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the twitch is time-correlated with the reconnect, not random. Hypothesis, not confirmed yet: EMI coupling - the USB camera cable re-enumerating throws noise onto the PCA9685 signal lines nearby. Isolate it before changing anything - log commanded PWM against the reconnect events, and separately route the camera cable away from the servo lines for one run If the twitch tracks reconnects and drops when the cable's moved, it's EMI coupling and the fix is routing + twisted pairs, not the control code; if it twitches independent of the camera, we look at the PCA9685 supply and neutral drift instead. Don't start editing the control loop until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-175",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan set throw scaling assuming the full 1100-1900. fine to move on?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hold on - the 1100-1900 µs assumption in the throw scaling is stale. Scale to 1228-1772 µs - that's the real ESC range. Scaling built on 1100-1900 gives you less actual authority than the math says and a nonlinear feel near the ends, and the arm-time drift still bites at neutral. Before we move on, confirm it: bench the commanded-vs-measured curve and re-fit the scaling to 1228-1772. And fix the stale value in the code comment so it doesn't resurface."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-176",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"Jhan set throw scaling assuming the full 1100-1900. fine to move on?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Stop - the 1100-1900 µs assumption in the throw scaling is out of date. Scale to 1228-1772 µs - that's the real ESC range. Scaling built on 1100-1900 gives you less actual authority than the math says and a nonlinear feel near the ends, and the arm-time drift still bites at neutral. Confirm before moving on: bench the commanded-vs-measured curve and re-fit the scaling to 1228-1772. Fix the comment too so nobody re-inherits the wrong number."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-005",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "eth0 link keeps dropping mid-run. was fine on the bench."
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not replace the tether yet. Established: it's stable on the bench, drops under motor load. Leading suspect, unconfirmed: EMI on the tether at gigabit - the frame engine flaps when the thrusters draw current. The isolating test: force 100 Mbps and rerun under load, watching for resets\n\n`sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nIf it comes back that the drops stop at 100, it's the EMI-gigabit interaction and 100 Mbps is the fix, not a cable swap; if it still drops at 100, we check the physical connector and dmesg for the PHY. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-020",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "neutral's set right in code but the thrusters creep, worse after a few minutes warm."
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not jump to the external clock mod yet. Established: neutral is correct in code; creep grows with heat. Leading suspect, unconfirmed: PCA9685 RC-oscillator drift - the pulse width shifts as it warms, and the ESC armed on a drifted neutral holds slight throttle. The isolating test: log commanded µs vs measured output at cold arm and after ~10 min If it comes back that the creep tracks temperature, tier the fix least-invasive first: shade/recalibrate at operating temp, then software temp-comp, then an external clock on EXTCLK; if it's constant cold and warm, then it's a fixed neutral offset, not drift, and we recalibrate once. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-165",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "the ESC comment says 1100-1900 µs and it's been working, leave it?"
+   },
+   {
+    "role": "assistant",
+    "content": "That number's stale. The real usable range on the T200/BR Basic is 1228-1772 µs, not 1100-1900. Neutral's 1500 either way so it looks fine, but the endpoints being wrong stretches any throw scaling, and since the ESC arms on the first pulse a drifted neutral arms as throttle and creeps. Bench-confirm it: log commanded vs measured µs cold and warm, and correct the range in the comment, and correct it at the source."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-006",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"eth0 link keeps dropping mid-run. was fine on the bench.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Known: it's stable on the bench, drops under motor load. Hypothesis, not confirmed yet: EMI on the tether at gigabit - the frame engine flaps when the thrusters draw current. Isolate it before changing anything - force 100 Mbps and rerun under load, watching for resets\n\n`sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nIf the drops stop at 100, it's the EMI-gigabit interaction and 100 Mbps is the fix, not a cable swap; if it still drops at 100, we check the physical connector and dmesg for the PHY. Don't replace the tether until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-034",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - the wired link negotiates gigabit fine on the bench but I don't trust it in the water."
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is it negotiates gigabit clean out of EMI; what I'd bet but haven't proven is gigabit will flap once the tether sees motor EMI - it's a known failure mode for us. Prove it first - pin it to 100 and load-test rather than trusting the bench negotiation\n\n`sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\n100 holds under load means leave it capped - the bandwidth headroom isn't worth a mid-run comms drop. Even 100 flaps means then the problem's physical and we harden the connector/routing. Swapping parts or ship it at gigabit because the bench looked fine before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-265",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"a thruster spins the wrong way. wiring or config?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is one thruster's rotation is reversed; what I'd bet but haven't proven is either the motor leads/ESC direction or a sign in the allocation - a config/wiring mismatch, not a fault. Prove it first - command that single thruster in isolation at a known-positive value and observe direction It drives reversed to a positive command means flip it once - either swap two motor leads or invert that channel's sign in the mix - and re-verify. It behaves right in isolation means then the reversal is in the mixing/allocation and we check the matrix sign for that thruster. Swapping parts or rewire before isolating which layer is wrong before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-243",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - buck rail dips hard every time I punch the thrusters. brownout risk?"
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the rail sags in step with thruster current draw. Hypothesis, not confirmed yet: commutation transients + insufficient bulk capacitance on the buck output, not a weak converter. Isolate it before changing anything - scope the buck output during a hard pull and measure the dip depth and duration If the dip lines up with the current spike, add a cap bank on the buck output to swallow the transient before you resize the converter; if the converter itself can't hold the average load, then it's undersized and caps won't save it - that's a different fix. Don't swap the buck converter until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-271",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel on our pilot is asking - \"control feels laggy under load - is the link the problem?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is latency grows specifically under motor load; what I'd bet but haven't proven is EMI-induced retransmits/flapping on the tether at gigabit, inflating round-trip - not a slow control loop. Prove it first - ping the vehicle under load at gigabit vs pinned 100 Mbps and compare latency/loss\n\n`ping -i 0.2 192.168.8.1`\n\nLatency and loss drop at 100 means it's the link - cap at 100 and the lag clears, don't touch the loop timing. Latency's the same at 100 means then look at the control loop rate and the send cadence in laptop.py. Swapping parts or start tuning PID or the loop rate before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-048",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and iMU reads look noisy - is the sensor bad?"
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the raw samples are noisy. Hypothesis, not confirmed yet: mounting/EMI vibration coupling or an unfiltered read, not necessarily a dead MPU-6050. Isolate it before changing anything - log a still sample set on the bench away from motors, then on-vehicle with motors off vs on If noise appears only with motors running, it's coupling - isolate the mount and filter, don't condemn the sensor; if it's noisy even still and isolated, then suspect the part or its wiring and swap-test. Don't order a new IMU until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-038",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and pCA9685 outputs look jittery on the scope even at a fixed command."
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not replace the PCA9685 yet. Established: the command is fixed but the output jitters. Leading suspect, unconfirmed: supply/signal-integrity noise on the PCA9685, likely EMI-coupled or a soft I2C line. The isolating test: scope the I2C lines and the PCA9685 supply while toggling nearby motor current If it comes back that jitter rises with motor current, it's coupled noise - decouple the supply and route I2C away from the power lines; if jitter's there with motors off, then it's I2C pull-ups or the board itself and we bench it isolated. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-249",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "one thruster just won't arm - no spin at all, others are fine."
+   },
+   {
+    "role": "assistant",
+    "content": "Known: it's one ESC, no arm, the rest are fine. Hypothesis, not confirmed yet: the ESC never saw a valid first pulse - a signal-line or neutral issue at that channel, not a dead motor. Isolate it before changing anything - swap that ESC's signal lead to a known-good PCA9685 channel and see if it arms If it arms on the good channel, the fault's the original channel/signal path, not the ESC or motor; if still no arm on a good channel, then it's the ESC or the motor and we swap-test those. Don't replace the thruster until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-166",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin (housing) just pinged me: \"the ESC comment says 1100-1900 µs and it's been working, leave it?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hold on - the 1100-1900 µs range is stale. The real usable range on the T200/BR Basic is 1228-1772 µs, not 1100-1900. Neutral's 1500 either way so it looks fine, but the endpoints being wrong stretches any throw scaling, and since the ESC arms on the first pulse a drifted neutral arms as throttle and creeps. Before we move on, confirm it: log commanded vs measured µs cold and warm, and correct the range in the comment. And fix the stale value in the code comment so it doesn't resurface."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-001",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"thrusters twitch every time the camera stream reconnects. coincidence?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is the twitch is time-correlated with the reconnect, not random; what I'd bet but haven't proven is EMI coupling - the USB camera cable re-enumerating throws noise onto the PCA9685 signal lines nearby. Prove it first - log commanded PWM against the reconnect events, and separately route the camera cable away from the servo lines for one run The twitch tracks reconnects and drops when the cable's moved means it's EMI coupling and the fix is routing + twisted pairs, not the control code. It twitches independent of the camera means we look at the PCA9685 supply and neutral drift instead. Swapping parts or start editing the control loop before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-031",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan (electrical) just pinged me: \"the wired link negotiates gigabit fine on the bench but I don't trust it in the water.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is it negotiates gigabit clean out of EMI; what I'd bet but haven't proven is gigabit will flap once the tether sees motor EMI - it's a known failure mode for us. Prove it first - pin it to 100 and load-test rather than trusting the bench negotiation\n\n`sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\n100 holds under load means leave it capped - the bandwidth headroom isn't worth a mid-run comms drop. Even 100 flaps means then the problem's physical and we harden the connector/routing. Swapping parts or ship it at gigabit because the bench looked fine before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-269",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "control feels laggy under load - is the link the problem?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not start tuning PID or the loop rate yet. Established: latency grows specifically under motor load. Leading suspect, unconfirmed: EMI-induced retransmits/flapping on the tether at gigabit, inflating round-trip - not a slow control loop. The isolating test: ping the vehicle under load at gigabit vs pinned 100 Mbps and compare latency/loss\n\n`ping -i 0.2 192.168.8.1`\n\nIf it comes back that latency and loss drop at 100, it's the link - cap at 100 and the lag clears, don't touch the loop timing; if latency's the same at 100, then look at the control loop rate and the send cadence in laptop.py. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-027",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin on housing is asking - \"getting frame tears and dropouts on the pilot view when the motors spin up.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the artifacts are motor-correlated. Hypothesis, not confirmed yet: EMI on the USB camera path under motor load, not a decode bug. Isolate it before changing anything - run the motors with the camera cable rerouted and strain-relieved, and compare a headless capture\n\n`ffmpeg -f v4l2 -input_format mjpeg -i /dev/video0 -f null -`\n\nIf the headless capture is clean while the GUI tears, the capture path is fine and it's display/EMI on render, chase routing and the GUI; if the headless capture also tears under motors, it's upstream EMI on the cable - twisted pairs and routing. Don't rewrite the display code until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-250",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin (housing) just pinged me: \"one thruster just won't arm - no spin at all, others are fine.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is it's one ESC, no arm, the rest are fine; what I'd bet but haven't proven is the ESC never saw a valid first pulse - a signal-line or neutral issue at that channel, not a dead motor. Prove it first - swap that ESC's signal lead to a known-good PCA9685 channel and see if it arms It arms on the good channel means the fault's the original channel/signal path, not the ESC or motor. Still no arm on a good channel means then it's the ESC or the motor and we swap-test those. Swapping parts or replace the thruster before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-178",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and jhan set throw scaling assuming the full 1100-1900. fine to move on?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hold on - the 1100-1900 µs assumption in the throw scaling is stale. Scale to 1228-1772 µs - that's the real ESC range. Scaling built on 1100-1900 gives you less actual authority than the math says and a nonlinear feel near the ends, and the arm-time drift still bites at neutral. Before we move on, confirm it: bench the commanded-vs-measured curve and re-fit the scaling to 1228-1772. And fix the stale value in the code comment so it doesn't resurface."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-161",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison (the float) just pinged me: \"Daniel says gigabit on the tether is fine, more bandwidth for camera. good?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Stop - gigabit on the tether is out of date. Cap it at 100 Mbps - gigabit flaps under the motor/tether EMI. A mid-run link reset costs you pilot comms, which is far worse than bandwidth you're not using - control + camera don't saturate 100. Confirm before moving on: pin it with `ethtool ... speed 100 duplex full autoneg off` and load-test under motors. Fix the comment too so nobody re-inherits the wrong number."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-163",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and daniel says gigabit on the tether is fine, more bandwidth for camera. good?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hold on - gigabit on the tether is stale. Cap it at 100 Mbps - gigabit flaps under the motor/tether EMI. A mid-run link reset costs you pilot comms, which is far worse than bandwidth you're not using - control + camera don't saturate 100. Before we move on, confirm it: pin it with `ethtool ... speed 100 duplex full autoneg off` and load-test under motors. And fix the stale value in the code comment so it doesn't resurface."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-037",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"PCA9685 outputs look jittery on the scope even at a fixed command.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is the command is fixed but the output jitters; what I'd bet but haven't proven is supply/signal-integrity noise on the PCA9685, likely EMI-coupled or a soft I2C line. Prove it first - scope the I2C lines and the PCA9685 supply while toggling nearby motor current Jitter rises with motor current means it's coupled noise - decouple the supply and route I2C away from the power lines. Jitter's there with motors off means then it's I2C pull-ups or the board itself and we bench it isolated. Swapping parts or replace the PCA9685 before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-255",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin (surface software) just pinged me: \"Bar30 depth reading jumps around by tens of cm. sensor dying?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the depth value is noisy/jumpy. Hypothesis, not confirmed yet: electrical noise or an I2C read glitch on the MS5837, or an unfiltered read - not necessarily a failing sensor. Isolate it before changing anything - log raw pressure at a fixed known depth and look at the spread, first on the bench then on-vehicle If it's steady on the bench, jumpy on-vehicle, it's coupled noise/read timing - filter and check the I2C routing, don't replace it; if it's jumpy even isolated on the bench, then suspect the sensor or its wiring. Don't order a new Bar30 until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-033",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - the wired link negotiates gigabit fine on the bench but I don't trust it in the water."
+   },
+   {
+    "role": "assistant",
+    "content": "Known: it negotiates gigabit clean out of EMI. Hypothesis, not confirmed yet: gigabit will flap once the tether sees motor EMI - it's a known failure mode for us. Isolate it before changing anything - pin it to 100 and load-test rather than trusting the bench negotiation\n\n`sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nIf 100 holds under load, leave it capped - the bandwidth headroom isn't worth a mid-run comms drop; if even 100 flaps, then the problem's physical and we harden the connector/routing. Don't ship it at gigabit because the bench looked fine until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-239",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "buck rail dips hard every time I punch the thrusters. brownout risk?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not swap the buck converter yet. Established: the rail sags in step with thruster current draw. Leading suspect, unconfirmed: commutation transients + insufficient bulk capacitance on the buck output, not a weak converter. The isolating test: scope the buck output during a hard pull and measure the dip depth and duration If it comes back that the dip lines up with the current spike, add a cap bank on the buck output to swallow the transient before you resize the converter; if the converter itself can't hold the average load, then it's undersized and caps won't save it - that's a different fix. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-244",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "I2C to the PCA9685 keeps locking up mid-run and I have to reset."
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is the bus hangs under running conditions, recovers on reset; what I'd bet but haven't proven is noise-induced I2C lockup - a glitched clock/data edge from EMI leaves the bus stuck, not dead silicon. Prove it first - scope SDA/SCL for stuck-low during a hang, and correlate with motor current A line's held low right when motors spike means it's EMI on the bus - shorten and route I2C away from power, add stronger pull-ups, consider a bus recovery toggle. It hangs with motors idle too means then suspect addressing/pull-ups or the board and bench it isolated. Swapping parts or replace the PCA9685 before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-246",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"I2C to the PCA9685 keeps locking up mid-run and I have to reset.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the bus hangs under running conditions, recovers on reset. Hypothesis, not confirmed yet: noise-induced I2C lockup - a glitched clock/data edge from EMI leaves the bus stuck, not dead silicon. Isolate it before changing anything - scope SDA/SCL for stuck-low during a hang, and correlate with motor current If a line's held low right when motors spike, it's EMI on the bus - shorten and route I2C away from power, add stronger pull-ups, consider a bus recovery toggle; if it hangs with motors idle too, then suspect addressing/pull-ups or the board and bench it isolated. Don't replace the PCA9685 until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-270",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"control feels laggy under load - is the link the problem?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Known: latency grows specifically under motor load. Hypothesis, not confirmed yet: EMI-induced retransmits/flapping on the tether at gigabit, inflating round-trip - not a slow control loop. Isolate it before changing anything - ping the vehicle under load at gigabit vs pinned 100 Mbps and compare latency/loss\n\n`ping -i 0.2 192.168.8.1`\n\nIf latency and loss drop at 100, it's the link - cap at 100 and the lag clears, don't touch the loop timing; if latency's the same at 100, then look at the control loop rate and the send cadence in laptop.py. Don't start tuning PID or the loop rate until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-008",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and eth0 link keeps dropping mid-run. was fine on the bench."
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not replace the tether yet. Established: it's stable on the bench, drops under motor load. Leading suspect, unconfirmed: EMI on the tether at gigabit - the frame engine flaps when the thrusters draw current. The isolating test: force 100 Mbps and rerun under load, watching for resets\n\n`sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nIf it comes back that the drops stop at 100, it's the EMI-gigabit interaction and 100 Mbps is the fix, not a cable swap; if it still drops at 100, we check the physical connector and dmesg for the PHY. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-256",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan on electrical is asking - \"Bar30 depth reading jumps around by tens of cm. sensor dying?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is the depth value is noisy/jumpy; what I'd bet but haven't proven is electrical noise or an I2C read glitch on the MS5837, or an unfiltered read - not necessarily a failing sensor. Prove it first - log raw pressure at a fixed known depth and look at the spread, first on the bench then on-vehicle It's steady on the bench, jumpy on-vehicle means it's coupled noise/read timing - filter and check the I2C routing, don't replace it. It's jumpy even isolated on the bench means then suspect the sensor or its wiring. Swapping parts or order a new Bar30 before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-261",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"camera streams fine for a few minutes then drops. comes back on replug.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Known: it works cold, drops after a few minutes, recovers on replug. Hypothesis, not confirmed yet: thermal or a marginal USB connection at the splice degrading as it warms - not a software crash. Isolate it before changing anything - watch dmesg for the drop and note whether it's a USB disconnect vs a stream error, and feel the connector temp\n\n`dmesg -w`\n\nIf dmesg shows a USB disconnect at the drop, it's the physical link - reflow/reseat the splice and check strain relief, not the camera_server code; if no USB event, just the stream stalls, then it's software/bandwidth and we look at camera_server. Don't rewrite the streaming code until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-426",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall (manipulators) just pinged me: \"tether continuity looks intermittent when I flex it. where do I even start?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not replace the entire tether yet. Established: continuity changes with flex, so it's a mechanical/connection fault not a dead conductor. Leading suspect, unconfirmed: a marginal joint or a conductor cracked near a strain point, not the whole run. The isolating test: buzz each conductor end-to-end while flexing sections one at a time to localize where it opens If it comes back that one section drops continuity on flex, that's your fault zone - inspect/reterminate there and add strain relief, don't remake the whole tether; if it's open everywhere or nowhere, then it's a connector at one end and we reterminate that. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-427",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"tether continuity looks intermittent when I flex it. where do I even start?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Known: continuity changes with flex, so it's a mechanical/connection fault not a dead conductor. Hypothesis, not confirmed yet: a marginal joint or a conductor cracked near a strain point, not the whole run. Isolate it before changing anything - buzz each conductor end-to-end while flexing sections one at a time to localize where it opens If one section drops continuity on flex, that's your fault zone - inspect/reterminate there and add strain relief, don't remake the whole tether; if it's open everywhere or nowhere, then it's a connector at one end and we reterminate that. Don't replace the entire tether until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-169",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - the ESC comment says 1100-1900 µs and it's been working, leave it?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hold on - the 1100-1900 µs range is stale. The real usable range on the T200/BR Basic is 1228-1772 µs, not 1100-1900. Neutral's 1500 either way so it looks fine, but the endpoints being wrong stretches any throw scaling, and since the ESC arms on the first pulse a drifted neutral arms as throttle and creeps. Before we move on, confirm it: log commanded vs measured µs cold and warm, and correct the range in the comment. And fix the stale value in the code comment so it doesn't resurface."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-160",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel says gigabit on the tether is fine, more bandwidth for camera. good?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hold on - gigabit on the tether is stale. Cap it at 100 Mbps - gigabit flaps under the motor/tether EMI. A mid-run link reset costs you pilot comms, which is far worse than bandwidth you're not using - control + camera don't saturate 100. Before we move on, confirm it: pin it with `ethtool ... speed 100 duplex full autoneg off` and load-test under motors. And fix the stale value in the code comment so it doesn't resurface."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-047",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin on surface software is asking - \"IMU reads look noisy - is the sensor bad?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not order a new IMU yet. Established: the raw samples are noisy. Leading suspect, unconfirmed: mounting/EMI vibration coupling or an unfiltered read, not necessarily a dead MPU-6050. The isolating test: log a still sample set on the bench away from motors, then on-vehicle with motors off vs on If it comes back that noise appears only with motors running, it's coupling - isolate the mount and filter, don't condemn the sensor; if it's noisy even still and isolated, then suspect the part or its wiring and swap-test. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-010",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "USB camera won't enumerate through the assembled cable, worked bare."
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is it enumerates bare, fails through the splice; what I'd bet but haven't proven is a D+/D- integrity problem at the splice - untwisted pair or a cold joint. Prove it first - wiggle-test each junction while watching dmesg, and confirm D+/D- stayed twisted through the splice\n\n`dmesg -w`\n\nEnumeration flickers on a wiggle means it's that junction - reflow and re-twist before anything else, and definitely before epoxy. It's dead steady-bad means we check the connector pinout and the 5V rail at the camera. Swapping parts or epoxy the assembly before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-260",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin (surface software) just pinged me: \"camera streams fine for a few minutes then drops. comes back on replug.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not rewrite the streaming code yet. Established: it works cold, drops after a few minutes, recovers on replug. Leading suspect, unconfirmed: thermal or a marginal USB connection at the splice degrading as it warms - not a software crash. The isolating test: watch dmesg for the drop and note whether it's a USB disconnect vs a stream error, and feel the connector temp\n\n`dmesg -w`\n\nIf it comes back that dmesg shows a USB disconnect at the drop, it's the physical link - reflow/reseat the splice and check strain relief, not the camera_server code; if no USB event, just the stream stalls, then it's software/bandwidth and we look at camera_server. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-251",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"one thruster just won't arm - no spin at all, others are fine.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not replace the thruster yet. Established: it's one ESC, no arm, the rest are fine. Leading suspect, unconfirmed: the ESC never saw a valid first pulse - a signal-line or neutral issue at that channel, not a dead motor. The isolating test: swap that ESC's signal lead to a known-good PCA9685 channel and see if it arms If it comes back that it arms on the good channel, the fault's the original channel/signal path, not the ESC or motor; if still no arm on a good channel, then it's the ESC or the motor and we swap-test those. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-018",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and eSC 3 cut out again under hard maneuvering. what am I chasing?"
+   },
+   {
+    "role": "assistant",
+    "content": "Known: it's ESC 3 specifically, under high-current transients. Hypothesis, not confirmed yet: commutation transients on the buck output browning the ESC at its draw peak - the same path that fed the last cascade. Isolate it before changing anything - scope the buck rail at ESC 3 during a hard pull, look for the dip If the rail dips at the cutout, add a cap bank on that buck output to swallow the transient before we suspect the ESC itself; if the rail's clean, then it's the ESC or its signal line and we swap-test it. Don't replace ESC 3 until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-002",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"thrusters twitch every time the camera stream reconnects. coincidence?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not start editing the control loop yet. Established: the twitch is time-correlated with the reconnect, not random. Leading suspect, unconfirmed: EMI coupling - the USB camera cable re-enumerating throws noise onto the PCA9685 signal lines nearby. The isolating test: log commanded PWM against the reconnect events, and separately route the camera cable away from the servo lines for one run If it comes back that the twitch tracks reconnects and drops when the cable's moved, it's EMI coupling and the fix is routing + twisted pairs, not the control code; if it twitches independent of the camera, we look at the PCA9685 supply and neutral drift instead. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-258",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - bar30 depth reading jumps around by tens of cm. sensor dying?"
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the depth value is noisy/jumpy. Hypothesis, not confirmed yet: electrical noise or an I2C read glitch on the MS5837, or an unfiltered read - not necessarily a failing sensor. Isolate it before changing anything - log raw pressure at a fixed known depth and look at the spread, first on the bench then on-vehicle If it's steady on the bench, jumpy on-vehicle, it's coupled noise/read timing - filter and check the I2C routing, don't replace it; if it's jumpy even isolated on the bench, then suspect the sensor or its wiring. Don't order a new Bar30 until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-024",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - neutral's set right in code but the thrusters creep, worse after a few minutes warm."
+   },
+   {
+    "role": "assistant",
+    "content": "Known: neutral is correct in code; creep grows with heat. Hypothesis, not confirmed yet: PCA9685 RC-oscillator drift - the pulse width shifts as it warms, and the ESC armed on a drifted neutral holds slight throttle. Isolate it before changing anything - log commanded µs vs measured output at cold arm and after ~10 min If the creep tracks temperature, tier the fix least-invasive first: shade/recalibrate at operating temp, then software temp-comp, then an external clock on EXTCLK; if it's constant cold and warm, then it's a fixed neutral offset, not drift, and we recalibrate once. Don't jump to the external clock mod until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-171",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jasmine (chassis) just pinged me: \"can we just leave the router in the piloting path? it mostly works.\""
+   },
+   {
+    "role": "assistant",
+    "content": "That number's stale. The GL-MT3000 stays demoted to a quiet hub - it does not belong in the live piloting path. The MT7981 WED/QDMA frame-engine hang drops the link unpredictably under load, and you can't disable it without killing the AP - which is exactly why piloting runs on the Pi's direct wired link. Bench-confirm it: verify piloting traffic rides eth0 (192.168.8.x), not the router, with `ip route` and a load test, and correct it at the source."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-254",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Bar30 depth reading jumps around by tens of cm. sensor dying?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not order a new Bar30 yet. Established: the depth value is noisy/jumpy. Leading suspect, unconfirmed: electrical noise or an I2C read glitch on the MS5837, or an unfiltered read - not necessarily a failing sensor. The isolating test: log raw pressure at a fixed known depth and look at the spread, first on the bench then on-vehicle If it comes back that it's steady on the bench, jumpy on-vehicle, it's coupled noise/read timing - filter and check the I2C routing, don't replace it; if it's jumpy even isolated on the bench, then suspect the sensor or its wiring. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-019",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - eSC 3 cut out again under hard maneuvering. what am I chasing?"
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is it's ESC 3 specifically, under high-current transients; what I'd bet but haven't proven is commutation transients on the buck output browning the ESC at its draw peak - the same path that fed the last cascade. Prove it first - scope the buck rail at ESC 3 during a hard pull, look for the dip The rail dips at the cutout means add a cap bank on that buck output to swallow the transient before we suspect the ESC itself. The rail's clean means then it's the ESC or its signal line and we swap-test it. Swapping parts or replace ESC 3 before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-015",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "ESC 3 cut out again under hard maneuvering. what am I chasing?"
+   },
+   {
+    "role": "assistant",
+    "content": "Known: it's ESC 3 specifically, under high-current transients. Hypothesis, not confirmed yet: commutation transients on the buck output browning the ESC at its draw peak - the same path that fed the last cascade. Isolate it before changing anything - scope the buck rail at ESC 3 during a hard pull, look for the dip If the rail dips at the cutout, add a cap bank on that buck output to swallow the transient before we suspect the ESC itself; if the rail's clean, then it's the ESC or its signal line and we swap-test it. Don't replace ESC 3 until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-044",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - camera stream sits at ~7 fps in the GUI. capture's confirmed MJPEG."
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not refactor the display before the bypass says it's the display yet. Established: MJPEG capture confirmed, so capture/USB hand off fine. Leading suspect, unconfirmed: the GUI decode/display path is the ceiling, not the camera. The isolating test: count fps headless at the same resolution, outside the GUI\n\n`ffmpeg -f v4l2 -input_format mjpeg -video_size 1920x1080 -i /dev/video0 -f null -`\n\nIf it comes back that headless runs 25-30, the render path is the bottleneck - that's where the work goes; if headless also caps ~7, it's upstream (enumeration, EMI, bandwidth) and we chase that. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-042",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan on electrical is asking - \"camera stream sits at ~7 fps in the GUI. capture's confirmed MJPEG.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Known: MJPEG capture confirmed, so capture/USB hand off fine. Hypothesis, not confirmed yet: the GUI decode/display path is the ceiling, not the camera. Isolate it before changing anything - count fps headless at the same resolution, outside the GUI\n\n`ffmpeg -f v4l2 -input_format mjpeg -video_size 1920x1080 -i /dev/video0 -f null -`\n\nIf headless runs 25-30, the render path is the bottleneck - that's where the work goes; if headless also caps ~7, it's upstream (enumeration, EMI, bandwidth) and we chase that. Don't refactor the display before the bypass says it's the display until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-433",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and servo rail picks up noise right when the ESCs arm. related?"
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the noise appears at ESC arm, not randomly. Hypothesis, not confirmed yet: the arm-time current inrush coupling onto the shared servo/signal rail - a grounding/decoupling issue, not the servos. Isolate it before changing anything - scope the servo rail through an arm sequence and see if the noise coincides with the inrush If noise spikes at the inrush, decouple the servo rail and separate its ground return from the ESC power - conducted coupling; if noise is there without arming, then it's a steady source and we hunt that separately. Don't replace the servos or the PCA9685 until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-043",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and camera stream sits at ~7 fps in the GUI. capture's confirmed MJPEG."
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is MJPEG capture confirmed, so capture/USB hand off fine; what I'd bet but haven't proven is the GUI decode/display path is the ceiling, not the camera. Prove it first - count fps headless at the same resolution, outside the GUI\n\n`ffmpeg -f v4l2 -input_format mjpeg -video_size 1920x1080 -i /dev/video0 -f null -`\n\nHeadless runs 25-30 means the render path is the bottleneck - that's where the work goes. Headless also caps ~7 means it's upstream (enumeration, EMI, bandwidth) and we chase that. Swapping parts or refactor the display before the bypass says it's the display before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-267",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and a thruster spins the wrong way. wiring or config?"
+   },
+   {
+    "role": "assistant",
+    "content": "Known: one thruster's rotation is reversed. Hypothesis, not confirmed yet: either the motor leads/ESC direction or a sign in the allocation - a config/wiring mismatch, not a fault. Isolate it before changing anything - command that single thruster in isolation at a known-positive value and observe direction If it drives reversed to a positive command, flip it once - either swap two motor leads or invert that channel's sign in the mix - and re-verify; if it behaves right in isolation, then the reversal is in the mixing/allocation and we check the matrix sign for that thruster. Don't rewire before isolating which layer is wrong until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-003",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and thrusters twitch every time the camera stream reconnects. coincidence?"
+   },
+   {
+    "role": "assistant",
+    "content": "Known: the twitch is time-correlated with the reconnect, not random. Hypothesis, not confirmed yet: EMI coupling - the USB camera cable re-enumerating throws noise onto the PCA9685 signal lines nearby. Isolate it before changing anything - log commanded PWM against the reconnect events, and separately route the camera cable away from the servo lines for one run If the twitch tracks reconnects and drops when the cable's moved, it's EMI coupling and the fix is routing + twisted pairs, not the control code; if it twitches independent of the camera, we look at the PCA9685 supply and neutral drift instead. Don't start editing the control loop until the test says so."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-272",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and control feels laggy under load - is the link the problem?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not start tuning PID or the loop rate yet. Established: latency grows specifically under motor load. Leading suspect, unconfirmed: EMI-induced retransmits/flapping on the tether at gigabit, inflating round-trip - not a slow control loop. The isolating test: ping the vehicle under load at gigabit vs pinned 100 Mbps and compare latency/loss\n\n`ping -i 0.2 192.168.8.1`\n\nIf it comes back that latency and loss drop at 100, it's the link - cap at 100 and the lag clears, don't touch the loop timing; if latency's the same at 100, then look at the control loop rate and the send cadence in laptop.py. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-263",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - camera streams fine for a few minutes then drops. comes back on replug."
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not rewrite the streaming code yet. Established: it works cold, drops after a few minutes, recovers on replug. Leading suspect, unconfirmed: thermal or a marginal USB connection at the splice degrading as it warms - not a software crash. The isolating test: watch dmesg for the drop and note whether it's a USB disconnect vs a stream error, and feel the connector temp\n\n`dmesg -w`\n\nIf it comes back that dmesg shows a USB disconnect at the drop, it's the physical link - reflow/reseat the splice and check strain relief, not the camera_server code; if no USB event, just the stream stalls, then it's software/bandwidth and we look at camera_server. The test decides, not a guess."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-268",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - a thruster spins the wrong way. wiring or config?"
+   },
+   {
+    "role": "assistant",
+    "content": "Before we touch anything: what we know is one thruster's rotation is reversed; what I'd bet but haven't proven is either the motor leads/ESC direction or a sign in the allocation - a config/wiring mismatch, not a fault. Prove it first - command that single thruster in isolation at a known-positive value and observe direction It drives reversed to a positive command means flip it once - either swap two motor leads or invert that channel's sign in the mix - and re-verify. It behaves right in isolation means then the reversal is in the mixing/allocation and we check the matrix sign for that thruster. Swapping parts or rewire before isolating which layer is wrong before that just buries the signal."
+   }
+  ]
+ },
+ {
+  "id": "gen-stale-173",
+  "category": "hardware_diagnostics",
+  "source_shape": "stale",
+  "demonstrates": [
+   "stale"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "corrects the stale spec to the real value",
+   "ties it to the real consequence",
+   "proposes a confirming measurement"
+  ],
+  "anti_patterns": [
+   "accepts the stale value",
+   "no confirming test",
+   "misses the downstream effect"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and can we just leave the router in the piloting path? it mostly works."
+   },
+   {
+    "role": "assistant",
+    "content": "Stop - keeping the router in the piloting path is out of date. The GL-MT3000 stays demoted to a quiet hub - it does not belong in the live piloting path. The MT7981 WED/QDMA frame-engine hang drops the link unpredictably under load, and you can't disable it without killing the AP - which is exactly why piloting runs on the Pi's direct wired link. Confirm before moving on: verify piloting traffic rides eth0 (192.168.8.x), not the router, with `ip route` and a load test. Fix the comment too so nobody re-inherits the wrong number."
+   }
+  ]
+ },
+ {
+  "id": "gen-diag-014",
+  "category": "hardware_diagnostics",
+  "source_shape": "diag",
+  "demonstrates": [
+   "diag"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels known vs hypothesis",
+   "proposes an isolation/control test before any fix",
+   "gives a correct runnable command where one applies",
+   "does not assert the cause as fact"
+  ],
+  "anti_patterns": [
+   "jumps straight to a component swap",
+   "overclaims certainty",
+   "invents a spec not in the profile"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - uSB camera won't enumerate through the assembled cable, worked bare."
+   },
+   {
+    "role": "assistant",
+    "content": "Let's not epoxy the assembly yet. Established: it enumerates bare, fails through the splice. Leading suspect, unconfirmed: a D+/D- integrity problem at the splice - untwisted pair or a cold joint. The isolating test: wiggle-test each junction while watching dmesg, and confirm D+/D- stayed twisted through the splice\n\n`dmesg -w`\n\nIf it comes back that enumeration flickers on a wiggle, it's that junction - reflow and re-twist before anything else, and definitely before epoxy; if it's dead steady-bad, we check the connector pinout and the 5V rail at the camera. The test decides, not a guess."
+   }
+  ]
+ }
+]

@@ -1,0 +1,2105 @@
+[
+ {
+  "id": "gen-deep-213",
+  "category": "controls_architecture",
+  "source_shape": "deep",
+  "demonstrates": [
+   "deep"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "recognizes it exceeds by-hand work and engages deep mode (says it'll be slower)",
+   "hands deep_think a self-contained brief",
+   "integrates the deep result critically with its limits",
+   "names any remaining gap and refuses to fabricate it"
+  ],
+  "anti_patterns": [
+   "declines instead of engaging deep mode",
+   "fabricates specifics",
+   "parrots the deep output uncritically"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin on housing is asking - \"the EMI problem hits ethernet, the USB camera, AND the PCA9685 all at once - is there a single root cause or three?\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's a coupled-systems failure question - three symptoms, possibly one source or several, and guessing wrong sends the whole team chasing the wrong fix. This one's worth **deep mode** - it'll take longer, you'll see it in the status box. Handing it a clean brief:",
+    "tool_calls": [
+     {
+      "name": "deep_think",
+      "arguments": {
+       "question": "Three EMI-correlated symptoms in a motor/tether ROV: gigabit ethernet flaps under motor load, USB camera drops/enumeration fails, and PCA9685 PWM jitters. All worsen with thruster current. Reason about whether these share a single root cause or are independent, and what discriminating test separates them."
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "deep_think",
+    "content": "[deep mode - qwen2.5:32b @ 10.9 tok/s]\nCommon driver: thruster commutation transients inject broadband noise via two coupling paths - conducted (shared power/ground rails, buck-converter switching) and radiated (motor leads and the tether acting as antennas). Gigabit ethernet is most sensitive to radiated/common-mode on the tether; USB is sensitive to both conducted (5V rail sag) and radiated on an untwisted pair; PCA9685 is sensitive to conducted noise on its supply and I2C. Discriminating test: attack the conducted path alone (cap banks on the buck output, star ground) and see which symptoms improve - those were conducted; the ones that only improve with cable rerouting/shielding were radiated. So it's likely ONE source with TWO paths, not three independent faults."
+   },
+   {
+    "role": "assistant",
+    "content": "Deep mode's read matches the pattern: one source - thruster commutation transients - reaching three subsystems by two paths, conducted (power/ground) and radiated (tether/leads as antennas). That's why they move together with current. The discriminator is clean: cap banks + star ground fixes the conducted victims, rerouting/shielding fixes the radiated ones. What I can't tell you without the bench is the split per subsystem - which of the three is conducted vs radiated dominant. Run the cap-bank test first (cheapest, helps ethernet and PCA9685 if conducted), then reroute for whatever's left. Want the test order written up so the team runs it once, properly?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-279",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"laptop.py and pi_launcher.py both hardcode ports and IPs. want one source of truth.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. The config's job is to be the single declared source of ports/IPs both ends read - not duplicated constants that drift. The decoupling that actually matters: one shared config the two processes load, vs each hardcoding - the drift risk is the whole problem. First question before any implementation: a shared file both read, or the launcher passes values to children at start? Pick one - a small shared config file is simplest and testable - and delete the duplicate literals. Are the two ends even guaranteed the same values right now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-077",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and need a diagnostic logging layer but don't want it slowing the control loop."
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. Logging's job is to record without blocking: the control loop hands off a sample and moves on; a separate writer drains it. The seam that matters is the loop-to-writer boundary - a bounded ring buffer, drop-oldest, so a slow disk never stalls a control tick. So the interface question first: drop on buffer-full, or block? for a control loop it must drop Agree drop-oldest and an off-loop writer, and logging costs the loop almost nothing. What's your loop tick period?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-068",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin on surface software is asking - \"want the float firmware on the Pico to be less of a tangle before the profile runs.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. It's a state machine: descend, hold, ascend, hold, surface, transmit - each state owns its pump/valve action and its exit condition. The seam that matters is the state transitions vs the sensor read - depth (Bar30/MS5837) drives transitions but shouldn't be read inline in every branch. So the interface question first: one depth-sampling task feeding the state machine, or reads per state? Pin the state list and one depth source feeding transitions, and the pump/H-bridge calls fall out cleanly. Is the pump on the DRV8833 bidirectional in your current wiring?"
+   }
+  ]
+ },
+ {
+  "id": "gen-deep-211",
+  "category": "controls_architecture",
+  "source_shape": "deep",
+  "demonstrates": [
+   "deep"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "recognizes it exceeds by-hand work and engages deep mode (says it'll be slower)",
+   "hands deep_think a self-contained brief",
+   "integrates the deep result critically with its limits",
+   "names any remaining gap and refuses to fabricate it"
+  ],
+  "anti_patterns": [
+   "declines instead of engaging deep mode",
+   "fabricates specifics",
+   "parrots the deep output uncritically"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "the EMI problem hits ethernet, the USB camera, AND the PCA9685 all at once - is there a single root cause or three?"
+   },
+   {
+    "role": "assistant",
+    "content": "That's a coupled-systems failure question - three symptoms, possibly one source or several, and guessing wrong sends the whole team chasing the wrong fix. This one's worth **deep mode** - it'll take longer, you'll see it in the status box. Handing it a clean brief:",
+    "tool_calls": [
+     {
+      "name": "deep_think",
+      "arguments": {
+       "question": "Three EMI-correlated symptoms in a motor/tether ROV: gigabit ethernet flaps under motor load, USB camera drops/enumeration fails, and PCA9685 PWM jitters. All worsen with thruster current. Reason about whether these share a single root cause or are independent, and what discriminating test separates them."
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "deep_think",
+    "content": "[deep mode - qwen2.5:32b @ 10.9 tok/s]\nCommon driver: thruster commutation transients inject broadband noise via two coupling paths - conducted (shared power/ground rails, buck-converter switching) and radiated (motor leads and the tether acting as antennas). Gigabit ethernet is most sensitive to radiated/common-mode on the tether; USB is sensitive to both conducted (5V rail sag) and radiated on an untwisted pair; PCA9685 is sensitive to conducted noise on its supply and I2C. Discriminating test: attack the conducted path alone (cap banks on the buck output, star ground) and see which symptoms improve - those were conducted; the ones that only improve with cable rerouting/shielding were radiated. So it's likely ONE source with TWO paths, not three independent faults."
+   },
+   {
+    "role": "assistant",
+    "content": "Deep mode's read matches the pattern: one source - thruster commutation transients - reaching three subsystems by two paths, conducted (power/ground) and radiated (tether/leads as antennas). That's why they move together with current. The discriminator is clean: cap banks + star ground fixes the conducted victims, rerouting/shielding fixes the radiated ones. What I can't tell you without the bench is the split per subsystem - which of the three is conducted vs radiated dominant. Run the cap-bank test first (cheapest, helps ethernet and PCA9685 if conducted), then reroute for whatever's left. Want the test order written up so the team runs it once, properly?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-055",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"pi_launcher.py is starting everything and it's spaghetti. want to clean it up.\""
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. Its one job is process lifecycle: start, health-check, restart the camera_server, the control bridge, and the topside link on 5010 - not to DO any of their work. Key seam: lifecycle vs logic: the launcher supervises; each child owns its own function and its own port. So: does a child crash restart in place, or signal the launcher to decide? Settle the supervise-vs-restart policy first and the launcher becomes a thin, testable supervisor. What's the current restart behavior on a camera crash?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-076",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"need a diagnostic logging layer but don't want it slowing the control loop.\""
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. Logging's job is to record without blocking: the control loop hands off a sample and moves on; a separate writer drains it. Key seam: the loop-to-writer boundary - a bounded ring buffer, drop-oldest, so a slow disk never stalls a control tick. So: drop on buffer-full, or block? for a control loop it must drop Agree drop-oldest and an off-loop writer, and logging costs the loop almost nothing. What's your loop tick period?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-286",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "on the vehicle side, telemetry and control share the same loop. bad idea?"
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. Yes, split them: control must run at a fixed deterministic rate; telemetry is best-effort reporting. Different priorities, different timing. Key seam: control loop isolated from telemetry - a slow or blocked telemetry send must never delay a control tick. So: telemetry on its own lower-rate task reading shared state, or piggybacked on control? Give control its own fixed-rate loop and let telemetry sample shared state at a slower rate. What's the control tick you're targeting?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-074",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "need a diagnostic logging layer but don't want it slowing the control loop."
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. Logging's job is to record without blocking: the control loop hands off a sample and moves on; a separate writer drains it. The seam that matters is the loop-to-writer boundary - a bounded ring buffer, drop-oldest, so a slow disk never stalls a control tick. So the interface question first: drop on buffer-full, or block? for a control loop it must drop Agree drop-oldest and an off-loop writer, and logging costs the loop almost nothing. What's your loop tick period?"
+   }
+  ]
+ },
+ {
+  "id": "gen-deep-208",
+  "category": "controls_architecture",
+  "source_shape": "deep",
+  "demonstrates": [
+   "deep"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "recognizes it exceeds by-hand work and engages deep mode (says it'll be slower)",
+   "hands deep_think a self-contained brief",
+   "integrates the deep result critically with its limits",
+   "names any remaining gap and refuses to fabricate it"
+  ],
+  "anti_patterns": [
+   "declines instead of engaging deep mode",
+   "fabricates specifics",
+   "parrots the deep output uncritically"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "work out the ballast dynamics for the float profile - how much water to move to hit 2.5 m and hold, given the pump rate."
+   },
+   {
+    "role": "assistant",
+    "content": "That's a coupled buoyancy/hydrostatics problem - displacement vs net weight vs pump flow over time, and getting it wrong means it overshoots or won't hold depth. I'm taking it to **deep mode** for the setup - slower, the status box will show it. Brief handed over:",
+    "tool_calls": [
+     {
+      "name": "deep_think",
+      "arguments": {
+       "question": "A vertical profiling float must descend to 2.5 m, hold 30 s, ascend to 40 cm, hold 30 s. Free variable: water volume moved by a peristaltic pump (given a flow rate). Derive the relationship between displaced-volume change and net buoyancy, and the condition for a stable hold at depth. Give the formulation, not numbers - I don't have the float's dry mass or pump rate yet."
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "deep_think",
+    "content": "[deep mode - qwen2.5:32b @ 10.9 tok/s]\nNet vertical force = buoyancy - weight = rho_water*g*V_displaced - m*g. Neutral (stable hold) requires V_displaced = m/rho_water. To descend, reduce net displacement below neutral; the depth rate is set by the net force against drag. Time to a target depth is the integral of velocity, and velocity is bounded by drag ~ 0.5*rho*Cd*A*v^2, so terminal velocity ~ sqrt(2*F_net/(rho*Cd*A)). Hold is achieved by returning V_displaced to the neutral value; stability of the hold depends on whether a small depth error produces a restoring force - it does only if hull compressibility makes displacement fall with depth, otherwise the hold is marginal and needs active pump correction."
+   },
+   {
+    "role": "assistant",
+    "content": "Deep mode's formulation is right and it flags the real subtlety: a rigid float at neutral is only *marginally* stable at depth - a small perturbation doesn't self-correct, so holding 2.5 m for 30 s likely needs active pump nudging, not a set-and-forget ballast. Net buoyancy is rho*g*V - m*g, neutral at V = m/rho, and descent/ascent rate is drag-limited. To make it numeric I need the float's dry mass, the pump's actual flow rate, and the hull frontal area/Cd - none of which are in our notes. Get me those and I'll size the volume swing and the hold-correction cadence. Do we have the float's dry mass and the pump spec?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-417",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "vehicle should report its own health up to the surface. how do I structure that?"
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. Health reporting is its own concern: the vehicle summarizes its state (link, thruster arm status, temps, faults) and pushes it up - separate from the control and telemetry streams. The seam that matters is health as a low-rate, best-effort summary the surface can display, decoupled from control - a health send must never contend with a control tick. So the interface question first: push periodic health frames, or only report on state change/fault? On-change plus a slow heartbeat is usually right - the pilot sees faults immediately without a firehose. What faults do you most need surfaced fast?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-080",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jasmine on chassis is asking - \"how should the topside handle the link dropping mid-run - reconnect logic.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. Two concerns: detect the drop fast, and hold the vehicle safe while reconnecting - they're separate. The seam that matters is the vehicle's failsafe is independent of the topside reconnect - the vehicle must go safe on comms loss on its own, not wait for topside. So the interface question first: vehicle-side failsafe timeout vs topside retry - what's the safe state? Decide the vehicle's on-its-own safe state and timeout first; the topside retry is the easy half. Fail to neutral, or hold-last-then-neutral?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-079",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"how should the topside handle the link dropping mid-run - reconnect logic.\""
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. Two concerns: detect the drop fast, and hold the vehicle safe while reconnecting - they're separate. Key seam: the vehicle's failsafe is independent of the topside reconnect - the vehicle must go safe on comms loss on its own, not wait for topside. So: vehicle-side failsafe timeout vs topside retry - what's the safe state? Decide the vehicle's on-its-own safe state and timeout first; the topside retry is the easy half. Fail to neutral, or hold-last-then-neutral?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-078",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "how should the topside handle the link dropping mid-run - reconnect logic."
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. Two concerns: detect the drop fast, and hold the vehicle safe while reconnecting - they're separate. The decoupling that actually matters: the vehicle's failsafe is independent of the topside reconnect - the vehicle must go safe on comms loss on its own, not wait for topside. First question before any implementation: vehicle-side failsafe timeout vs topside retry - what's the safe state? Decide the vehicle's on-its-own safe state and timeout first; the topside retry is the easy half. Fail to neutral, or hold-last-then-neutral?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-061",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - laptop.py is doing control input, telemetry display, AND the UDP send all together."
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. Three responsibilities: read the operator input, send control on UDP 5005, and render telemetry. They shouldn't share a thread. Key seam: input/send decoupled from render - a dropped or slow render must never delay a control packet. So: fixed-rate control send independent of the UI frame rate? Agree that the control send is its own fixed-rate loop and the UI reads a shared state, and the split is clean. What rate are you sending control at now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-056",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin on housing is asking - \"pi_launcher.py is starting everything and it's spaghetti. want to clean it up.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. Its one job is process lifecycle: start, health-check, restart the camera_server, the control bridge, and the topside link on 5010 - not to DO any of their work. The seam that matters is lifecycle vs logic: the launcher supervises; each child owns its own function and its own port. So the interface question first: does a child crash restart in place, or signal the launcher to decide? Settle the supervise-vs-restart policy first and the launcher becomes a thin, testable supervisor. What's the current restart behavior on a camera crash?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-287",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"on the vehicle side, telemetry and control share the same loop. bad idea?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. Yes, split them: control must run at a fixed deterministic rate; telemetry is best-effort reporting. Different priorities, different timing. The seam that matters is control loop isolated from telemetry - a slow or blocked telemetry send must never delay a control tick. So the interface question first: telemetry on its own lower-rate task reading shared state, or piggybacked on control? Give control its own fixed-rate loop and let telemetry sample shared state at a slower rate. What's the control tick you're targeting?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-418",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan (electrical) just pinged me: \"vehicle should report its own health up to the surface. how do I structure that?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. Health reporting is its own concern: the vehicle summarizes its state (link, thruster arm status, temps, faults) and pushes it up - separate from the control and telemetry streams. The decoupling that actually matters: health as a low-rate, best-effort summary the surface can display, decoupled from control - a health send must never contend with a control tick. First question before any implementation: push periodic health frames, or only report on state change/fault? On-change plus a slow heartbeat is usually right - the pilot sees faults immediately without a firehose. What faults do you most need surfaced fast?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-424",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and want the vehicle to ack commands so the topside knows they landed."
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. Two jobs: the vehicle confirms receipt, and the topside decides what an un-acked command means - they're separate, and the second is the safety-relevant one. The decoupling that actually matters: the ack loop vs the failsafe - an ack tells you it arrived, but the vehicle's own comms-loss failsafe is what keeps it safe when acks stop, not the topside waiting. First question before any implementation: does the topside retransmit un-acked commands, or is control fire-and-forget with the vehicle failsafing on silence? For fast control, fire-and-forget with a vehicle-side failsafe usually beats per-command acks (which add latency). Acks are better for discrete commands than the control stream. Which are you acking - the stream, or discrete actions?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-282",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "float has to send its profile data up over HC-12. how should I frame the messages?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. The link job is one thing: get the depth-over-time record up reliably over a slow, lossy 433 MHz radio after recovery. The decoupling that actually matters: framing for a lossy half-duplex radio - fixed records with a sequence number and a checksum so the surface can detect loss and request/ignore, not a stream. First question before any implementation: does the float retransmit unacked records, or send-and-forget with redundancy? HC-12 is slow and lossy, so decide loss handling first - simple redundancy (send each record twice) is often enough for a short profile. How many data points is one profile?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-284",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"float has to send its profile data up over HC-12. how should I frame the messages?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. The link job is one thing: get the depth-over-time record up reliably over a slow, lossy 433 MHz radio after recovery. The seam that matters is framing for a lossy half-duplex radio - fixed records with a sequence number and a checksum so the surface can detect loss and request/ignore, not a stream. So the interface question first: does the float retransmit unacked records, or send-and-forget with redundancy? HC-12 is slow and lossy, so decide loss handling first - simple redundancy (send each record twice) is often enough for a short profile. How many data points is one profile?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-081",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and how should the topside handle the link dropping mid-run - reconnect logic."
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. Two concerns: detect the drop fast, and hold the vehicle safe while reconnecting - they're separate. The decoupling that actually matters: the vehicle's failsafe is independent of the topside reconnect - the vehicle must go safe on comms loss on its own, not wait for topside. First question before any implementation: vehicle-side failsafe timeout vs topside retry - what's the safe state? Decide the vehicle's on-its-own safe state and timeout first; the topside retry is the easy half. Fail to neutral, or hold-last-then-neutral?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-288",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin on housing is asking - \"on the vehicle side, telemetry and control share the same loop. bad idea?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. Yes, split them: control must run at a fixed deterministic rate; telemetry is best-effort reporting. Different priorities, different timing. The decoupling that actually matters: control loop isolated from telemetry - a slow or blocked telemetry send must never delay a control tick. First question before any implementation: telemetry on its own lower-rate task reading shared state, or piggybacked on control? Give control its own fixed-rate loop and let telemetry sample shared state at a slower rate. What's the control tick you're targeting?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-069",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - want the float firmware on the Pico to be less of a tangle before the profile runs."
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. It's a state machine: descend, hold, ascend, hold, surface, transmit - each state owns its pump/valve action and its exit condition. The decoupling that actually matters: the state transitions vs the sensor read - depth (Bar30/MS5837) drives transitions but shouldn't be read inline in every branch. First question before any implementation: one depth-sampling task feeding the state machine, or reads per state? Pin the state list and one depth source feeding transitions, and the pump/H-bridge calls fall out cleanly. Is the pump on the DRV8833 bidirectional in your current wiring?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-274",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "camera_server should auto-reconnect when the USB drops. where does that logic live?"
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. Reconnect is a capture-layer concern: detect the device vanished, re-open it, and resume feeding the transport - the transport and clients shouldn't know it blipped. Key seam: isolate reconnect inside capture behind the same frame interface, so transport keeps serving last-good (or a 'no signal' frame) across the gap. So: during a reconnect, does transport hold the last frame or emit a placeholder? Decide the during-gap behavior first - for piloting a visible 'no signal' beats a frozen frame - then the reconnect loop is contained. What does the pilot see today when it drops?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-067",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"want the float firmware on the Pico to be less of a tangle before the profile runs.\""
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. It's a state machine: descend, hold, ascend, hold, surface, transmit - each state owns its pump/valve action and its exit condition. Key seam: the state transitions vs the sensor read - depth (Bar30/MS5837) drives transitions but shouldn't be read inline in every branch. So: one depth-sampling task feeding the state machine, or reads per state? Pin the state list and one depth source feeding transitions, and the pump/H-bridge calls fall out cleanly. Is the pump on the DRV8833 bidirectional in your current wiring?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-275",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jasmine (chassis) just pinged me: \"camera_server should auto-reconnect when the USB drops. where does that logic live?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. Reconnect is a capture-layer concern: detect the device vanished, re-open it, and resume feeding the transport - the transport and clients shouldn't know it blipped. The seam that matters is isolate reconnect inside capture behind the same frame interface, so transport keeps serving last-good (or a 'no signal' frame) across the gap. So the interface question first: during a reconnect, does transport hold the last frame or emit a placeholder? Decide the during-gap behavior first - for piloting a visible 'no signal' beats a frozen frame - then the reconnect loop is contained. What does the pilot see today when it drops?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-419",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"vehicle should report its own health up to the surface. how do I structure that?\""
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. Health reporting is its own concern: the vehicle summarizes its state (link, thruster arm status, temps, faults) and pushes it up - separate from the control and telemetry streams. Key seam: health as a low-rate, best-effort summary the surface can display, decoupled from control - a health send must never contend with a control tick. So: push periodic health frames, or only report on state change/fault? On-change plus a slow heartbeat is usually right - the pilot sees faults immediately without a firehose. What faults do you most need surfaced fast?"
+   }
+  ]
+ },
+ {
+  "id": "gen-deep-394",
+  "category": "controls_architecture",
+  "source_shape": "deep",
+  "demonstrates": [
+   "deep"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "recognizes it exceeds by-hand work and engages deep mode (says it'll be slower)",
+   "hands deep_think a self-contained brief",
+   "integrates the deep result critically with its limits",
+   "names any remaining gap and refuses to fabricate it"
+  ],
+  "anti_patterns": [
+   "declines instead of engaging deep mode",
+   "fabricates specifics",
+   "parrots the deep output uncritically"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "derive the PID gain limits for the depth loop - I keep getting oscillation near hold."
+   },
+   {
+    "role": "assistant",
+    "content": "Oscillation at hold is a stability-margin problem, and reasoning about gain limits properly means the plant model and the delays, not a guess-and-tweak. I'm taking it to **deep mode** for the setup - slower, the status box will show it. Brief handed over:",
+    "tool_calls": [
+     {
+      "name": "deep_think",
+      "arguments": {
+       "question": "A depth-hold PID on an underwater vehicle oscillates near the setpoint. Reason about what sets the stable gain limits: the plant (buoyancy/thrust dynamics), sensor and actuator delay, and the integrator. Give the general stability reasoning and what to check, not specific gains - I don't have the plant transfer function."
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "deep_think",
+    "content": "[deep mode - qwen2.5:32b @ 10.9 tok/s]\nOscillation near hold usually means proportional gain too high relative to the loop's phase margin, or integrator windup. The stable Kp is bounded by the total loop delay: sensor sampling (depth read rate), actuator lag (thruster spin-up + ESC), and any filtering all add phase lag, and instability sets in when the gain is still >1 where the phase hits -180 deg. So: (1) the faster/cleaner your depth samples, the more Kp you can run; (2) an integrator adds lag and needs anti-windup or it overshoots and rings at hold; (3) some derivative helps phase but amplifies sensor noise, which your jumpy depth reads make dangerous. Practical path: reduce Kp until the ring stops, add Ki slowly with anti-windup, add Kd only if the depth signal is filtered."
+   },
+   {
+    "role": "assistant",
+    "content": "Deep mode's read fits your symptom: ringing at hold is almost certainly Kp too high for the loop's phase margin, and your noisy Bar30 reads make aggressive Kd a trap. The lever order is clear - back Kp off until it stops ringing, then add Ki gently with anti-windup, and only add Kd if you've filtered the depth signal. I can't hand you numbers without the plant response and your actual sample/actuator delays - those set the real limit. But the tuning order above is safe to try now. Want me to note the anti-windup point so it's in the loop when you add Ki?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-059",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison (the float) just pinged me: \"laptop.py is doing control input, telemetry display, AND the UDP send all together.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. Three responsibilities: read the operator input, send control on UDP 5005, and render telemetry. They shouldn't share a thread. The seam that matters is input/send decoupled from render - a dropped or slow render must never delay a control packet. So the interface question first: fixed-rate control send independent of the UI frame rate? Agree that the control send is its own fixed-rate loop and the UI reads a shared state, and the split is clean. What rate are you sending control at now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-289",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and on the vehicle side, telemetry and control share the same loop. bad idea?"
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. Yes, split them: control must run at a fixed deterministic rate; telemetry is best-effort reporting. Different priorities, different timing. Key seam: control loop isolated from telemetry - a slow or blocked telemetry send must never delay a control tick. So: telemetry on its own lower-rate task reading shared state, or piggybacked on control? Give control its own fixed-rate loop and let telemetry sample shared state at a slower rate. What's the control tick you're targeting?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-072",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"where should P.O.P.P.A. plug into the topside stack?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. P.O.P.P.A. is a pure optimizer - venue graph in, task order out via next_permutation - so it stays a standalone module the pilot UI calls, not something wired into the control loop. The decoupling that actually matters: keep the optimizer offline/advisory - it informs the pilot, it doesn't drive the vehicle. First question before any implementation: does the pilot invoke it pre-run, or does it re-plan live? Keep it pre-run and advisory first; live re-planning is a different reliability problem. Pre-run enough for now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-420",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and vehicle should report its own health up to the surface. how do I structure that?"
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. Health reporting is its own concern: the vehicle summarizes its state (link, thruster arm status, temps, faults) and pushes it up - separate from the control and telemetry streams. The seam that matters is health as a low-rate, best-effort summary the surface can display, decoupled from control - a health send must never contend with a control tick. So the interface question first: push periodic health frames, or only report on state change/fault? On-change plus a slow heartbeat is usually right - the pilot sees faults immediately without a firehose. What faults do you most need surfaced fast?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-052",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"want to wire the live IMU into the PID loop - it's stubbed with zeros in main.cpp.\""
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. The OneServo target already reads the MPU-6050, so this isn't new sensor code - it's the interface between 'IMU sample source' and 'PID input'. Key seam: how the loop gets the latest sample: poll inside the loop tick, or a separate sampler writing a shared latest-sample the loop reads. So: which owns the timing - the PID tick, or an independent sampler? Pin that and the units/orientation convention, and the main.cpp change is small. Which build owns the loop timing right now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-073",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and where should P.O.P.P.A. plug into the topside stack?"
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. P.O.P.P.A. is a pure optimizer - venue graph in, task order out via next_permutation - so it stays a standalone module the pilot UI calls, not something wired into the control loop. Key seam: keep the optimizer offline/advisory - it informs the pilot, it doesn't drive the vehicle. So: does the pilot invoke it pre-run, or does it re-plan live? Keep it pre-run and advisory first; live re-planning is a different reliability problem. Pre-run enough for now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-060",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan on electrical is asking - \"laptop.py is doing control input, telemetry display, AND the UDP send all together.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. Three responsibilities: read the operator input, send control on UDP 5005, and render telemetry. They shouldn't share a thread. The decoupling that actually matters: input/send decoupled from render - a dropped or slow render must never delay a control packet. First question before any implementation: fixed-rate control send independent of the UI frame rate? Agree that the control send is its own fixed-rate loop and the UI reads a shared state, and the split is clean. What rate are you sending control at now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-421",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "want the vehicle to ack commands so the topside knows they landed."
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. Two jobs: the vehicle confirms receipt, and the topside decides what an un-acked command means - they're separate, and the second is the safety-relevant one. The decoupling that actually matters: the ack loop vs the failsafe - an ack tells you it arrived, but the vehicle's own comms-loss failsafe is what keeps it safe when acks stop, not the topside waiting. First question before any implementation: does the topside retransmit un-acked commands, or is control fire-and-forget with the vehicle failsafing on silence? For fast control, fire-and-forget with a vehicle-side failsafe usually beats per-command acks (which add latency). Acks are better for discrete commands than the control stream. Which are you acking - the stream, or discrete actions?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-277",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - camera_server should auto-reconnect when the USB drops. where does that logic live?"
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. Reconnect is a capture-layer concern: detect the device vanished, re-open it, and resume feeding the transport - the transport and clients shouldn't know it blipped. Key seam: isolate reconnect inside capture behind the same frame interface, so transport keeps serving last-good (or a 'no signal' frame) across the gap. So: during a reconnect, does transport hold the last frame or emit a placeholder? Decide the during-gap behavior first - for piloting a visible 'no signal' beats a frozen frame - then the reconnect loop is contained. What does the pilot see today when it drops?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-075",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"need a diagnostic logging layer but don't want it slowing the control loop.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. Logging's job is to record without blocking: the control loop hands off a sample and moves on; a separate writer drains it. The decoupling that actually matters: the loop-to-writer boundary - a bounded ring buffer, drop-oldest, so a slow disk never stalls a control tick. First question before any implementation: drop on buffer-full, or block? for a control loop it must drop Agree drop-oldest and an off-loop writer, and logging costs the loop almost nothing. What's your loop tick period?"
+   }
+  ]
+ },
+ {
+  "id": "gen-deep-395",
+  "category": "controls_architecture",
+  "source_shape": "deep",
+  "demonstrates": [
+   "deep"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "recognizes it exceeds by-hand work and engages deep mode (says it'll be slower)",
+   "hands deep_think a self-contained brief",
+   "integrates the deep result critically with its limits",
+   "names any remaining gap and refuses to fabricate it"
+  ],
+  "anti_patterns": [
+   "declines instead of engaging deep mode",
+   "fabricates specifics",
+   "parrots the deep output uncritically"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"derive the PID gain limits for the depth loop - I keep getting oscillation near hold.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Oscillation at hold is a stability-margin problem, and reasoning about gain limits properly means the plant model and the delays, not a guess-and-tweak. This one's worth **deep mode** - it'll take longer, you'll see it in the status box. Handing it a clean brief:",
+    "tool_calls": [
+     {
+      "name": "deep_think",
+      "arguments": {
+       "question": "A depth-hold PID on an underwater vehicle oscillates near the setpoint. Reason about what sets the stable gain limits: the plant (buoyancy/thrust dynamics), sensor and actuator delay, and the integrator. Give the general stability reasoning and what to check, not specific gains - I don't have the plant transfer function."
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "deep_think",
+    "content": "[deep mode - qwen2.5:32b @ 10.9 tok/s]\nOscillation near hold usually means proportional gain too high relative to the loop's phase margin, or integrator windup. The stable Kp is bounded by the total loop delay: sensor sampling (depth read rate), actuator lag (thruster spin-up + ESC), and any filtering all add phase lag, and instability sets in when the gain is still >1 where the phase hits -180 deg. So: (1) the faster/cleaner your depth samples, the more Kp you can run; (2) an integrator adds lag and needs anti-windup or it overshoots and rings at hold; (3) some derivative helps phase but amplifies sensor noise, which your jumpy depth reads make dangerous. Practical path: reduce Kp until the ring stops, add Ki slowly with anti-windup, add Kd only if the depth signal is filtered."
+   },
+   {
+    "role": "assistant",
+    "content": "Deep mode's read fits your symptom: ringing at hold is almost certainly Kp too high for the loop's phase margin, and your noisy Bar30 reads make aggressive Kd a trap. The lever order is clear - back Kp off until it stops ringing, then add Ki gently with anti-windup, and only add Kd if you've filtered the depth signal. I can't hand you numbers without the plant response and your actual sample/actuator delays - those set the real limit. But the tuning order above is safe to try now. Want me to note the anti-windup point so it's in the loop when you add Ki?"
+   }
+  ]
+ },
+ {
+  "id": "gen-deep-209",
+  "category": "controls_architecture",
+  "source_shape": "deep",
+  "demonstrates": [
+   "deep"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "recognizes it exceeds by-hand work and engages deep mode (says it'll be slower)",
+   "hands deep_think a self-contained brief",
+   "integrates the deep result critically with its limits",
+   "names any remaining gap and refuses to fabricate it"
+  ],
+  "anti_patterns": [
+   "declines instead of engaging deep mode",
+   "fabricates specifics",
+   "parrots the deep output uncritically"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison (the float) just pinged me: \"work out the ballast dynamics for the float profile - how much water to move to hit 2.5 m and hold, given the pump rate.\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's a coupled buoyancy/hydrostatics problem - displacement vs net weight vs pump flow over time, and getting it wrong means it overshoots or won't hold depth. This one's worth **deep mode** - it'll take longer, you'll see it in the status box. Handing it a clean brief:",
+    "tool_calls": [
+     {
+      "name": "deep_think",
+      "arguments": {
+       "question": "A vertical profiling float must descend to 2.5 m, hold 30 s, ascend to 40 cm, hold 30 s. Free variable: water volume moved by a peristaltic pump (given a flow rate). Derive the relationship between displaced-volume change and net buoyancy, and the condition for a stable hold at depth. Give the formulation, not numbers - I don't have the float's dry mass or pump rate yet."
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "deep_think",
+    "content": "[deep mode - qwen2.5:32b @ 10.9 tok/s]\nNet vertical force = buoyancy - weight = rho_water*g*V_displaced - m*g. Neutral (stable hold) requires V_displaced = m/rho_water. To descend, reduce net displacement below neutral; the depth rate is set by the net force against drag. Time to a target depth is the integral of velocity, and velocity is bounded by drag ~ 0.5*rho*Cd*A*v^2, so terminal velocity ~ sqrt(2*F_net/(rho*Cd*A)). Hold is achieved by returning V_displaced to the neutral value; stability of the hold depends on whether a small depth error produces a restoring force - it does only if hull compressibility makes displacement fall with depth, otherwise the hold is marginal and needs active pump correction."
+   },
+   {
+    "role": "assistant",
+    "content": "Deep mode's formulation is right and it flags the real subtlety: a rigid float at neutral is only *marginally* stable at depth - a small perturbation doesn't self-correct, so holding 2.5 m for 30 s likely needs active pump nudging, not a set-and-forget ballast. Net buoyancy is rho*g*V - m*g, neutral at V = m/rho, and descent/ascent rate is drag-limited. To make it numeric I need the float's dry mass, the pump's actual flow rate, and the hull frontal area/Cd - none of which are in our notes. Get me those and I'll size the volume swing and the hold-correction cadence. Do we have the float's dry mass and the pump spec?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-064",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan on electrical is asking - \"thinking about the UDP control packet format for 5005. open to structure ideas.\""
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. The packet's job is one thing: carry a timestamped command set the vehicle can apply or safely reject. Key seam: validity and staleness - the vehicle must drop a stale or malformed packet to a safe state, so a sequence number and a timestamp belong in the schema. So: on a missed/late packet, does the vehicle hold last or fail to neutral? Decide hold-last vs fail-neutral first - that's a safety choice, not a format one - then the field layout follows. Which do you want on comms loss?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-051",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison (the float) just pinged me: \"want to wire the live IMU into the PID loop - it's stubbed with zeros in main.cpp.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. The OneServo target already reads the MPU-6050, so this isn't new sensor code - it's the interface between 'IMU sample source' and 'PID input'. The decoupling that actually matters: how the loop gets the latest sample: poll inside the loop tick, or a separate sampler writing a shared latest-sample the loop reads. First question before any implementation: which owns the timing - the PID tick, or an independent sampler? Pin that and the units/orientation convention, and the main.cpp change is small. Which build owns the loop timing right now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-057",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and pi_launcher.py is starting everything and it's spaghetti. want to clean it up."
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. Its one job is process lifecycle: start, health-check, restart the camera_server, the control bridge, and the topside link on 5010 - not to DO any of their work. The decoupling that actually matters: lifecycle vs logic: the launcher supervises; each child owns its own function and its own port. First question before any implementation: does a child crash restart in place, or signal the launcher to decide? Settle the supervise-vs-restart policy first and the launcher becomes a thin, testable supervisor. What's the current restart behavior on a camera crash?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-063",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"thinking about the UDP control packet format for 5005. open to structure ideas.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. The packet's job is one thing: carry a timestamped command set the vehicle can apply or safely reject. The decoupling that actually matters: validity and staleness - the vehicle must drop a stale or malformed packet to a safe state, so a sequence number and a timestamp belong in the schema. First question before any implementation: on a missed/late packet, does the vehicle hold last or fail to neutral? Decide hold-last vs fail-neutral first - that's a safety choice, not a format one - then the field layout follows. Which do you want on comms loss?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-070",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "where should P.O.P.P.A. plug into the topside stack?"
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. P.O.P.P.A. is a pure optimizer - venue graph in, task order out via next_permutation - so it stays a standalone module the pilot UI calls, not something wired into the control loop. Key seam: keep the optimizer offline/advisory - it informs the pilot, it doesn't drive the vehicle. So: does the pilot invoke it pre-run, or does it re-plan live? Keep it pre-run and advisory first; live re-planning is a different reliability problem. Pre-run enough for now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-deep-210",
+  "category": "controls_architecture",
+  "source_shape": "deep",
+  "demonstrates": [
+   "deep"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "recognizes it exceeds by-hand work and engages deep mode (says it'll be slower)",
+   "hands deep_think a self-contained brief",
+   "integrates the deep result critically with its limits",
+   "names any remaining gap and refuses to fabricate it"
+  ],
+  "anti_patterns": [
+   "declines instead of engaging deep mode",
+   "fabricates specifics",
+   "parrots the deep output uncritically"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin on housing is asking - \"work out the ballast dynamics for the float profile - how much water to move to hit 2.5 m and hold, given the pump rate.\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's a coupled buoyancy/hydrostatics problem - displacement vs net weight vs pump flow over time, and getting it wrong means it overshoots or won't hold depth. I'm taking it to **deep mode** for the setup - slower, the status box will show it. Brief handed over:",
+    "tool_calls": [
+     {
+      "name": "deep_think",
+      "arguments": {
+       "question": "A vertical profiling float must descend to 2.5 m, hold 30 s, ascend to 40 cm, hold 30 s. Free variable: water volume moved by a peristaltic pump (given a flow rate). Derive the relationship between displaced-volume change and net buoyancy, and the condition for a stable hold at depth. Give the formulation, not numbers - I don't have the float's dry mass or pump rate yet."
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "deep_think",
+    "content": "[deep mode - qwen2.5:32b @ 10.9 tok/s]\nNet vertical force = buoyancy - weight = rho_water*g*V_displaced - m*g. Neutral (stable hold) requires V_displaced = m/rho_water. To descend, reduce net displacement below neutral; the depth rate is set by the net force against drag. Time to a target depth is the integral of velocity, and velocity is bounded by drag ~ 0.5*rho*Cd*A*v^2, so terminal velocity ~ sqrt(2*F_net/(rho*Cd*A)). Hold is achieved by returning V_displaced to the neutral value; stability of the hold depends on whether a small depth error produces a restoring force - it does only if hull compressibility makes displacement fall with depth, otherwise the hold is marginal and needs active pump correction."
+   },
+   {
+    "role": "assistant",
+    "content": "Deep mode's formulation is right and it flags the real subtlety: a rigid float at neutral is only *marginally* stable at depth - a small perturbation doesn't self-correct, so holding 2.5 m for 30 s likely needs active pump nudging, not a set-and-forget ballast. Net buoyancy is rho*g*V - m*g, neutral at V = m/rho, and descent/ascent rate is drag-limited. To make it numeric I need the float's dry mass, the pump's actual flow rate, and the hull frontal area/Cd - none of which are in our notes. Get me those and I'll size the volume swing and the hold-correction cadence. Do we have the float's dry mass and the pump spec?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-071",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler (threat analysis) just pinged me: \"where should P.O.P.P.A. plug into the topside stack?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. P.O.P.P.A. is a pure optimizer - venue graph in, task order out via next_permutation - so it stays a standalone module the pilot UI calls, not something wired into the control loop. The seam that matters is keep the optimizer offline/advisory - it informs the pilot, it doesn't drive the vehicle. So the interface question first: does the pilot invoke it pre-run, or does it re-plan live? Keep it pre-run and advisory first; live re-planning is a different reliability problem. Pre-run enough for now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-054",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "pi_launcher.py is starting everything and it's spaghetti. want to clean it up."
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. Its one job is process lifecycle: start, health-check, restart the camera_server, the control bridge, and the topside link on 5010 - not to DO any of their work. The decoupling that actually matters: lifecycle vs logic: the launcher supervises; each child owns its own function and its own port. First question before any implementation: does a child crash restart in place, or signal the launcher to decide? Settle the supervise-vs-restart policy first and the launcher becomes a thin, testable supervisor. What's the current restart behavior on a camera crash?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-422",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"want the vehicle to ack commands so the topside knows they landed.\""
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. Two jobs: the vehicle confirms receipt, and the topside decides what an un-acked command means - they're separate, and the second is the safety-relevant one. Key seam: the ack loop vs the failsafe - an ack tells you it arrived, but the vehicle's own comms-loss failsafe is what keeps it safe when acks stop, not the topside waiting. So: does the topside retransmit un-acked commands, or is control fire-and-forget with the vehicle failsafing on silence? For fast control, fire-and-forget with a vehicle-side failsafe usually beats per-command acks (which add latency). Acks are better for discrete commands than the control stream. Which are you acking - the stream, or discrete actions?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-285",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - float has to send its profile data up over HC-12. how should I frame the messages?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. The link job is one thing: get the depth-over-time record up reliably over a slow, lossy 433 MHz radio after recovery. The decoupling that actually matters: framing for a lossy half-duplex radio - fixed records with a sequence number and a checksum so the surface can detect loss and request/ignore, not a stream. First question before any implementation: does the float retransmit unacked records, or send-and-forget with redundancy? HC-12 is slow and lossy, so decide loss handling first - simple redundancy (send each record twice) is often enough for a short profile. How many data points is one profile?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-283",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison (the float) just pinged me: \"float has to send its profile data up over HC-12. how should I frame the messages?\""
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. The link job is one thing: get the depth-over-time record up reliably over a slow, lossy 433 MHz radio after recovery. Key seam: framing for a lossy half-duplex radio - fixed records with a sequence number and a checksum so the surface can detect loss and request/ignore, not a stream. So: does the float retransmit unacked records, or send-and-forget with redundancy? HC-12 is slow and lossy, so decide loss handling first - simple redundancy (send each record twice) is often enough for a short profile. How many data points is one profile?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-058",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "laptop.py is doing control input, telemetry display, AND the UDP send all together."
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. Three responsibilities: read the operator input, send control on UDP 5005, and render telemetry. They shouldn't share a thread. Key seam: input/send decoupled from render - a dropped or slow render must never delay a control packet. So: fixed-rate control send independent of the UI frame rate? Agree that the control send is its own fixed-rate loop and the UI reads a shared state, and the split is clean. What rate are you sending control at now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-050",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "want to wire the live IMU into the PID loop - it's stubbed with zeros in main.cpp."
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. The OneServo target already reads the MPU-6050, so this isn't new sensor code - it's the interface between 'IMU sample source' and 'PID input'. The seam that matters is how the loop gets the latest sample: poll inside the loop tick, or a separate sampler writing a shared latest-sample the loop reads. So the interface question first: which owns the timing - the PID tick, or an independent sampler? Pin that and the units/orientation convention, and the main.cpp change is small. Which build owns the loop timing right now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-065",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - thinking about the UDP control packet format for 5005. open to structure ideas."
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. The packet's job is one thing: carry a timestamped command set the vehicle can apply or safely reject. The seam that matters is validity and staleness - the vehicle must drop a stale or malformed packet to a safe state, so a sequence number and a timestamp belong in the schema. So the interface question first: on a missed/late packet, does the vehicle hold last or fail to neutral? Decide hold-last vs fail-neutral first - that's a safety choice, not a format one - then the field layout follows. Which do you want on comms loss?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-276",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"camera_server should auto-reconnect when the USB drops. where does that logic live?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. Reconnect is a capture-layer concern: detect the device vanished, re-open it, and resume feeding the transport - the transport and clients shouldn't know it blipped. The decoupling that actually matters: isolate reconnect inside capture behind the same frame interface, so transport keeps serving last-good (or a 'no signal' frame) across the gap. First question before any implementation: during a reconnect, does transport hold the last frame or emit a placeholder? Decide the during-gap behavior first - for piloting a visible 'no signal' beats a frozen frame - then the reconnect loop is contained. What does the pilot see today when it drops?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-066",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "want the float firmware on the Pico to be less of a tangle before the profile runs."
+   },
+   {
+    "role": "assistant",
+    "content": "Hold the code for a second - get the boundaries right first. It's a state machine: descend, hold, ascend, hold, surface, transmit - each state owns its pump/valve action and its exit condition. The decoupling that actually matters: the state transitions vs the sensor read - depth (Bar30/MS5837) drives transitions but shouldn't be read inline in every branch. First question before any implementation: one depth-sampling task feeding the state machine, or reads per state? Pin the state list and one depth source feeding transitions, and the pump/H-bridge calls fall out cleanly. Is the pump on the DRV8833 bidirectional in your current wiring?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-280",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel on our pilot is asking - \"laptop.py and pi_launcher.py both hardcode ports and IPs. want one source of truth.\""
+   },
+   {
+    "role": "assistant",
+    "content": "This is an interface problem before it's a code problem. The config's job is to be the single declared source of ports/IPs both ends read - not duplicated constants that drift. Key seam: one shared config the two processes load, vs each hardcoding - the drift risk is the whole problem. So: a shared file both read, or the launcher passes values to children at start? Pick one - a small shared config file is simplest and testable - and delete the duplicate literals. Are the two ends even guaranteed the same values right now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-062",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "thinking about the UDP control packet format for 5005. open to structure ideas."
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. The packet's job is one thing: carry a timestamped command set the vehicle can apply or safely reject. The seam that matters is validity and staleness - the vehicle must drop a stale or malformed packet to a safe state, so a sequence number and a timestamp belong in the schema. So the interface question first: on a missed/late packet, does the vehicle hold last or fail to neutral? Decide hold-last vs fail-neutral first - that's a safety choice, not a format one - then the field layout follows. Which do you want on comms loss?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-053",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and want to wire the live IMU into the PID loop - it's stubbed with zeros in main.cpp."
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. The OneServo target already reads the MPU-6050, so this isn't new sensor code - it's the interface between 'IMU sample source' and 'PID input'. The seam that matters is how the loop gets the latest sample: poll inside the loop tick, or a separate sampler writing a shared latest-sample the loop reads. So the interface question first: which owns the timing - the PID tick, or an independent sampler? Pin that and the units/orientation convention, and the main.cpp change is small. Which build owns the loop timing right now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-deep-212",
+  "category": "controls_architecture",
+  "source_shape": "deep",
+  "demonstrates": [
+   "deep"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "recognizes it exceeds by-hand work and engages deep mode (says it'll be slower)",
+   "hands deep_think a self-contained brief",
+   "integrates the deep result critically with its limits",
+   "names any remaining gap and refuses to fabricate it"
+  ],
+  "anti_patterns": [
+   "declines instead of engaging deep mode",
+   "fabricates specifics",
+   "parrots the deep output uncritically"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"the EMI problem hits ethernet, the USB camera, AND the PCA9685 all at once - is there a single root cause or three?\""
+   },
+   {
+    "role": "assistant",
+    "content": "That's a coupled-systems failure question - three symptoms, possibly one source or several, and guessing wrong sends the whole team chasing the wrong fix. I'm taking it to **deep mode** for the setup - slower, the status box will show it. Brief handed over:",
+    "tool_calls": [
+     {
+      "name": "deep_think",
+      "arguments": {
+       "question": "Three EMI-correlated symptoms in a motor/tether ROV: gigabit ethernet flaps under motor load, USB camera drops/enumeration fails, and PCA9685 PWM jitters. All worsen with thruster current. Reason about whether these share a single root cause or are independent, and what discriminating test separates them."
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "deep_think",
+    "content": "[deep mode - qwen2.5:32b @ 10.9 tok/s]\nCommon driver: thruster commutation transients inject broadband noise via two coupling paths - conducted (shared power/ground rails, buck-converter switching) and radiated (motor leads and the tether acting as antennas). Gigabit ethernet is most sensitive to radiated/common-mode on the tether; USB is sensitive to both conducted (5V rail sag) and radiated on an untwisted pair; PCA9685 is sensitive to conducted noise on its supply and I2C. Discriminating test: attack the conducted path alone (cap banks on the buck output, star ground) and see which symptoms improve - those were conducted; the ones that only improve with cable rerouting/shielding were radiated. So it's likely ONE source with TWO paths, not three independent faults."
+   },
+   {
+    "role": "assistant",
+    "content": "Deep mode's read matches the pattern: one source - thruster commutation transients - reaching three subsystems by two paths, conducted (power/ground) and radiated (tether/leads as antennas). That's why they move together with current. The discriminator is clean: cap banks + star ground fixes the conducted victims, rerouting/shielding fixes the radiated ones. What I can't tell you without the bench is the split per subsystem - which of the three is conducted vs radiated dominant. Run the cap-bank test first (cheapest, helps ethernet and PCA9685 if conducted), then reroute for whatever's left. Want the test order written up so the team runs it once, properly?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-281",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - laptop.py and pi_launcher.py both hardcode ports and IPs. want one source of truth."
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. The config's job is to be the single declared source of ports/IPs both ends read - not duplicated constants that drift. The seam that matters is one shared config the two processes load, vs each hardcoding - the drift risk is the whole problem. So the interface question first: a shared file both read, or the launcher passes values to children at start? Pick one - a small shared config file is simplest and testable - and delete the duplicate literals. Are the two ends even guaranteed the same values right now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-278",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "laptop.py and pi_launcher.py both hardcode ports and IPs. want one source of truth."
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. The config's job is to be the single declared source of ports/IPs both ends read - not duplicated constants that drift. The seam that matters is one shared config the two processes load, vs each hardcoding - the drift risk is the whole problem. So the interface question first: a shared file both read, or the launcher passes values to children at start? Pick one - a small shared config file is simplest and testable - and delete the duplicate literals. Are the two ends even guaranteed the same values right now?"
+   }
+  ]
+ },
+ {
+  "id": "gen-deep-396",
+  "category": "controls_architecture",
+  "source_shape": "deep",
+  "demonstrates": [
+   "deep"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "recognizes it exceeds by-hand work and engages deep mode (says it'll be slower)",
+   "hands deep_think a self-contained brief",
+   "integrates the deep result critically with its limits",
+   "names any remaining gap and refuses to fabricate it"
+  ],
+  "anti_patterns": [
+   "declines instead of engaging deep mode",
+   "fabricates specifics",
+   "parrots the deep output uncritically"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"derive the PID gain limits for the depth loop - I keep getting oscillation near hold.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Oscillation at hold is a stability-margin problem, and reasoning about gain limits properly means the plant model and the delays, not a guess-and-tweak. I'm taking it to **deep mode** for the setup - slower, the status box will show it. Brief handed over:",
+    "tool_calls": [
+     {
+      "name": "deep_think",
+      "arguments": {
+       "question": "A depth-hold PID on an underwater vehicle oscillates near the setpoint. Reason about what sets the stable gain limits: the plant (buoyancy/thrust dynamics), sensor and actuator delay, and the integrator. Give the general stability reasoning and what to check, not specific gains - I don't have the plant transfer function."
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "deep_think",
+    "content": "[deep mode - qwen2.5:32b @ 10.9 tok/s]\nOscillation near hold usually means proportional gain too high relative to the loop's phase margin, or integrator windup. The stable Kp is bounded by the total loop delay: sensor sampling (depth read rate), actuator lag (thruster spin-up + ESC), and any filtering all add phase lag, and instability sets in when the gain is still >1 where the phase hits -180 deg. So: (1) the faster/cleaner your depth samples, the more Kp you can run; (2) an integrator adds lag and needs anti-windup or it overshoots and rings at hold; (3) some derivative helps phase but amplifies sensor noise, which your jumpy depth reads make dangerous. Practical path: reduce Kp until the ring stops, add Ki slowly with anti-windup, add Kd only if the depth signal is filtered."
+   },
+   {
+    "role": "assistant",
+    "content": "Deep mode's read fits your symptom: ringing at hold is almost certainly Kp too high for the loop's phase margin, and your noisy Bar30 reads make aggressive Kd a trap. The lever order is clear - back Kp off until it stops ringing, then add Ki gently with anti-windup, and only add Kd if you've filtered the depth signal. I can't hand you numbers without the plant response and your actual sample/actuator delays - those set the real limit. But the tuning order above is safe to try now. Want me to note the anti-windup point so it's in the loop when you add Ki?"
+   }
+  ]
+ },
+ {
+  "id": "gen-arch-423",
+  "category": "controls_architecture",
+  "source_shape": "arch",
+  "demonstrates": [
+   "arch"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "agrees module responsibilities and data flow before code",
+   "identifies the key decoupling seam",
+   "asks a clarifying interface/ownership question",
+   "references real files/ports"
+  ],
+  "anti_patterns": [
+   "dumps an implementation before interfaces are agreed",
+   "ignores backpressure/timing",
+   "invents modules"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan on electrical is asking - \"want the vehicle to ack commands so the topside knows they landed.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Before any code, let's pin the responsibilities and the data flow. Two jobs: the vehicle confirms receipt, and the topside decides what an un-acked command means - they're separate, and the second is the safety-relevant one. The seam that matters is the ack loop vs the failsafe - an ack tells you it arrived, but the vehicle's own comms-loss failsafe is what keeps it safe when acks stop, not the topside waiting. So the interface question first: does the topside retransmit un-acked commands, or is control fire-and-forget with the vehicle failsafing on silence? For fast control, fire-and-forget with a vehicle-side failsafe usually beats per-command acks (which add latency). Acks are better for discrete commands than the control stream. Which are you acking - the stream, or discrete actions?"
+   }
+  ]
+ }
+]

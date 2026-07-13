@@ -1,0 +1,1162 @@
+[
+ {
+  "id": "gen-tradeoff-148",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "PETG or PLA for the housing bracket off the Bambu?"
+   },
+   {
+    "role": "assistant",
+    "content": "Structured call. What matters here: strength/temperature in a wet motor bay, layer adhesion under vibration, and print reliability via the AMS. PLA is stiffer and easier but creeps warm and is brittle under vibration; PETG takes heat and impact better and bonds layers well, at a slightly fussier print. **Verdict:** PETG for anything structural or near the thrusters/electronics heat. **Why not the other:** PLA's easier print isn't worth creep and brittle failure on a load-bearing bracket in a warm wet bay. **Flip if:** for a quick non-structural jig or a fit-check, PLA's fine and faster."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-414",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jasmine (chassis) just pinged me: \"pot the camera connector or use a sealed connector?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's do this properly. Criteria, in order: reliability at depth, serviceability, and the failure history (USB enumeration at splices). Potting is the most waterproof and strain-relieved but permanent - a bad joint is unfixable; a sealed connector is serviceable but adds a mate that can leak or loosen. So: **pot it - but only after enumeration and streaming are confirmed through the fully assembled cable.** The loser's kill reason: a sealed connector's serviceability isn't worth another underwater mate on a path that already fails at junctions. What would flip it: if you'll need to swap the camera often, a quality sealed connector wins - accept the extra seal to keep it serviceable."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-158",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison on the float is asking - \"reuse last year's ESCs or get fresh ones?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: reliability history, the EMI/transient hardening we've since learned, and cost. Reused ESCs carry unknown fatigue and the ESC 3 cascade in their history; fresh ones reset that but cost money and still need the cap-bank hardening. **Verdict:** fresh ESCs for the thrusters that failed or ran hot, reuse the known-good ones with cap banks added. **Kill reason:** reusing the ESC that already cascaded is betting the run on a part with a failure record. **Flip condition:** if budget's zero, reuse all - but bench-cycle each and add the buck-rail caps first."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-318",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "single battery pack or two smaller ones for the float?"
+   },
+   {
+    "role": "assistant",
+    "content": "Structured call. What matters here: reliability (single point of failure), the <1 m / <18 cm size envelope, weight/trim, and wiring complexity. One pack is simpler and lighter but a single failure ends the run; two adds redundancy and balances trim but costs space in a tight envelope and more connections to leak/fail. **Verdict:** single Tenergy pack, sized with margin, given the tight float envelope. **Why not the other:** dual packs' redundancy isn't worth the space and extra connections inside a <18 cm float that only runs a short profile. **Flip if:** if a single pack can't hold the profile with margin, split it - but that's a size problem to solve first."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-140",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "one camera or two on the vehicle - worth the second?"
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: task coverage (Task 2.1 vision + piloting), bandwidth on the capped 100 Mbps link, USB/EMI reliability, and pilot cognitive load. A second camera buys situational coverage but doubles the USB-EMI failure surface (our least reliable subsystem) and eats link budget you've capped at 100 for EMI reasons. **Verdict:** one primary piloting camera, add the second only if a task demands a view the first can't give. **Kill reason:** the second camera's coverage isn't worth two more failure-prone USB paths in an EMI bay if one view does the job. **Flip condition:** if a scored task needs a simultaneous second angle, the second earns its place - then harden both cables."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-142",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin on housing is asking - \"one camera or two on the vehicle - worth the second?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Structured call. What matters here: task coverage (Task 2.1 vision + piloting), bandwidth on the capped 100 Mbps link, USB/EMI reliability, and pilot cognitive load. A second camera buys situational coverage but doubles the USB-EMI failure surface (our least reliable subsystem) and eats link budget you've capped at 100 for EMI reasons. **Verdict:** one primary piloting camera, add the second only if a task demands a view the first can't give. **Why not the other:** the second camera's coverage isn't worth two more failure-prone USB paths in an EMI bay if one view does the job. **Flip if:** if a scored task needs a simultaneous second angle, the second earns its place - then harden both cables."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-145",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin (surface software) just pinged me: \"build our own manipulator or buy one?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Structured call. What matters here: task fit, schedule to competition, reliability under our EMI/water conditions, and the workmanship rubric points a custom build can earn. Buying de-risks schedule and reliability; building earns design/workmanship rationale but costs time we may not have and adds a subsystem to debug. **Verdict:** build only the gripper geometry that's task-specific, buy the actuation if a proven unit fits. **Why not the other:** a fully custom manipulator's rubric upside doesn't cover the schedule and reliability risk this close to Worlds. **Flip if:** if no off-the-shelf unit meets the task envelope, build - and budget real bench time for it."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-153",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan (electrical) just pinged me: \"foam buoyancy or an air-filled compartment?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's do this properly. Criteria, in order: reliability at depth (flood risk), trim adjustability, and manufacturability. Foam is flood-proof and set-and-forget but fixed; an air compartment is tunable but adds a sealing failure mode - and sealing is where we get bitten. So: **closed-cell foam for the baseline buoyancy, small trim weights for adjustment.** The loser's kill reason: an air compartment's adjustability isn't worth another pressure seal that can flood mid-run. What would flip it: if you need in-mission buoyancy change, that's a different vehicle - not this season."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-319",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"single battery pack or two smaller ones for the float?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: reliability (single point of failure), the <1 m / <18 cm size envelope, weight/trim, and wiring complexity. One pack is simpler and lighter but a single failure ends the run; two adds redundancy and balances trim but costs space in a tight envelope and more connections to leak/fail. **Verdict:** single Tenergy pack, sized with margin, given the tight float envelope. **Kill reason:** dual packs' redundancy isn't worth the space and extra connections inside a <18 cm float that only runs a short profile. **Flip condition:** if a single pack can't hold the profile with margin, split it - but that's a size problem to solve first."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-327",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jasmine (chassis) just pinged me: \"wired-only piloting or keep a wireless backup path?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Structured call. What matters here: reliability of each under EMI, complexity, and failure modes mid-run. The wired eth0 link is your reliable primary; a wireless backup adds a fallback but also another EMI-sensitive path and the router complexity you deliberately demoted. **Verdict:** wired primary, no live wireless piloting backup - keep the failover simple and vehicle-side. **Why not the other:** a wireless backup reintroduces the flaky router path you removed from the critical path for good reason. **Flip if:** if the wired link proves unreliable in the venue, a backup's worth revisiting - but the vehicle-side failsafe is the real safety net, not a second comms path."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-150",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"PETG or PLA for the housing bracket off the Bambu?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's do this properly. Criteria, in order: strength/temperature in a wet motor bay, layer adhesion under vibration, and print reliability via the AMS. PLA is stiffer and easier but creeps warm and is brittle under vibration; PETG takes heat and impact better and bonds layers well, at a slightly fussier print. So: **PETG for anything structural or near the thrusters/electronics heat.** The loser's kill reason: PLA's easier print isn't worth creep and brittle failure on a load-bearing bracket in a warm wet bay. What would flip it: for a quick non-structural jig or a fit-check, PLA's fine and faster."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-321",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and single battery pack or two smaller ones for the float?"
+   },
+   {
+    "role": "assistant",
+    "content": "Structured call. What matters here: reliability (single point of failure), the <1 m / <18 cm size envelope, weight/trim, and wiring complexity. One pack is simpler and lighter but a single failure ends the run; two adds redundancy and balances trim but costs space in a tight envelope and more connections to leak/fail. **Verdict:** single Tenergy pack, sized with margin, given the tight float envelope. **Why not the other:** dual packs' redundancy isn't worth the space and extra connections inside a <18 cm float that only runs a short profile. **Flip if:** if a single pack can't hold the profile with margin, split it - but that's a size problem to solve first."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-323",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"run the OpenCV vision on the Pi or up on the surface for Task 2.1?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's do this properly. Criteria, in order: compute headroom, the EMI/latency of moving frames, dev/debug speed, and the display bottleneck we already have. On-Pi saves link bandwidth but adds load to a box already feeding cameras over an EMI-touchy path; surface-side has the compute and is far easier to iterate, at the cost of shipping frames up. So: **surface-side vision for Task 2.1 - easier to develop and the Pi's already busy.** The loser's kill reason: on-Pi processing's bandwidth saving isn't worth the debug pain and added load while the display path is still the bottleneck. What would flip it: if the link can't carry the frames at usable rate, move inference to the Pi - but isolate the display bottleneck first."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-151",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and pETG or PLA for the housing bracket off the Bambu?"
+   },
+   {
+    "role": "assistant",
+    "content": "Structured call. What matters here: strength/temperature in a wet motor bay, layer adhesion under vibration, and print reliability via the AMS. PLA is stiffer and easier but creeps warm and is brittle under vibration; PETG takes heat and impact better and bonds layers well, at a slightly fussier print. **Verdict:** PETG for anything structural or near the thrusters/electronics heat. **Why not the other:** PLA's easier print isn't worth creep and brittle failure on a load-bearing bracket in a warm wet bay. **Flip if:** for a quick non-structural jig or a fit-check, PLA's fine and faster."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-416",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - pot the camera connector or use a sealed connector?"
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: reliability at depth, serviceability, and the failure history (USB enumeration at splices). Potting is the most waterproof and strain-relieved but permanent - a bad joint is unfixable; a sealed connector is serviceable but adds a mate that can leak or loosen. **Verdict:** pot it - but only after enumeration and streaming are confirmed through the fully assembled cable. **Kill reason:** a sealed connector's serviceability isn't worth another underwater mate on a path that already fails at junctions. **Flip condition:** if you'll need to swap the camera often, a quality sealed connector wins - accept the extra seal to keep it serviceable."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-152",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "foam buoyancy or an air-filled compartment?"
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: reliability at depth (flood risk), trim adjustability, and manufacturability. Foam is flood-proof and set-and-forget but fixed; an air compartment is tunable but adds a sealing failure mode - and sealing is where we get bitten. **Verdict:** closed-cell foam for the baseline buoyancy, small trim weights for adjustment. **Kill reason:** an air compartment's adjustability isn't worth another pressure seal that can flood mid-run. **Flip condition:** if you need in-mission buoyancy change, that's a different vehicle - not this season."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-149",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall (manipulators) just pinged me: \"PETG or PLA for the housing bracket off the Bambu?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: strength/temperature in a wet motor bay, layer adhesion under vibration, and print reliability via the AMS. PLA is stiffer and easier but creeps warm and is brittle under vibration; PETG takes heat and impact better and bonds layers well, at a slightly fussier print. **Verdict:** PETG for anything structural or near the thrusters/electronics heat. **Kill reason:** PLA's easier print isn't worth creep and brittle failure on a load-bearing bracket in a warm wet bay. **Flip condition:** for a quick non-structural jig or a fit-check, PLA's fine and faster."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-320",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"single battery pack or two smaller ones for the float?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's do this properly. Criteria, in order: reliability (single point of failure), the <1 m / <18 cm size envelope, weight/trim, and wiring complexity. One pack is simpler and lighter but a single failure ends the run; two adds redundancy and balances trim but costs space in a tight envelope and more connections to leak/fail. So: **single Tenergy pack, sized with margin, given the tight float envelope.** The loser's kill reason: dual packs' redundancy isn't worth the space and extra connections inside a <18 cm float that only runs a short profile. What would flip it: if a single pack can't hold the profile with margin, split it - but that's a size problem to solve first."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-141",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"one camera or two on the vehicle - worth the second?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's do this properly. Criteria, in order: task coverage (Task 2.1 vision + piloting), bandwidth on the capped 100 Mbps link, USB/EMI reliability, and pilot cognitive load. A second camera buys situational coverage but doubles the USB-EMI failure surface (our least reliable subsystem) and eats link budget you've capped at 100 for EMI reasons. So: **one primary piloting camera, add the second only if a task demands a view the first can't give.** The loser's kill reason: the second camera's coverage isn't worth two more failure-prone USB paths in an EMI bay if one view does the job. What would flip it: if a scored task needs a simultaneous second angle, the second earns its place - then harden both cables."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-413",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "pot the camera connector or use a sealed connector?"
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: reliability at depth, serviceability, and the failure history (USB enumeration at splices). Potting is the most waterproof and strain-relieved but permanent - a bad joint is unfixable; a sealed connector is serviceable but adds a mate that can leak or loosen. **Verdict:** pot it - but only after enumeration and streaming are confirmed through the fully assembled cable. **Kill reason:** a sealed connector's serviceability isn't worth another underwater mate on a path that already fails at junctions. **Flip condition:** if you'll need to swap the camera often, a quality sealed connector wins - accept the extra seal to keep it serviceable."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-410",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall (manipulators) just pinged me: \"harden EMI with cap banks first or star-ground first?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: which attacks the biggest coupling path, cost/effort, and how testable each is in isolation. Star ground kills return-current loops that couple noise broadly and is cheap; cap banks target the buck-output transients specifically. They fix different halves of the conducted path. **Verdict:** star ground first - it's the cheapest, broadest conducted-noise fix and it's the reference the cap banks need anyway. **Kill reason:** leading with cap banks without a clean single ground point leaves the return loops that reinject the noise you just filtered. **Flip condition:** if the noise is clearly a buck-transient spike at one rail (scope shows it), do that cap bank first - fix the measured dominant path."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-409",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "harden EMI with cap banks first or star-ground first?"
+   },
+   {
+    "role": "assistant",
+    "content": "Structured call. What matters here: which attacks the biggest coupling path, cost/effort, and how testable each is in isolation. Star ground kills return-current loops that couple noise broadly and is cheap; cap banks target the buck-output transients specifically. They fix different halves of the conducted path. **Verdict:** star ground first - it's the cheapest, broadest conducted-noise fix and it's the reference the cap banks need anyway. **Why not the other:** leading with cap banks without a clean single ground point leaves the return loops that reinject the noise you just filtered. **Flip if:** if the noise is clearly a buck-transient spike at one rail (scope shows it), do that cap bank first - fix the measured dominant path."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-325",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - run the OpenCV vision on the Pi or up on the surface for Task 2.1?"
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: compute headroom, the EMI/latency of moving frames, dev/debug speed, and the display bottleneck we already have. On-Pi saves link bandwidth but adds load to a box already feeding cameras over an EMI-touchy path; surface-side has the compute and is far easier to iterate, at the cost of shipping frames up. **Verdict:** surface-side vision for Task 2.1 - easier to develop and the Pi's already busy. **Kill reason:** on-Pi processing's bandwidth saving isn't worth the debug pain and added load while the display path is still the bottleneck. **Flip condition:** if the link can't carry the frames at usable rate, move inference to the Pi - but isolate the display bottleneck first."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-157",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"reuse last year's ESCs or get fresh ones?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Structured call. What matters here: reliability history, the EMI/transient hardening we've since learned, and cost. Reused ESCs carry unknown fatigue and the ESC 3 cascade in their history; fresh ones reset that but cost money and still need the cap-bank hardening. **Verdict:** fresh ESCs for the thrusters that failed or ran hot, reuse the known-good ones with cap banks added. **Why not the other:** reusing the ESC that already cascaded is betting the run on a part with a failure record. **Flip if:** if budget's zero, reuse all - but bench-cycle each and add the buck-rail caps first."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-147",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and build our own manipulator or buy one?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let's do this properly. Criteria, in order: task fit, schedule to competition, reliability under our EMI/water conditions, and the workmanship rubric points a custom build can earn. Buying de-risks schedule and reliability; building earns design/workmanship rationale but costs time we may not have and adds a subsystem to debug. So: **build only the gripper geometry that's task-specific, buy the actuation if a proven unit fits.** The loser's kill reason: a fully custom manipulator's rubric upside doesn't cover the schedule and reliability risk this close to Worlds. What would flip it: if no off-the-shelf unit meets the task envelope, build - and budget real bench time for it."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-326",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "wired-only piloting or keep a wireless backup path?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let's do this properly. Criteria, in order: reliability of each under EMI, complexity, and failure modes mid-run. The wired eth0 link is your reliable primary; a wireless backup adds a fallback but also another EMI-sensitive path and the router complexity you deliberately demoted. So: **wired primary, no live wireless piloting backup - keep the failover simple and vehicle-side.** The loser's kill reason: a wireless backup reintroduces the flaky router path you removed from the critical path for good reason. What would flip it: if the wired link proves unreliable in the venue, a backup's worth revisiting - but the vehicle-side failsafe is the real safety net, not a second comms path."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-412",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - harden EMI with cap banks first or star-ground first?"
+   },
+   {
+    "role": "assistant",
+    "content": "Structured call. What matters here: which attacks the biggest coupling path, cost/effort, and how testable each is in isolation. Star ground kills return-current loops that couple noise broadly and is cheap; cap banks target the buck-output transients specifically. They fix different halves of the conducted path. **Verdict:** star ground first - it's the cheapest, broadest conducted-noise fix and it's the reference the cap banks need anyway. **Why not the other:** leading with cap banks without a clean single ground point leaves the return loops that reinject the noise you just filtered. **Flip if:** if the noise is clearly a buck-transient spike at one rail (scope shows it), do that cap bank first - fix the measured dominant path."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-328",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin on housing is asking - \"wired-only piloting or keep a wireless backup path?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: reliability of each under EMI, complexity, and failure modes mid-run. The wired eth0 link is your reliable primary; a wireless backup adds a fallback but also another EMI-sensitive path and the router complexity you deliberately demoted. **Verdict:** wired primary, no live wireless piloting backup - keep the failover simple and vehicle-side. **Kill reason:** a wireless backup reintroduces the flaky router path you removed from the critical path for good reason. **Flip condition:** if the wired link proves unreliable in the venue, a backup's worth revisiting - but the vehicle-side failsafe is the real safety net, not a second comms path."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-329",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and wired-only piloting or keep a wireless backup path?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let's do this properly. Criteria, in order: reliability of each under EMI, complexity, and failure modes mid-run. The wired eth0 link is your reliable primary; a wireless backup adds a fallback but also another EMI-sensitive path and the router complexity you deliberately demoted. So: **wired primary, no live wireless piloting backup - keep the failover simple and vehicle-side.** The loser's kill reason: a wireless backup reintroduces the flaky router path you removed from the critical path for good reason. What would flip it: if the wired link proves unreliable in the venue, a backup's worth revisiting - but the vehicle-side failsafe is the real safety net, not a second comms path."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-144",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "build our own manipulator or buy one?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let's do this properly. Criteria, in order: task fit, schedule to competition, reliability under our EMI/water conditions, and the workmanship rubric points a custom build can earn. Buying de-risks schedule and reliability; building earns design/workmanship rationale but costs time we may not have and adds a subsystem to debug. So: **build only the gripper geometry that's task-specific, buy the actuation if a proven unit fits.** The loser's kill reason: a fully custom manipulator's rubric upside doesn't cover the schedule and reliability risk this close to Worlds. What would flip it: if no off-the-shelf unit meets the task envelope, build - and budget real bench time for it."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-159",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and reuse last year's ESCs or get fresh ones?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let's do this properly. Criteria, in order: reliability history, the EMI/transient hardening we've since learned, and cost. Reused ESCs carry unknown fatigue and the ESC 3 cascade in their history; fresh ones reset that but cost money and still need the cap-bank hardening. So: **fresh ESCs for the thrusters that failed or ran hot, reuse the known-good ones with cap banks added.** The loser's kill reason: reusing the ESC that already cascaded is betting the run on a part with a failure record. What would flip it: if budget's zero, reuse all - but bench-cycle each and add the buck-rail caps first."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-143",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and one camera or two on the vehicle - worth the second?"
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: task coverage (Task 2.1 vision + piloting), bandwidth on the capped 100 Mbps link, USB/EMI reliability, and pilot cognitive load. A second camera buys situational coverage but doubles the USB-EMI failure surface (our least reliable subsystem) and eats link budget you've capped at 100 for EMI reasons. **Verdict:** one primary piloting camera, add the second only if a task demands a view the first can't give. **Kill reason:** the second camera's coverage isn't worth two more failure-prone USB paths in an EMI bay if one view does the job. **Flip condition:** if a scored task needs a simultaneous second angle, the second earns its place - then harden both cables."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-155",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - foam buoyancy or an air-filled compartment?"
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: reliability at depth (flood risk), trim adjustability, and manufacturability. Foam is flood-proof and set-and-forget but fixed; an air compartment is tunable but adds a sealing failure mode - and sealing is where we get bitten. **Verdict:** closed-cell foam for the baseline buoyancy, small trim weights for adjustment. **Kill reason:** an air compartment's adjustability isn't worth another pressure seal that can flood mid-run. **Flip condition:** if you need in-mission buoyancy change, that's a different vehicle - not this season."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-324",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jhan on electrical is asking - \"run the OpenCV vision on the Pi or up on the surface for Task 2.1?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Structured call. What matters here: compute headroom, the EMI/latency of moving frames, dev/debug speed, and the display bottleneck we already have. On-Pi saves link bandwidth but adds load to a box already feeding cameras over an EMI-touchy path; surface-side has the compute and is far easier to iterate, at the cost of shipping frames up. **Verdict:** surface-side vision for Task 2.1 - easier to develop and the Pi's already busy. **Why not the other:** on-Pi processing's bandwidth saving isn't worth the debug pain and added load while the display path is still the bottleneck. **Flip if:** if the link can't carry the frames at usable rate, move inference to the Pi - but isolate the display bottleneck first."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-411",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel on our pilot is asking - \"harden EMI with cap banks first or star-ground first?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Let's do this properly. Criteria, in order: which attacks the biggest coupling path, cost/effort, and how testable each is in isolation. Star ground kills return-current loops that couple noise broadly and is cheap; cap banks target the buck-output transients specifically. They fix different halves of the conducted path. So: **star ground first - it's the cheapest, broadest conducted-noise fix and it's the reference the cap banks need anyway.** The loser's kill reason: leading with cap banks without a clean single ground point leaves the return loops that reinject the noise you just filtered. What would flip it: if the noise is clearly a buck-transient spike at one rail (scope shows it), do that cap bank first - fix the measured dominant path."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-415",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin on housing is asking - \"pot the camera connector or use a sealed connector?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Structured call. What matters here: reliability at depth, serviceability, and the failure history (USB enumeration at splices). Potting is the most waterproof and strain-relieved but permanent - a bad joint is unfixable; a sealed connector is serviceable but adds a mate that can leak or loosen. **Verdict:** pot it - but only after enumeration and streaming are confirmed through the fully assembled cable. **Why not the other:** a sealed connector's serviceability isn't worth another underwater mate on a path that already fails at junctions. **Flip if:** if you'll need to swap the camera often, a quality sealed connector wins - accept the extra seal to keep it serviceable."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-322",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "run the OpenCV vision on the Pi or up on the surface for Task 2.1?"
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: compute headroom, the EMI/latency of moving frames, dev/debug speed, and the display bottleneck we already have. On-Pi saves link bandwidth but adds load to a box already feeding cameras over an EMI-touchy path; surface-side has the compute and is far easier to iterate, at the cost of shipping frames up. **Verdict:** surface-side vision for Task 2.1 - easier to develop and the Pi's already busy. **Kill reason:** on-Pi processing's bandwidth saving isn't worth the debug pain and added load while the display path is still the bottleneck. **Flip condition:** if the link can't carry the frames at usable rate, move inference to the Pi - but isolate the display bottleneck first."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-156",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "reuse last year's ESCs or get fresh ones?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let's do this properly. Criteria, in order: reliability history, the EMI/transient hardening we've since learned, and cost. Reused ESCs carry unknown fatigue and the ESC 3 cascade in their history; fresh ones reset that but cost money and still need the cap-bank hardening. So: **fresh ESCs for the thrusters that failed or ran hot, reuse the known-good ones with cap banks added.** The loser's kill reason: reusing the ESC that already cascaded is betting the run on a part with a failure record. What would flip it: if budget's zero, reuse all - but bench-cycle each and add the buck-rail caps first."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-146",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison on the float is asking - \"build our own manipulator or buy one?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Applying *structured trade-off*. Criteria that matter: task fit, schedule to competition, reliability under our EMI/water conditions, and the workmanship rubric points a custom build can earn. Buying de-risks schedule and reliability; building earns design/workmanship rationale but costs time we may not have and adds a subsystem to debug. **Verdict:** build only the gripper geometry that's task-specific, buy the actuation if a proven unit fits. **Kill reason:** a fully custom manipulator's rubric upside doesn't cover the schedule and reliability risk this close to Worlds. **Flip condition:** if no off-the-shelf unit meets the task envelope, build - and budget real bench time for it."
+   }
+  ]
+ },
+ {
+  "id": "gen-tradeoff-154",
+  "category": "design_tradeoff",
+  "source_shape": "tradeoff",
+  "demonstrates": [
+   "tradeoff"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "fixes criteria before the verdict",
+   "gives a verdict with the runner-up's kill reason",
+   "states a flip condition"
+  ],
+  "anti_patterns": [
+   "picks an option without criteria",
+   "omits the flip condition",
+   "invents specs"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall on manipulators is asking - \"foam buoyancy or an air-filled compartment?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Structured call. What matters here: reliability at depth (flood risk), trim adjustability, and manufacturability. Foam is flood-proof and set-and-forget but fixed; an air compartment is tunable but adds a sealing failure mode - and sealing is where we get bitten. **Verdict:** closed-cell foam for the baseline buoyancy, small trim weights for adjustment. **Why not the other:** an air compartment's adjustability isn't worth another pressure seal that can flood mid-run. **Flip if:** if you need in-mission buoyancy change, that's a different vehicle - not this season."
+   }
+  ]
+ }
+]

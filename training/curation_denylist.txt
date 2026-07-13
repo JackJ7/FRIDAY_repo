@@ -1,0 +1,39 @@
+# curation_denylist.txt - human-review verdicts for curate.py (one exact
+# user-turn string per line; '#' = comment). These records pass the automated
+# excludes but MODEL THE WRONG BEHAVIOR, so they must never enter the
+# training set. curate.py regenerates curated_logs.jsonl on every run, which
+# is why these verdicts live here and not as hand-edits to that file.
+#
+# 2026-07-09 review (v2 dataset build):
+# - one record claims she'll restart her own application (no such tool);
+# - six records are one thread where she never analyzes the PDF Jack is
+#   pointing at, looping on "please specify" / directory listings instead.
+Hey Friday, there should be some new updates waiting, can you restart your application for me?
+Can I get your thoughts and feelings on the schematics?
+The ones I just handed off to you
+the doc ock sketches I uploaded during this converstaion
+I'd like to know your thoughts and feelings on the document
+I'd like you to give me your thoughts and feelings on the doc ock sketches (a pdf) in the doc ock project file
+I'd just like you to analyze the pdf and give me your thoughts and feelings on it
+#
+# 2026-07-10 review (v3 dataset build): fresh logs since v2 surfaced more
+# wrong-behavior records —
+# - a chatbot "Great!" opener + a servile "How can I assist you further today?"
+#   closer (the exact tells the voice work removes);
+# - another file-attach record where she FILES the PDF but doesn't analyze it
+#   ("analyze them yourself" dropped) — matched by its typed first line, since
+#   the harness appends the attachment marker on line 2;
+# - a confused EPP-MathWorks calendar thread: she asserts "scheduled for today"
+#   with no read_calendar, a read_calendar returns UNRELATED office hours, she
+#   clarification-loops on an obvious follow-up, and one reply hallucinates the
+#   phantom-artifact "no specific file has been provided yet" barrier text;
+# - "What is the date today?" answered "2023-11-15" (base-model date hallucination).
+Fair enough, we'll run the test first. Thanks.
+Hey Friday, thank you for the daily briefings, I appreciate them
+Here are those ock sketches, please add them to the ock project file and analyze them yourself
+Hi Friday, what day do you have the EPP mathworks team meeting set as?
+Can you give me an exact date please
+What date do you have saved for the epp mathworks team meeting?
+What EPP Mathworks meeting were you talking about earlier?
+Can you cross reference my calendar and tasks that you have marked down personally, remove any task in your database that you don't see on the calendar, but don't add any tasks based on my calendar
+What is the date today?

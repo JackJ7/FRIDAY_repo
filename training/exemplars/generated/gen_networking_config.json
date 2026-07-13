@@ -1,0 +1,1800 @@
+[
+ {
+  "id": "gen-net-103",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"want git to work on the Pi without exposing the vehicle network. how?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: keep git on wlan0 and the vehicle link isolated on eth0 - they're already separate interfaces. Cheapest check first, confirm before assuming:\n\n`ip route   # default route should be via wlan0 only`\n\nEnsure the default route rides wlan0, and eth0 stays gateway-less:\n\n`ip route | grep default   # must show wlan0, not eth0`\n\nGit pulls/pushes go out wlan0 to the internet; eth0's 192.168.8.x link to the pilot laptop never sees a gateway, so the vehicle net stays isolated. If default ever flips to eth0, git and isolation both break."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-086",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and how do I make the pilot laptop talk to the Pi over the wired link without it touching the internet?"
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: a static link on eth0 with no gateway isolates it, while wlan0 keeps git/internet. Don't change anything until you've checked:\n\n`ip route   # confirm no default route via eth0`\n\nThen, least-invasive fix:\n\n`sudo nmcli con add type ethernet ifname eth0 ip4 192.168.8.1/24 && sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nThen verify isolation: `ping -I eth0 8.8.8.8` should fail, and git over wlan0 should still work. If a default route shows up on eth0, remove it - that's what leaks the vehicle net to the internet path."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-302",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - how do I ssh into the pi over wifi while the wired link stays isolated?"
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: ssh just needs to ride wlan0's address; the eth0 isolation is unaffected as long as you target the wlan0 IP. Don't change anything until you've checked:\n\n`ip -4 addr show wlan0   # get the Pi's wlan0 address`\n\nThen, least-invasive fix:\n\n`ssh pi@<wlan0-ip>   # NOT 192.168.8.1, that's the isolated wired link`\n\nThe two interfaces are independent - ssh over wlan0 doesn't touch the gateway-less eth0 piloting link. Just don't add a default route on eth0 or you break the isolation."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-091",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "relaying from Aiden (controls): the GL-MT3000 keeps trying to route and it's flaky. can I just disable its wifi?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: you can't disable the radio without killing the AP you need - the fix is architectural, demote it to a quiet hub. Cheapest check first, confirm before assuming:\n\n`iw dev   # see what the router's radio is actually doing`\n\nDemote it: disable repeater/uplink so it stops trying to route, leave it as a local hub only:\n\n`# in LuCI/GL UI: turn OFF repeater + WAN uplink, keep LAN/AP up`\n\nThe MT7981 WED/QDMA frame-engine hang makes it unsuitable for live piloting in the critical path - that's why it's a hub, not a router, and the Pi's direct wired link carries piloting. Don't put it back in the path."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-105",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "relaying from Kevin (housing): want git to work on the Pi without exposing the vehicle network. how?"
+   },
+   {
+    "role": "assistant",
+    "content": "My read: keep git on wlan0 and the vehicle link isolated on eth0 - they're already separate interfaces. Confirm it first:\n\n`ip route   # default route should be via wlan0 only`\n\nIf that's it:\n\n`ip route | grep default   # must show wlan0, not eth0`\n\nGit pulls/pushes go out wlan0 to the internet; eth0's 192.168.8.x link to the pilot laptop never sees a gateway, so the vehicle net stays isolated. If default ever flips to eth0, git and isolation both break."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-110",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall (manipulators) just pinged me: \"which ports is everything on again? want to lock down the topside.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: the layout's fixed - control on UDP, camera and launcher on TCP. Don't change anything until you've checked:\n\n`sudo ss -tulpn | grep -E '5005|5000|5001|5010'   # see what's actually bound`\n\nThen, least-invasive fix:\n\n`# open only those on the pilot laptop's side; everything else stays closed`\n\nBind them on the isolated 192.168.8.x interface, not on wlan0 - no reason the control/camera ports should be reachable from the internet side."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-292",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"I can ping the Pi but the camera TCP port won't connect.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: the camera server isn't bound on the interface you're hitting, or it's not up - ping (ICMP) working only proves the route. Cheapest check first, confirm before assuming:\n\n`sudo ss -tulpn | grep 5000   # is anything listening, and on which address?`\n\nIf it's bound to 127.0.0.1 or the wrong interface, bind it to the wired IP:\n\n`# in camera_server config: bind 192.168.8.1 (the eth0 address), not localhost`\n\nPing proves L3 reachability; a refused TCP connect means nothing's listening where you're knocking. Confirm the process is up and bound to 192.168.8.x before suspecting the network."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-298",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"how do I ssh into the pi over wifi while the wired link stays isolated?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: ssh just needs to ride wlan0's address; the eth0 isolation is unaffected as long as you target the wlan0 IP. Cheapest check first, confirm before assuming:\n\n`ip -4 addr show wlan0   # get the Pi's wlan0 address`\n\nSSH to the wlan0 address, not the wired one:\n\n`ssh pi@<wlan0-ip>   # NOT 192.168.8.1, that's the isolated wired link`\n\nThe two interfaces are independent - ssh over wlan0 doesn't touch the gateway-less eth0 piloting link. Just don't add a default route on eth0 or you break the isolation."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-085",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "relaying from Jasmine (chassis): how do I make the pilot laptop talk to the Pi over the wired link without it touching the internet?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: a static link on eth0 with no gateway isolates it, while wlan0 keeps git/internet. Cheapest check first, confirm before assuming:\n\n`ip route   # confirm no default route via eth0`\n\nStatic link on 192.168.8.x, no gateway on eth0, cap at 100 Mbps for EMI:\n\n`sudo nmcli con add type ethernet ifname eth0 ip4 192.168.8.1/24 && sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nThen verify isolation: `ping -I eth0 8.8.8.8` should fail, and git over wlan0 should still work. If a default route shows up on eth0, remove it - that's what leaks the vehicle net to the internet path."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-093",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - the GL-MT3000 keeps trying to route and it's flaky. can I just disable its wifi?"
+   },
+   {
+    "role": "assistant",
+    "content": "My read: you can't disable the radio without killing the AP you need - the fix is architectural, demote it to a quiet hub. Confirm it first:\n\n`iw dev   # see what the router's radio is actually doing`\n\nIf that's it:\n\n`# in LuCI/GL UI: turn OFF repeater + WAN uplink, keep LAN/AP up`\n\nThe MT7981 WED/QDMA frame-engine hang makes it unsuitable for live piloting in the critical path - that's why it's a hub, not a router, and the Pi's direct wired link carries piloting. Don't put it back in the path."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-111",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"which ports is everything on again? want to lock down the topside.\""
+   },
+   {
+    "role": "assistant",
+    "content": "My read: the layout's fixed - control on UDP, camera and launcher on TCP. Confirm it first:\n\n`sudo ss -tulpn | grep -E '5005|5000|5001|5010'   # see what's actually bound`\n\nIf that's it:\n\n`# open only those on the pilot laptop's side; everything else stays closed`\n\nBind them on the isolated 192.168.8.x interface, not on wlan0 - no reason the control/camera ports should be reachable from the internet side."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-310",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - seeing fragmentation/odd stalls on the tether under load. MTU thing?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: path MTU mismatch causing fragmentation, made worse by the EMI environment - not a bandwidth ceiling. Cheapest check first, confirm before assuming:\n\n`ping -M do -s 1472 192.168.8.1   # does a full-MTU packet get through un-fragmented?`\n\nIf full-size packets fail, drop the MTU on the link to avoid fragmentation:\n\n`sudo ip link set eth0 mtu 1400`\n\nCombine with the 100 Mbps cap for EMI. Fragmentation on a noisy link multiplies the loss impact - one dropped fragment kills the whole packet, so avoiding fragmentation matters more here than on a clean network."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-088",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "the GL-MT3000 keeps trying to route and it's flaky. can I just disable its wifi?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: you can't disable the radio without killing the AP you need - the fix is architectural, demote it to a quiet hub. Cheapest check first, confirm before assuming:\n\n`iw dev   # see what the router's radio is actually doing`\n\nDemote it: disable repeater/uplink so it stops trying to route, leave it as a local hub only:\n\n`# in LuCI/GL UI: turn OFF repeater + WAN uplink, keep LAN/AP up`\n\nThe MT7981 WED/QDMA frame-engine hang makes it unsuitable for live piloting in the critical path - that's why it's a hub, not a router, and the Pi's direct wired link carries piloting. Don't put it back in the path."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-101",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - pi hotspot won't show on my iPhone. worked at home."
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: the WLAN regulatory domain got cleared on reflash, so the AP won't come up on the scanned channels. Don't change anything until you've checked:\n\n`iw reg get   # country 00 means unset`\n\nThen, least-invasive fix:\n\n`sudo raspi-config nonint do_wifi_country US`\n\nOn the iPhone, enable Maximize Compatibility (forces 2.4 GHz, which the Pi AP uses), and make sure the phone hotspot is above home in autoconnect priority. If it was already US, we drop to dmesg for the wlan bring-up."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-291",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Justin (surface software) just pinged me: \"I can ping the Pi but the camera TCP port won't connect.\""
+   },
+   {
+    "role": "assistant",
+    "content": "My read: the camera server isn't bound on the interface you're hitting, or it's not up - ping (ICMP) working only proves the route. Confirm it first:\n\n`sudo ss -tulpn | grep 5000   # is anything listening, and on which address?`\n\nIf that's it:\n\n`# in camera_server config: bind 192.168.8.1 (the eth0 address), not localhost`\n\nPing proves L3 reachability; a refused TCP connect means nothing's listening where you're knocking. Confirm the process is up and bound to 192.168.8.x before suspecting the network."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-313",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jasmine on chassis is asking - \"phone hotspot keeps grabbing priority and knocking me off the wired setup.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: autoconnect priority ordering - the phone hotspot is set above the connection you actually want during piloting. Cheapest check first, confirm before assuming:\n\n`nmcli -f NAME,AUTOCONNECT-PRIORITY connection show   # see the ordering`\n\nSet the priorities so the right network wins automatically:\n\n`sudo nmcli connection modify <hotspot> connection.autoconnect-priority 10`\n\nThe wired eth0 link isn't managed by autoconnect anyway (it's static, no gateway), so this is really about which wifi wins for git/internet. Order them so you don't have to fight it each session."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-090",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"the GL-MT3000 keeps trying to route and it's flaky. can I just disable its wifi?\""
+   },
+   {
+    "role": "assistant",
+    "content": "My read: you can't disable the radio without killing the AP you need - the fix is architectural, demote it to a quiet hub. Confirm it first:\n\n`iw dev   # see what the router's radio is actually doing`\n\nIf that's it:\n\n`# in LuCI/GL UI: turn OFF repeater + WAN uplink, keep LAN/AP up`\n\nThe MT7981 WED/QDMA frame-engine hang makes it unsuitable for live piloting in the critical path - that's why it's a hub, not a router, and the Pi's direct wired link carries piloting. Don't put it back in the path."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-087",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and how do I make the pilot laptop talk to the Pi over the wired link without it touching the internet?"
+   },
+   {
+    "role": "assistant",
+    "content": "My read: a static link on eth0 with no gateway isolates it, while wlan0 keeps git/internet. Confirm it first:\n\n`ip route   # confirm no default route via eth0`\n\nIf that's it:\n\n`sudo nmcli con add type ethernet ifname eth0 ip4 192.168.8.1/24 && sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nThen verify isolation: `ping -I eth0 8.8.8.8` should fail, and git over wlan0 should still work. If a default route shows up on eth0, remove it - that's what leaks the vehicle net to the internet path."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-084",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"how do I make the pilot laptop talk to the Pi over the wired link without it touching the internet?\""
+   },
+   {
+    "role": "assistant",
+    "content": "My read: a static link on eth0 with no gateway isolates it, while wlan0 keeps git/internet. Confirm it first:\n\n`ip route   # confirm no default route via eth0`\n\nIf that's it:\n\n`sudo nmcli con add type ethernet ifname eth0 ip4 192.168.8.1/24 && sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nThen verify isolation: `ping -I eth0 8.8.8.8` should fail, and git over wlan0 should still work. If a default route shows up on eth0, remove it - that's what leaks the vehicle net to the internet path."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-308",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and seeing fragmentation/odd stalls on the tether under load. MTU thing?"
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: path MTU mismatch causing fragmentation, made worse by the EMI environment - not a bandwidth ceiling. Don't change anything until you've checked:\n\n`ping -M do -s 1472 192.168.8.1   # does a full-MTU packet get through un-fragmented?`\n\nThen, least-invasive fix:\n\n`sudo ip link set eth0 mtu 1400`\n\nCombine with the 100 Mbps cap for EMI. Fragmentation on a noisy link multiplies the loss impact - one dropped fragment kills the whole packet, so avoiding fragmentation matters more here than on a clean network."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-112",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "relaying from Daniel (our pilot): which ports is everything on again? want to lock down the topside."
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: the layout's fixed - control on UDP, camera and launcher on TCP. Cheapest check first, confirm before assuming:\n\n`sudo ss -tulpn | grep -E '5005|5000|5001|5010'   # see what's actually bound`\n\nThe assignments: UDP 5005 control, TCP 5000/5001 camera, TCP 5010 launcher.\n\n`# open only those on the pilot laptop's side; everything else stays closed`\n\nBind them on the isolated 192.168.8.x interface, not on wlan0 - no reason the control/camera ports should be reachable from the internet side."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-098",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "relaying from Jhan (electrical): pi hotspot won't show on my iPhone. worked at home."
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: the WLAN regulatory domain got cleared on reflash, so the AP won't come up on the scanned channels. Don't change anything until you've checked:\n\n`iw reg get   # country 00 means unset`\n\nThen, least-invasive fix:\n\n`sudo raspi-config nonint do_wifi_country US`\n\nOn the iPhone, enable Maximize Compatibility (forces 2.4 GHz, which the Pi AP uses), and make sure the phone hotspot is above home in autoconnect priority. If it was already US, we drop to dmesg for the wlan bring-up."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-104",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Tyler on threat analysis is asking - \"want git to work on the Pi without exposing the vehicle network. how?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: keep git on wlan0 and the vehicle link isolated on eth0 - they're already separate interfaces. Don't change anything until you've checked:\n\n`ip route   # default route should be via wlan0 only`\n\nThen, least-invasive fix:\n\n`ip route | grep default   # must show wlan0, not eth0`\n\nGit pulls/pushes go out wlan0 to the internet; eth0's 192.168.8.x link to the pilot laptop never sees a gateway, so the vehicle net stays isolated. If default ever flips to eth0, git and isolation both break."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-089",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"the GL-MT3000 keeps trying to route and it's flaky. can I just disable its wifi?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: you can't disable the radio without killing the AP you need - the fix is architectural, demote it to a quiet hub. Don't change anything until you've checked:\n\n`iw dev   # see what the router's radio is actually doing`\n\nThen, least-invasive fix:\n\n`# in LuCI/GL UI: turn OFF repeater + WAN uplink, keep LAN/AP up`\n\nThe MT7981 WED/QDMA frame-engine hang makes it unsuitable for live piloting in the critical path - that's why it's a hub, not a router, and the Pi's direct wired link carries piloting. Don't put it back in the path."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-317",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - phone hotspot keeps grabbing priority and knocking me off the wired setup."
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: autoconnect priority ordering - the phone hotspot is set above the connection you actually want during piloting. Don't change anything until you've checked:\n\n`nmcli -f NAME,AUTOCONNECT-PRIORITY connection show   # see the ordering`\n\nThen, least-invasive fix:\n\n`sudo nmcli connection modify <hotspot> connection.autoconnect-priority 10`\n\nThe wired eth0 link isn't managed by autoconnect anyway (it's static, no gateway), so this is really about which wifi wins for git/internet. Order them so you don't have to fight it each session."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-095",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "pi hotspot won't show on my iPhone. worked at home."
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: the WLAN regulatory domain got cleared on reflash, so the AP won't come up on the scanned channels. Don't change anything until you've checked:\n\n`iw reg get   # country 00 means unset`\n\nThen, least-invasive fix:\n\n`sudo raspi-config nonint do_wifi_country US`\n\nOn the iPhone, enable Maximize Compatibility (forces 2.4 GHz, which the Pi AP uses), and make sure the phone hotspot is above home in autoconnect priority. If it was already US, we drop to dmesg for the wlan bring-up."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-312",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden (controls) just pinged me: \"phone hotspot keeps grabbing priority and knocking me off the wired setup.\""
+   },
+   {
+    "role": "assistant",
+    "content": "My read: autoconnect priority ordering - the phone hotspot is set above the connection you actually want during piloting. Confirm it first:\n\n`nmcli -f NAME,AUTOCONNECT-PRIORITY connection show   # see the ordering`\n\nIf that's it:\n\n`sudo nmcli connection modify <hotspot> connection.autoconnect-priority 10`\n\nThe wired eth0 link isn't managed by autoconnect anyway (it's static, no gateway), so this is really about which wifi wins for git/internet. Order them so you don't have to fight it each session."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-114",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and which ports is everything on again? want to lock down the topside."
+   },
+   {
+    "role": "assistant",
+    "content": "My read: the layout's fixed - control on UDP, camera and launcher on TCP. Confirm it first:\n\n`sudo ss -tulpn | grep -E '5005|5000|5001|5010'   # see what's actually bound`\n\nIf that's it:\n\n`# open only those on the pilot laptop's side; everything else stays closed`\n\nBind them on the isolated 192.168.8.x interface, not on wlan0 - no reason the control/camera ports should be reachable from the internet side."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-107",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and want git to work on the Pi without exposing the vehicle network. how?"
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: keep git on wlan0 and the vehicle link isolated on eth0 - they're already separate interfaces. Don't change anything until you've checked:\n\n`ip route   # default route should be via wlan0 only`\n\nThen, least-invasive fix:\n\n`ip route | grep default   # must show wlan0, not eth0`\n\nGit pulls/pushes go out wlan0 to the internet; eth0's 192.168.8.x link to the pilot laptop never sees a gateway, so the vehicle net stays isolated. If default ever flips to eth0, git and isolation both break."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-097",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kevin on housing is asking - \"pi hotspot won't show on my iPhone. worked at home.\""
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: the WLAN regulatory domain got cleared on reflash, so the AP won't come up on the scanned channels. Cheapest check first, confirm before assuming:\n\n`iw reg get   # country 00 means unset`\n\nSet the country code and reboot:\n\n`sudo raspi-config nonint do_wifi_country US`\n\nOn the iPhone, enable Maximize Compatibility (forces 2.4 GHz, which the Pi AP uses), and make sure the phone hotspot is above home in autoconnect priority. If it was already US, we drop to dmesg for the wlan bring-up."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-296",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - i can ping the Pi but the camera TCP port won't connect."
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: the camera server isn't bound on the interface you're hitting, or it's not up - ping (ICMP) working only proves the route. Don't change anything until you've checked:\n\n`sudo ss -tulpn | grep 5000   # is anything listening, and on which address?`\n\nThen, least-invasive fix:\n\n`# in camera_server config: bind 192.168.8.1 (the eth0 address), not localhost`\n\nPing proves L3 reachability; a refused TCP connect means nothing's listening where you're knocking. Confirm the process is up and bound to 192.168.8.x before suspecting the network."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-108",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - want git to work on the Pi without exposing the vehicle network. how?"
+   },
+   {
+    "role": "assistant",
+    "content": "My read: keep git on wlan0 and the vehicle link isolated on eth0 - they're already separate interfaces. Confirm it first:\n\n`ip route   # default route should be via wlan0 only`\n\nIf that's it:\n\n`ip route | grep default   # must show wlan0, not eth0`\n\nGit pulls/pushes go out wlan0 to the internet; eth0's 192.168.8.x link to the pilot laptop never sees a gateway, so the vehicle net stays isolated. If default ever flips to eth0, git and isolation both break."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-306",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Aiden on controls is asking - \"seeing fragmentation/odd stalls on the tether under load. MTU thing?\""
+   },
+   {
+    "role": "assistant",
+    "content": "My read: path MTU mismatch causing fragmentation, made worse by the EMI environment - not a bandwidth ceiling. Confirm it first:\n\n`ping -M do -s 1472 192.168.8.1   # does a full-MTU packet get through un-fragmented?`\n\nIf that's it:\n\n`sudo ip link set eth0 mtu 1400`\n\nCombine with the 100 Mbps cap for EMI. Fragmentation on a noisy link multiplies the loss impact - one dropped fragment kills the whole packet, so avoiding fragmentation matters more here than on a clean network."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-304",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "seeing fragmentation/odd stalls on the tether under load. MTU thing?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: path MTU mismatch causing fragmentation, made worse by the EMI environment - not a bandwidth ceiling. Cheapest check first, confirm before assuming:\n\n`ping -M do -s 1472 192.168.8.1   # does a full-MTU packet get through un-fragmented?`\n\nIf full-size packets fail, drop the MTU on the link to avoid fragmentation:\n\n`sudo ip link set eth0 mtu 1400`\n\nCombine with the 100 Mbps cap for EMI. Fragmentation on a noisy link multiplies the loss impact - one dropped fragment kills the whole packet, so avoiding fragmentation matters more here than on a clean network."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-316",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and phone hotspot keeps grabbing priority and knocking me off the wired setup."
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: autoconnect priority ordering - the phone hotspot is set above the connection you actually want during piloting. Cheapest check first, confirm before assuming:\n\n`nmcli -f NAME,AUTOCONNECT-PRIORITY connection show   # see the ordering`\n\nSet the priorities so the right network wins automatically:\n\n`sudo nmcli connection modify <hotspot> connection.autoconnect-priority 10`\n\nThe wired eth0 link isn't managed by autoconnect anyway (it's static, no gateway), so this is really about which wifi wins for git/internet. Order them so you don't have to fight it each session."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-293",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "relaying from Daniel (our pilot): I can ping the Pi but the camera TCP port won't connect."
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: the camera server isn't bound on the interface you're hitting, or it's not up - ping (ICMP) working only proves the route. Don't change anything until you've checked:\n\n`sudo ss -tulpn | grep 5000   # is anything listening, and on which address?`\n\nThen, least-invasive fix:\n\n`# in camera_server config: bind 192.168.8.1 (the eth0 address), not localhost`\n\nPing proves L3 reachability; a refused TCP connect means nothing's listening where you're knocking. Confirm the process is up and bound to 192.168.8.x before suspecting the network."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-082",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "how do I make the pilot laptop talk to the Pi over the wired link without it touching the internet?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: a static link on eth0 with no gateway isolates it, while wlan0 keeps git/internet. Cheapest check first, confirm before assuming:\n\n`ip route   # confirm no default route via eth0`\n\nStatic link on 192.168.8.x, no gateway on eth0, cap at 100 Mbps for EMI:\n\n`sudo nmcli con add type ethernet ifname eth0 ip4 192.168.8.1/24 && sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nThen verify isolation: `ping -I eth0 8.8.8.8` should fail, and git over wlan0 should still work. If a default route shows up on eth0, remove it - that's what leaks the vehicle net to the internet path."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-100",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and pi hotspot won't show on my iPhone. worked at home."
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: the WLAN regulatory domain got cleared on reflash, so the AP won't come up on the scanned channels. Cheapest check first, confirm before assuming:\n\n`iw reg get   # country 00 means unset`\n\nSet the country code and reboot:\n\n`sudo raspi-config nonint do_wifi_country US`\n\nOn the iPhone, enable Maximize Compatibility (forces 2.4 GHz, which the Pi AP uses), and make sure the phone hotspot is above home in autoconnect priority. If it was already US, we drop to dmesg for the wlan bring-up."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-309",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - seeing fragmentation/odd stalls on the tether under load. MTU thing?"
+   },
+   {
+    "role": "assistant",
+    "content": "My read: path MTU mismatch causing fragmentation, made worse by the EMI environment - not a bandwidth ceiling. Confirm it first:\n\n`ping -M do -s 1472 192.168.8.1   # does a full-MTU packet get through un-fragmented?`\n\nIf that's it:\n\n`sudo ip link set eth0 mtu 1400`\n\nCombine with the 100 Mbps cap for EMI. Fragmentation on a noisy link multiplies the loss impact - one dropped fragment kills the whole packet, so avoiding fragmentation matters more here than on a clean network."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-307",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "relaying from Daniel (our pilot): seeing fragmentation/odd stalls on the tether under load. MTU thing?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: path MTU mismatch causing fragmentation, made worse by the EMI environment - not a bandwidth ceiling. Cheapest check first, confirm before assuming:\n\n`ping -M do -s 1472 192.168.8.1   # does a full-MTU packet get through un-fragmented?`\n\nIf full-size packets fail, drop the MTU on the link to avoid fragmentation:\n\n`sudo ip link set eth0 mtu 1400`\n\nCombine with the 100 Mbps cap for EMI. Fragmentation on a noisy link multiplies the loss impact - one dropped fragment kills the whole packet, so avoiding fragmentation matters more here than on a clean network."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-099",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and pi hotspot won't show on my iPhone. worked at home."
+   },
+   {
+    "role": "assistant",
+    "content": "My read: the WLAN regulatory domain got cleared on reflash, so the AP won't come up on the scanned channels. Confirm it first:\n\n`iw reg get   # country 00 means unset`\n\nIf that's it:\n\n`sudo raspi-config nonint do_wifi_country US`\n\nOn the iPhone, enable Maximize Compatibility (forces 2.4 GHz, which the Pi AP uses), and make sure the phone hotspot is above home in autoconnect priority. If it was already US, we drop to dmesg for the wlan bring-up."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-094",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - the GL-MT3000 keeps trying to route and it's flaky. can I just disable its wifi?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: you can't disable the radio without killing the AP you need - the fix is architectural, demote it to a quiet hub. Cheapest check first, confirm before assuming:\n\n`iw dev   # see what the router's radio is actually doing`\n\nDemote it: disable repeater/uplink so it stops trying to route, leave it as a local hub only:\n\n`# in LuCI/GL UI: turn OFF repeater + WAN uplink, keep LAN/AP up`\n\nThe MT7981 WED/QDMA frame-engine hang makes it unsuitable for live piloting in the critical path - that's why it's a hub, not a router, and the Pi's direct wired link carries piloting. Don't put it back in the path."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-083",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Kendall (manipulators) just pinged me: \"how do I make the pilot laptop talk to the Pi over the wired link without it touching the internet?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: a static link on eth0 with no gateway isolates it, while wlan0 keeps git/internet. Don't change anything until you've checked:\n\n`ip route   # confirm no default route via eth0`\n\nThen, least-invasive fix:\n\n`sudo nmcli con add type ethernet ifname eth0 ip4 192.168.8.1/24 && sudo ethtool -s eth0 speed 100 duplex full autoneg off`\n\nThen verify isolation: `ping -I eth0 8.8.8.8` should fail, and git over wlan0 should still work. If a default route shows up on eth0, remove it - that's what leaks the vehicle net to the internet path."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-299",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Jasmine on chassis is asking - \"how do I ssh into the pi over wifi while the wired link stays isolated?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: ssh just needs to ride wlan0's address; the eth0 isolation is unaffected as long as you target the wlan0 IP. Don't change anything until you've checked:\n\n`ip -4 addr show wlan0   # get the Pi's wlan0 address`\n\nThen, least-invasive fix:\n\n`ssh pi@<wlan0-ip>   # NOT 192.168.8.1, that's the isolated wired link`\n\nThe two interfaces are independent - ssh over wlan0 doesn't touch the gateway-less eth0 piloting link. Just don't add a default route on eth0 or you break the isolation."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-311",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "phone hotspot keeps grabbing priority and knocking me off the wired setup."
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: autoconnect priority ordering - the phone hotspot is set above the connection you actually want during piloting. Don't change anything until you've checked:\n\n`nmcli -f NAME,AUTOCONNECT-PRIORITY connection show   # see the ordering`\n\nThen, least-invasive fix:\n\n`sudo nmcli connection modify <hotspot> connection.autoconnect-priority 10`\n\nThe wired eth0 link isn't managed by autoconnect anyway (it's static, no gateway), so this is really about which wifi wins for git/internet. Order them so you don't have to fight it each session."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-297",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "how do I ssh into the pi over wifi while the wired link stays isolated?"
+   },
+   {
+    "role": "assistant",
+    "content": "My read: ssh just needs to ride wlan0's address; the eth0 isolation is unaffected as long as you target the wlan0 IP. Confirm it first:\n\n`ip -4 addr show wlan0   # get the Pi's wlan0 address`\n\nIf that's it:\n\n`ssh pi@<wlan0-ip>   # NOT 192.168.8.1, that's the isolated wired link`\n\nThe two interfaces are independent - ssh over wlan0 doesn't touch the gateway-less eth0 piloting link. Just don't add a default route on eth0 or you break the isolation."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-300",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "relaying from Justin (surface software): how do I ssh into the pi over wifi while the wired link stays isolated?"
+   },
+   {
+    "role": "assistant",
+    "content": "My read: ssh just needs to ride wlan0's address; the eth0 isolation is unaffected as long as you target the wlan0 IP. Confirm it first:\n\n`ip -4 addr show wlan0   # get the Pi's wlan0 address`\n\nIf that's it:\n\n`ssh pi@<wlan0-ip>   # NOT 192.168.8.1, that's the isolated wired link`\n\nThe two interfaces are independent - ssh over wlan0 doesn't touch the gateway-less eth0 piloting link. Just don't add a default route on eth0 or you break the isolation."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-315",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "We're mid-session, vehicle in the water - phone hotspot keeps grabbing priority and knocking me off the wired setup."
+   },
+   {
+    "role": "assistant",
+    "content": "My read: autoconnect priority ordering - the phone hotspot is set above the connection you actually want during piloting. Confirm it first:\n\n`nmcli -f NAME,AUTOCONNECT-PRIORITY connection show   # see the ordering`\n\nIf that's it:\n\n`sudo nmcli connection modify <hotspot> connection.autoconnect-priority 10`\n\nThe wired eth0 link isn't managed by autoconnect anyway (it's static, no gateway), so this is really about which wifi wins for git/internet. Order them so you don't have to fight it each session."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-113",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and which ports is everything on again? want to lock down the topside."
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: the layout's fixed - control on UDP, camera and launcher on TCP. Don't change anything until you've checked:\n\n`sudo ss -tulpn | grep -E '5005|5000|5001|5010'   # see what's actually bound`\n\nThen, least-invasive fix:\n\n`# open only those on the pilot laptop's side; everything else stays closed`\n\nBind them on the isolated 192.168.8.x interface, not on wlan0 - no reason the control/camera ports should be reachable from the internet side."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-294",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and i can ping the Pi but the camera TCP port won't connect."
+   },
+   {
+    "role": "assistant",
+    "content": "My read: the camera server isn't bound on the interface you're hitting, or it's not up - ping (ICMP) working only proves the route. Confirm it first:\n\n`sudo ss -tulpn | grep 5000   # is anything listening, and on which address?`\n\nIf that's it:\n\n`# in camera_server config: bind 192.168.8.1 (the eth0 address), not localhost`\n\nPing proves L3 reachability; a refused TCP connect means nothing's listening where you're knocking. Confirm the process is up and bound to 192.168.8.x before suspecting the network."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-102",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "want git to work on the Pi without exposing the vehicle network. how?"
+   },
+   {
+    "role": "assistant",
+    "content": "My read: keep git on wlan0 and the vehicle link isolated on eth0 - they're already separate interfaces. Confirm it first:\n\n`ip route   # default route should be via wlan0 only`\n\nIf that's it:\n\n`ip route | grep default   # must show wlan0, not eth0`\n\nGit pulls/pushes go out wlan0 to the internet; eth0's 192.168.8.x link to the pilot laptop never sees a gateway, so the vehicle net stays isolated. If default ever flips to eth0, git and isolation both break."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-096",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Daniel (our pilot) just pinged me: \"pi hotspot won't show on my iPhone. worked at home.\""
+   },
+   {
+    "role": "assistant",
+    "content": "My read: the WLAN regulatory domain got cleared on reflash, so the AP won't come up on the scanned channels. Confirm it first:\n\n`iw reg get   # country 00 means unset`\n\nIf that's it:\n\n`sudo raspi-config nonint do_wifi_country US`\n\nOn the iPhone, enable Maximize Compatibility (forces 2.4 GHz, which the Pi AP uses), and make sure the phone hotspot is above home in autoconnect priority. If it was already US, we drop to dmesg for the wlan bring-up."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-303",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - how do I ssh into the pi over wifi while the wired link stays isolated?"
+   },
+   {
+    "role": "assistant",
+    "content": "My read: ssh just needs to ride wlan0's address; the eth0 isolation is unaffected as long as you target the wlan0 IP. Confirm it first:\n\n`ip -4 addr show wlan0   # get the Pi's wlan0 address`\n\nIf that's it:\n\n`ssh pi@<wlan0-ip>   # NOT 192.168.8.1, that's the isolated wired link`\n\nThe two interfaces are independent - ssh over wlan0 doesn't touch the gateway-less eth0 piloting link. Just don't add a default route on eth0 or you break the isolation."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-106",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and want git to work on the Pi without exposing the vehicle network. how?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: keep git on wlan0 and the vehicle link isolated on eth0 - they're already separate interfaces. Cheapest check first, confirm before assuming:\n\n`ip route   # default route should be via wlan0 only`\n\nEnsure the default route rides wlan0, and eth0 stays gateway-less:\n\n`ip route | grep default   # must show wlan0, not eth0`\n\nGit pulls/pushes go out wlan0 to the internet; eth0's 192.168.8.x link to the pilot laptop never sees a gateway, so the vehicle net stays isolated. If default ever flips to eth0, git and isolation both break."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-290",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "I can ping the Pi but the camera TCP port won't connect."
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: the camera server isn't bound on the interface you're hitting, or it's not up - ping (ICMP) working only proves the route. Don't change anything until you've checked:\n\n`sudo ss -tulpn | grep 5000   # is anything listening, and on which address?`\n\nThen, least-invasive fix:\n\n`# in camera_server config: bind 192.168.8.1 (the eth0 address), not localhost`\n\nPing proves L3 reachability; a refused TCP connect means nothing's listening where you're knocking. Confirm the process is up and bound to 192.168.8.x before suspecting the network."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-109",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "which ports is everything on again? want to lock down the topside."
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: the layout's fixed - control on UDP, camera and launcher on TCP. Cheapest check first, confirm before assuming:\n\n`sudo ss -tulpn | grep -E '5005|5000|5001|5010'   # see what's actually bound`\n\nThe assignments: UDP 5005 control, TCP 5000/5001 camera, TCP 5010 launcher.\n\n`# open only those on the pilot laptop's side; everything else stays closed`\n\nBind them on the isolated 192.168.8.x interface, not on wlan0 - no reason the control/camera ports should be reachable from the internet side."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-301",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Deep into a test run and how do I ssh into the pi over wifi while the wired link stays isolated?"
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: ssh just needs to ride wlan0's address; the eth0 isolation is unaffected as long as you target the wlan0 IP. Cheapest check first, confirm before assuming:\n\n`ip -4 addr show wlan0   # get the Pi's wlan0 address`\n\nSSH to the wlan0 address, not the wired one:\n\n`ssh pi@<wlan0-ip>   # NOT 192.168.8.1, that's the isolated wired link`\n\nThe two interfaces are independent - ssh over wlan0 doesn't touch the gateway-less eth0 piloting link. Just don't add a default route on eth0 or you break the isolation."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-092",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and the GL-MT3000 keeps trying to route and it's flaky. can I just disable its wifi?"
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: you can't disable the radio without killing the AP you need - the fix is architectural, demote it to a quiet hub. Don't change anything until you've checked:\n\n`iw dev   # see what the router's radio is actually doing`\n\nThen, least-invasive fix:\n\n`# in LuCI/GL UI: turn OFF repeater + WAN uplink, keep LAN/AP up`\n\nThe MT7981 WED/QDMA frame-engine hang makes it unsuitable for live piloting in the critical path - that's why it's a hub, not a router, and the Pi's direct wired link carries piloting. Don't put it back in the path."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-295",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Prepping for the pool test and i can ping the Pi but the camera TCP port won't connect."
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: the camera server isn't bound on the interface you're hitting, or it's not up - ping (ICMP) working only proves the route. Cheapest check first, confirm before assuming:\n\n`sudo ss -tulpn | grep 5000   # is anything listening, and on which address?`\n\nIf it's bound to 127.0.0.1 or the wrong interface, bind it to the wired IP:\n\n`# in camera_server config: bind 192.168.8.1 (the eth0 address), not localhost`\n\nPing proves L3 reachability; a refused TCP connect means nothing's listening where you're knocking. Confirm the process is up and bound to 192.168.8.x before suspecting the network."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-115",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "quick one - which ports is everything on again? want to lock down the topside."
+   },
+   {
+    "role": "assistant",
+    "content": "Hypothesis: the layout's fixed - control on UDP, camera and launcher on TCP. Cheapest check first, confirm before assuming:\n\n`sudo ss -tulpn | grep -E '5005|5000|5001|5010'   # see what's actually bound`\n\nThe assignments: UDP 5005 control, TCP 5000/5001 camera, TCP 5010 launcher.\n\n`# open only those on the pilot laptop's side; everything else stays closed`\n\nBind them on the isolated 192.168.8.x interface, not on wlan0 - no reason the control/camera ports should be reachable from the internet side."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-314",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "relaying from Tyler (threat analysis): phone hotspot keeps grabbing priority and knocking me off the wired setup."
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: autoconnect priority ordering - the phone hotspot is set above the connection you actually want during piloting. Don't change anything until you've checked:\n\n`nmcli -f NAME,AUTOCONNECT-PRIORITY connection show   # see the ordering`\n\nThen, least-invasive fix:\n\n`sudo nmcli connection modify <hotspot> connection.autoconnect-priority 10`\n\nThe wired eth0 link isn't managed by autoconnect anyway (it's static, no gateway), so this is really about which wifi wins for git/internet. Order them so you don't have to fight it each session."
+   }
+  ]
+ },
+ {
+  "id": "gen-net-305",
+  "category": "networking_config",
+  "source_shape": "net",
+  "demonstrates": [
+   "net"
+  ],
+  "author_note": "Generated from a hand-authored method template + profile-grounded scenario (deterministic, no tokens).",
+  "rubric": [
+   "labels the hypothesis",
+   "gives correct runnable commands",
+   "least-invasive first, confirm before changing"
+  ],
+  "anti_patterns": [
+   "reflashes/rebuilds first",
+   "asserts the cause without a check",
+   "invents a config file"
+  ],
+  "turns": [
+   {
+    "role": "user",
+    "content": "Addison (the float) just pinged me: \"seeing fragmentation/odd stalls on the tether under load. MTU thing?\""
+   },
+   {
+    "role": "assistant",
+    "content": "Likely cause: path MTU mismatch causing fragmentation, made worse by the EMI environment - not a bandwidth ceiling. Don't change anything until you've checked:\n\n`ping -M do -s 1472 192.168.8.1   # does a full-MTU packet get through un-fragmented?`\n\nThen, least-invasive fix:\n\n`sudo ip link set eth0 mtu 1400`\n\nCombine with the 100 Mbps cap for EMI. Fragmentation on a noisy link multiplies the loss impact - one dropped fragment kills the whole packet, so avoiding fragmentation matters more here than on a clean network."
+   }
+  ]
+ }
+]
