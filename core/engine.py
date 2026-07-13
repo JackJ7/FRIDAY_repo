@@ -331,6 +331,34 @@ class Engine:
                 on_token(msg)
             return reply
 
+        # Stop-path integrity (Notes-10 Phase 7). The gate above only fires while
+        # a run is ACTIVE (setting_up/running). A "stop research" request when NO
+        # run is active — it crashed during setup, finished, or was already
+        # stopped — otherwise falls through to the model tool-loop, where the 14B
+        # (which never tracked the tag) calls autoresearch_stop with an empty tag
+        # and gets "No active run tagged ''", producing the incoherent "no active
+        # runs" reply that STILL proposes the stop tool. Worse, if Jack checked
+        # status earlier this session the turn is already tainted, so his own
+        # typed "stop" trips the CONTENT-TRIGGERED confirm card (defect #3). We
+        # answer deterministically here — BEFORE the taint line below — resolving
+        # the target run in code and reporting its terminal ledger state. Only
+        # STOP-shaped input is intercepted; ordinary chat proceeds to the normal
+        # loop (no run holds the GPU now, so there is nothing to deflect).
+        if research is not None and self._looks_like_stop_request(user_input):
+            tag = research.latest_tag()
+            if tag:
+                # stop() on a terminal run reports its state, it does not
+                # fabricate a fresh "stopped" (Phase 7 §2).
+                msg = research.stop(tag)
+            else:
+                msg = ("There's no research run on record to stop — nothing is "
+                       "or was running this session.")
+            reply = ModelReply()
+            reply.content = msg
+            if on_token:
+                on_token(msg)
+            return reply
+
         # Start tainted if externally-sourced content is still in context from
         # an earlier turn; a fresh read this turn will refine it below.
         self._taint = self._external_in_context()
@@ -2020,6 +2048,19 @@ class Engine:
         "Nothing's on the calendar I can see right now — where do you want to "
         "pick things up?")
 
+    # Phase 8 §3 (relative-date drift, LOWER priority). A fresh instance called
+    # office hours "next week" when the days were this week. The clock AND a
+    # spelled-out 'next 7 days' ISO list are already in the system prompt, so the
+    # data is present — this rule points her at it. Kept conservative (a
+    # deterministic prose-rewriter is false-positive-prone and DEFERRED — see the
+    # plan's §3 findings; the transcript's office-hours item isn't even a live
+    # calendar event, so the plan's calendar-date corrector wouldn't catch it).
+    _PROACTIVE_RELATIVE_WEEK_RULE = (
+        "Relative dates: use the clock and the 'next 7 days' list in your system "
+        "prompt to place any day you mention. A date within the next 7 days is "
+        "only a few days out — do NOT call it 'next week'. Reserve 'next week' "
+        "for dates 7 or more days ahead.")
+
     # PAST framing rescues a legitimately-past mention from the phantom strip:
     # "the review was last week" is information, not a stale event presented as
     # current, so it must survive even when the live calendar is empty.
@@ -2063,6 +2104,152 @@ class Engine:
         kept = [s for s in self._CLAUSE_SPLIT.split(text or "") if s not in offset]
         out = " ".join(p.strip() for p in kept if p.strip()).strip()
         return out or self._PROACTIVE_EMPTY_CAL_FALLBACK
+
+    # ---- Proactive-path research-status floor (Phase 8, item 1) ---------------
+    # Phase 1 grounded the CALENDAR only. A fresh instance still narrated a
+    # CRASHED autoresearch run as "still in progress" — the observation stream
+    # (dense with past run activity) recited forward as live state, with nothing
+    # consulting the live status.json ledger. This is the calendar floor's exact
+    # twin for run state: the engine reads the live ledger (Phase 7's
+    # latest_status — one run-state source) and injects it as DATA; the ledger's
+    # `state` is the only authority for "is a run in progress", and a post-check
+    # strips any clause that frames a terminal/absent run as running.
+    _PROACTIVE_RESEARCH_RULE = (
+        "The autoresearch_status result above is the ONLY authority for whether "
+        "any research or training run is in progress. Its 'state' field governs: "
+        "only 'setting_up' or 'running' is actually live. NEVER present a run "
+        "whose state is 'crashed', 'done', or 'stopped' — or a run not on record "
+        "at all — as still running, in progress, training, or underway. Past "
+        "observations in your context may mention a run that has since ended; "
+        "they are history, not current state.")
+
+    # In-progress framing for a run: "is still training / is running / underway".
+    _INPROGRESS_RUN_FRAME = re.compile(
+        r"\b(still (in progress|running|going|training|churning)"
+        r"|is (running|training|underway|ongoing|in progress)"
+        r"|(currently|actively) (running|training)|in progress|underway|ongoing"
+        r"|continues to (run|train)|hasn'?t finished|not (yet )?(done|finished))\b",
+        re.IGNORECASE)
+    # A run reference: a research/training noun (the tag is open-vocabulary, so a
+    # noun anchor is more robust than trying to know the tag here).
+    _RUN_REFERENCE = re.compile(
+        r"\b(research|training|experiment|autoresearch|the run|a run|val_bpb"
+        r"|fine-?tun\w+|the model run)\b", re.IGNORECASE)
+
+    @staticmethod
+    def _run_is_terminal(status: dict) -> bool:
+        """True when the live ledger says NO run is live: a terminal state
+        (crashed/done/stopped) OR no run on record at all ({}). Only these make
+        in-progress framing phantom — an actually-active run may be so framed."""
+        state = (status or {}).get("state", "")
+        return state in ("crashed", "done", "stopped") or not state
+
+    def _phantom_run_sentences(self, text: str, status: dict) -> list:
+        """Clauses framing a research run as in-progress while the live ledger
+        says it is terminal/absent — a remembered past run narrated as live state
+        (#4). Clause-level and past-aware, exactly like _phantom_event_sentences:
+        'the run crashed earlier' is history, not a phantom."""
+        if not self._run_is_terminal(status):
+            return []
+        out = []
+        for s in self._CLAUSE_SPLIT.split(text or ""):
+            if self._PAST_FRAME.search(s):
+                continue
+            if self._INPROGRESS_RUN_FRAME.search(s) \
+                    and self._RUN_REFERENCE.search(s):
+                out.append(s)
+        return out
+
+    @staticmethod
+    def _research_status_line(status: dict) -> str:
+        """The live ledger rendered as one DATA line for injection. {} (no runs)
+        is stated plainly so the model can't infer a run from silence."""
+        if not status:
+            return ("No research run is on record. Nothing is training or in "
+                    "progress right now.")
+        return (f"Most recent research run '{status.get('tag', '?')}': "
+                f"state = {status.get('state', '?')}, "
+                f"attempt {status.get('iteration', 0)}/"
+                f"{status.get('max_iters', '?')}. Only 'setting_up' or 'running' "
+                f"means a run is actually in progress.")
+
+    # ---- Proactive-path provenance guard (Phase 8, item 2 — SOFT) -------------
+    # "I've consolidated the claude code upgrade projects into one folder" — said
+    # UNPROMPTED by a fresh instance, collapsing a note's RECORD ('X was done')
+    # into a fresh first-person action ('I just did X'). Unlike the calendar/run
+    # floors this cannot be a clean deterministic lock (NLP over free prose): it
+    # is a prompt rule + a measured flag + a best-effort reframe, honest ceiling
+    # stated to Jack in the plan. Detector is deliberately conservative.
+    _PROACTIVE_PROVENANCE_RULE = (
+        "Your notes and observations are a RECORD of past work, not a script of "
+        "things you are doing now. When you mention work a note records, frame it "
+        "as a record — 'your notes show…', 'last session, X was done' — never as "
+        "a fresh first-person action you just performed ('I've consolidated…', "
+        "'I've updated…') unless Jack asked you to do it in THIS conversation.")
+    _PROACTIVE_ACTION_CLAIM = re.compile(
+        r"\bI(?:'ve| have)?\s+(consolidated|updated|moved|archived|created"
+        r"|merged|deleted|renamed|combined|reorganiz\w+|reorganis\w+|set up"
+        r"|cleaned up|finished|completed)\b", re.IGNORECASE)
+
+    def _proactive_action_claims(self, text: str) -> list:
+        """First-person completed-action clauses in a proactive message (the
+        provenance failure). Soft: used to MEASURE (proactive_action_claim log
+        field) and to trigger a best-effort reframe — never a deterministic
+        strip, since removing a first-person clause could gut the message."""
+        return [s for s in self._CLAUSE_SPLIT.split(text or "")
+                if self._PROACTIVE_ACTION_CLAIM.search(s)]
+
+    def _vet_proactive(self, reply, messages, cal_result, status) -> str:
+        """Unified post-generation grounding for a proactive message. Two HARD
+        floors (calendar phantoms, run-status phantoms) that regenerate once then
+        deterministically strip — the code guarantee GT-C2/GT-C7 lock on — plus
+        the SOFT provenance guard (reframe + measure, no strip). One regeneration
+        covers whichever fired; the strip is applied only to the hard floors.
+        `cal_result`/`status` are None when that kind wasn't grounded this turn."""
+        cal_bad = (self._phantom_event_sentences(reply.content, cal_result)
+                   if cal_result is not None else [])
+        run_bad = (self._phantom_run_sentences(reply.content, status)
+                   if status is not None else [])
+        prov_bad = self._proactive_action_claims(reply.content)
+        self._proactive_action_claim = bool(prov_bad)  # pre-reframe signal
+        if not (cal_bad or run_bad or prov_bad):
+            return reply.content
+
+        parts = ["STOP: rewrite your message."]
+        if cal_bad:
+            parts.append("It presents an event as scheduled, but the live "
+                         "calendar above shows nothing there — that date came "
+                         "from a note and may be stale. Remove any event framed "
+                         "as today/upcoming; say the calendar is clear.")
+        if run_bad:
+            parts.append("It presents a research run as still in progress, but "
+                         "the live ledger above shows it is not running. Do not "
+                         "describe any run as running/training/underway; give its "
+                         "real state only if relevant.")
+        if prov_bad:
+            parts.append("It recites recorded work as a fresh action you just "
+                         "performed ('I've consolidated/updated…'). Reframe as a "
+                         "record — 'your notes show…' — not a first-person action, "
+                         "since Jack didn't ask you to do it now.")
+        parts.append("Then pick up a real open commitment or active project.")
+        retry = self.model.chat(
+            messages + [{"role": "assistant", "content": reply.content},
+                        {"role": "system", "content": " ".join(parts)}],
+            on_token=None)
+        self.session_tokens += retry.eval_count
+        candidate = (retry.content if (retry.content or "").strip()
+                     else reply.content)
+        # Deterministic strip for the HARD floors only.
+        still = ((self._phantom_event_sentences(candidate, cal_result)
+                  if cal_result is not None else [])
+                 + (self._phantom_run_sentences(candidate, status)
+                    if status is not None else []))
+        if still:
+            candidate = self._strip_sentences(candidate, still)
+        # Re-measure provenance AFTER the reframe — the honest post-state flag
+        # (soft guard: it may survive, which is what the metric records).
+        self._proactive_action_claim = bool(self._proactive_action_claims(candidate))
+        return candidate
 
     def session_greeting(self, on_token=None):
         """
@@ -2138,10 +2325,10 @@ class Engine:
             {"role": "user", "content": prompt},
         ]
         cal_result = None
-        # Hold the stream on a grounded turn: the post-check below may strip a
-        # phantom event, and the user must not watch it appear then vanish.
-        live_token = None if ground_calendar else on_token
+        status = None
         self._proactive_grounded = False
+        self._proactive_research_grounded = False
+        self._proactive_action_claim = False
         if ground_calendar:
             # Read through the registry (not _run_tool): this is display-only
             # scaffolding, so it must NOT taint the next turn or push referents;
@@ -2160,37 +2347,46 @@ class Engine:
                              "content": self._wrap_data(cal_result, external=True)})
             messages.append({"role": "system",
                              "content": self._PROACTIVE_CALENDAR_RULE})
+            # Phase 8 §3: point her at the injected clock/next-7-days for
+            # this-week vs next-week (prompt-only; deterministic corrector
+            # deferred — see plan §3 findings).
+            messages.append({"role": "system",
+                             "content": self._PROACTIVE_RELATIVE_WEEK_RULE})
 
-        reply = self.model.chat(messages, on_token=live_token)
+        # Phase 8 §1: research-status floor. When research is wired, read the live
+        # ledger (Phase 7's single run-state source) and inject it as DATA — same
+        # assistant-tool-call -> tool-message -> system-rule shape as the calendar
+        # — so a crashed run can't be narrated as "still in progress". Skipped
+        # entirely when research is off (no run can be misreported). status={} is
+        # a valid grounded state ("no runs") — only None means "not checked".
+        research = getattr(self, "research", None)
+        if research is not None:
+            status = research.latest_status()  # {} when no runs on record
+            self._proactive_research_grounded = True
+            rcall = {"function": {"name": "autoresearch_status", "arguments": {}}}
+            messages.append({"role": "assistant",
+                             "content": "Checking the live research ledger first.",
+                             "tool_calls": [rcall]})
+            messages.append({"role": "tool",
+                             "content": self._wrap_data(
+                                 self._research_status_line(status), external=True)})
+            messages.append({"role": "system",
+                             "content": self._PROACTIVE_RESEARCH_RULE})
+
+        # Phase 8 §2: provenance guard (soft) — greeting + briefing both flow
+        # through here, so the rule reaches both. Frames recorded work as record,
+        # not fresh first-person action.
+        messages.append({"role": "system",
+                         "content": self._PROACTIVE_PROVENANCE_RULE})
+
+        # The stream is HELD on every proactive turn: _vet_proactive may strip a
+        # phantom event/run or reframe a provenance claim, and the user must not
+        # watch text appear then change. The vetted reply is emitted once below.
+        reply = self.model.chat(messages, on_token=None)
         self.session_tokens += reply.eval_count
-
-        if ground_calendar:
-            # Post-check: any sentence framing a scheduled item as current while
-            # the live calendar is empty is phantom. Regenerate ONCE, then strip
-            # deterministically whatever survives — the strip is the code floor
-            # that makes GT-C2 lockable (never depends on the 14B complying).
-            offenders = self._phantom_event_sentences(reply.content, cal_result)
-            if offenders:
-                correction = (
-                    "STOP: your message presents an event as scheduled, but the "
-                    "live calendar above shows nothing there. That date came "
-                    "from a note, not the calendar, and may be stale. Rewrite "
-                    "with NO event framed as today/upcoming — say plainly the "
-                    "calendar is clear (or not connected) and pick up a "
-                    "commitment or an active project instead.")
-                retry = self.model.chat(
-                    messages + [{"role": "assistant", "content": reply.content},
-                                {"role": "system", "content": correction}],
-                    on_token=None)
-                self.session_tokens += retry.eval_count
-                candidate = (retry.content if (retry.content or "").strip()
-                             else reply.content)
-                still = self._phantom_event_sentences(candidate, cal_result)
-                if still:
-                    candidate = self._strip_sentences(candidate, still)
-                reply.content = candidate
-            if on_token and reply.content:  # single vetted emit (stream was held)
-                on_token(reply.content)
+        reply.content = self._vet_proactive(reply, messages, cal_result, status)
+        if on_token and reply.content:  # single vetted emit (stream was held)
+            on_token(reply.content)
 
         # Proactive messages join history so the conversation flows from them.
         self.history.append({"role": "assistant", "content": reply.content})
@@ -2202,5 +2398,10 @@ class Engine:
             # Phase 1: True when the engine grounded this proactive message in a
             # live calendar read (the greeting/briefing are no longer barrier-free).
             "proactive_grounded": self._proactive_grounded,
+            # Phase 8: True when the engine grounded it in a live research-ledger
+            # read; proactive_action_claim = a first-person completed-action clause
+            # SURVIVED the reframe (the soft provenance guard's measured rate).
+            "proactive_research_grounded": self._proactive_research_grounded,
+            "proactive_action_claim": self._proactive_action_claim,
         })
         return reply

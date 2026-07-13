@@ -908,6 +908,65 @@ reasoning*, and that is exactly how it may be described.
 
 ### Phase 7 — Autoresearch stop-path integrity (near-term; Cluster 1)
 
+**STATUS: DONE — CODE + TESTS LANDED (2026-07-13, branch `phase78`, commit
+`d06a925`).** All three defects fixed deterministically (no model, no GPU);
+`test_research_stop.py` STOP-001..005 (+2 variants) green; worktree A/B proves
+zero regression (baseline 89 pass → 96 pass, same 94 env-errors from the
+worktree's absent runtime dirs). Landed in a git worktree parallel to the
+Phase 2 session; **ready for merge to master** (disjoint engine.py regions).
+See "§ P7 findings" immediately below.
+
+> **§ P7 findings (stop-path integrity — DONE).** Two-layer fix, both locked by
+> pure-code tests.
+>
+> **Manager (`core/tools/research_tools.py`).** Added the single run-state
+> source the whole fix pivots on: `_all_tags()` (in-memory `_runs` ∪ on-disk
+> `data\research\` ledger dirs — a crash/restart loses `_runs` but the
+> `status.json` survives), `_recency_key()` (sorts by the ledger's `updated`
+> stamp; ISO-8601 strings compare chronologically as-is), `_resolve_tag(tag)`
+> (a non-empty tag passes through; an EMPTY tag resolves to the sole/most-recent
+> run — this is what stops `stop("")` degrading to `_runs.get("")` →
+> *"No active run tagged ''"*, defect #2), and `latest_tag()`/`latest_status()`
+> (the accessor Phase 8's briefing floor also reads, so run-state truth is
+> computed one way — §3). **`stop()` rewritten (defect #2 + the fabrication
+> bug):** it routes through `_resolve_tag`, and it only signals+kills+writes
+> `"stopped"` for a genuinely LIVE run (`setting_up`/`running`). A run that is
+> already terminal (`crashed`/`done`/`stopped` — finalize keeps the object in
+> `_runs` with its terminal `state`, so the old code would have overwritten a
+> crash with a fake "stopped") now reports its ledger state instead:
+> *"Research 'smoke1' is already crashed — nothing is running to stop. Its
+> workspace is kept at data\research\smoke1\; nothing was pushed."*
+> **Note (status_text):** left as-is — `status_text("")` already lists all runs
+> (its documented tool contract) and never degrades to the literal `""`, so the
+> plan's "route it through `_resolve_tag`" concern doesn't apply; the single-run
+> resolver Phase 8 needs is `latest_status()`.
+>
+> **Engine (`core/engine.py`).** Added a sibling branch to the busy-gate,
+> placed AFTER the active-run gate and BEFORE the taint line (`self._taint =
+> self._external_in_context()`): when `research` is wired and the input is
+> stop-shaped (`_looks_like_stop_request`, the existing pure keyword check) but
+> no run is active, resolve the target via `research.latest_tag()` and answer
+> from `research.stop(tag)` (which now reports terminal state) — one coherent
+> deterministic reply, no model call. Because it returns before the taint line,
+> it also kills defect #3 *for stop*: Jack's own typed "stop" no longer trips
+> the CONTENT-TRIGGERED card after a prior status read. Only stop-shaped input
+> is intercepted here; ordinary chat proceeds to the normal loop (nothing holds
+> the GPU now). The broader taint-framing issue (any action after any
+> `external_read` gets carded) remains **explicitly out of scope** per the plan,
+> flagged for Jack below.
+>
+> **Tests (`tests/pillar1/test_research_stop.py`, pure-code, no model/GPU).**
+> STOP-001 live run really stops (behavior preserved); STOP-002 crashed run +
+> "stop research" through a bare Engine → one deterministic message naming the
+> terminal state + kept workspace, no fabricated stop, no tool call, ledger
+> stays `crashed` (+ STOP-002b the manager-level assertion); STOP-003 `stop("")`
+> with one run resolves to it; STOP-004 no runs → graceful "nothing to stop" +
+> the engine no-run branch; STOP-005 most-recent selection across ledger dirs
+> (+ STOP-005b disk-only runs with an empty `_runs`). All 7 pass (1.8s).
+> The engine branch is exercised end-to-end with `Engine.__new__(Engine)` + a
+> real manager (the branch returns before any retriever/brain work, so no heavy
+> `__init__` is needed — same pattern as `test_date_floor`).
+
 > **Source:** 2026-07-13 manual autoresearch smoke test (three transcripts).
 > A run tagged `smoke1` **crashed during setup** ("crashed after 0 attempts,
 > val_bpb undefined"); every "stop research" after that failed incoherently.
@@ -987,6 +1046,82 @@ tool call, no CONTENT-TRIGGERED card. Non-model suite green, GT-A/GT-B LOCKED
 held.
 
 ### Phase 8 — Proactive-briefing grounding: run-status + provenance floor (near-term; Cluster 2)
+
+**STATUS: DONE — CODE + PURE-CODE TESTS LANDED (2026-07-13, branch `phase78`,
+commit `8b29484`); GT-C7/C8 goldens ADDED, awaiting a GPU run to promote.** All
+three items landed in `_proactive`; `test_briefing_grounding.py` BRIEF-001..010
+green; worktree A/B holds (96 → 106 pass, same 94 env-errors from absent runtime
+dirs, 0 regression). Landed in the git worktree parallel to the Phase 2 session;
+**ready for merge to master** (disjoint engine.py regions). See "§ P8 findings".
+
+> **§ P8 findings (proactive-briefing grounding — DONE).** Mirrors Phase 1's
+> calendar floor for two more kinds of state, all in `_proactive`
+> (`core/engine.py`). One unified post-generation vet (`_vet_proactive`)
+> replaces the calendar-only inline post-check: it runs BOTH hard floors +
+> the soft provenance guard, regenerates ONCE for whichever fired, then
+> deterministically strips only the hard floors. The stream is now HELD on every
+> proactive turn (both callers already grounded, so no behavior change) and the
+> vetted reply emitted once.
+>
+> **§1 research-status floor (HARD — the #4 lock).** When `engine.research` is
+> wired, the engine reads the live ledger via Phase 7's `latest_status()` (the
+> single run-state source — this is why P7's accessor existed) and injects it as
+> DATA with the same assistant-tool-call → tool-message → system-rule shape the
+> calendar uses (`_PROACTIVE_RESEARCH_RULE`: the ledger `state` is the ONLY
+> authority; only `setting_up`/`running` is live). Post-check
+> `_phantom_run_sentences` (clause-level, past-aware, twin of
+> `_phantom_event_sentences`) flags any clause pairing in-progress framing
+> (`_INPROGRESS_RUN_FRAME`) with a run reference (`_RUN_REFERENCE`) while
+> `_run_is_terminal(status)` is true (crashed/done/stopped OR no run at all —
+> `{}`); `_vet_proactive` regenerates once then strips whatever survives. When
+> research is NOT wired, `status` stays `None` → the whole floor is skipped (no
+> run can be misreported). `_research_status_line` renders the DATA line and
+> states "no runs" plainly so a run can't be inferred from silence.
+>
+> **§2 provenance guard (SOFT — honest ceiling, stated to Jack).** Cannot be a
+> clean deterministic lock (NLP over free prose). It is: a prompt rule
+> (`_PROACTIVE_PROVENANCE_RULE`, injected on every proactive turn so it reaches
+> greeting AND briefing — frame recorded work as *"your notes show…"*, never
+> *"I've just done X"* unprompted); a conservative detector
+> (`_proactive_action_claims`: first-person completed-action verbs —
+> consolidated/updated/moved/archived/created/merged/deleted/renamed/…); a
+> best-effort reframe (one regeneration in `_vet_proactive`, NO strip — removing
+> a first-person clause could gut the message); and a MEASURED flag
+> `proactive_action_claim`, set to whether a claim SURVIVED the reframe (the
+> honest residual rate, mirroring §Phase-1's `unsolicited_action`).
+>
+> **§3 relative-week (LOWER priority — prompt-only, corrector DEFERRED).** The
+> clock AND a spelled-out `next 7 days` ISO list are already in the proactive
+> system prompt (`engine.py` ~250), so the data is present; the transcript's
+> "next week" was a 14B slip. Added a conservative `_PROACTIVE_RELATIVE_WEEK_RULE`
+> on `ground_calendar` turns pointing her at that list (a date within 7 days is
+> not "next week"). The plan's DETERMINISTIC calendar-date corrector is
+> **deferred**: it would only help the narrow case where the item is a *live
+> calendar event* framed with wrong relative-week language — and the transcript's
+> office-hours item isn't a calendar event at all (it's note/observation-derived),
+> so the corrector wouldn't have caught the actual failure. Rewriting relative-
+> date prose deterministically is false-positive-prone; prompt + the existing
+> injected next-7-days is the honest, low-risk floor. Flagged for a later pass if
+> a measured rate justifies it.
+>
+> **Tests.** `tests/pillar1/test_briefing_grounding.py` BRIEF-001..010 (pure-code,
+> no model, all pass, 0.03s): the run-status detectors (terminal flags,
+> active-run does-NOT-flag, past-mention survives, `_run_is_terminal` table,
+> status-line render), the provenance detector (claims vs record/offer/future
+> prose), and three `_vet_proactive` integrations via a fake model — the hard
+> strip fires when a retry still frames the run, a clean retry is kept as-is, and
+> provenance is reframed-but-never-stripped with the measured flag honest
+> pre/post. **Goldens:** `test_notes10.py` **GT-C7** (fresh instance + wired
+> crashed ledger; LOCKED `research-grounded` + `no-phantom-run`) and **GT-C8**
+> (planted "consolidated X" note; TARGET `no-first-person-action-claim` — soft
+> guard) ADDED and collect clean; they need the live 14B + GPU, so a GPU session
+> runs `-m model` and promotes GT-C7 to its LOCKED baseline.
+>
+> **Not runnable in the worktree:** the model-in-the-loop goldens and the
+> brain/config-dependent suites — gitignored runtime dirs aren't copied into a
+> worktree (documented in `docs/PARALLEL_WORKTREES.md`). The pure-code locks ARE
+> the worktree-verifiable guarantee; the 94 "errors" in the worktree A/B are that
+> same absent-runtime-dir limitation (identical with/without this work).
 
 > **Source:** same 2026-07-13 smoke test — the **"New Friday Instance"**
 > transcript. A *fresh* instance's opening briefing made three ungrounded
@@ -1083,8 +1218,8 @@ held; non-model suite green.
 | P4    | not started | | | | |
 | P5    | not started | | | | |
 | P6    | not started | | | | Decision-gated: report to Jack, verdict is his |
-| P7    | **write-up landed — awaiting Jack review** | 2026-07-13 | | | Autoresearch stop-path (Cluster 1). Near-term, before P3–P6. No model/GPU in fix or tests. |
-| P8    | **write-up landed — awaiting Jack review** | 2026-07-13 | | | Proactive-briefing grounding (Cluster 2). Near-term. Provenance guard has an honest ceiling (soft, not a clean lock). |
+| P7    | **DONE (code+tests)** | 2026-07-13 | STOP-001..005 (+2 variants) green; worktree A/B 89→96 pass, same 94 env-errors (absent runtime dirs), 0 regression | not re-run (no model-visible change to prompts/graders; branch `phase78`) | Autoresearch stop-path (Cluster 1). Deterministic manager resolver + engine stop branch. Commit `d06a925`; ready for merge. Broader taint-framing issue still flagged for Jack (out of scope). |
+| P8    | **DONE (code+pure-tests); GT-C7/C8 added, await GPU** | 2026-07-13 | BRIEF-001..010 green; worktree A/B 96→106 pass, same 94 env-errors, 0 regression; GT-C7/C8 collect clean (run `-m model` on GPU) | not re-run (no model-visible change to existing prompts/graders; branch `phase78`) | Proactive-briefing grounding (Cluster 2). §1 research-status floor (HARD, uses P7 `latest_status`), §2 provenance guard (SOFT, honest ceiling), §3 relative-week (prompt-only; corrector deferred). Commit `8b29484`; ready for merge. |
 
 ### P0 baseline — GT-C golden set (live `qwen2.5:14b`, 2026-07-13, single run each)
 
