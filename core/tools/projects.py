@@ -16,7 +16,8 @@ import shutil
 from datetime import date
 from pathlib import Path
 
-from core.project_resolver import ProjectResolver
+from core.project_meta import set_field
+from core.project_resolver import ProjectResolver, _norm
 
 
 def _slug(name: str) -> str:
@@ -205,6 +206,178 @@ def register_project_tools(registry, gate, brain, projects_root: Path):
         return (f"No project matches '{name}', and there are no project notes to "
                 f"match against yet. Use list_projects to see what exists.")
 
+    # ---------- merge_projects (Notes-10 Phase 3, §3) ----------
+
+    def _folded_body(text: str) -> str:
+        """The narrative/log content of a note, minus its `# title` heading and
+        any `- **Field:** value` lines. Those structured fields belong to the
+        note that owns them — folding a COPY into the survivor would duplicate
+        its Status/Folder (and the brain's one-field-one-value guard refuses a
+        second copy). Provenance is carried by the '## Merged from X' heading;
+        the survivor keeps its own fields."""
+        out = []
+        for line in text.splitlines():
+            if re.match(r"^\s*#\s", line):
+                continue
+            if re.match(r"^\s*-\s*\*\*[^*]+:\*\*", line):
+                continue
+            out.append(line)
+        return "\n".join(out).strip()
+
+    def _unique_dest(dst: Path) -> Path:
+        """A non-colliding destination path — so merging two folders that both
+        hold 'notes.md' keeps BOTH (name_1.ext) instead of silently overwriting.
+        Erring non-destructive is safer than the overwrite the confirm warned of."""
+        if not dst.exists():
+            return dst
+        stem, suffix, i = dst.stem, dst.suffix, 1
+        while True:
+            cand = dst.with_name(f"{stem}_{i}{suffix}")
+            if not cand.exists():
+                return cand
+            i += 1
+
+    def _resolve_exact(name: str):
+        """Resolve one name to a single project for the merge, or a string error.
+        A merge operates on NEAR-DUPLICATES, which are by definition fuzzy-
+        ambiguous, so an EXACT normalized slug/title match wins first (the model
+        passes the precise names it saw via list_projects) — only a name with no
+        exact hit falls back to the fuzzy resolver, and genuine ambiguity/absence
+        is refused rather than guessed (a merge is too destructive to pick the
+        wrong target silently, invariant 4)."""
+        norm = _norm(name)
+        exact = [p for p in resolver.projects()
+                 if _norm(p["slug"]) == norm or _norm(p["title"]) == norm]
+        if len(exact) == 1:
+            return exact[0]
+        if len(exact) > 1:
+            names = ", ".join(f"'{p['slug']}'" for p in exact)
+            return (f"ERROR: '{name}' matches several projects with the same name "
+                    f"({names}) — use the distinct slug.")
+        outcome, data = resolver.resolve_one(name)
+        if outcome == "one":
+            return data
+        if outcome == "many":
+            names = ", ".join(f"'{d['title']}'" for d in data)
+            return f"ERROR: '{name}' is ambiguous ({names}) — name it precisely."
+        return f"ERROR: no project matches '{name}'."
+
+    def merge_projects(target: str, duplicates: list) -> str:
+        """Consolidate `duplicates` INTO `target` (cluster C — 'make it only
+        one'). Deterministic surgery, the model just orchestrates: move every
+        duplicate folder's files into the target folder (ONE batch confirm),
+        append each duplicate note's content under a '## Merged from X' heading
+        in the target note, and mark each duplicate note '- **Status:** merged
+        into <target>'. The duplicate notes/folders are left in place (status =
+        the record; git = the undo), never deleted here."""
+        if isinstance(duplicates, str):
+            duplicates = [duplicates]
+        if not duplicates:
+            return ("ERROR: no duplicate projects given. Call with the survivor "
+                    "as `target` and the projects to fold in as `duplicates`.")
+
+        t = _resolve_exact(target)
+        if isinstance(t, str):
+            return t
+        target_slug = t["slug"]
+        target_note = t["note_path"] or f"projects/{target_slug}.md"
+
+        dups, seen = [], {target_slug}
+        for name in duplicates:
+            d = _resolve_exact(name)
+            if isinstance(d, str):
+                return d
+            if d["slug"] in seen:
+                if d["slug"] == target_slug:
+                    return (f"ERROR: '{name}' resolves to the target itself — a "
+                            f"project can't be merged into itself.")
+                continue  # a duplicate named twice
+            seen.add(d["slug"])
+            dups.append(d)
+        if not dups:
+            return "ERROR: nothing to merge once the target was excluded."
+
+        # Gather every file across the duplicate folders (the destructive part).
+        moves = []
+        for d in dups:
+            if d["folder_exists"]:
+                moves += [f for f in Path(d["folder"]).iterdir() if f.is_file()]
+
+        # The target needs a folder to receive files; make one if it lacks it.
+        target_folder = Path(t["folder"]) if t["folder_exists"] else None
+        created_folder = False
+        if moves and target_folder is None:
+            target_folder = projects_root / target_slug
+            target_folder.mkdir(parents=True, exist_ok=True)
+            created_folder = True
+
+        # ONE batch confirm for all the moves (the gate lists every file).
+        moved = []
+        if moves:
+            pairs = gate.approve_transfer([str(m) for m in moves],
+                                          target_folder, "move")
+            for src, dst in pairs:
+                dst = _unique_dest(dst)
+                shutil.move(str(src), str(dst))
+                moved.append(dst.name)
+
+        # Note surgery — free brain writes (logged + git-versioned = reversible).
+        # Ensure the target note exists first (a folder-only target may lack one).
+        try:
+            brain.read_note(target_note)
+        except FileNotFoundError:
+            brain.write_note(
+                target_note,
+                f"# {t['title']}\n\n- **Status:** active\n",
+                mode="create", summary=f"Create survivor note for {t['title']}")
+
+        merged_notes, restatused, orphans = [], [], []
+        for d in dups:
+            if d["note_path"]:
+                body = _folded_body(brain.read_note(d["note_path"]))
+                brain.write_note(
+                    target_note,
+                    f"\n\n## Merged from {d['title']}\n\n{body}\n",
+                    mode="append",
+                    summary=f"Merge {d['title']} into {t['title']}")
+                merged_notes.append(d["title"])
+                # Mark the duplicate note as merged (its content now lives in the
+                # target; a stale duplicate presented as live was the original sin).
+                dup_text = brain.read_note(d["note_path"])
+                brain.write_note(
+                    d["note_path"],
+                    set_field(dup_text, "Status", f"merged into {t['title']}"),
+                    mode="overwrite",
+                    summary=f"Mark {d['title']} merged into {t['title']}")
+                restatused.append(d["title"])
+            else:
+                orphans.append(d["title"])
+
+        # If we created the target folder, record it on the note.
+        if created_folder:
+            ttext = brain.read_note(target_note)
+            brain.write_note(target_note, set_field(ttext, "Folder", str(target_folder)),
+                             mode="overwrite",
+                             summary=f"Record folder for {t['title']}")
+
+        # Honest report of exactly what happened.
+        out = [f"Merged {len(dups)} project(s) into '{t['title']}':"]
+        if moved:
+            out.append(f"  Moved {len(moved)} file(s) into {target_folder}: "
+                       + ", ".join(moved))
+        else:
+            out.append("  No files to move (duplicates had no folders on disk).")
+        if merged_notes:
+            out.append("  Folded note content from: " + ", ".join(merged_notes))
+        if restatused:
+            out.append("  Marked as 'merged into " + t['title'] + "': "
+                       + ", ".join(restatused))
+        if orphans:
+            out.append("  Folder-only (no note to re-status): " + ", ".join(orphans))
+        out.append("  Duplicate notes/folders kept in place (status is the "
+                   "record; use git to undo).")
+        return "\n".join(out)
+
     # ---------- registration ----------
 
     registry.register(
@@ -233,6 +406,27 @@ def register_project_tools(registry, gate, brain, projects_root: Path):
         },
         resolve_project,
         kind="internal",
+    )
+    registry.register(
+        "merge_projects",
+        "Consolidate duplicate projects INTO one survivor: moves the duplicates' "
+        "files into the target folder, folds their note content into the target "
+        "note, and marks each duplicate 'merged into <target>'. Use this (never "
+        "create_project) when Jack says 'make these one' / 'there are too many'. "
+        "List with list_projects and confirm the survivor with Jack first. Jack "
+        "confirms the file moves before anything happens.",
+        {
+            "type": "object",
+            "properties": {
+                "target": {"type": "string",
+                           "description": "The survivor project (kept)"},
+                "duplicates": {"type": "array", "items": {"type": "string"},
+                               "description": "Projects to fold into the target"},
+            },
+            "required": ["target", "duplicates"],
+        },
+        merge_projects,
+        kind="action",
     )
     registry.register(
         "create_project",

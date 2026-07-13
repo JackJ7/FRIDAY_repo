@@ -552,7 +552,7 @@ Promote GT-C3 (partially — resolution lands in Phase 3) and GT-C4 to LOCKED.
 **Per-section progress (a fresh session resumes from here):**
 - [x] **§1 resolve_project / entity resolver — DONE (2026-07-13).** See "§1 findings" below.
 - [x] **§2 list_projects tool — DONE (2026-07-13).** See "§2 findings" below.
-- [ ] **§3 merge_projects tool (gated) — not started.**
+- [x] **§3 merge_projects tool (gated) — DONE (2026-07-13).** See "§3 findings" below.
 - [ ] **§4 near-duplicate guard in create_project — not started.**
 - [ ] **§5 fuzzy recall floor — not started.**
 - [ ] **§6 consolidate_projects playbook + promote GT-C3/C5/C6 to LOCKED — not started.**
@@ -601,6 +601,33 @@ Promote GT-C3 (partially — resolution lands in Phase 3) and GT-C4 to LOCKED.
 > reporting incl. an orphan folder, and the internal-kind (non-tainting)
 > registration. (§3's `merge_projects` is the action that consumes this list;
 > §6's playbook wires list→confirm→merge.)
+
+> **§3 findings (merge_projects tool).** The action cluster C lacked — a
+> deterministic consolidation surface, so "make it only one" reached for
+> `create` and spawned a fourth. `merge_projects(target, duplicates)` (kind
+> `action`): the code does the surgery, the model only orchestrates. It (a)
+> gathers every file across the duplicate folders and moves them into the
+> survivor folder under **ONE batch confirm** (`gate.approve_transfer`, move —
+> the destructive part), (b) folds each duplicate note's NARRATIVE into the
+> survivor under a `## Merged from X` heading, and (c) marks each duplicate
+> `- **Status:** merged into <target>` (duplicates kept in place — status is the
+> record, git is the undo — never deleted here). Resolution uses an EXACT
+> normalized slug/title match FIRST (merges operate on near-duplicates, which are
+> fuzzy-ambiguous by definition; the model passes the precise names it saw via
+> `list_projects`), falling back to the fuzzy resolver and REFUSING genuine
+> ambiguity/absence rather than guessing the wrong target (invariant 4).
+> Colliding filenames across duplicates are suffixed, never silently overwritten.
+> A survivor with no folder gets one created + recorded when files must move in.
+> **Two guards the tests caught:** folding a duplicate's RAW note (with its
+> `- **Status:**`/`- **Folder:**` lines) tripped brain.py's one-field-one-value
+> guard — fixed by stripping structured fields from the folded body (the survivor
+> keeps its own; provenance rides in the heading), keeping "one fact, one place";
+> and a declined confirm aborts cleanly (move-confirm-first ordering) leaving
+> files, notes, and statuses untouched. **Tests:** `test_merge_projects.py`
+> MERGE-001..007 pass (no model) — full merge (files+notes+status, one confirm),
+> declined-is-atomic, self-merge/unknown refused, note-only duplicate (zero
+> confirms), survivor-folder creation, collision keeps both, action-kind
+> registration. **203 non-model pass (+7), no regressions.**
 
 1. **`resolve_project` / entity resolver (code, deterministic).** Extract
    `_find_folder` into a shared resolver: given a free-text name, fuzzy-match
@@ -972,7 +999,7 @@ held; non-model suite green.
 | P0    | **DONE** | 2026-07-13 | GT-C 6/6 green (all TARGET, no LOCKED yet) | GT-A/GT-B unchanged (not re-run — no code touched) | GT-C golden set + baseline landed. Table below. |
 | P1    | **§1–§4 done (code)** | 2026-07-13 | Full suite 205/252 (all 16 P1 targets PASS; GT-C1 LOCKED, GT-C2 LOCKED×2, GT-A/GT-B LOCKED held); 166 non-model pass. 47 failures = PRE-EXISTING model-suite (calc/injection/variance), NOT caused by P1 (A/B-proven) | **GT baseline HELD** (GT-A/GT-B LOCKED green; GT-C1/C2 now LOCKED) | All four §§ landed. Live calendar-mirror migration DEFERRED (Jack). 47 pre-existing model-suite failures flagged for Jack — see "Phase 1 regression notes". |
 | P2    | **§1–§4 DONE** | 2026-07-13 | 184 non-model pass (+15 new: OFFER-001..006, REF-001..005, COMPACT-001..004); GT golden 8/8 (GT-C4 gains LOCKED offer-ledger-accepts); COMPACT-LIVE-001 live smoke green | **GT baseline HELD** (GT-A/GT-B LOCKED + GT-C1/C2 LOCKED green; GT-C4 offer-ledger LOCKED) | Offer ledger + widened anti-dodge + list_dir referents + history compaction. All four §§ landed & verified. Full model suite not re-run (frozen-code rule; the 47 pre-existing P1 failures are unrelated). |
-| P3    | **§1–§2 done (code)** | 2026-07-13 | 196 non-model pass (+12: RESOLVE-001..008, LIST-001..004) | **GT baseline HELD** (non-model only; GT-C model goldens not re-run — frozen-code / single-GPU shared with the p78 session) | §1 entity resolver (`core/project_resolver.py` + `resolve_project` tool + engine hint) and §2 `list_projects`. §3–§6 pending. GT-C3/C5/C6 LOCK promotions ride with §6. |
+| P3    | **§1–§3 done (code)** | 2026-07-13 | 203 non-model pass (+19: RESOLVE-001..008, LIST-001..004, MERGE-001..007) | **GT baseline HELD** (non-model only; GT-C model goldens not re-run — frozen-code / single-GPU shared with the p78 session) | §1 entity resolver + §2 `list_projects` + §3 `merge_projects` (gated action). §4–§6 pending. GT-C3/C5/C6 LOCK promotions ride with §6. |
 | P4    | not started | | | | |
 | P5    | not started | | | | |
 | P6    | not started | | | | Decision-gated: report to Jack, verdict is his |
