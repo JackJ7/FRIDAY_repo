@@ -137,6 +137,31 @@ def register_project_tools(registry, gate, brain, projects_root: Path):
             [perceive(dst) for _, dst in pairs])
         return report
 
+    # ---------- list_projects (Notes-10 Phase 3, §2) ----------
+
+    def list_projects() -> str:
+        """Every project FRIDAY knows about: name, status, folder, note path.
+        The consolidation transcript (cluster C) died for lack of exactly this
+        surface — asked to reduce N projects to one, the model had no way to SEE
+        the N, so it reached for create. This is the deterministic inventory it
+        should read first."""
+        projects = sorted(resolver.projects(), key=lambda p: p["title"].lower())
+        if not projects:
+            return ("No projects yet. (No projects/ notes and no folders under "
+                    "the projects root.)")
+        lines = [f"{len(projects)} project(s):"]
+        for p in projects:
+            if p["folder_exists"]:
+                folder = p["folder"]
+            elif p["folder"]:
+                folder = f"{p['folder']} (recorded, not on disk)"
+            else:
+                folder = "no folder on disk"
+            note = p["note_path"] or "no note"
+            lines.append(f"  - {p['title']} — status: {p['status']}; "
+                         f"folder: {folder}; note: {note}")
+        return "\n".join(lines)
+
     # ---------- resolve_project (Notes-10 Phase 3, §1) ----------
 
     def resolve_project(name: str) -> str:
@@ -182,6 +207,16 @@ def register_project_tools(registry, gate, brain, projects_root: Path):
 
     # ---------- registration ----------
 
+    registry.register(
+        "list_projects",
+        "List every project you know about — name, status, folder, and note "
+        "path — from your projects/ notes and folders. Read this FIRST when Jack "
+        "asks about 'your projects' or wants to consolidate/merge/reduce them, "
+        "so you act on the real set instead of creating a new one.",
+        {"type": "object", "properties": {}},
+        list_projects,
+        kind="internal",
+    )
     registry.register(
         "resolve_project",
         "Resolve a free-text project name (how Jack said it, e.g. 'the doc ock "

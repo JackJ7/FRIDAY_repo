@@ -551,7 +551,7 @@ Promote GT-C3 (partially — resolution lands in Phase 3) and GT-C4 to LOCKED.
 
 **Per-section progress (a fresh session resumes from here):**
 - [x] **§1 resolve_project / entity resolver — DONE (2026-07-13).** See "§1 findings" below.
-- [ ] **§2 list_projects tool — not started.**
+- [x] **§2 list_projects tool — DONE (2026-07-13).** See "§2 findings" below.
 - [ ] **§3 merge_projects tool (gated) — not started.**
 - [ ] **§4 near-duplicate guard in create_project — not started.**
 - [ ] **§5 fuzzy recall floor — not started.**
@@ -587,6 +587,20 @@ Promote GT-C3 (partially — resolution lands in Phase 3) and GT-C4 to LOCKED.
 > hint carrying note+folder, and orphan-folder resolution. **192 non-model pass
 > (+8), no regressions.** GT-C3's `resolved-real-folder` promotion to LOCKED
 > rides with §6 (needs the whole surface: resolver + the engine hint together).
+
+> **§2 findings (list_projects tool).** A thin, deterministic surface over the
+> §1 resolver's `projects()` inventory — the exact thing cluster C died for
+> (asked to reduce N projects to one, the model couldn't SEE the N, so it
+> created a fourth). `list_projects` (kind `internal`, no args) returns every
+> project's name, status, folder (honest: on-disk / recorded-but-absent / none),
+> and note path, sourced from `projects/` notes plus orphan folders under the
+> projects root. Registered with a description that tells the model to read it
+> FIRST on any consolidate/merge ask. **Tests:** `test_list_projects.py`
+> LIST-001..004 pass (no model) — seeded projects with real statuses, a freshly
+> written note appearing immediately (deterministic re-scan), honest folder
+> reporting incl. an orphan folder, and the internal-kind (non-tainting)
+> registration. (§3's `merge_projects` is the action that consumes this list;
+> §6's playbook wires list→confirm→merge.)
 
 1. **`resolve_project` / entity resolver (code, deterministic).** Extract
    `_find_folder` into a shared resolver: given a free-text name, fuzzy-match
@@ -958,7 +972,7 @@ held; non-model suite green.
 | P0    | **DONE** | 2026-07-13 | GT-C 6/6 green (all TARGET, no LOCKED yet) | GT-A/GT-B unchanged (not re-run — no code touched) | GT-C golden set + baseline landed. Table below. |
 | P1    | **§1–§4 done (code)** | 2026-07-13 | Full suite 205/252 (all 16 P1 targets PASS; GT-C1 LOCKED, GT-C2 LOCKED×2, GT-A/GT-B LOCKED held); 166 non-model pass. 47 failures = PRE-EXISTING model-suite (calc/injection/variance), NOT caused by P1 (A/B-proven) | **GT baseline HELD** (GT-A/GT-B LOCKED green; GT-C1/C2 now LOCKED) | All four §§ landed. Live calendar-mirror migration DEFERRED (Jack). 47 pre-existing model-suite failures flagged for Jack — see "Phase 1 regression notes". |
 | P2    | **§1–§4 DONE** | 2026-07-13 | 184 non-model pass (+15 new: OFFER-001..006, REF-001..005, COMPACT-001..004); GT golden 8/8 (GT-C4 gains LOCKED offer-ledger-accepts); COMPACT-LIVE-001 live smoke green | **GT baseline HELD** (GT-A/GT-B LOCKED + GT-C1/C2 LOCKED green; GT-C4 offer-ledger LOCKED) | Offer ledger + widened anti-dodge + list_dir referents + history compaction. All four §§ landed & verified. Full model suite not re-run (frozen-code rule; the 47 pre-existing P1 failures are unrelated). |
-| P3    | **§1 done (code)** | 2026-07-13 | 192 non-model pass (+8: RESOLVE-001..008) | **GT baseline HELD** (non-model only; GT-C model goldens not re-run — frozen-code / single-GPU shared with the p78 session) | §1 entity resolver landed: `core/project_resolver.py` + `resolve_project` tool + engine per-turn hint. §2–§6 pending. GT-C3 LOCK promotion rides with §6. |
+| P3    | **§1–§2 done (code)** | 2026-07-13 | 196 non-model pass (+12: RESOLVE-001..008, LIST-001..004) | **GT baseline HELD** (non-model only; GT-C model goldens not re-run — frozen-code / single-GPU shared with the p78 session) | §1 entity resolver (`core/project_resolver.py` + `resolve_project` tool + engine hint) and §2 `list_projects`. §3–§6 pending. GT-C3/C5/C6 LOCK promotions ride with §6. |
 | P4    | not started | | | | |
 | P5    | not started | | | | |
 | P6    | not started | | | | Decision-gated: report to Jack, verdict is his |
