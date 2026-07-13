@@ -128,6 +128,65 @@ def test_observations_layer_separation(sandbox):
     assert all(not n.startswith("observations/") for n in recent_paths)
 
 
+@pytest.mark.case("INDEX-001", "session-start index: one compact line per observation (id | date | glyph | title), newest first")
+def test_session_start_index_format(sandbox):
+    """Phase 4 §1: the greeting's continuity block is a compact index — each
+    line carries the observation's ID (so its body is fetchable on demand) and a
+    type glyph, newest first."""
+    eng = sandbox.service.engine
+    # Two records with controlled timestamps so ordering is deterministic.
+    _write_obs_file(sandbox.brain.root, "obs-20200101-000000-aa",
+                    "2020-01-01T00:00:00", "Older decision", type="decision")
+    _write_obs_file(sandbox.brain.root, "obs-20260101-000000-bb",
+                    "2026-01-01T00:00:00", "Newer discovery", type="discovery")
+
+    block = eng._where_we_left_off()
+    assert "left off" in block.lower()
+    # Both IDs present (the index is what makes an old session reachable).
+    assert "obs-20200101-000000-aa" in block
+    assert "obs-20260101-000000-bb" in block
+    # Compact line shape: id | date | glyph type | title.
+    assert "obs-20260101-000000-bb | 2026-01-01 | ○ discovery | Newer discovery" in block
+    assert "obs-20200101-000000-aa | 2020-01-01 | ⚖ decision | Older decision" in block
+    # Newest first: the 2026 line precedes the 2020 line.
+    assert block.index("obs-20260101") < block.index("obs-20200101")
+
+
+@pytest.mark.case("INDEX-002", "session-start index: char-capped so a busy brain can't blow the greeting budget")
+def test_session_start_index_capped(sandbox):
+    eng = sandbox.service.engine
+    # Many observations, each with a long title, so the raw block would far
+    # exceed the cap; the index must bound itself and still keep the newest.
+    for i in range(60):
+        _write_obs_file(
+            sandbox.brain.root, f"obs-2026{i:04d}-000000-zz",
+            f"2026-07-{(i % 27) + 1:02d}T00:00:00",
+            f"Observation number {i} with a deliberately long title " + "x" * 60)
+    block = eng._where_we_left_off()
+    # Bounded: the framing header plus the char cap, with generous slack.
+    assert len(block) < eng._OBS_INDEX_CHAR_CAP + 400, len(block)
+    # But not empty — at least one (the newest) line survives.
+    assert block.count("\n- ") >= 1
+
+
+@pytest.mark.case("INDEX-003", "session-start index: unknown type falls through to a neutral glyph, empty store is silent")
+def test_session_start_index_glyph_and_empty(sandbox):
+    eng = sandbox.service.engine
+    # An unknown/verbatim type is kept, with the neutral dot glyph.
+    _write_obs_file(sandbox.brain.root, "obs-20260601-000000-cc",
+                    "2026-06-01T00:00:00", "Some milestone", type="mystery")
+    block = eng._where_we_left_off()
+    assert "· mystery | Some milestone" in block
+
+    # A brain with no observations yet: the block is empty (cold greeting
+    # unchanged) — proven by pointing the store at an empty test archive.
+    eng.observations.brain.test_session = True
+    try:
+        assert eng._where_we_left_off() == ""
+    finally:
+        eng.observations.brain.test_session = False
+
+
 @pytest.mark.case("OBS-005", "test-session observations reroute to the archive and never leak into real recall")
 def test_test_session_routing(sandbox, monkeypatch):
     monkeypatch.delenv("FRIDAY_TEST_SESSION", raising=False)

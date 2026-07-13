@@ -1,9 +1,18 @@
 # FRIDAY Notes-10 Plan — temporal integrity, conversational continuity, intent resolution, memory method port
 
-**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) next. Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
+**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) IN PROGRESS (2026-07-13): §1 (session-start compact observation index) DONE; §2 get_observations / §3 FTS search / §4 compaction→observation next. Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
 **Source: Jack's "Friday Notes 10" (live-usage transcripts, 2026-07-11/12) + code diagnosis of the current repo.**
 
 > **Progress at a glance** (newest first — a fresh session reads this line, then §3):
+> - **P4 §1 done 2026-07-13** — Session-start compact observation index.
+>   `_where_we_left_off` (engine.py) is now claude-mem's SessionStart pattern at
+>   FRIDAY's scale: the greeting carries a COMPACT INDEX of the recent ~30
+>   observations, one line each (`id | date | glyph | title`, newest first,
+>   hard char-capped ~2000 chars). The per-line **id** makes an old session
+>   *reachable* — its body is pulled on demand (get_observations, §2) instead of
+>   stuffed into the prompt. New `_OBS_GLYPH` type cues; empty-store still silent
+>   (cold greeting unchanged). INDEX-001..003 pass; 231 non-model pass (+3), no
+>   regressions. **§2 (get_observations tool) next.**
 > - **P3 COMPLETE 2026-07-13 — the JARVIS layer (clusters B+C).** All six §§:
 >   §1 entity resolver (`core/project_resolver.py` — stdlib fuzzy match; engine
 >   injects real note+folder so the 14B never guesses a path; ambiguity asks
@@ -749,6 +758,40 @@ Promote GT-C3/C5/C6 to LOCKED. **DONE (2026-07-13)** — all three LOCKED and
 verified live (see "§6 findings" above).
 
 ### Phase 4 — Memory method port (claude-mem logic → FRIDAY)
+
+**Per-section progress (a fresh session resumes from here):**
+- [x] **§1 Session-start compact index — DONE (2026-07-13).** See "§1 findings" below.
+- [ ] **§2 `get_observations(ids)` tool — TODO.**
+- [ ] **§3 `search_observations` on SQLite FTS5 — TODO.**
+- [ ] **§4 Wire compaction summary → observation at session end — TODO.**
+
+> **§1 findings (Session-start compact index).** `_where_we_left_off` (engine.py)
+> was a 5-line prose "where we left off" list with no IDs. It is now the
+> claude-mem SessionStart pattern at FRIDAY's scale: a COMPACT INDEX of the
+> recent ~30 observations, newest first, one line each —
+> `- <id> | <YYYY-MM-DD> | <glyph> <type> | <title>`. The **id on every line** is
+> the whole point: it makes an older session *reachable* (its body is pulled on
+> demand by id via `get_observations`, §2) instead of gone, and it is what turns
+> the greeting from "here are 5 recent titles" into a real progressive-disclosure
+> index. New class-level `_OBS_GLYPH` maps FRIDAY's canonical types to a one-char
+> cue (⚖ decision / ● fact / ★ preference / ○ discovery / ◆ task; unknown →
+> neutral `·`, never dropped). Budget is guarded by a **hard char cap**
+> (`_OBS_INDEX_CHAR_CAP` 2000 ≈ 500 tokens, `_OBS_INDEX_MAX` 30 lines): the loop
+> stops before the cap is exceeded but always keeps at least the newest line, so
+> a busy brain can't blow the greeting's prompt budget (claude-mem token-caps its
+> index for the same reason). Empty-store → empty string, so a cold brain's
+> greeting is unchanged; the store access stays `None`- and `try/except`-guarded
+> exactly as before. `session_greeting` picks it up unchanged (it already
+> concatenated `_where_we_left_off()`), and the recently-edited-notes scan still
+> excludes `observations/` so the two blocks don't fight. The greeting framing now
+> tells her to pull an entry's full detail with `get_observations` when a thread
+> is relevant — that tool lands in §2 (forward reference; §1 and §2 land in the
+> same session). **Tests:** `test_observations.py` INDEX-001..003 pass (no model)
+> — the compact `id | date | glyph | title` line shape + newest-first ordering,
+> the char cap bounding a 60-observation brain while keeping the newest line, and
+> the neutral-glyph fallback + empty-store silence. OBS-004 (the greeting still
+> carries the title + "left off") still green. **231 non-model pass (+3), no
+> regressions.**
 
 FRIDAY has the observation stream (Phase 3, `core\memory\observations.py`,
 self-citing IDs already in paths). Port claude-mem's *retrieval economics*:

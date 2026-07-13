@@ -1991,12 +1991,34 @@ class Engine:
 
     # ---------- session opening ----------
 
-    def _where_we_left_off(self, n: int = 5) -> str:
-        """The recent typed-observation stream, formatted for the greeting —
-        the cross-session continuity that "recently edited notes" alone can't
-        give (a file's mtime says it changed, not what happened). Empty when no
-        store is wired or nothing has been recorded yet, so a cold brain's
-        greeting is unchanged."""
+    # A one-char visual cue per observation type for the session-start index —
+    # the same idea claude-mem's SessionStart legend uses (●bugfix ◆feature …),
+    # translated to FRIDAY's canonical types. An unknown/verbatim type falls
+    # through to a neutral dot rather than being dropped (a record is never lost
+    # over a label, same posture as the store's type handling).
+    _OBS_GLYPH = {
+        "decision":   "⚖",
+        "fact":       "●",
+        "preference": "★",
+        "discovery":  "○",
+        "task":       "◆",
+    }
+    # Session-start index budget (Notes-10 Phase 4 §1). ~30 lines, but a hard
+    # char cap is the real guard so a busy brain can't blow the greeting's prompt
+    # budget — claude-mem token-caps its index for the same reason. ~2000 chars
+    # ≈ 500 tokens; at least the newest line is always kept.
+    _OBS_INDEX_MAX = 30
+    _OBS_INDEX_CHAR_CAP = 2000
+
+    def _where_we_left_off(self, n: int = _OBS_INDEX_MAX) -> str:
+        """A COMPACT INDEX of the recent typed-observation stream — one line per
+        observation (`id | date | glyph | title`), newest first, char-capped.
+        This is claude-mem's SessionStart pattern at FRIDAY's scale (Notes-10
+        Phase 4 §1): the index says WHAT exists so older sessions are *reachable*
+        rather than gone, and each line carries the observation's id so its full
+        body can be pulled ON DEMAND (get_observations) instead of stuffing every
+        recall into the prompt. Empty when no store is wired or nothing has been
+        recorded yet, so a cold brain's greeting is unchanged."""
         if self.observations is None:
             return ""
         try:
@@ -2005,11 +2027,20 @@ class Engine:
             return ""
         if not recent:
             return ""
-        lines = "\n".join(
-            f"- ({o.ts[:10]}, {o.type}) {o.title}" for o in recent)
-        return ("\n\nWhere you left off (your recent observations — the "
-                "running thread across sessions; pick up the live one):\n"
-                + lines)
+        lines, used = [], 0
+        for o in recent:
+            glyph = self._OBS_GLYPH.get(o.type, "·")
+            line = f"- {o.id} | {o.ts[:10]} | {glyph} {o.type} | {o.title}"
+            # Keep at least the newest line; stop once the cap would be exceeded.
+            if lines and used + len(line) > self._OBS_INDEX_CHAR_CAP:
+                break
+            lines.append(line)
+            used += len(line) + 1
+        return ("\n\nWhere you left off — your recent observation stream (newest "
+                "first; the running thread across sessions). Each line is one "
+                "observation you recorded; pick up the live one, and pull an "
+                "entry's full detail with get_observations when a thread is "
+                "actually relevant:\n" + "\n".join(lines))
 
     # ---- Proactive-path calendar grounding (Phase 1, item 2) ------------------
     # The greeting/briefing ran TOOL-LESS and BARRIER-FREE, so a stale
