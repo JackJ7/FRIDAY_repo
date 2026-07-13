@@ -903,6 +903,174 @@ brains, FTS rebuilt from scratch matches incremental state. GT baseline held.
 
 ### Phase 5 — ECC method import (curated, not wholesale)
 
+**Per-section progress (a fresh session resumes from here):**
+- [x] **§1 Pull + review the ECC repo — DONE (2026-07-13).** See "§1 findings" below.
+- [x] **§2 Select the curated set — DONE (2026-07-13).** See "§2 findings" below.
+- [x] **§3 Rewrite each as a FRIDAY skill/playbook — DONE (2026-07-13).** See "§3 findings" below.
+- [x] **§4 Strengthen the continuous-learning / playbook-capture rule — DONE (2026-07-13).** See "§4 findings" below.
+- [x] **§5 Document imported-method provenance in ARCHITECTURE.md — DONE (2026-07-13).** See "§5 findings" below.
+- [ ] **Acceptance (live `--test-session`: one imported skill matched + followed) — PENDING (needs the GPU/port-47533 lock free; the parallel Phase 4 session may hold it). See "Acceptance" below.**
+
+> **§1 findings (Pull + review the ECC repo).** Shallow-cloned
+> `github.com/affaan-m/ecc` (HEAD `4092795`, 3322 files) into
+> `data\workspaces\ecc` — the exact dir `repo_sync` produces (repo_sync is pure
+> code: a `git clone --depth 1`, no model/GPU, so the clone was done directly
+> and faithfully rather than spinning up a live instance). Reviewed it as
+> **tainted external data** (invariant 2): the repo's own `CLAUDE.md` and
+> generated `rules/*` carry an embedded "Prompt Defense Baseline" instruction
+> block — treated as content to inspect, never as directives. **Surface:** 278
+> skills (each a dir with `SKILL.md` + YAML frontmatter), 23 language rule-sets,
+> 67 agents, Node hooks. The vast majority is **web-dev-stack-specific**
+> (React/TS/Vercel/Zod/JWT) or **ECC-infrastructure-coupled** (the
+> `plan-orchestrate` skill emits `/orchestrate custom` chains against ECC's own
+> agent catalogue + install-form detection — meaningless without ECC's runtime)
+> — correctly skipped per the plan's "skip web-dev-stack-specific" and CLAUDE.md's
+> "import METHOD, not code." The genuinely method-general, engineering-relevant
+> sources read in full: `verification-loop` (build→type→lint→test→security→diff
+> gate ladder → READY/NOT-READY verdict; commands are Node-specific, the ladder
+> is not), `security-review` (a review checklist; ECC's specifics are web, the
+> category structure transfers), `architecture-decision-records` (Nygard ADR
+> format — language-agnostic), and `continuous-learning` / `-v2` (the
+> observation→instinct→cluster→skill evolution with confidence/evidence — a whole
+> hook+background-agent SYSTEM in ECC, but the FRAMING maps onto FRIDAY's existing
+> capture rule per §4). **§2 (record the curated selection) next.**
+
+> **§2 findings (The curated set — quality over quantity).** The plan says
+> "select ~5–10"; the operative word is *curated*. ~10+ ECC skills were read or
+> scanned; the honest yield of genuinely-transferable, non-duplicative,
+> non-web method is **three artifacts + one strengthening**, which is what
+> lands (§3/§4). Over-importing to hit a count would crowd the skill index and
+> the playbook match against files FRIDAY's actual work never touches — the
+> opposite of the acceptance criterion. **Selected (→ §3):**
+> - **`verify_before_done` (new SKILL)** ← ECC `verification-loop`. The
+>   completion-gate discipline: don't declare a change/deliverable done until
+>   it's been checked, and give an honest READY / NOT-READY verdict naming what
+>   is *unverified*. Re-voiced for FRIDAY's real capability envelope (she reviews
+>   read-only repos and can't run Jack's build — invariant 4), so the skill
+>   separates "checks I ran" from "checks Jack must run." Distinct from the
+>   existing `self_verification_before_presenting` (that guards a computed
+>   *number* in an answer; this guards a completed *change/piece of work*).
+> - **`security_review` (new PLAYBOOK)** ← ECC `security-review`. A security-lens
+>   review checklist (secrets, input/bounds validation, injection & untrusted
+>   data, auth/permissions, memory & resource safety, dependency/supply-chain,
+>   error/info leakage), tool-agnostic and sized for Jack's C++/embedded/Python
+>   work rather than ECC's web specifics. Sibling to the existing `code_review`
+>   playbook, which now points to it (same escalation pattern `code_review` uses
+>   for `max_effort`).
+> - **`record_a_decision` (new PLAYBOOK)** ← ECC `architecture-decision-records`.
+>   The Nygard ADR shape (context → decision → alternatives-considered →
+>   consequences → status) as a durable-capture procedure, so "why did we choose
+>   X over Y" survives the session. Dovetails with FRIDAY's typed `⚖ decision`
+>   observations and the `structured_tradeoff_analysis` skill (which supplies the
+>   "alternatives considered" analysis the ADR then records).
+> - **§4 strengthening (no new file)** ← ECC `continuous-learning`. Its
+>   confidence/evidence/evolution framing folds into the existing
+>   `writing_a_playbook` capture rule, per the plan's explicit "strengthen, don't
+>   build a parallel system."
+>
+> **Rejected, with reason (the curation is the work):** `plan-orchestrate`
+> (emits ECC `/orchestrate` chains against ECC's agent catalogue — pure ECC
+> infrastructure, meaningless in FRIDAY); every `*-testing` / `*-security` /
+> `*-verification` **language variant** (React/Django/Laravel/Spring/… —
+> web-dev-stack-specific, explicitly out per the plan); `continuous-learning-v2`
+> **as a system** (hooks + background Haiku observer + instinct YAML store +
+> evolve/promote commands — building it would be the "parallel system" §4
+> forbids; only its framing is taken); `context-budget` (FRIDAY already does
+> history compaction in code, Phase 2 §4); `codebase-onboarding` (its method —
+> ground before bulk-reading, map then targeted reads — already IS the existing
+> `code_review` playbook's step 1 and the repo-tools contract; no new file
+> earns its place). **§3 (write the three files) next.**
+
+> **§3 findings (Rewrite as FRIDAY skills/playbooks).** Three files written to
+> the live brain (committed there, `45c7ded`; the brain is one shared on-disk
+> repo, so these land regardless of the phase5 worktree), each re-authored in
+> FRIDAY's tight imperative Steps/Checks voice, sized for the 14B, with
+> provenance in-file (§5):
+> - **`brain/skills/verify_before_done.md`** — Goal/When/Triggers/When-NOT +
+>   Steps/Checks per `_template.md`. The completion-gate ladder
+>   (builds → behaves → edges → scope → secrets/safety) but honestly bounded:
+>   step 3 forces a split between "checks I ran" and "checks Jack must run"
+>   because FRIDAY reviews read-only repos and can't run his build — an
+>   unverified gate is never reported as passing (invariant 4). Explicitly
+>   defers single-number verification to the existing
+>   `self_verification_before_presenting` (no overlap).
+> - **`brain/playbooks/security_review.md`** — the ECC checklist re-scoped off
+>   the web stack to Jack's C/C++/embedded/Python: secrets, input & bounds,
+>   **memory & resource safety** (buffer/UAF/overflow — the ECC original had
+>   none of this), injection/untrusted-data, auth, supply-chain, info-leak.
+>   Grounds via repo_sync→map→targeted-read like `code_review`, findings
+>   file:line + known/hypothesis, escalates to `max_effort` on safety-critical
+>   code, advice-ends-at-words (read-only). `code_review.md` step 6 now
+>   escalates INTO it (same pattern it uses for `max_effort`).
+> - **`brain/playbooks/record_a_decision.md`** — Nygard ADR fields (context /
+>   decision / alternatives-considered / consequences / status) as a
+>   durable-capture procedure that writes into the relevant **project note** +
+>   a one-line `⚖ decision` observation pointer (one-fact-one-place: note is the
+>   record, observation is the pointer). Pairs with `structured_tradeoff_analysis`
+>   (that evaluates; this records) and refuses to invent an unstated rationale.
+>
+> **Verified through the REAL matcher** (`p5check.py`, pure-code, no model):
+> `Skills.index()` lists all 7 skills and `Skills.match("…the fix is done…ready
+> to ship")` returns **Verify before you call it done**; `Playbooks.match()`
+> returns **Security Review** for a secrets/buffer-overflow query and **Record a
+> Decision** for a "why did we choose…" query; both new playbooks appear in the
+> index. **Budget (the acceptance criterion): skill `index_text` is 1556 chars
+> for all 7 skills** (each skill still injects only its single best match in
+> full), and the playbook set stays in index+match-one mode (`_over_budget` True,
+> as before) — so nothing crowds the prompt. **§4 (strengthen the capture rule)
+> next.**
+
+> **§4 findings (Strengthen the capture rule, don't build a parallel system).**
+> Per the plan's explicit instruction, ECC's continuous-learning loop was folded
+> INTO the existing `brain/playbooks/writing_a_playbook.md` capture rule — no
+> hooks, no background observer, no instinct store (all of which would be the
+> "parallel system" the plan forbids and which FRIDAY's observation stream +
+> playbook set already cover). Two edits (committed in the brain, `writing_a_
+> playbook` bumped 2669→4305 chars, still index+match-one so no always-on cost):
+> (1) the third-occurrence trigger is reframed with evidence language ("once is a
+> data point, twice is coincidence, the third time is a pattern with evidence");
+> (2) a new **"From observation to playbook"** section makes the ECC evolution
+> path explicit at FRIDAY's scale — *observation → confirmed pattern → captured
+> procedure* — and imports two ECC framings verbatim in spirit: **hold a new
+> playbook at the confidence the evidence supports** (provisional, tightened on
+> next use, retired if the work contradicts it — ECC's confidence-weighting /
+> decay) and **scope it to where it's been proven** (a one-project method stays a
+> project note until it holds across contexts — ECC v2.1's project-scoped-vs-global
+> to prevent cross-context contamination). A closing italic line names ECC as the
+> source of the frame and states plainly it's folded in, not run separately.
+> Verified: the playbook still indexes and still matches a "capture a recurring
+> procedure" query.
+
+> **§5 findings (Provenance in ARCHITECTURE.md).** Added an "Imported-method
+> provenance" note to the `core\skills.py` block of ARCHITECTURE.md's module map:
+> a curated-from-outside skill/playbook records its origin IN THE FILE — a
+> `- **Source:**` line (skills) or the template's `- **Origin:**` field
+> (playbooks) naming origin repo@commit + import date — and the note states
+> plainly that this is provenance only (the index parser reads
+> title/When-to-use/Triggers and ignores it) and that imported method still runs
+> at FRIDAY's own model level, never as a claim of the source model's horsepower
+> (invariant 4). It names the ECC import as the first use. This matches what §3
+> actually wrote into each file (Source/Origin lines are present and carry
+> `github.com/affaan-m/ecc @ 4092795`, 2026-07-13). **Only the live acceptance
+> run remains** (see below).
+
+> **Acceptance (live `--test-session`).** The plan's acceptance criterion is two
+> parts: (1) *skills load through the matcher without crowding the prompt budget*
+> — **DONE and verified deterministically** in §3 (`Skills.index()` lists all 7,
+> index_text 1556 chars, playbooks stay index+match-one; matches resolve to the
+> right imported file). (2) *a live `--test-session` conversation shows one
+> imported skill correctly matched and followed* — **PENDING**: it needs a live
+> 14B instance, which requires the single GPU and the port-47533 lock, and the
+> parallel Phase 4 session may hold them (worktrees isolate source, NOT the
+> machine's one Ollama/GPU/brain — `docs\PARALLEL_WORKTREES.md`). Per the
+> frozen-code and single-tenant-GPU rules, the live run is deferred to when this
+> branch is merged to `master` in the main tree and the GPU is free; run one
+> `--test-session` turn whose wording trips `verify_before_done` (e.g. "I finished
+> the fix, is it ready to ship?") and confirm she walks the gate ladder and gives
+> a READY/NOT-READY verdict rather than a bare "done". The deterministic half is
+> the LOCK; the live turn is the behavioural confirmation, same split every prior
+> phase used.
+
 Per CLAUDE.md, this is METHOD transfer. Do not vendor the repo; do not port
 Node hooks. Curate and translate:
 

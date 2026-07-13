@@ -289,6 +289,18 @@ core\skills.py       Skills — domain-general THINKING DISCIPLINES in
                      engine.respond(), like retrieved notes. read_skill /
                      list_skills for explicit loads. A skill's steps never
                      override the invariants or the gate.
+                     Imported-method provenance: a skill or playbook curated
+                     from an outside source records where it came from IN THE
+                     FILE — a `- **Source:**` line (skills) or the template's
+                     `- **Origin:**` field (playbooks) naming origin repo@commit
+                     + import date. It is provenance only (the index parser
+                     reads title/When-to-use/Triggers and ignores it), and the
+                     method still runs at FRIDAY's own model level — never as a
+                     claim of the source model's horsepower (invariant 4). First
+                     use: the ECC import (Notes-10 Phase 5 — verify_before_done
+                     [skill], security_review + record_a_decision [playbooks],
+                     source github.com/affaan-m/ecc; the continuous-learning
+                     frame folded into writing_a_playbook.md).
                      Self-repair boundary (growth): her NOTES she fixes
                      herself; config\ lives OUTSIDE the brain root and
                      Brain._resolve refuses escapes, so configuration fixes
