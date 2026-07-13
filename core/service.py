@@ -197,6 +197,16 @@ class FridayService:
                 self._busy.release()
         threading.Thread(target=run, daemon=True).start()
 
+    def close_session(self):
+        """Called when Jack ends the session (GUI Quit / CLI /quit): persists the
+        running compaction digest as one session-summary observation for the next
+        session's start-index (Notes-10 Phase 4 §4). Deterministic, best-effort,
+        idempotent — see Engine.close_session. Never raises at shutdown."""
+        try:
+            return self.engine.close_session()
+        except Exception:
+            return None
+
     # ---------- accountability: panel, DND, background pacing ----------
 
     def get_needs_you(self) -> dict:

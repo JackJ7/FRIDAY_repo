@@ -50,7 +50,11 @@ OBS_DIR = "observations"
 # coding-agent category with no analogue in an engineering partner's memory, so
 # it becomes "task" (an intention/commitment Jack stated). Unknown types are
 # kept verbatim rather than rejected — a record is never lost over a label.
-CANONICAL_TYPES = ("decision", "fact", "preference", "discovery", "task")
+# "session-summary" is the end-of-session compaction digest (Notes-10 Phase 4
+# §4) — recorded by Engine.close_session so the Claude Code memory loop closes
+# (transcript -> compaction summary -> durable memory -> next session's index).
+CANONICAL_TYPES = ("decision", "fact", "preference", "discovery", "task",
+                   "session-summary")
 
 
 @dataclass

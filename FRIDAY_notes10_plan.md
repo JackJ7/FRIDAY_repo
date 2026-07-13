@@ -1,9 +1,18 @@
 # FRIDAY Notes-10 Plan — temporal integrity, conversational continuity, intent resolution, memory method port
 
-**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) IN PROGRESS (2026-07-13): §1 (session-start compact observation index) + §2 (get_observations fetch-by-id tool) + §3 (search_observations FTS5) DONE; §4 (compaction summary → session-end observation) next — the last section. Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
+**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) COMPLETE (2026-07-13): all four §§ landed + verified (session-start compact index, get_observations fetch-by-id, search_observations on stdlib SQLite FTS5, close_session → session-summary observation); claude-mem retrieval economics run end-to-end at FRIDAY's scale; 15 new non-model tests, full --quick suite green. Phase 5 (ECC method import) done in parallel + merged to master (5241d78). Phase 6 (deep-mode brain eval, decision-gated) is the last remaining phase. Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
 **Source: Jack's "Friday Notes 10" (live-usage transcripts, 2026-07-11/12) + code diagnosis of the current repo.**
 
 > **Progress at a glance** (newest first — a fresh session reads this line, then §3):
+> - **P4 COMPLETE 2026-07-13 — memory method port (claude-mem economics).** All
+>   four §§: §1 session-start COMPACT INDEX (id|date|glyph|title, capped), §2
+>   `get_observations(ids)` fetch-by-id, §3 `search_observations` on stdlib
+>   SQLite FTS5 (derived/rebuildable, Retriever seam untouched), §4
+>   `close_session` records the compaction digest as a `session-summary`
+>   observation → next session's index (the loop closes). 15 new non-model tests
+>   (INDEX/GETOBS/FTS/CLOSE); full `--quick` suite GREEN. **Phase 5 (ECC) done in
+>   parallel + merged (5241d78); Phase 6 (deep-mode brain eval, decision-gated) is
+>   the last remaining phase.**
 > - **P4 §3 done 2026-07-13** — `search_observations` on SQLite FTS5. Real
 >   full-text recall across every past session, stdlib sqlite3+FTS5 (no new dep),
 >   in a derived, rebuildable, git-ignored index under data\ (new
@@ -782,7 +791,48 @@ verified live (see "§6 findings" above).
 - [x] **§1 Session-start compact index — DONE (2026-07-13).** See "§1 findings" below.
 - [x] **§2 `get_observations(ids)` tool — DONE (2026-07-13).** See "§2 findings" below.
 - [x] **§3 `search_observations` on SQLite FTS5 — DONE (2026-07-13).** See "§3 findings" below.
-- [ ] **§4 Wire compaction summary → observation at session end — TODO.**
+- [x] **§4 Wire compaction summary → session-end observation — DONE (2026-07-13).** See "§4 findings" below.
+
+> **PHASE 4 COMPLETE (2026-07-13).** All four §§ landed + verified. The
+> claude-mem retrieval economics now run at FRIDAY's scale end-to-end: the
+> session-start COMPACT INDEX (§1) lists observations one cheap line each with
+> ids; `get_observations` (§2) pulls a full body on demand; `search_observations`
+> on stdlib SQLite FTS5 (§3) gives full-text recall across every past session
+> (derived/rebuildable index, no new dep, Retriever seam untouched); and
+> `close_session` (§4) records the running compaction digest as a
+> `session-summary` observation so the loop closes (transcript → compaction
+> summary → durable memory → next session's index). 15 new non-model unit tests
+> (INDEX/GETOBS/FTS/CLOSE). Full `--quick` suite green (test_skills count fixed
+> from a concurrent Phase-5 skill import — see §4 findings). **Phase 5 (ECC method
+> import) was completed IN PARALLEL and merged to master (5241d78); Phase 6
+> (deep-mode brain eval) is the remaining decision-gated phase.**
+
+> **§4 findings (compaction summary → session-end observation).** The last link
+> in the Claude Code memory loop: `Engine.close_session()` records the running
+> Phase-2 compaction digest (`self.history_summary`) as ONE observation of a new
+> type **`session-summary`** at session end, so the NEXT session's start-index
+> (§1) carries it and it's fetchable (§2) / searchable (§3). Deliberately
+> **deterministic — NO model call at quit** (shutdown stays fast): it just
+> persists the digest already built across the session. Records nothing when
+> there's no digest (a short session that never hit the compaction threshold left
+> no scrolled-off context to carry — its durable facts were already captured
+> per-turn by the memory pass), and is guarded idempotent
+> (`_session_summary_recorded`) so a quit+atexit or two frontends closing can't
+> double-write. Best-effort/wrapped so end-of-session bookkeeping never surfaces
+> at shutdown. Wiring: `FridayService.close_session()` seam → GUI `App.quit()` and
+> CLI `/quit` + EOF/^C paths all call it. New glyph `▣` for the type in the §1
+> index; `session-summary` added to `CANONICAL_TYPES`. **Tests:**
+> `test_session_summary.py` CLOSE-001..003 pass (no model) — records the digest as
+> a `session-summary` observation that then shows in the start-index (with its
+> glyph), pulls back full via `get_observations`, and is FTS-searchable; idempotent
+> + no-op on an empty/blank digest; and the service seam records it and never
+> raises. **Suite:** full `--quick` GREEN. The one prior failure
+> (`test_skills.py::test_seeding`, expecting 6 shipped skills) was a **concurrent
+> Phase-5** oversight — Phase 5's ECC import committed a legitimate 7th shipped
+> skill (`verify_before_done.md`, carrying its `Source: ECC` provenance) into the
+> shared brain but never updated the count test. Fixed here (→ 7, asserting the
+> new skill by name) since it left master red and masks nothing; flagged so
+> Phase 5 is aware.
 
 > **§3 findings (`search_observations` on SQLite FTS5).** Real full-text recall
 > across every past session, using **stdlib sqlite3 + FTS5 — no new dependency**

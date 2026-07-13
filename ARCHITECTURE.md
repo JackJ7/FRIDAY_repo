@@ -83,7 +83,16 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      After each durably-writing turn the memory pass records ONE
                      typed observation, and session_greeting resumes from the
                      recent observation stream ("where we left off") — the
-                     Phase-3 cross-session backbone.
+                     Phase-3 cross-session backbone. Notes-10 Phase 4 turns that
+                     stream into claude-mem's retrieval economics: "where we left
+                     off" is now a COMPACT INDEX (id | date | glyph | title, ~30
+                     lines, char-capped) so a body is pulled ON DEMAND by id
+                     (get_observations) or found by search_observations (FTS,
+                     §3) rather than stuffed into every prompt; and close_session
+                     (GUI Quit / CLI /quit) records the running compaction digest
+                     as one `session-summary` observation, so the loop closes —
+                     transcript -> compaction summary -> durable memory -> next
+                     session's start-index.
 
 core\model.py        OllamaClient — the ONLY file that knows how the model is
                      served (local HTTP). Swap serving stacks here.

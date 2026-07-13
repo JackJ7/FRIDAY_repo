@@ -71,12 +71,15 @@ def main():
         try:
             user_input = input(f"{CYAN}you>{RESET} ").strip()
         except (EOFError, KeyboardInterrupt):
+            # Close the memory loop before exiting (Notes-10 Phase 4 §4).
+            engine.close_session()
             print("\nFRIDAY offline.")
             break
 
         if not user_input:
             continue
         if user_input.lower() in ("/quit", "/exit"):
+            engine.close_session()
             print("FRIDAY offline.")
             break
 

@@ -33,8 +33,10 @@ def seed_skills(sandbox):
 def test_seeding(sandbox):
     skills = seed_skills(sandbox)
     names = [e["name"] for e in skills.index()]
-    assert len(names) == 6, f"expected the 6 shipped skills, got {names}"
+    assert len(names) == 7, f"expected the 7 shipped skills, got {names}"
     assert "Structured trade-off analysis" in names
+    # The ECC-imported verification-loop skill (Notes-10 Phase 5 §3).
+    assert "Verify before you call it done" in names
     assert not any("template" in n.lower() for n in names), "_template not ignored"
     # Foreign format (no field lines at all) still indexes on first paragraph.
     (sandbox.brain.root / "skills" / "rubber_duck.md").write_text(

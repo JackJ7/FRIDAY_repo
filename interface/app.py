@@ -226,6 +226,12 @@ class FridayApp:
         return False  # cancel the close
 
     def quit(self):
+        # Close the memory loop: persist this session's compaction digest as a
+        # session-summary observation before we tear down (Notes-10 Phase 4 §4).
+        try:
+            self.service.close_session()
+        except Exception:
+            pass
         if self.tray:
             self.tray.stop()
         try:

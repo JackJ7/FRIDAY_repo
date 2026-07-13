@@ -62,6 +62,9 @@ class Engine:
         # trim re-triggers only after the margin refills), never every turn.
         self.history_summary = None
         self._compact_keep = 24
+        # Guards close_session (Phase 4 §4) against writing the end-of-session
+        # summary twice (a quit + atexit, or two frontends closing).
+        self._session_summary_recorded = False
         # Optional provider of accountability state (commitments, stale items)
         # for the system prompt — wired in bootstrap/service, may stay None.
         self.acc_summary = None
@@ -1035,6 +1038,37 @@ class Engine:
         self.history_summary = text[:1200]
         return True
 
+    def close_session(self) -> str | None:
+        """Record the session's running compaction digest as ONE observation at
+        session end (Notes-10 Phase 4 §4) — the last link in the Claude Code
+        memory loop: transcript -> compaction summary (Phase 2 §4) -> a durable
+        memory (here) -> the NEXT session's start-index (§1) -> fetch on demand
+        (§2/§3). Deterministic and cheap: it just persists the digest already
+        built across the session — NO model call at quit, so shutdown stays fast.
+
+        Records nothing when there is no digest (a short session that never hit
+        the compaction threshold left no scrolled-off context to carry — its
+        durable facts were already captured per-turn by the memory pass). Guarded
+        against a double-record so a quit + atexit, or two frontends closing,
+        can't write it twice. Best-effort by contract (wrapped): a failed write
+        must never break shutdown."""
+        if self.observations is None:
+            return None
+        if getattr(self, "_session_summary_recorded", False):
+            return None
+        digest = (self.history_summary or "").strip()
+        if not digest:
+            return None
+        self._session_summary_recorded = True
+        try:
+            day = datetime.now().strftime("%Y-%m-%d %H:%M")
+            return self.observations.record(
+                "session-summary", f"Session summary — {day}", digest,
+                session=self.session_id)
+        except Exception:
+            # Never let end-of-session bookkeeping surface at shutdown.
+            return None
+
     def _recover_tool_calls(self, content: str) -> list:
         """Recover tool calls the model wrote as TEXT instead of using the
         function-calling channel. qwen intermittently narrates a call with an
@@ -1997,11 +2031,12 @@ class Engine:
     # through to a neutral dot rather than being dropped (a record is never lost
     # over a label, same posture as the store's type handling).
     _OBS_GLYPH = {
-        "decision":   "⚖",
-        "fact":       "●",
-        "preference": "★",
-        "discovery":  "○",
-        "task":       "◆",
+        "decision":        "⚖",
+        "fact":            "●",
+        "preference":      "★",
+        "discovery":       "○",
+        "task":            "◆",
+        "session-summary": "▣",   # the end-of-session compaction digest (§4)
     }
     # Session-start index budget (Notes-10 Phase 4 §1). ~30 lines, but a hard
     # char cap is the real guard so a busy brain can't blow the greeting's prompt
