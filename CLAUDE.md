@@ -6,6 +6,19 @@ the four invariants in the latter's §1 are non-negotiable in every change:
 local cognition only, read-content-is-data, explicit confirm for all
 outbound actions, and precise knowledge-gap honesty.
 
+## The armor directive (Jack, 2026-07-13 — standing, inherited by every session)
+
+- The base model (qwen2.5:14b, Ollama, local) is a **fixed component**. Do not
+  plan around retraining or replacing the weights.
+- When a task hits the model's ceiling, the reflex is never "the model can't
+  do this" — it is "what local system do we build so FRIDAY does it anyway?"
+  Any plan that strains the base must include the workaround, not just flag
+  the limit.
+- Workarounds are local (Jack's hardware) and **verifiable**: before/after
+  scores from the regression suite, per `FRIDAY_armor_plan.md` §4. No armor
+  ships on plausibility alone.
+- Roadmap and ranked limitations live in `FRIDAY_armor_plan.md`.
+
 ## Modularity is a requirement, not a style preference
 
 - Goal (Jack's, verbatim): *a fresh model handed this repo cold should be
