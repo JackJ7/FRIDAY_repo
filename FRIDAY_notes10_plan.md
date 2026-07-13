@@ -1,6 +1,6 @@
 # FRIDAY Notes-10 Plan — temporal integrity, conversational continuity, intent resolution, memory method port
 
-**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) COMPLETE (2026-07-13): all four §§ landed + verified (session-start compact index, get_observations fetch-by-id, search_observations on stdlib SQLite FTS5, close_session → session-summary observation); claude-mem retrieval economics run end-to-end at FRIDAY's scale; 15 new non-model tests, full --quick suite green. Phase 5 (ECC method import) COMPLETE (2026-07-13): all five §§ landed + merged to master (5241d78), and the live `--test-session` acceptance run is now DONE — deterministic LOCK PASS (matcher resolves the imported `verify_before_done` skill; index_text 1556 chars, no budget crowding), behavioural follow PARTIAL/model-limited (the 14B applies the verification-ladder discipline on a grounded prompt but doesn't reliably land a READY/NOT-READY verdict; the gate correctly blocked an unsolicited push). Phase 6 (deep-mode brain eval, decision-gated) COMPLETE (2026-07-13): both prerequisites done (`<think>`-stripping shim verified + unit-locked; honest-handoff re-voicing diff staged, unlanded), and the A/B ran clean under the frozen-code rule — the reasoning-distilled `deepseek-r1:14b` beat the offloaded `qwen2.5:32b` on every axis (10/10 vs 8/10 checkable-answer accuracy, ~2× faster wall-clock, fits fully on the 12GB card vs CPU-offloaded, 0 `<think>` leak, no persona cost). Report DELIVERED to Jack; the config swap is propose-tier and was NOT made — `deep_mode.model` stays `qwen2.5:32b`/`enabled:false` pending Jack's go. **All Notes-10 phases (P0–P8) now complete.** Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
+**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) COMPLETE (2026-07-13): all four §§ landed + verified (session-start compact index, get_observations fetch-by-id, search_observations on stdlib SQLite FTS5, close_session → session-summary observation); claude-mem retrieval economics run end-to-end at FRIDAY's scale; 15 new non-model tests, full --quick suite green. Phase 5 (ECC method import) COMPLETE (2026-07-13): all five §§ landed + merged to master (5241d78), and the live `--test-session` acceptance run is now DONE — deterministic LOCK PASS (matcher resolves the imported `verify_before_done` skill; index_text 1556 chars, no budget crowding), behavioural follow PARTIAL/model-limited (the 14B applies the verification-ladder discipline on a grounded prompt but doesn't reliably land a READY/NOT-READY verdict; the gate correctly blocked an unsolicited push). Phase 6 (deep-mode brain eval, decision-gated) COMPLETE (2026-07-13): both prerequisites done (`<think>`-stripping shim verified + unit-locked; honest-handoff re-voicing diff staged, unlanded), and the A/B ran clean under the frozen-code rule — the reasoning-distilled `deepseek-r1:14b` beat the offloaded `qwen2.5:32b` on every axis (10/10 vs 8/10 checkable-answer accuracy, ~2× faster wall-clock, fits fully on the 12GB card vs CPU-offloaded, 0 `<think>` leak, no persona cost). Report DELIVERED to Jack; the config swap is propose-tier and was NOT made — `deep_mode.model` stays `qwen2.5:32b`/`enabled:false`. **Jack APPROVED the swap (2026-07-13) but deferred application to a fresh session — this session merged Notes-10 to `main` and documented the ready-to-apply swap checklist ("JACK APPROVED THE SWAP — NEXT SESSION APPLIES IT" block under §Phase 6); `deep_mode.model` is unchanged until then.** **All Notes-10 phases (P0–P8) now complete.** Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
 **Source: Jack's "Friday Notes 10" (live-usage transcripts, 2026-07-11/12) + code diagnosis of the current repo.**
 
 > **Progress at a glance** (newest first — a fresh session reads this line, then §3):
@@ -1522,6 +1522,46 @@ reasoning*, and that is exactly how it may be described.
 > better-validated first choice. Either way the honesty floor holds: deep mode is
 > *disciplined method*, never more raw intelligence than a local Qwen-family
 > model has.
+
+> **✅ JACK APPROVED THE SWAP (2026-07-13) — NEXT SESSION APPLIES IT.** Jack
+> approved adopting `deepseek-r1:14b` for deep mode and asked that the
+> application be left for a fresh session to pick up (this session only merged to
+> `main` and documented). **Nothing below is applied yet — deep_mode.model is
+> still `qwen2.5:32b`.** This is the propose-tier change, now approved, so the
+> next session may land it directly. The model `deepseek-r1:14b` (9 GB) is
+> already pulled in Ollama. Concrete checklist, in order:
+>
+> 1. **Point deep mode at the distilled brain.** In `config/friday_config.yaml`
+>    `deep_mode:` — change `model: qwen2.5:32b` → `model: deepseek-r1:14b`.
+>    Stripping needs NO second key (auto-enables via `_resolve_strip_reasoning`,
+>    §Prereq-1). Update the block comment too: the `ollama pull qwen2.5:32b
+>    (~20 GB, will part-offload)` line → `ollama pull deepseek-r1:14b (~9 GB,
+>    fits the 12 GB card)`, and drop the "Heavier model" framing (see step 3).
+>    `enabled:` is advisory-only (doesn't gate the tool) — leave or set true.
+> 2. **Raise the deep context window** (the E3 = 7878/8192 near-truncation). Add
+>    a `deep_mode.num_ctx: 16384` key, then wire it in
+>    `core/tools/reasoning_tools.py` `register_deep_think`: change
+>    `num_ctx=config["model"]["num_ctx"]` → `num_ctx=deep_cfg.get("num_ctx",
+>    config["model"]["num_ctx"])` (falls back to the chat num_ctx if unset).
+>    Keep this LOCKED-tier consistent with the other deep budget keys.
+> 3. **Land the §Prereq-2 re-voicing diff** (now that a same-size brain makes
+>    "heavier/larger local model" false). Apply Tier 1 (model-visible:
+>    `calibration_batch.json` ~L558, `core/reasoning.py` `_DEEP_ROUTING`,
+>    `reasoning_tools.py` tool description) AND Tier 2 (comments/docstrings). The
+>    exact old→new strings are in "§Prereq-2 findings" above.
+> 4. **Verify (frozen-code rule: do steps 1–3, THEN test — no model-visible edit
+>    mid-verify).** (a) `py -3 -m pytest tests/pillar1/test_model_reasoning_filter.py
+>    -q` stays 10/10. (b) Live deep smoke: drive one genuinely-hard turn that
+>    triggers `deep_think`, confirm the status box shows deep mode, the reply
+>    integrates a correct answer, and **no `<think>`/reasoning leaks** into the
+>    chat OR into any memory-pass note (exercise end-to-end, the §Prereq-1
+>    requirement — and re-confirm the `thinking`-field separation still holds on
+>    whatever Ollama version is live). (c) Full `--quick` suite green + GT
+>    baseline held. Then record results here and flip this block to DONE.
+> 5. **Config governance note:** `deep_mode.model` is propose-tier by design
+>    (FRIDAY proposes, Jack approves) — Jack's approval here is the authorization;
+>    the session edits the yaml to enact it. Confirm `core/config_governance.py`
+>    doesn't flag the edit; if it audits the change, that's expected.
 
 ### Phase 7 — Autoresearch stop-path integrity (near-term; Cluster 1)
 
