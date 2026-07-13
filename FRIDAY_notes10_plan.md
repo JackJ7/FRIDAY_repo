@@ -827,7 +827,7 @@ brains, FTS rebuilt from scratch matches incremental state. GT baseline held.
 - [x] **§1 Pull + review the ECC repo — DONE (2026-07-13).** See "§1 findings" below.
 - [x] **§2 Select the curated set — DONE (2026-07-13).** See "§2 findings" below.
 - [x] **§3 Rewrite each as a FRIDAY skill/playbook — DONE (2026-07-13).** See "§3 findings" below.
-- [ ] **§4 Strengthen the continuous-learning / playbook-capture rule — TODO.**
+- [x] **§4 Strengthen the continuous-learning / playbook-capture rule — DONE (2026-07-13).** See "§4 findings" below.
 - [ ] **§5 Document imported-method provenance in ARCHITECTURE.md — TODO.**
 
 > **§1 findings (Pull + review the ECC repo).** Shallow-cloned
@@ -938,6 +938,27 @@ brains, FTS rebuilt from scratch matches incremental state. GT baseline held.
 > full), and the playbook set stays in index+match-one mode (`_over_budget` True,
 > as before) — so nothing crowds the prompt. **§4 (strengthen the capture rule)
 > next.**
+
+> **§4 findings (Strengthen the capture rule, don't build a parallel system).**
+> Per the plan's explicit instruction, ECC's continuous-learning loop was folded
+> INTO the existing `brain/playbooks/writing_a_playbook.md` capture rule — no
+> hooks, no background observer, no instinct store (all of which would be the
+> "parallel system" the plan forbids and which FRIDAY's observation stream +
+> playbook set already cover). Two edits (committed in the brain, `writing_a_
+> playbook` bumped 2669→4305 chars, still index+match-one so no always-on cost):
+> (1) the third-occurrence trigger is reframed with evidence language ("once is a
+> data point, twice is coincidence, the third time is a pattern with evidence");
+> (2) a new **"From observation to playbook"** section makes the ECC evolution
+> path explicit at FRIDAY's scale — *observation → confirmed pattern → captured
+> procedure* — and imports two ECC framings verbatim in spirit: **hold a new
+> playbook at the confidence the evidence supports** (provisional, tightened on
+> next use, retired if the work contradicts it — ECC's confidence-weighting /
+> decay) and **scope it to where it's been proven** (a one-project method stays a
+> project note until it holds across contexts — ECC v2.1's project-scoped-vs-global
+> to prevent cross-context contamination). A closing italic line names ECC as the
+> source of the frame and states plainly it's folded in, not run separately.
+> Verified: the playbook still indexes and still matches a "capture a recurring
+> procedure" query.
 
 Per CLAUDE.md, this is METHOD transfer. Do not vendor the repo; do not port
 Node hooks. Curate and translate:
