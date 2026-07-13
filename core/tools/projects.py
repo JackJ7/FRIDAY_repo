@@ -17,7 +17,7 @@ from datetime import date
 from pathlib import Path
 
 from core.project_meta import set_field
-from core.project_resolver import ProjectResolver, _norm
+from core.project_resolver import STRONG, ProjectResolver, _norm
 
 
 def _slug(name: str) -> str:
@@ -44,8 +44,34 @@ def register_project_tools(registry, gate, brain, projects_root: Path):
 
     # ---------- create_project ----------
 
-    def create_project(name: str, description: str = "") -> str:
-        folder = projects_root / _slug(name)
+    def create_project(name: str, description: str = "",
+                       confirm_new: bool = False) -> str:
+        new_slug = _slug(name)
+
+        # Near-duplicate guard (Notes-10 Phase 3, §4). Before scaffolding a NEW
+        # project, check it isn't a near-copy of one that already exists — the
+        # single guard that would have stopped the fourth 'claudecodeupgrade'
+        # sibling. Only fires for a genuinely new slug (re-running create on an
+        # EXISTING project to give it a folder is a supported use, not a dup) and
+        # is overridable: once Jack confirms it's really new, the model calls
+        # again with confirm_new=true. The model relays the question; it never
+        # decides "genuinely new" on its own.
+        if new_slug not in {p["slug"] for p in resolver.projects()} and not confirm_new:
+            near = [c for c in resolver.resolve(name)
+                    if c["score"] >= STRONG and c["slug"] != new_slug]
+            if near:
+                rows = "; ".join(
+                    f"'{c['title']}' (folder {c['folder'] or 'none'}, "
+                    f"note {c['note_path'] or 'none'})" for c in near)
+                return (
+                    f"A similar project already exists — I did NOT create a new "
+                    f"one to avoid a near-duplicate. Near-match(es): {rows}. If "
+                    f"Jack means that existing project, add to it "
+                    f"(add_files_to_project) or consolidate with merge_projects. "
+                    f"Only if he confirms this is GENUINELY different, call "
+                    f"create_project again with confirm_new=true.")
+
+        folder = projects_root / new_slug
         note = _note_path(name)
         results = []
 
@@ -432,12 +458,18 @@ def register_project_tools(registry, gate, brain, projects_root: Path):
         "create_project",
         "Create a new project: scaffolds a folder (with a README) under Jack's "
         "projects root and a projects/ note in your brain describing it. Also "
-        "use this to create a folder for an existing project that has none yet.",
+        "use this to create a folder for an existing project that has none yet. "
+        "If a similar project already exists it will NOT create a duplicate — it "
+        "returns the match so you can ask Jack; only pass confirm_new=true after "
+        "he confirms it is genuinely a new, separate project.",
         {
             "type": "object",
             "properties": {
                 "name": {"type": "string", "description": "Project name, e.g. 'Doc Ock'"},
                 "description": {"type": "string", "description": "One-paragraph description of the project"},
+                "confirm_new": {"type": "boolean",
+                                "description": "Set true ONLY after Jack confirms this is "
+                                "genuinely new despite a similar existing project"},
             },
             "required": ["name"],
         },
