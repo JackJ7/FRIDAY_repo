@@ -826,7 +826,7 @@ brains, FTS rebuilt from scratch matches incremental state. GT baseline held.
 **Per-section progress (a fresh session resumes from here):**
 - [x] **§1 Pull + review the ECC repo — DONE (2026-07-13).** See "§1 findings" below.
 - [x] **§2 Select the curated set — DONE (2026-07-13).** See "§2 findings" below.
-- [ ] **§3 Rewrite each as a FRIDAY skill/playbook — TODO.**
+- [x] **§3 Rewrite each as a FRIDAY skill/playbook — DONE (2026-07-13).** See "§3 findings" below.
 - [ ] **§4 Strengthen the continuous-learning / playbook-capture rule — TODO.**
 - [ ] **§5 Document imported-method provenance in ARCHITECTURE.md — TODO.**
 
@@ -899,6 +899,45 @@ brains, FTS rebuilt from scratch matches incremental state. GT baseline held.
 > ground before bulk-reading, map then targeted reads — already IS the existing
 > `code_review` playbook's step 1 and the repo-tools contract; no new file
 > earns its place). **§3 (write the three files) next.**
+
+> **§3 findings (Rewrite as FRIDAY skills/playbooks).** Three files written to
+> the live brain (committed there, `45c7ded`; the brain is one shared on-disk
+> repo, so these land regardless of the phase5 worktree), each re-authored in
+> FRIDAY's tight imperative Steps/Checks voice, sized for the 14B, with
+> provenance in-file (§5):
+> - **`brain/skills/verify_before_done.md`** — Goal/When/Triggers/When-NOT +
+>   Steps/Checks per `_template.md`. The completion-gate ladder
+>   (builds → behaves → edges → scope → secrets/safety) but honestly bounded:
+>   step 3 forces a split between "checks I ran" and "checks Jack must run"
+>   because FRIDAY reviews read-only repos and can't run his build — an
+>   unverified gate is never reported as passing (invariant 4). Explicitly
+>   defers single-number verification to the existing
+>   `self_verification_before_presenting` (no overlap).
+> - **`brain/playbooks/security_review.md`** — the ECC checklist re-scoped off
+>   the web stack to Jack's C/C++/embedded/Python: secrets, input & bounds,
+>   **memory & resource safety** (buffer/UAF/overflow — the ECC original had
+>   none of this), injection/untrusted-data, auth, supply-chain, info-leak.
+>   Grounds via repo_sync→map→targeted-read like `code_review`, findings
+>   file:line + known/hypothesis, escalates to `max_effort` on safety-critical
+>   code, advice-ends-at-words (read-only). `code_review.md` step 6 now
+>   escalates INTO it (same pattern it uses for `max_effort`).
+> - **`brain/playbooks/record_a_decision.md`** — Nygard ADR fields (context /
+>   decision / alternatives-considered / consequences / status) as a
+>   durable-capture procedure that writes into the relevant **project note** +
+>   a one-line `⚖ decision` observation pointer (one-fact-one-place: note is the
+>   record, observation is the pointer). Pairs with `structured_tradeoff_analysis`
+>   (that evaluates; this records) and refuses to invent an unstated rationale.
+>
+> **Verified through the REAL matcher** (`p5check.py`, pure-code, no model):
+> `Skills.index()` lists all 7 skills and `Skills.match("…the fix is done…ready
+> to ship")` returns **Verify before you call it done**; `Playbooks.match()`
+> returns **Security Review** for a secrets/buffer-overflow query and **Record a
+> Decision** for a "why did we choose…" query; both new playbooks appear in the
+> index. **Budget (the acceptance criterion): skill `index_text` is 1556 chars
+> for all 7 skills** (each skill still injects only its single best match in
+> full), and the playbook set stays in index+match-one mode (`_over_budget` True,
+> as before) — so nothing crowds the prompt. **§4 (strengthen the capture rule)
+> next.**
 
 Per CLAUDE.md, this is METHOD transfer. Do not vendor the repo; do not port
 Node hooks. Curate and translate:
