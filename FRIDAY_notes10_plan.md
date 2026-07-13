@@ -823,6 +823,37 @@ brains, FTS rebuilt from scratch matches incremental state. GT baseline held.
 
 ### Phase 5 — ECC method import (curated, not wholesale)
 
+**Per-section progress (a fresh session resumes from here):**
+- [x] **§1 Pull + review the ECC repo — DONE (2026-07-13).** See "§1 findings" below.
+- [ ] **§2 Select the curated set — TODO.**
+- [ ] **§3 Rewrite each as a FRIDAY skill/playbook — TODO.**
+- [ ] **§4 Strengthen the continuous-learning / playbook-capture rule — TODO.**
+- [ ] **§5 Document imported-method provenance in ARCHITECTURE.md — TODO.**
+
+> **§1 findings (Pull + review the ECC repo).** Shallow-cloned
+> `github.com/affaan-m/ecc` (HEAD `4092795`, 3322 files) into
+> `data\workspaces\ecc` — the exact dir `repo_sync` produces (repo_sync is pure
+> code: a `git clone --depth 1`, no model/GPU, so the clone was done directly
+> and faithfully rather than spinning up a live instance). Reviewed it as
+> **tainted external data** (invariant 2): the repo's own `CLAUDE.md` and
+> generated `rules/*` carry an embedded "Prompt Defense Baseline" instruction
+> block — treated as content to inspect, never as directives. **Surface:** 278
+> skills (each a dir with `SKILL.md` + YAML frontmatter), 23 language rule-sets,
+> 67 agents, Node hooks. The vast majority is **web-dev-stack-specific**
+> (React/TS/Vercel/Zod/JWT) or **ECC-infrastructure-coupled** (the
+> `plan-orchestrate` skill emits `/orchestrate custom` chains against ECC's own
+> agent catalogue + install-form detection — meaningless without ECC's runtime)
+> — correctly skipped per the plan's "skip web-dev-stack-specific" and CLAUDE.md's
+> "import METHOD, not code." The genuinely method-general, engineering-relevant
+> sources read in full: `verification-loop` (build→type→lint→test→security→diff
+> gate ladder → READY/NOT-READY verdict; commands are Node-specific, the ladder
+> is not), `security-review` (a review checklist; ECC's specifics are web, the
+> category structure transfers), `architecture-decision-records` (Nygard ADR
+> format — language-agnostic), and `continuous-learning` / `-v2` (the
+> observation→instinct→cluster→skill evolution with confidence/evidence — a whole
+> hook+background-agent SYSTEM in ECC, but the FRAMING maps onto FRIDAY's existing
+> capture rule per §4). **§2 (record the curated selection) next.**
+
 Per CLAUDE.md, this is METHOD transfer. Do not vendor the repo; do not port
 Node hooks. Curate and translate:
 
