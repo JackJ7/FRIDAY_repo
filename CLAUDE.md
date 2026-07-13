@@ -53,3 +53,9 @@ outbound actions, and precise knowledge-gap honesty.
   processes — Jack may have her open.
 - Interaction logs (`logs\interactions\`) are the future fine-tuning set:
   keep the JSONL schema stable.
+- Running two or more INDEPENDENT phases at once (not stages of one pipeline)?
+  Use git worktrees so sessions don't clobber shared files (`core\engine.py`
+  especially). Follow `docs\PARALLEL_WORKTREES.md` — it has the setup, the
+  FRIDAY-specific limits (one brain / one GPU / port-47533 lock are shared
+  across all worktrees; ignored runtime dirs aren't copied in), and the
+  merge-back loop.
