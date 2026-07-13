@@ -825,7 +825,7 @@ brains, FTS rebuilt from scratch matches incremental state. GT baseline held.
 
 **Per-section progress (a fresh session resumes from here):**
 - [x] **§1 Pull + review the ECC repo — DONE (2026-07-13).** See "§1 findings" below.
-- [ ] **§2 Select the curated set — TODO.**
+- [x] **§2 Select the curated set — DONE (2026-07-13).** See "§2 findings" below.
 - [ ] **§3 Rewrite each as a FRIDAY skill/playbook — TODO.**
 - [ ] **§4 Strengthen the continuous-learning / playbook-capture rule — TODO.**
 - [ ] **§5 Document imported-method provenance in ARCHITECTURE.md — TODO.**
@@ -853,6 +853,52 @@ brains, FTS rebuilt from scratch matches incremental state. GT baseline held.
 > observation→instinct→cluster→skill evolution with confidence/evidence — a whole
 > hook+background-agent SYSTEM in ECC, but the FRAMING maps onto FRIDAY's existing
 > capture rule per §4). **§2 (record the curated selection) next.**
+
+> **§2 findings (The curated set — quality over quantity).** The plan says
+> "select ~5–10"; the operative word is *curated*. ~10+ ECC skills were read or
+> scanned; the honest yield of genuinely-transferable, non-duplicative,
+> non-web method is **three artifacts + one strengthening**, which is what
+> lands (§3/§4). Over-importing to hit a count would crowd the skill index and
+> the playbook match against files FRIDAY's actual work never touches — the
+> opposite of the acceptance criterion. **Selected (→ §3):**
+> - **`verify_before_done` (new SKILL)** ← ECC `verification-loop`. The
+>   completion-gate discipline: don't declare a change/deliverable done until
+>   it's been checked, and give an honest READY / NOT-READY verdict naming what
+>   is *unverified*. Re-voiced for FRIDAY's real capability envelope (she reviews
+>   read-only repos and can't run Jack's build — invariant 4), so the skill
+>   separates "checks I ran" from "checks Jack must run." Distinct from the
+>   existing `self_verification_before_presenting` (that guards a computed
+>   *number* in an answer; this guards a completed *change/piece of work*).
+> - **`security_review` (new PLAYBOOK)** ← ECC `security-review`. A security-lens
+>   review checklist (secrets, input/bounds validation, injection & untrusted
+>   data, auth/permissions, memory & resource safety, dependency/supply-chain,
+>   error/info leakage), tool-agnostic and sized for Jack's C++/embedded/Python
+>   work rather than ECC's web specifics. Sibling to the existing `code_review`
+>   playbook, which now points to it (same escalation pattern `code_review` uses
+>   for `max_effort`).
+> - **`record_a_decision` (new PLAYBOOK)** ← ECC `architecture-decision-records`.
+>   The Nygard ADR shape (context → decision → alternatives-considered →
+>   consequences → status) as a durable-capture procedure, so "why did we choose
+>   X over Y" survives the session. Dovetails with FRIDAY's typed `⚖ decision`
+>   observations and the `structured_tradeoff_analysis` skill (which supplies the
+>   "alternatives considered" analysis the ADR then records).
+> - **§4 strengthening (no new file)** ← ECC `continuous-learning`. Its
+>   confidence/evidence/evolution framing folds into the existing
+>   `writing_a_playbook` capture rule, per the plan's explicit "strengthen, don't
+>   build a parallel system."
+>
+> **Rejected, with reason (the curation is the work):** `plan-orchestrate`
+> (emits ECC `/orchestrate` chains against ECC's agent catalogue — pure ECC
+> infrastructure, meaningless in FRIDAY); every `*-testing` / `*-security` /
+> `*-verification` **language variant** (React/Django/Laravel/Spring/… —
+> web-dev-stack-specific, explicitly out per the plan); `continuous-learning-v2`
+> **as a system** (hooks + background Haiku observer + instinct YAML store +
+> evolve/promote commands — building it would be the "parallel system" §4
+> forbids; only its framing is taken); `context-budget` (FRIDAY already does
+> history compaction in code, Phase 2 §4); `codebase-onboarding` (its method —
+> ground before bulk-reading, map then targeted reads — already IS the existing
+> `code_review` playbook's step 1 and the repo-tools contract; no new file
+> earns its place). **§3 (write the three files) next.**
 
 Per CLAUDE.md, this is METHOD transfer. Do not vendor the repo; do not port
 Node hooks. Curate and translate:
