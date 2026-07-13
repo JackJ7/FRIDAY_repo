@@ -1629,8 +1629,19 @@ reasoning*, and that is exactly how it may be described.
 > build, and the strip filter is the untriggered backstop. Since deep_think's
 > return is exactly what the memory pass would summarise and it is leak-free, the
 > memory-pass leg is covered transitively (nothing to leak) on top of the unit
-> lock. (c) **Non-model `--quick` suite: 242 passed, 89 deselected — GREEN, zero
-> regressions.** (d) **One model-suite variance failure, NOT this swap:**
+> lock. (b-live) **FULL-STACK live run through the real CLI face** (`py -3
+> friday.py --test-session`, port 47533 free, memories routed to `test_archive/`):
+> given a throwaway hard buoyancy problem and asked to engage deep mode, FRIDAY
+> (qwen2.5:14b) **called `deep_think` herself** (tool trace shown), the offload ran
+> on `deepseek-r1:14b`, and she **integrated + re-voiced** a **correct** answer in
+> persona — equilibrium submerged depth **≈ 0.699 m** and ballast-to-submerge
+> **≈ 64.57 kg** (both match hand-calc), second-person, offered follow-up, **no
+> `<think>` leak in the chat reply**, 56.9 tok/s. Post-run audit: **0 `<think>` in
+> any brain note**, real brain untouched (git status clean; the memory pass judged
+> a single throwaway Q&A not worth persisting, so `test_archive/` wasn't even
+> created — correct behaviour). This is the end-to-end proof the swap is live and
+> honest through the WHOLE engine, not just the isolated tool. (c) **Non-model
+> `--quick` suite: 242 passed, 89 deselected — GREEN, zero regressions.** (d) **One model-suite variance failure, NOT this swap:**
 > `test_governance.py::CFG-007` failed with the reply drifting into **Thai**
 > (the known intermittent 14B language drift, GT-A T5 / GT-C6 shape). It is
 > structurally impossible for this swap to cause it — the sandbox builds its own
