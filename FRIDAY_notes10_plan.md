@@ -828,7 +828,8 @@ brains, FTS rebuilt from scratch matches incremental state. GT baseline held.
 - [x] **§2 Select the curated set — DONE (2026-07-13).** See "§2 findings" below.
 - [x] **§3 Rewrite each as a FRIDAY skill/playbook — DONE (2026-07-13).** See "§3 findings" below.
 - [x] **§4 Strengthen the continuous-learning / playbook-capture rule — DONE (2026-07-13).** See "§4 findings" below.
-- [ ] **§5 Document imported-method provenance in ARCHITECTURE.md — TODO.**
+- [x] **§5 Document imported-method provenance in ARCHITECTURE.md — DONE (2026-07-13).** See "§5 findings" below.
+- [ ] **Acceptance (live `--test-session`: one imported skill matched + followed) — PENDING (needs the GPU/port-47533 lock free; the parallel Phase 4 session may hold it). See "Acceptance" below.**
 
 > **§1 findings (Pull + review the ECC repo).** Shallow-cloned
 > `github.com/affaan-m/ecc` (HEAD `4092795`, 3322 files) into
@@ -959,6 +960,36 @@ brains, FTS rebuilt from scratch matches incremental state. GT baseline held.
 > source of the frame and states plainly it's folded in, not run separately.
 > Verified: the playbook still indexes and still matches a "capture a recurring
 > procedure" query.
+
+> **§5 findings (Provenance in ARCHITECTURE.md).** Added an "Imported-method
+> provenance" note to the `core\skills.py` block of ARCHITECTURE.md's module map:
+> a curated-from-outside skill/playbook records its origin IN THE FILE — a
+> `- **Source:**` line (skills) or the template's `- **Origin:**` field
+> (playbooks) naming origin repo@commit + import date — and the note states
+> plainly that this is provenance only (the index parser reads
+> title/When-to-use/Triggers and ignores it) and that imported method still runs
+> at FRIDAY's own model level, never as a claim of the source model's horsepower
+> (invariant 4). It names the ECC import as the first use. This matches what §3
+> actually wrote into each file (Source/Origin lines are present and carry
+> `github.com/affaan-m/ecc @ 4092795`, 2026-07-13). **Only the live acceptance
+> run remains** (see below).
+
+> **Acceptance (live `--test-session`).** The plan's acceptance criterion is two
+> parts: (1) *skills load through the matcher without crowding the prompt budget*
+> — **DONE and verified deterministically** in §3 (`Skills.index()` lists all 7,
+> index_text 1556 chars, playbooks stay index+match-one; matches resolve to the
+> right imported file). (2) *a live `--test-session` conversation shows one
+> imported skill correctly matched and followed* — **PENDING**: it needs a live
+> 14B instance, which requires the single GPU and the port-47533 lock, and the
+> parallel Phase 4 session may hold them (worktrees isolate source, NOT the
+> machine's one Ollama/GPU/brain — `docs\PARALLEL_WORKTREES.md`). Per the
+> frozen-code and single-tenant-GPU rules, the live run is deferred to when this
+> branch is merged to `master` in the main tree and the GPU is free; run one
+> `--test-session` turn whose wording trips `verify_before_done` (e.g. "I finished
+> the fix, is it ready to ship?") and confirm she walks the gate ladder and gives
+> a READY/NOT-READY verdict rather than a bare "done". The deterministic half is
+> the LOCK; the live turn is the behavioural confirmation, same split every prior
+> phase used.
 
 Per CLAUDE.md, this is METHOD transfer. Do not vendor the repo; do not port
 Node hooks. Curate and translate:
