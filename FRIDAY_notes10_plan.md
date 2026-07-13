@@ -1,17 +1,28 @@
 # FRIDAY Notes-10 Plan — temporal integrity, conversational continuity, intent resolution, memory method port
 
-**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution) IN PROGRESS — §1 (entity resolver) done 2026-07-13. Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
+**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) next. Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
 **Source: Jack's "Friday Notes 10" (live-usage transcripts, 2026-07-11/12) + code diagnosis of the current repo.**
 
 > **Progress at a glance** (newest first — a fresh session reads this line, then §3):
+> - **P3 COMPLETE 2026-07-13 — the JARVIS layer (clusters B+C).** All six §§:
+>   §1 entity resolver (`core/project_resolver.py` — stdlib fuzzy match; engine
+>   injects real note+folder so the 14B never guesses a path; ambiguity asks
+>   which), §2 `list_projects`, §3 `merge_projects` (gated consolidation — one
+>   batch confirm, folds notes, marks duplicates merged, never creates), §4
+>   `create_project` near-dup guard (the fix for the fourth-project bug), §5
+>   separator-insensitive fuzzy recall floor, §6 `consolidate_projects` playbook.
+>   27 non-model unit tests (RESOLVE/LIST/MERGE/GUARD/RECALL), 211 non-model pass.
+>   **GT-C3/C5/C6 promoted to LOCKED and verified live** (deterministic structural
+>   checks; behavioural stay TARGET). GT-A/GT-B baseline HELD. Landed on `master`
+>   in parallel with the P7/P8 worktree (`phase78`) — merges cleanly (disjoint
+>   engine.py regions). **Phase 4 (memory method port) next.**
 > - **P3 §1 done 2026-07-13** — Entity resolver (`core/project_resolver.py`):
 >   stdlib fuzzy-matches Jack's free-text project references against real
 >   projects; a confident single match injects the real note+folder into the
 >   prompt (engine `hint_for`, `None`-guarded) so the 14B stops guessing paths
 >   (transcript-B root), ambiguity asks which (JARVIS confirm), weak = silent.
 >   New `resolve_project` tool + `entity_resolved` log field. RESOLVE-001..008
->   pass; 192 non-model pass. GT-C3 LOCK rides with §6. **§2–§6 next.** (Running
->   in parallel with the P7/P8 worktree — see the parallel note under the header.)
+>   pass; 192 non-model pass.
 > - **P2 COMPLETE 2026-07-13 (§4 last)** — History compaction replaces the silent
 >   40-msg trim: evicted turns are summarised (one tool-less call) into a running
 >   digest injected at the head of context, so nothing scrolled-off is lost.
@@ -555,7 +566,13 @@ Promote GT-C3 (partially — resolution lands in Phase 3) and GT-C4 to LOCKED.
 - [x] **§3 merge_projects tool (gated) — DONE (2026-07-13).** See "§3 findings" below.
 - [x] **§4 near-duplicate guard in create_project — DONE (2026-07-13).** See "§4 findings" below.
 - [x] **§5 fuzzy recall floor — DONE (2026-07-13).** See "§5 findings" below.
-- [ ] **§6 consolidate_projects playbook + promote GT-C3/C5/C6 to LOCKED — not started.**
+- [x] **§6 consolidate_projects playbook + promote GT-C3/C5/C6 to LOCKED — DONE (2026-07-13).** See "§6 findings" below.
+
+> **PHASE 3 COMPLETE (2026-07-13).** All six §§ landed + verified. 27 new
+> non-model unit tests (RESOLVE/LIST/MERGE/GUARD/RECALL) pass; **GT-C3, GT-C5,
+> GT-C6 promoted to LOCKED and verified live** (qwen2.5:14b); GT-A/GT-B baseline
+> HELD. Phase 4 (memory method port) next. See §6 findings for the golden
+> evidence and the honest ceiling.
 
 > **§1 findings (resolve_project / entity resolver).** New module
 > `core/project_resolver.py`: `ProjectResolver` reads the brain's `projects/`
@@ -661,6 +678,36 @@ Promote GT-C3 (partially — resolution lands in Phase 3) and GT-C4 to LOCKED.
 > guard), and title-channel normalization. **211 non-model pass (+4), no
 > regressions** (the retriever is shared; the floor and existing recall held).
 
+> **§6 findings (playbook + GT-C3/C5/C6 LOCK promotion).** Shipped
+> `brain/playbooks/consolidate_projects.md` (list first → confirm the survivor →
+> `merge_projects` → report; NEVER `create_project` during a consolidation —
+> the anti-pattern that spawned the fourth project) and committed it in the brain
+> repo alongside the other playbooks. Promoted the three Phase-3 goldens to
+> **LOCKED**, following the established pattern — each gets a DETERMINISTIC
+> structural LOCKED check keyed on the code barrier, while the behavioural
+> checks stay TARGET (the honest ceiling):
+> - **GT-C3 `entity-hint-resolved` LOCKED** — the engine injected a resolution
+>   hint naming the real folder (resolver fired). Verified live: **PASS**. The
+>   behavioural `resolved-real-folder` MISSED this run (the 14B was handed the
+>   folder but didn't echo it) — exactly why the LOCK is on the code hint, not
+>   the model's echo.
+> - **GT-C5 `no-fourth-project` LOCKED** — no new project note appeared (the §4
+>   near-dup guard no-ops a stray create; merge never creates). Verified live:
+>   **PASS**, and this run ALL behavioural checks also passed (no create_project,
+>   surfaced 3/4 duplicates, proposed a merge).
+> - **GT-C6 `recall-retrieves` LOCKED** — the retriever itself surfaces the
+>   merged-word note for the query (§5 floor). Verified live: **PASS**;
+>   behavioural `recall-found` also PASS (she cited "picothruster").
+> **GT baseline HELD:** GT-B + GT-C1..C6 green; GT-A passed on re-run (a single
+> T4 `record-honest-no-review` miss was pre-existing 14B phrasing variance in an
+> optimistically-LOCKED check — NOT caused by Phase 3: no message in GT-A
+> fuzzy-matches a project, so the entity hint never fires, and its queries name-
+> match no notes, so §5 retrieval is unchanged; the prompt is byte-identical).
+> **Honest ceiling (say it plainly):** the intermittent Thai/non-English drift
+> (GT-A T5 shape) recurred on GT-C3/C6 this run (english-only TARGET missed) —
+> a 14B limit the deterministic locks are designed to survive: the resolver, the
+> guard, and the retriever floor all held regardless of the drift.
+
 1. **`resolve_project` / entity resolver (code, deterministic).** Extract
    `_find_folder` into a shared resolver: given a free-text name, fuzzy-match
    (normalized: lowercase, strip separators, `difflib` ratio — stdlib only)
@@ -698,7 +745,8 @@ Promote GT-C3 (partially — resolution lands in Phase 3) and GT-C4 to LOCKED.
    (`list_projects`), confirm the target with Jack, `merge_projects`, report
    the end state. Never `create_project` during a consolidation.
 
-Promote GT-C3/C5/C6 to LOCKED.
+Promote GT-C3/C5/C6 to LOCKED. **DONE (2026-07-13)** — all three LOCKED and
+verified live (see "§6 findings" above).
 
 ### Phase 4 — Memory method port (claude-mem logic → FRIDAY)
 
@@ -1031,7 +1079,7 @@ held; non-model suite green.
 | P0    | **DONE** | 2026-07-13 | GT-C 6/6 green (all TARGET, no LOCKED yet) | GT-A/GT-B unchanged (not re-run — no code touched) | GT-C golden set + baseline landed. Table below. |
 | P1    | **§1–§4 done (code)** | 2026-07-13 | Full suite 205/252 (all 16 P1 targets PASS; GT-C1 LOCKED, GT-C2 LOCKED×2, GT-A/GT-B LOCKED held); 166 non-model pass. 47 failures = PRE-EXISTING model-suite (calc/injection/variance), NOT caused by P1 (A/B-proven) | **GT baseline HELD** (GT-A/GT-B LOCKED green; GT-C1/C2 now LOCKED) | All four §§ landed. Live calendar-mirror migration DEFERRED (Jack). 47 pre-existing model-suite failures flagged for Jack — see "Phase 1 regression notes". |
 | P2    | **§1–§4 DONE** | 2026-07-13 | 184 non-model pass (+15 new: OFFER-001..006, REF-001..005, COMPACT-001..004); GT golden 8/8 (GT-C4 gains LOCKED offer-ledger-accepts); COMPACT-LIVE-001 live smoke green | **GT baseline HELD** (GT-A/GT-B LOCKED + GT-C1/C2 LOCKED green; GT-C4 offer-ledger LOCKED) | Offer ledger + widened anti-dodge + list_dir referents + history compaction. All four §§ landed & verified. Full model suite not re-run (frozen-code rule; the 47 pre-existing P1 failures are unrelated). |
-| P3    | **§1–§5 done (code)** | 2026-07-13 | 211 non-model pass (+27: RESOLVE/LIST/MERGE/GUARD + RECALL-001..004) | **GT baseline HELD** (non-model only; GT-C model goldens not re-run — frozen-code / single-GPU shared with the p78 session) | §1 resolver + §2 `list_projects` + §3 `merge_projects` + §4 near-dup guard + §5 fuzzy recall floor. §6 (playbook + GT-C3/C5/C6 LOCK promotion) pending. |
+| P3    | **COMPLETE (§1–§6)** | 2026-07-13 | 211 non-model pass (+27: RESOLVE/LIST/MERGE/GUARD/RECALL); GT-C3/C5/C6 LOCKED + verified live (qwen2.5:14b) | **GT baseline HELD** — GT-B + GT-C1..C6 green; GT-A held on re-run (one T4 miss = pre-existing 14B variance, NOT Phase 3 — identical prompt/retrieval). GT-A/GT-B/GT-C1/C2/C4 LOCKED held | Full JARVIS layer: resolver + list/merge/near-dup-guard + fuzzy recall + consolidate_projects playbook. GT-C3/C5/C6 promoted to LOCKED (deterministic structural checks; behavioural stay TARGET = honest ceiling). |
 | P4    | not started | | | | |
 | P5    | not started | | | | |
 | P6    | not started | | | | Decision-gated: report to Jack, verdict is his |

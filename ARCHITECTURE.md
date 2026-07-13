@@ -318,6 +318,22 @@ core\tools\          the registry pattern: every capability is a tool
   filesystem.py / brain_tools.py / projects.py / commitment_tools.py /
   timeline_tools.py / playbook_tools.py / senses_tools.py / reasoning_tools.py /
   git_write.py (gated commit/push) / video_tools.py (/watch scaffold)
+  projects.py       the project surface (Notes-10 Phase 3, cluster B+C): all
+                     backed by core\project_resolver.py so the model never
+                     guesses a project path or spawns a duplicate.
+                       resolve_project (internal) — free-text name -> note/folder/
+                         status/files, or asks which on ambiguity.
+                       list_projects (internal) — the whole inventory; read FIRST
+                         on any consolidate ask.
+                       merge_projects (action) — fold duplicates INTO a survivor:
+                         one batch move confirm, narrative folded under
+                         "Merged from X", duplicates marked "merged into <target>"
+                         (kept in place; git is the undo). Never creates.
+                       create_project (action) — now guards against near-
+                         duplicates (refuses a look-alike unless confirm_new).
+                       add_files_to_project (action) — copy/move + comprehend.
+                     Playbook: playbooks\consolidate_projects.md (list -> confirm
+                     survivor -> merge -> report; never create during a merge).
   research_tools.py  autonomous GPU research loop (autoresearch port), gated.
                      Three tools (autoresearch_launch/status/stop). Registers
                      only behind research.enabled (LOCKED) + a non-empty

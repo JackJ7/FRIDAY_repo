@@ -83,6 +83,54 @@ def offer_ledger_accepts(status: str) -> Check:
     return Check("offer-ledger-accepts", status, _fn)
 
 
+def entity_hint_names_folder(folder, status: str) -> Check:
+    """LOCKED structural guard for the §1 resolver (GT-C3): the ENGINE injected a
+    resolution hint that names the real folder from the note's Folder line. This
+    is the deterministic half — the resolver ran and resolved the free-text
+    reference to the real path in CODE, so the model is HANDED the folder instead
+    of guessing. Whether it then echoes the path is behavioural (resolved-real-
+    folder, TARGET); this can only fail on a resolver regression."""
+    needle = str(folder).lower()
+    def _fn(ctx):
+        hint = (getattr(ctx.engine, "_entity_hint", "") or "").lower()
+        ok = needle in hint
+        return ok, ("resolver hint named the real folder" if ok
+                    else f"hint did not resolve the folder (hint={hint[:120]!r})")
+    return Check("entity-hint-resolved", status, _fn)
+
+
+def no_new_project(known_slugs, status: str) -> Check:
+    """LOCKED structural guard for §3/§4 (GT-C5): NO new project note appeared
+    this turn — the near-duplicate guard makes a stray create_project on the
+    orbit-sync family a no-op, and merge_projects never creates. So 'make it one'
+    can no longer spawn a fourth project (the transcript-C failure). Keys on the
+    on-disk note set, not on what the model said, so only a code regression that
+    lets a duplicate create through can fail it."""
+    known = set(known_slugs)
+    def _fn(ctx):
+        extra = [n for n in ctx.sandbox.brain.list_notes()
+                 if n.startswith("projects/") and n.endswith(".md")
+                 and n[len("projects/"):-len(".md")] not in known]
+        return (not extra), ("no new project note created"
+                             if not extra else f"NEW project note(s): {extra}")
+    return Check("no-fourth-project", status, _fn)
+
+
+def recall_retrieves(query, needle_path, status: str) -> Check:
+    """LOCKED structural guard for the §5 recall floor (GT-C6): the retriever
+    itself surfaces the merged-word note for the query, deterministically (the
+    separator-insensitive name channel clears the min_score floor). Independent
+    of the reply — whether she then cites the fact is behavioural (recall-found,
+    TARGET); this proves the note was actually RETRIEVED into context."""
+    def _fn(ctx):
+        eng = ctx.sandbox.service.engine
+        got = [r.path for r in eng.retriever.retrieve(query, eng.top_k)]
+        ok = needle_path in got
+        return ok, (f"retriever surfaced {needle_path}" if ok
+                    else f"retriever missed it (got {got})")
+    return Check("recall-retrieves", status, _fn)
+
+
 def resolved_real_folder(folder, status: str) -> Check:
     """The real folder path (from the note's Folder line) shows up either in
     the reply or in a tool call's args — i.e. she looked it up instead of
@@ -259,6 +307,10 @@ def test_gt_c3_folder_resolution(sandbox, detail):
 
     turns = [
         Turn("Look at the files in the marlin rig project.", [
+            # LOCKED (Phase 3 §1): the resolver injected the real folder into the
+            # prompt — the free-text reference resolved in code, not a guess.
+            entity_hint_names_folder(real, LOCKED),
+            # Behavioral (did she then USE it): stays TARGET.
             resolved_real_folder(real, TARGET),
             no_match("no-reprovide-dodge", TARGET, REPROVIDE, "reprovide dodge"),
             english_only(TARGET),
@@ -317,6 +369,13 @@ def test_gt_c5_consolidation(sandbox, detail):
 
     turns = [
         Turn("There are 3 orbit sync projects. Please make it only one.", [
+            # LOCKED (Phase 3 §3/§4): no FOURTH project note can appear — the
+            # near-dup guard no-ops a stray create, and merge never creates. The
+            # known set = the 4 seeded fixtures + the 3 orbit-sync duplicates.
+            no_new_project({"alpha_rig", "beta_probe", "gamma_arm", "delta_sled",
+                            "orbitsync", "orbit_sync_tool", "orbit_sync_v2"},
+                           LOCKED),
+            # Behavioral (surfaces + proposes a merge instead of acting blind).
             no_tool("create_project", TARGET),
             surfaces_at_least(["orbitsync", "orbit sync tool", "orbit sync v2",
                                "orbit_sync"], 2, "surfaces-duplicates", TARGET),
@@ -346,6 +405,12 @@ def test_gt_c6_fuzzy_recall(sandbox, detail):
 
     turns = [
         Turn("Find my notes about the pico thruster project.", [
+            # LOCKED (Phase 3 §5): the retriever deterministically surfaces the
+            # merged-word note for "pico thruster" — the separator-insensitive
+            # name channel clears the floor. Proves the note reached context.
+            recall_retrieves("pico thruster project", "projects/picothruster.md",
+                             LOCKED),
+            # Behavioral (did she then cite the fact): stays TARGET.
             mentions_any(["picothruster", "12 mn", "cold-gas", "cold gas",
                           "thruster testbed"], "recall-found", TARGET),
             no_match("no-dodge", TARGET, DODGE, "context-dodge"),
