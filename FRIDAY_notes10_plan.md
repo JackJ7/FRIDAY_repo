@@ -1215,6 +1215,14 @@ skill correctly matched and followed.
 
 ### Phase 6 — Deep-mode brain evaluation: reasoning-distilled 14B vs 32B
 
+**Per-section progress (a fresh session resumes from here):**
+- [x] **§Prereq-1 `<think>`-stripping shim — DONE (2026-07-13).** Already
+  implemented + unit-locked before this session (THINK-001..010); verified +
+  end-to-end leak-checked live in §A/B. See "§Prereq-1 findings" below.
+- [ ] **§Prereq-2 honest-handoff re-voicing diff — prepared, NOT landed.**
+- [ ] **§A/B deep-mode reasoning eval (32B vs distilled-14B) — in progress.**
+- [ ] **§Deliverable — table + recommendation to Jack (decision-gated).**
+
 **This phase is different in kind. It is independent of the P0–P5 ordering
 (it lands no barriers, changes no user-visible behavior by itself) and it is
 DECISION-GATED: it ends with a report to Jack, NOT an autonomous swap. No
@@ -1312,6 +1320,40 @@ has. Method, not artifact. The distilled model's edge is *disciplined
 reasoning*, and that is exactly how it may be described.
 
 ---
+
+#### Phase 6 execution log (2026-07-13)
+
+> **§Prereq-1 findings (`<think>`-stripping shim) — DONE.** The shim the A/B
+> depends on was already built and unit-locked in an earlier session (obs 385,
+> 431, 516, 692, 695) — this session verified it, so §Prereq-1 is confirmed
+> complete, not re-implemented:
+> - **Client-boundary filter (`core/model.py`).** `_ReasoningFilter` is a
+>   stateful streaming machine that siphons `<think>…</think>` out of the token
+>   stream into `ModelReply.reasoning` (diagnostics only) so it reaches **neither**
+>   the `on_token` UI callback **nor** `reply.content` (which the memory pass
+>   later reads). It is *fail-closed*: an unterminated `<think>` (generation hit
+>   the token budget mid-thought) is discarded, never emitted — an empty answer
+>   is honest, a leaked half-thought is not. Split-tag safe (`<thi`|`nk>` across
+>   two chunks handled via `_longest_partial_tag`). For a non-reasoning model
+>   (today's chat brain) it is a byte-for-byte transparent pass-through.
+> - **Single-key activation (`core/tools/reasoning_tools.py`).**
+>   `_resolve_strip_reasoning` is tri-state: Jack's `deep_mode.strip_reasoning`
+>   override wins in either direction (LOCKED key); absent, it auto-detects a
+>   reasoning family from the model tag (`deepseek-r1`, `r1-distill`, `qwq`,
+>   `reasoning`, `magistral`). So simply pointing `deep_mode.model` at a
+>   reasoning brain turns stripping ON — the dangerous failure mode (a `<think>`
+>   trace leaking into a note) cannot be armed by forgetting a second flag.
+>   `register_deep_think` wires the resolved flag into the deep `OllamaClient`.
+> - **Tests:** `tests/pillar1/test_model_reasoning_filter.py` THINK-001..010
+>   pass (0.02s, no Ollama) — whole-block strip, split-tag, transparent
+>   pass-through, lone `<`, unterminated-fail-closed, multi-block, the partial
+>   helper, family detection, auto-enable, and the override both ways.
+> - **End-to-end (not just unit-mocked):** the plan requires the no-leak
+>   guarantee be exercised against the *real* reasoning model in the live path.
+>   That is done in §A/B — every `deepseek-r1:14b` deep call there runs with
+>   `strip_reasoning=True` and the harness asserts no `<think>`/`</think>` and
+>   no residual reasoning-preamble survives into `reply.content`. Result:
+>   recorded in the §A/B findings (LEAK column).
 
 ### Phase 7 — Autoresearch stop-path integrity (near-term; Cluster 1)
 
