@@ -76,7 +76,7 @@ class Engine:
         # present, Jack's free-text project references resolve to a real note+
         # folder in CODE before the model can guess a path.
         self.project_resolver = None
-        # True while the heavier deep-mode model is engaged (future use; the
+        # True while the deep-reasoning deep-mode model is engaged (future use; the
         # status console shows "deep mode" so Jack knows why it's slower).
         self.deep_active = False
         # Taint defense (invariant #2): while EXTERNAL content (file/web/email/

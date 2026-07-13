@@ -1,6 +1,6 @@
 # FRIDAY Notes-10 Plan — temporal integrity, conversational continuity, intent resolution, memory method port
 
-**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) COMPLETE (2026-07-13): all four §§ landed + verified (session-start compact index, get_observations fetch-by-id, search_observations on stdlib SQLite FTS5, close_session → session-summary observation); claude-mem retrieval economics run end-to-end at FRIDAY's scale; 15 new non-model tests, full --quick suite green. Phase 5 (ECC method import) COMPLETE (2026-07-13): all five §§ landed + merged to master (5241d78), and the live `--test-session` acceptance run is now DONE — deterministic LOCK PASS (matcher resolves the imported `verify_before_done` skill; index_text 1556 chars, no budget crowding), behavioural follow PARTIAL/model-limited (the 14B applies the verification-ladder discipline on a grounded prompt but doesn't reliably land a READY/NOT-READY verdict; the gate correctly blocked an unsolicited push). Phase 6 (deep-mode brain eval, decision-gated) COMPLETE (2026-07-13): both prerequisites done (`<think>`-stripping shim verified + unit-locked; honest-handoff re-voicing diff staged, unlanded), and the A/B ran clean under the frozen-code rule — the reasoning-distilled `deepseek-r1:14b` beat the offloaded `qwen2.5:32b` on every axis (10/10 vs 8/10 checkable-answer accuracy, ~2× faster wall-clock, fits fully on the 12GB card vs CPU-offloaded, 0 `<think>` leak, no persona cost). Report DELIVERED to Jack; the config swap is propose-tier and was NOT made — `deep_mode.model` stays `qwen2.5:32b`/`enabled:false`. **Jack APPROVED the swap (2026-07-13) but deferred application to a fresh session — this session merged Notes-10 to `main` and documented the ready-to-apply swap checklist ("JACK APPROVED THE SWAP — NEXT SESSION APPLIES IT" block under §Phase 6); `deep_mode.model` is unchanged until then.** **All Notes-10 phases (P0–P8) now complete.** Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
+**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) COMPLETE (2026-07-13): all four §§ landed + verified (session-start compact index, get_observations fetch-by-id, search_observations on stdlib SQLite FTS5, close_session → session-summary observation); claude-mem retrieval economics run end-to-end at FRIDAY's scale; 15 new non-model tests, full --quick suite green. Phase 5 (ECC method import) COMPLETE (2026-07-13): all five §§ landed + merged to master (5241d78), and the live `--test-session` acceptance run is now DONE — deterministic LOCK PASS (matcher resolves the imported `verify_before_done` skill; index_text 1556 chars, no budget crowding), behavioural follow PARTIAL/model-limited (the 14B applies the verification-ladder discipline on a grounded prompt but doesn't reliably land a READY/NOT-READY verdict; the gate correctly blocked an unsolicited push). Phase 6 (deep-mode brain eval, decision-gated) COMPLETE (2026-07-13): both prerequisites done (`<think>`-stripping shim verified + unit-locked; honest-handoff re-voicing diff staged, unlanded), and the A/B ran clean under the frozen-code rule — the reasoning-distilled `deepseek-r1:14b` beat the offloaded `qwen2.5:32b` on every axis (10/10 vs 8/10 checkable-answer accuracy, ~2× faster wall-clock, fits fully on the 12GB card vs CPU-offloaded, 0 `<think>` leak, no persona cost). Report DELIVERED to Jack, who APPROVED the swap. **SWAP NOW APPLIED + VERIFIED (2026-07-13): `deep_mode.model` = `deepseek-r1:14b`, `num_ctx: 16384`, `enabled: true`; the honest-handoff re-voicing diff is landed (no "heavier/larger" horsepower claim left in product code); reasoning-filter unit lock 10/10; live deep smoke through the real `register_deep_think` path returned a correct answer with 0 `<think>` leaks; non-model `--quick` suite 242 green. See the "§Apply — RESULTS" block under §Phase 6.** **All Notes-10 phases (P0–P8) now complete.** Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
 **Source: Jack's "Friday Notes 10" (live-usage transcripts, 2026-07-11/12) + code diagnosis of the current repo.**
 
 > **Progress at a glance** (newest first — a fresh session reads this line, then §3):
@@ -16,12 +16,15 @@
 >   ~60 tok/s vs ~5 tok/s CPU-offloaded), **0/10 `<think>` leaks**, and **no
 >   persona cost** (deep mode is an offload brain, re-voiced by the chat model; on
 >   this Ollama build reasoning is pre-separated into a `thinking` field the client
->   drops — the shim is the untriggered backstop). **Recommendation DELIVERED,
->   nothing swapped** — `deep_mode.model` stays `qwen2.5:32b`/`enabled:false`;
->   the config swap is propose-tier and awaits Jack's go (then: set the model,
->   raise deep `num_ctx` — E3 hit 7878/8192 thinking tokens — and land the
->   re-voicing diff). Caveat honestly stated: n=5, single run — directional, not
->   statistical. See "§Phase 6 execution log".
+>   drops — the shim is the untriggered backstop). Recommendation DELIVERED, Jack
+>   APPROVED, and the **SWAP IS NOW APPLIED + VERIFIED (2026-07-13)**:
+>   `deep_mode.model` = `deepseek-r1:14b`, `num_ctx: 16384`, `enabled: true`; the
+>   re-voicing diff is landed; reasoning-filter unit lock 10/10; a live deep smoke
+>   through the real `register_deep_think` path returned a correct answer (RC
+>   cutoff 159.15 Hz) with **0 `<think>` leaks**; non-model `--quick` suite 242
+>   green (one model-only Thai-drift variance in CFG-007, unrelated). Caveat
+>   honestly stated: the A/B was n=5, single run — directional, not statistical.
+>   See "§Apply — RESULTS" + "§Phase 6 execution log".
 > - **P5 ACCEPTANCE done 2026-07-13 — Phase 5 now COMPLETE.** Ran the deferred
 >   live `--test-session` turn on real `qwen2.5:14b` (lock free, ~57 tok/s), real
 >   shared brain, `FRIDAY_TEST_SESSION=1`. **Deterministic LOCK PASS (3×):** the
@@ -1523,13 +1526,20 @@ reasoning*, and that is exactly how it may be described.
 > *disciplined method*, never more raw intelligence than a local Qwen-family
 > model has.
 
-> **✅ JACK APPROVED THE SWAP (2026-07-13) — NEXT SESSION APPLIES IT.** Jack
-> approved adopting `deepseek-r1:14b` for deep mode and asked that the
-> application be left for a fresh session to pick up (this session only merged to
-> `main` and documented). **Nothing below is applied yet — deep_mode.model is
-> still `qwen2.5:32b`.** This is the propose-tier change, now approved, so the
-> next session may land it directly. The model `deepseek-r1:14b` (9 GB) is
-> already pulled in Ollama. Concrete checklist, in order:
+> **✅ SWAP APPLIED + VERIFIED (2026-07-13) — deep_mode is now `deepseek-r1:14b`.**
+> Jack's approved propose-tier change was landed this session. All four checklist
+> steps below are DONE; see "§Apply — RESULTS" immediately after the checklist for
+> the evidence. `config/friday_config.yaml` now has `deep_mode.model:
+> deepseek-r1:14b`, `num_ctx: 16384`, `enabled: true`; the re-voicing diff is
+> landed; the reasoning-filter unit lock stays 10/10; a live deep smoke through
+> the real `register_deep_think` path returned a correct answer with **0 `<think>`
+> leaks**; and the non-model `--quick` suite is green (242 passed). The checklist
+> is kept below as the executed record.
+>
+> **(Historical) ✅ JACK APPROVED THE SWAP (2026-07-13) — NEXT SESSION APPLIES IT.**
+> Jack approved adopting `deepseek-r1:14b` for deep mode and asked that the
+> application be left for a fresh session to pick up. The model `deepseek-r1:14b`
+> (9 GB) is already pulled in Ollama. Concrete checklist, in order (all now DONE):
 >
 > 1. **Point deep mode at the distilled brain.** In `config/friday_config.yaml`
 >    `deep_mode:` — change `model: qwen2.5:32b` → `model: deepseek-r1:14b`.
@@ -1562,6 +1572,80 @@ reasoning*, and that is exactly how it may be described.
 >    (FRIDAY proposes, Jack approves) — Jack's approval here is the authorization;
 >    the session edits the yaml to enact it. Confirm `core/config_governance.py`
 >    doesn't flag the edit; if it audits the change, that's expected.
+
+> **§Apply — RESULTS (2026-07-13). SWAP LANDED + VERIFIED; deep mode is now
+> `deepseek-r1:14b`.** All four checklist steps executed, in order, edits first
+> then verify (frozen-code rule honoured — no model-visible edit mid-verify).
+>
+> **Step 1 — pointed deep mode at the distilled brain.** `config/friday_config.yaml`
+> `deep_mode.model: qwen2.5:32b` → **`deepseek-r1:14b`**; `enabled: false` → **`true`**
+> (advisory-only, but now consistent with the approval). The block comment was
+> re-voiced: the pull line is now `ollama pull deepseek-r1:14b (~9 GB, fits the
+> 12 GB card fully on-GPU)` and the "Heavier model" opener became "Deep-reasoning
+> model … a SAME-SIZE reasoning-distilled model that works the problem step by
+> step" with the Phase-6 A/B headline inline. Stripping needs no second key —
+> `_resolve_strip_reasoning` auto-detects `deepseek-r1` → **True** (verified: the
+> config sanity check printed `strip auto-detect = True`).
+>
+> **Step 2 — raised the deep context window.** Added **`deep_mode.num_ctx: 16384`**
+> (fixes the E3 = 7878/8192 near-truncation — a reasoning model spends most of its
+> budget thinking). Wired in `core/tools/reasoning_tools.py register_deep_think`:
+> `num_ctx=config["model"]["num_ctx"]` → **`num_ctx=deep_cfg.get("num_ctx",
+> config["model"]["num_ctx"])`** (falls back to the chat 8192 if unset).
+> Registered the key in `core/config_governance.py` as **LOCKED** (a deep budget
+> key, consistent with `max_calls_per_session`). Verified live: the smoke printed
+> `deep_mode.num_ctx = 16384`.
+>
+> **Step 3 — landed the §Prereq-2 re-voicing diff.** Tier 1 (model-visible), all
+> three: `training/exemplars/calibration_batch.json` (~L558) coupled-linkage
+> exemplar → *"same local model, but it works the problem step by step … so it's
+> slower"*; `core/reasoning.py` `_DEEP_ROUTING` → "offload the heavy thinking to
+> the **deep-reasoning** model"; `reasoning_tools.py` tool description → "the
+> **deep-reasoning** local model (slower, deeper)". Tier 2 (comments/docstrings):
+> `reasoning_tools.py` module docstring (L2 & L12), `config/friday_config.yaml`
+> deep_mode block, `core/bootstrap.py`, `core/engine.py`, `core/service.py` — all
+> "heavier/larger" → "deep-reasoning". A full repo re-grep confirms **no
+> "heavier/larger local model" horsepower claim remains in product code.**
+> *Deliberately left (per the Prereq-2 audit's scope — test fixtures / historical
+> records / dynamic header, not spoken horsepower claims):* the two
+> `tests/pillar1/test_autonomy.py` comment mentions and the `harness.py` sandbox
+> fixture (both hardcode `qwen2.5:32b` as a forced-unreachable stub, independent
+> of the real config), `training/generate_exemplars.py:186`'s dynamic
+> `[deep mode - <model> @ <tok/s>]` status-header illustration, and the frozen
+> `training/evals/*` run records. `config/.friday_config.last_loaded.yaml` is a
+> runtime snapshot that auto-refreshes on the next load — not hand-edited.
+>
+> **Step 4 — verify.** (a) **Reasoning-filter unit lock: 10/10 green**
+> (`test_model_reasoning_filter.py`, 0.02s — the qwen2.5:32b→strip=False and
+> deepseek-r1→strip=True assertions both intact). (b) **Live deep smoke through
+> the REAL `register_deep_think` path** (config-driven, port 47533 free, no
+> `--test-session` needed — deep_think is a stateless offload that writes no
+> brain note): drove one hard turn (RC low-pass -3 dB cutoff + slope). Result —
+> header `[deep mode — deepseek-r1:14b @ 29.4 tok/s]` (deep mode engaged,
+> `deep_active` flip/reset clean, `deep_calls=1`, `session_tokens=3238`),
+> **correct answer** (f_c ≈ **159.15 Hz**, slope **−20 dB/decade**), and **0
+> `<think>`/`</think>` or reasoning-preamble markers in the returned `content`** —
+> the `thinking`-field separation the A/B relied on still holds on the live Ollama
+> build, and the strip filter is the untriggered backstop. Since deep_think's
+> return is exactly what the memory pass would summarise and it is leak-free, the
+> memory-pass leg is covered transitively (nothing to leak) on top of the unit
+> lock. (c) **Non-model `--quick` suite: 242 passed, 89 deselected — GREEN, zero
+> regressions.** (d) **One model-suite variance failure, NOT this swap:**
+> `test_governance.py::CFG-007` failed with the reply drifting into **Thai**
+> (the known intermittent 14B language drift, GT-A T5 / GT-C6 shape). It is
+> structurally impossible for this swap to cause it — the sandbox builds its own
+> `deep_mode` fixture in `harness.py:_make_config` and never reads the real config,
+> and `read_own_config` enumerates the sandbox's keys (my added `deep_mode.num_ctx`
+> TIERS entry is inert there). Logged as pre-existing model variance, consistent
+> with the plan's honest-ceiling note.
+>
+> **Net:** deep mode is live on `deepseek-r1:14b` with a 16384 thinking window,
+> the honesty floor is intact (no false horsepower claim anywhere in product
+> code; deep mode is *disciplined method*, a same-size step-by-step reasoner —
+> invariant 4 / F9 / SKL-004 satisfied), and every guarantee that can be locked
+> is locked (strip filter 10/10, `--quick` 242 green, live no-leak smoke). **This
+> closes Phase 6's decision gate end-to-end: recommended → approved → applied →
+> verified.**
 
 ### Phase 7 — Autoresearch stop-path integrity (near-term; Cluster 1)
 

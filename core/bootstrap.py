@@ -334,8 +334,8 @@ def build_engine(confirm, config: dict = None) -> Engine:
     # judgment when a problem genuinely needs it — she shouldn't have to ask
     # Jack to flip a config flag first. Registered after the engine so the tool
     # can flag engine.deep_active (the status box then shows "deep mode ·..."
-    # so Jack knows the reply will take longer). If the heavier model isn't
-    # pulled, the tool returns an honest fallback rather than bluffing. The
+    # so Jack knows the reply will take longer). If the deep-reasoning model
+    # isn't pulled, the tool returns an honest fallback rather than bluffing. The
     # config's deep_mode.enabled is now advisory only (used by the reasoning
     # scaffold's hint), no longer a gate on availability.
     register_deep_think(registry, engine, config)

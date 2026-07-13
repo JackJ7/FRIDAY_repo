@@ -92,8 +92,8 @@ class FridayService:
     # ---------- live activity (drives the status console) ----------
 
     def _set_activity(self, text: str):
-        # Deep mode gets named whenever the heavier model is engaged, so Jack
-        # knows why replies are slower (engine.deep_active is set by deep mode).
+        # Deep mode gets named whenever the deep-reasoning model is engaged, so
+        # Jack knows why replies are slower (engine.deep_active is set by deep mode).
         if getattr(self.engine, "deep_active", False) and text != "idle":
             text = f"deep mode · {text}"
         if text != self._activity:

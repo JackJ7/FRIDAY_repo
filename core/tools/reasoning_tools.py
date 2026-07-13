@@ -1,5 +1,5 @@
 r"""
-deep_think — route genuinely hard reasoning to the heavier model.
+deep_think — route genuinely hard reasoning to the deep-reasoning model.
 
 Division of labor: the main (14B) model stays the conversationalist and
 tool-caller; the deep model gets ONE self-contained question, no tools, and
@@ -9,8 +9,8 @@ FRIDAY engages this on her OWN judgment when a problem is genuinely too hard
 for confident by-hand work — she doesn't ask Jack to enable anything. While
 the deep model runs, engine.deep_active is set, so the status console shows
 "deep mode · ..." and Jack knows the reply will take longer than usual. If the
-heavier model isn't pulled yet, the tool says so honestly and she falls back to
-normal-depth reasoning, clearly labelled — never a bluff (invariant 4).
+deep-reasoning model isn't pulled yet, the tool says so honestly and she falls
+back to normal-depth reasoning, clearly labelled — never a bluff (invariant 4).
 """
 
 from core.model import ModelError, OllamaClient
@@ -63,7 +63,10 @@ def register_deep_think(registry, engine, config):
     deep = OllamaClient(
         host=config["model"]["host"],
         model=deep_model,
-        num_ctx=config["model"]["num_ctx"],
+        # A reasoning deep model spends most of its budget THINKING, so it gets
+        # its own (larger) context window when set; falls back to the chat
+        # model's num_ctx if deep_mode.num_ctx is absent (Notes-10 Phase 6).
+        num_ctx=deep_cfg.get("num_ctx", config["model"]["num_ctx"]),
         temperature=config["model"]["temperature"],
         strip_reasoning=bool(strip),
         think_tags=tags,
@@ -112,7 +115,7 @@ def register_deep_think(registry, engine, config):
     registry.register(
         "deep_think",
         "Engage DEEP MODE: offload ONE genuinely hard reasoning question to "
-        "the larger local model (slower, deeper). Use it on your own judgment "
+        "the deep-reasoning local model (slower, deeper). Use it on your own judgment "
         "when a problem is too hard for confident by-hand work — tell Jack "
         "you're switching to deep mode (it's slower; the status box shows it), "
         "then call this. Self-contained question only — it has no access to "

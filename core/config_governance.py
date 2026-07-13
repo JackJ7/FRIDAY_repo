@@ -81,6 +81,9 @@ TIERS = {
     "deep_mode.model":    {"tier": "propose", "type": str},
     # The budget CEILING is Jack's, not hers — she spends within it.
     "deep_mode.max_calls_per_session": {"tier": "locked"},
+    # Deep-model context window (Notes-10 Phase 6). LOCKED like the other deep
+    # budget keys — a reasoning model's thinking budget is a spend Jack sets.
+    "deep_mode.num_ctx": {"tier": "locked"},
     # Reasoning-model <think> stripping (Notes-10 Phase 6). Both LOCKED and
     # both OPTIONAL (absent => auto): a reasoning deep model emits an inline
     # <think> scratchpad that MUST be stripped before it reaches Jack or a

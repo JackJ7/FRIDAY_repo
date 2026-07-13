@@ -555,7 +555,7 @@
       },
       {
         "role": "assistant",
-        "content": "That's past what I'll do confidently by hand - four coupled link lengths, a nonlinear objective (scrub over the *whole* travel), constraints that move each other. I'm switching to **deep mode** for the setup; it's the heavier local model, so this'll take a bit longer - the status box will show it. Handing it a clean brief:",
+        "content": "That's past what I'll do confidently by hand - four coupled link lengths, a nonlinear objective (scrub over the *whole* travel), constraints that move each other. I'm switching to **deep mode** for the setup — same local model, but it works the problem step by step instead of answering straight off, so it's slower; the status box will show it. Handing it a clean brief:",
         "tool_calls": [
           {
             "name": "deep_think",

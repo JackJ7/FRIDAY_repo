@@ -63,17 +63,27 @@ reasoning:
   scaffold: standard
 
 deep_mode:
-  # Heavier model for hard reasoning. FRIDAY ALWAYS has the deep_think tool and
-  # engages "deep mode" on her own judgment for genuinely hard problems — the
-  # main (14B) model keeps doing tools/conversation and offloads the heavy
-  # reasoning to this model on demand. The status box shows "deep mode" while
-  # it runs so you know the reply will be slower. Until the model below is
-  # pulled, deep_think reports it's unavailable and she answers at normal depth
-  # (honestly labelled) — so pull it to actually enable the deeper reasoning:
-  #   ollama pull qwen2.5:32b   (~20 GB, will part-offload to CPU)
+  # Deep-reasoning model for hard problems. FRIDAY ALWAYS has the deep_think
+  # tool and engages "deep mode" on her own judgment for genuinely hard problems
+  # — the main (14B) model keeps doing tools/conversation and offloads the heavy
+  # reasoning to this model on demand. This is a SAME-SIZE reasoning-distilled
+  # model that works the problem step by step instead of answering straight off:
+  # slower, but it lands hard technical answers the chat model fumbles (Notes-10
+  # Phase 6 A/B: 10/10 vs 8/10, ~2× faster wall-clock on-GPU vs the offloaded
+  # 32B). The status box shows "deep mode" while it runs so you know the reply
+  # will be slower. Until the model below is pulled, deep_think reports it's
+  # unavailable and she answers at normal depth (honestly labelled) — so pull it
+  # to actually enable the deeper reasoning:
+  #   ollama pull deepseek-r1:14b   (~9 GB, fits the 12 GB card fully on-GPU)
   # `enabled` is now advisory only (kept for reference; no longer gates the tool).
-  enabled: false
-  model: qwen2.5:32b
+  enabled: true
+  model: deepseek-r1:14b
+  # Deep-model context window. Larger than the chat model's 8192 because a
+  # reasoning model spends most of its budget THINKING (Phase 6 E3 hit
+  # 7878/8192 — a near-truncation) — this headroom keeps the chain-of-thought
+  # from being the ceiling on a hard problem. Falls back to model.num_ctx if
+  # unset (see reasoning_tools.register_deep_think). LOCKED (deep budget key).
+  num_ctx: 16384
   # Budget ceiling: deep calls allowed per session. JACK's number (locked in
   # config governance) — FRIDAY chooses when to spend within it and
   # hard-stops at the ceiling, saying so.
