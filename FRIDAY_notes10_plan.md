@@ -1,9 +1,17 @@
 # FRIDAY Notes-10 Plan — temporal integrity, conversational continuity, intent resolution, memory method port
 
-**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) IN PROGRESS (2026-07-13): §1 (session-start compact observation index) DONE; §2 get_observations / §3 FTS search / §4 compaction→observation next. Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
+**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) IN PROGRESS (2026-07-13): §1 (session-start compact observation index) + §2 (get_observations fetch-by-id tool) DONE; §3 FTS search / §4 compaction→observation next. Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
 **Source: Jack's "Friday Notes 10" (live-usage transcripts, 2026-07-11/12) + code diagnosis of the current repo.**
 
 > **Progress at a glance** (newest first — a fresh session reads this line, then §3):
+> - **P4 §2 done 2026-07-13** — `get_observations(ids)` tool (fetch-by-id).
+>   `ObservationStore.get(id)` + new `core/tools/observation_tools.py` register a
+>   kind-**internal** tool that pulls a full observation body on demand (the
+>   index in §1 lists ids; this is how a thread from an old session is actually
+>   read). `_clean_id` refuses path-escape / non-`obs-` ids; input parsing is
+>   forgiving (array/string/comma), de-duped, capped at 20; misses named honestly;
+>   test-archive unreachable from a real session. GETOBS-001..004 pass; 235
+>   non-model pass (+4), no regressions. **§3 (search_observations, FTS5) next.**
 > - **P4 §1 done 2026-07-13** — Session-start compact observation index.
 >   `_where_we_left_off` (engine.py) is now claude-mem's SessionStart pattern at
 >   FRIDAY's scale: the greeting carries a COMPACT INDEX of the recent ~30
@@ -761,9 +769,31 @@ verified live (see "§6 findings" above).
 
 **Per-section progress (a fresh session resumes from here):**
 - [x] **§1 Session-start compact index — DONE (2026-07-13).** See "§1 findings" below.
-- [ ] **§2 `get_observations(ids)` tool — TODO.**
+- [x] **§2 `get_observations(ids)` tool — DONE (2026-07-13).** See "§2 findings" below.
 - [ ] **§3 `search_observations` on SQLite FTS5 — TODO.**
 - [ ] **§4 Wire compaction summary → observation at session end — TODO.**
+
+> **§2 findings (`get_observations(ids)` tool).** The fetch-by-id half of the
+> progressive-disclosure bargain §1 set up: the index lists ids cheaply, this
+> pulls a full body ON DEMAND. New `ObservationStore.get(id)` reads one
+> observation by id, guarded by `_clean_id` — it normalises the id however the
+> 14B hands it back (bare id, `observations/<id>.md` path, trailing `.md`) and
+> returns "" for anything without the `obs-` prefix or carrying `/`/`..`, so the
+> fetch can't be steered off the observation tree (path-escape defense, tested).
+> Routing matches recall exactly: a real session never reaches a `test_archive/`
+> observation by id, a test session reads only its own archive. New module
+> `core/tools/observation_tools.py` registers `get_observations` (kind
+> **internal** — her own record, so no taint, no referent push, same posture as
+> read_brain over her notes). `_as_id_list` is forgiving (JSON array, single
+> string, or comma/space/newline blob → de-duped, order preserved) and the call
+> is capped at 20 ids so one call can't dump the whole stream back and defeat the
+> point of the index. Honest on misses: unfound ids are named, never fabricated
+> (invariant 4). Wired in bootstrap right after `register_brain_tools`. **Tests:**
+> `test_get_observations.py` GETOBS-001..004 pass (no model) — full-body fetch
+> with self-citing stamp + refs, honest/again-refused missing & malformed ids
+> (incl. `../` escape → None), forgiving parsing + de-dup + cap, and internal-kind
+> registration + real-session-can't-reach-test-archive routing. **235 non-model
+> pass (+4), no regressions.**
 
 > **§1 findings (Session-start compact index).** `_where_we_left_off` (engine.py)
 > was a 5-line prose "where we left off" list with no IDs. It is now the

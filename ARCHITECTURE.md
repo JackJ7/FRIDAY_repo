@@ -334,6 +334,14 @@ core\tools\          the registry pattern: every capability is a tool
                        add_files_to_project (action) — copy/move + comprehend.
                      Playbook: playbooks\consolidate_projects.md (list -> confirm
                      survivor -> merge -> report; never create during a merge).
+  observation_tools.py  progressive-disclosure reads over the typed-observation
+                     stream (Notes-10 Phase 4 §2). get_observations(ids)
+                     (internal) pulls a full observation body ON DEMAND by id —
+                     the session-start index (engine._where_we_left_off) lists
+                     ids cheaply, this fetches the body only when a thread is
+                     relevant (claude-mem's compact-index + fetch-by-id economics
+                     at FRIDAY's scale). Store.get() refuses path-escape/non-obs
+                     ids and honours test-session routing.
   research_tools.py  autonomous GPU research loop (autoresearch port), gated.
                      Three tools (autoresearch_launch/status/stop). Registers
                      only behind research.enabled (LOCKED) + a non-empty

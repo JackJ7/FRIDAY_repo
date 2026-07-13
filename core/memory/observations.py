@@ -245,3 +245,34 @@ class ObservationStore:
         obs = self.all(include_test)
         obs.sort(key=lambda o: o.ts, reverse=True)
         return obs[:n]
+
+    @staticmethod
+    def _clean_id(obs_id: str) -> str:
+        """Normalise an id as the model might hand it back — the bare id from the
+        session-start index, a full `observations/<id>.md` path, or a trailing
+        `.md`. Returns "" for anything that isn't a well-formed observation id, so
+        the fetch can't be steered off the observation tree (no path separators,
+        no `..`; must carry the `obs-` prefix the id scheme guarantees)."""
+        s = (obs_id or "").strip().replace("\\", "/")
+        s = s.rsplit("/", 1)[-1]                 # drop any path prefix
+        if s.endswith(".md"):
+            s = s[:-3]
+        if not s or "/" in s or ".." in s or not s.startswith("obs-"):
+            return ""
+        return s
+
+    def get(self, obs_id: str) -> Observation | None:
+        """Fetch ONE observation by id — the progressive-disclosure half of the
+        Phase-4 memory port (the session-start index lists ids cheaply; this
+        pulls a full body only when a thread is actually relevant). Honest None
+        when the id is malformed or no such observation exists. Respects test-
+        session routing exactly like recall: a real session never reaches a test
+        observation by id, a test session reads only its own archive."""
+        clean = self._clean_id(obs_id)
+        if not clean:
+            return None
+        for d in self._dirs(self.brain.test_session):
+            p = d / f"{clean}.md"
+            if p.is_file():
+                return self._parse(p)
+        return None

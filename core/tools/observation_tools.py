@@ -1,0 +1,98 @@
+r"""
+Observation tools — the progressive-disclosure reads over the typed-observation
+stream (Notes-10 Phase 4, claude-mem retrieval-economics port).
+
+The session-start index (`engine._where_we_left_off`) lists recent observations
+one cheap line each — `id | date | glyph | title` — so an older session is
+*reachable* without stuffing its full body into every prompt. This module is the
+other half of that bargain: the model pulls a full observation body ON DEMAND,
+by id, only when a thread is actually relevant. That is claude-mem's "compact
+index + fetch-by-id" pattern at FRIDAY's scale.
+
+Kind is `internal`: an observation is FRIDAY's OWN provenance record, not
+content from outside the trust boundary, so reading one neither taints the turn
+nor pushes referents (same posture as read_brain over her own notes).
+"""
+
+# Be forgiving about how many ids a 14B crams into one call, but bound it so a
+# single call can't dump the whole stream back into context (that would defeat
+# the progressive-disclosure point the index exists for).
+_MAX_IDS = 20
+
+
+def register_observation_tools(registry, store):
+
+    def _as_id_list(ids) -> list:
+        """Accept the ids however the model hands them over — a real JSON array,
+        a single string, or a comma/space/newline-separated blob — and return a
+        de-duplicated list of candidate id strings (validation happens in the
+        store's get()). Order is preserved so the reply follows what was asked."""
+        if ids is None:
+            return []
+        if isinstance(ids, str):
+            raw = ids.replace(",", " ").split()
+        elif isinstance(ids, (list, tuple)):
+            raw = []
+            for item in ids:
+                raw.extend(str(item).replace(",", " ").split())
+        else:
+            raw = str(ids).replace(",", " ").split()
+        seen, out = set(), []
+        for r in raw:
+            r = r.strip()
+            if r and r not in seen:
+                seen.add(r)
+                out.append(r)
+        return out
+
+    def get_observations(ids) -> str:
+        """Fetch the full body of one or more observations by id. Honest about
+        the ids it could not find so the model never invents a body it didn't
+        get back (invariant 4)."""
+        wanted = _as_id_list(ids)
+        if not wanted:
+            return ("No observation ids given. Pass the ids from the session-"
+                    "start index (the `obs-...` at the start of each line).")
+        capped = wanted[:_MAX_IDS]
+        blocks, missing = [], []
+        for oid in capped:
+            obs = store.get(oid)
+            if obs is None:
+                missing.append(oid)
+                continue
+            refs = ("\n  refs: " + ", ".join(obs.refs)) if obs.refs else ""
+            blocks.append(
+                f"[{obs.cite()}]\n{obs.title}\n\n{obs.body.strip()}{refs}")
+        out = []
+        if blocks:
+            out.append("\n\n".join(blocks))
+        if missing:
+            out.append("No observation found for: " + ", ".join(missing)
+                       + ". (Check the id against the session-start index.)")
+        if len(wanted) > _MAX_IDS:
+            out.append(f"({len(wanted)} ids requested; showing the first "
+                       f"{_MAX_IDS}.)")
+        return "\n\n".join(out) if out else "No matching observations."
+
+    registry.register(
+        "get_observations",
+        "Pull the full detail of one or more of YOUR observations by id (the "
+        "`obs-...` ids listed in your session-start 'where you left off' index). "
+        "The index shows only a title per entry to save space; call this when a "
+        "thread from a past session is actually relevant and you need what "
+        "happened, not just its title. Pass one id or several.",
+        {
+            "type": "object",
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Observation ids to fetch, e.g. "
+                                   "['obs-20260713-142233-a1b2']",
+                },
+            },
+            "required": ["ids"],
+        },
+        get_observations,
+        kind="internal",
+    )

@@ -190,6 +190,11 @@ def build_engine(confirm, config: dict = None) -> Engine:
     register_filesystem_tools(registry, gate, outbox_path,
                               config["tools"]["read_file_max_bytes"])
     register_brain_tools(registry, brain, retriever, config["memory"]["top_k"])
+    # Progressive-disclosure reads over the typed-observation stream (Notes-10
+    # Phase 4 §2): the session-start index lists ids cheaply, get_observations
+    # pulls a full body on demand. Internal kind — reading her own record.
+    from core.tools.observation_tools import register_observation_tools
+    register_observation_tools(registry, observations)
     register_calc_tools(registry)  # units-safe arithmetic (don't make the model do math)
     project_resolver = register_project_tools(registry, gate, brain, projects_root)
 
