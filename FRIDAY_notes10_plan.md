@@ -554,7 +554,7 @@ Promote GT-C3 (partially — resolution lands in Phase 3) and GT-C4 to LOCKED.
 - [x] **§2 list_projects tool — DONE (2026-07-13).** See "§2 findings" below.
 - [x] **§3 merge_projects tool (gated) — DONE (2026-07-13).** See "§3 findings" below.
 - [x] **§4 near-duplicate guard in create_project — DONE (2026-07-13).** See "§4 findings" below.
-- [ ] **§5 fuzzy recall floor — not started.**
+- [x] **§5 fuzzy recall floor — DONE (2026-07-13).** See "§5 findings" below.
 - [ ] **§6 consolidate_projects playbook + promote GT-C3/C5/C6 to LOCKED — not started.**
 
 > **§1 findings (resolve_project / entity resolver).** New module
@@ -644,6 +644,22 @@ Promote GT-C3 (partially — resolution lands in Phase 3) and GT-C4 to LOCKED.
 > confirm reached), confirm_new override creates it, exact-existing name gets its
 > folder (not blocked), and a distinct name isn't over-caught. **207 non-model
 > pass (+4), no regressions** (existing create_project behaviour intact).
+
+> **§5 findings (fuzzy recall floor).** P0 already showed the FORWARD direction
+> works (substring already made "claude code" find slug `claudecodeupgrade` —
+> `recall-found` PASSED at baseline). §5 closes the REVERSE and the title
+> channel: `KeywordRetriever`'s name bonus is now separator-insensitive —
+> terms match against both the raw path AND a compacted `_norm(slug + title)`
+> haystack, plus the whole normalized query as one token — so a merged-word
+> query (`claudecode`) finds a separated slug (`claude_code_upgrade`), and a
+> name living only in the `# title` heading matches too. The body min_score floor
+> is UNTOUCHED (an incidental single body-term hit is still dropped — silence
+> beats a weak guess, Phase-1 Symptom 6); only the slug/title channel got the
+> normalization, exactly as the plan scoped it. **Tests:**
+> `test_fuzzy_recall.py` RECALL-001..004 pass (no model) — spaced→merged,
+> merged→separated (the new direction), the body floor preserved (regression
+> guard), and title-channel normalization. **211 non-model pass (+4), no
+> regressions** (the retriever is shared; the floor and existing recall held).
 
 1. **`resolve_project` / entity resolver (code, deterministic).** Extract
    `_find_folder` into a shared resolver: given a free-text name, fuzzy-match
@@ -1015,7 +1031,7 @@ held; non-model suite green.
 | P0    | **DONE** | 2026-07-13 | GT-C 6/6 green (all TARGET, no LOCKED yet) | GT-A/GT-B unchanged (not re-run — no code touched) | GT-C golden set + baseline landed. Table below. |
 | P1    | **§1–§4 done (code)** | 2026-07-13 | Full suite 205/252 (all 16 P1 targets PASS; GT-C1 LOCKED, GT-C2 LOCKED×2, GT-A/GT-B LOCKED held); 166 non-model pass. 47 failures = PRE-EXISTING model-suite (calc/injection/variance), NOT caused by P1 (A/B-proven) | **GT baseline HELD** (GT-A/GT-B LOCKED green; GT-C1/C2 now LOCKED) | All four §§ landed. Live calendar-mirror migration DEFERRED (Jack). 47 pre-existing model-suite failures flagged for Jack — see "Phase 1 regression notes". |
 | P2    | **§1–§4 DONE** | 2026-07-13 | 184 non-model pass (+15 new: OFFER-001..006, REF-001..005, COMPACT-001..004); GT golden 8/8 (GT-C4 gains LOCKED offer-ledger-accepts); COMPACT-LIVE-001 live smoke green | **GT baseline HELD** (GT-A/GT-B LOCKED + GT-C1/C2 LOCKED green; GT-C4 offer-ledger LOCKED) | Offer ledger + widened anti-dodge + list_dir referents + history compaction. All four §§ landed & verified. Full model suite not re-run (frozen-code rule; the 47 pre-existing P1 failures are unrelated). |
-| P3    | **§1–§4 done (code)** | 2026-07-13 | 207 non-model pass (+23: RESOLVE-001..008, LIST-001..004, MERGE-001..007, GUARD-001..004) | **GT baseline HELD** (non-model only; GT-C model goldens not re-run — frozen-code / single-GPU shared with the p78 session) | §1 resolver + §2 `list_projects` + §3 `merge_projects` + §4 create_project near-dup guard. §5–§6 pending. GT-C3/C5/C6 LOCK promotions ride with §6. |
+| P3    | **§1–§5 done (code)** | 2026-07-13 | 211 non-model pass (+27: RESOLVE/LIST/MERGE/GUARD + RECALL-001..004) | **GT baseline HELD** (non-model only; GT-C model goldens not re-run — frozen-code / single-GPU shared with the p78 session) | §1 resolver + §2 `list_projects` + §3 `merge_projects` + §4 near-dup guard + §5 fuzzy recall floor. §6 (playbook + GT-C3/C5/C6 LOCK promotion) pending. |
 | P4    | not started | | | | |
 | P5    | not started | | | | |
 | P6    | not started | | | | Decision-gated: report to Jack, verdict is his |

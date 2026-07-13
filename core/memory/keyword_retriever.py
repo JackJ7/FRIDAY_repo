@@ -27,6 +27,12 @@ def _words(text: str) -> list:
             if len(w) > 2 and w not in STOPWORDS]
 
 
+def _norm(text: str) -> str:
+    """Separator-free, lowercase (Notes-10 Phase 3, §5) — so 'claude code',
+    'claude_code' and 'claudecode' all compare equal in the slug/title channel."""
+    return re.sub(r"[^a-z0-9]+", "", text.lower())
+
+
 class KeywordRetriever(Retriever):
     # Relevance floor (Phase 1, Symptom 6). Without one, top-k always returns
     # SOMETHING — an incidental single-keyword hit ("meeting" appearing once in
@@ -86,8 +92,27 @@ class KeywordRetriever(Retriever):
                 continue
             lower = text.lower()
 
+            # Name/title match bonus, now SEPARATOR-INSENSITIVE (Notes-10 Phase 3,
+            # §5). Cluster C: "claude code" must find slug `claudecodeupgrade`
+            # (already handled by the raw-path substring) AND the reverse — a
+            # merged-word query `claudecode` must find a separated slug
+            # `claude_code_upgrade`. So terms match against BOTH the raw path and
+            # a compacted slug+title haystack. This title/slug channel is what
+            # clears the min_score floor for a name hit; body scoring keeps the
+            # floor, so an incidental single body-term match is still dropped.
+            rel_stub = rel.rsplit(".", 1)[0]
+            title_m = re.search(r"^#\s+(.+)$", text, re.MULTILINE)
+            name_norm = (_norm(rel_stub) + " "
+                         + (_norm(title_m.group(1)) if title_m else ""))
+
             score = float(sum(lower.count(t) for t in terms))
-            score += 10.0 * sum(1 for t in terms if t in rel.lower())  # name match bonus
+            score += 10.0 * sum(1 for t in terms
+                                if t in rel.lower() or t in name_norm)  # name match
+            # The whole normalized query as one token — a merged-word name hit
+            # (or its reverse) that per-term matching would miss.
+            q_compact = "".join(terms)
+            if len(q_compact) >= 4 and q_compact in name_norm:
+                score += 10.0
             if score == 0:
                 continue
 
