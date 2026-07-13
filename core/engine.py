@@ -326,6 +326,34 @@ class Engine:
                 on_token(msg)
             return reply
 
+        # Stop-path integrity (Notes-10 Phase 7). The gate above only fires while
+        # a run is ACTIVE (setting_up/running). A "stop research" request when NO
+        # run is active — it crashed during setup, finished, or was already
+        # stopped — otherwise falls through to the model tool-loop, where the 14B
+        # (which never tracked the tag) calls autoresearch_stop with an empty tag
+        # and gets "No active run tagged ''", producing the incoherent "no active
+        # runs" reply that STILL proposes the stop tool. Worse, if Jack checked
+        # status earlier this session the turn is already tainted, so his own
+        # typed "stop" trips the CONTENT-TRIGGERED confirm card (defect #3). We
+        # answer deterministically here — BEFORE the taint line below — resolving
+        # the target run in code and reporting its terminal ledger state. Only
+        # STOP-shaped input is intercepted; ordinary chat proceeds to the normal
+        # loop (no run holds the GPU now, so there is nothing to deflect).
+        if research is not None and self._looks_like_stop_request(user_input):
+            tag = research.latest_tag()
+            if tag:
+                # stop() on a terminal run reports its state, it does not
+                # fabricate a fresh "stopped" (Phase 7 §2).
+                msg = research.stop(tag)
+            else:
+                msg = ("There's no research run on record to stop — nothing is "
+                       "or was running this session.")
+            reply = ModelReply()
+            reply.content = msg
+            if on_token:
+                on_token(msg)
+            return reply
+
         # Start tainted if externally-sourced content is still in context from
         # an earlier turn; a fresh read this turn will refine it below.
         self._taint = self._external_in_context()

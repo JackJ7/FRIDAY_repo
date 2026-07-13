@@ -371,6 +371,64 @@ class ResearchManager:
                     return r.get("eta")
         return None
 
+    # ---------- run-state truth: single source (Notes-10 Phase 7 §3) ----------
+    # The engine's stop branch and the proactive briefing status floor (Phase 8)
+    # both need to answer "which run, and what state" WITHOUT a model call and
+    # WITHOUT guessing a tag. That truth is computed exactly one way here so the
+    # two callers can never disagree (defect: a fresh instance narrated a crashed
+    # run as "still in progress" because nothing consulted the live ledger).
+
+    def _all_tags(self) -> list:
+        """Every run tag known right now — the in-memory _runs map PLUS on-disk
+        ledger dirs from earlier sessions (a crash/restart loses _runs but the
+        status.json survives). Deduplicated; order is irrelevant because callers
+        sort by recency."""
+        with self._lock:
+            tags = list(self._runs.keys())
+        if self.base_dir.exists():
+            for d in self.base_dir.iterdir():
+                if (d / "status.json").exists() and d.name not in tags:
+                    tags.append(d.name)
+        return tags
+
+    def _recency_key(self, tag: str) -> str:
+        """Sort key for 'most recent run': the ledger's `updated` stamp, else
+        `started`, else '' (an unreadable run sorts oldest). ISO-8601 strings
+        compare chronologically as plain strings, so no parsing is needed."""
+        s = self._read_status(tag)
+        return s.get("updated") or s.get("started") or ""
+
+    def _resolve_tag(self, tag: str = "") -> str:
+        """Turn a caller-supplied tag into a concrete run tag. A non-empty tag is
+        returned as-is (the caller named a specific run). An EMPTY tag — the model
+        left `tag` blank, or the deterministic stop-path never tracked one —
+        resolves to the sole run, or the most-recent one, so a bare `stop("")`
+        never degrades to the literal '' that `_runs.get('')` can't match (that
+        exact degradation produced "No active research run tagged ''"). Returns
+        '' only when there are genuinely no runs on record."""
+        if tag:
+            return tag
+        tags = self._all_tags()
+        if not tags:
+            return ""
+        if len(tags) == 1:
+            return tags[0]
+        return max(tags, key=self._recency_key)
+
+    def latest_tag(self) -> str:
+        """The most-recent run tag on record, or '' if none. The single 'which
+        run' source for the engine stop branch (Phase 7 §1) and the briefing
+        status floor (Phase 8 §1)."""
+        return self._resolve_tag("")
+
+    def latest_status(self) -> dict:
+        """The status-ledger dict of the most-recent run, or {} if none. Phase 8's
+        briefing floor reads `state` from this to decide whether any run may be
+        presented as in-progress. Read-only (no lock needed — it only reads the
+        on-disk ledger)."""
+        tag = self.latest_tag()
+        return self._read_status(tag) if tag else {}
+
     # ---------- paths ----------
 
     def _run_dir(self, tag: str) -> Path:
@@ -397,24 +455,44 @@ class ResearchManager:
 
     # ---------- stop ----------
 
-    def stop(self, tag: str) -> str:
+    def stop(self, tag: str = "") -> str:
         """Immediate stop: signal the loop, kill the in-flight training subtree
         NOW (loses up to one ~5-min attempt), finalize status. Reachable both
-        as the autoresearch_stop tool and directly from the engine busy-gate."""
+        as the autoresearch_stop tool and directly from the engine busy-gate.
+
+        Notes-10 Phase 7 §2: an empty tag resolves to the run on record (the
+        model often leaves it blank), and a run that is ALREADY terminal
+        (crashed/done/stopped) reports its ledger state instead of fabricating a
+        fresh "stopped" — you cannot stop what is not running, and claiming you
+        did is a false state write. Only a genuinely live run is actually killed."""
+        tag = self._resolve_tag(tag)
+        if not tag:
+            return "No research runs on record — nothing to stop."
         with self._lock:
             run = self._runs.get(tag)
-        if not run:
-            return f"No active research run tagged '{tag}'."
-        run["stop_event"].set()
-        _terminate_tree(run.get("proc"))
-        status = self._read_status(tag)
-        status.update(state="stopped",
-                      updated=datetime.now().isoformat(timespec="seconds"),
-                      message="Stopped by Jack.")
-        self._write_status(tag, status)
-        self.on_event(tag, "stopped by you")
-        return (f"Stopped research '{tag}'. Its best result so far is kept in "
-                f"data\\research\\{_slug(tag)}\\; nothing was pushed anywhere.")
+            state = run.get("state") if run else None
+        # Live run (setting_up or running) — this is the only path that actually
+        # signals + kills + writes a "stopped" state.
+        if run and state in ("setting_up", "running"):
+            run["stop_event"].set()
+            _terminate_tree(run.get("proc"))
+            status = self._read_status(tag)
+            status.update(state="stopped",
+                          updated=datetime.now().isoformat(timespec="seconds"),
+                          message="Stopped by Jack.")
+            self._write_status(tag, status)
+            self.on_event(tag, "stopped by you")
+            return (f"Stopped research '{tag}'. Its best result so far is kept in "
+                    f"data\\research\\{_slug(tag)}\\; nothing was pushed anywhere.")
+        # Not live: terminal run object, or no object but an on-disk ledger.
+        # Report the truth; never write a fabricated "stopped".
+        s = self._read_status(tag)
+        if not s and not run:
+            return f"No research run tagged '{tag}'."
+        terminal = (s.get("state") if s else state) or "unknown"
+        return (f"Research '{tag}' is already {terminal} — nothing is running to "
+                f"stop. Its workspace is kept at data\\research\\{_slug(tag)}\\; "
+                f"nothing was pushed.")
 
     # ---------- launch (returns immediately; work happens on a thread) ----------
 
