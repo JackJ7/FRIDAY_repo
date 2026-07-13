@@ -710,6 +710,65 @@ reasoning*, and that is exactly how it may be described.
 
 ### Phase 7 — Autoresearch stop-path integrity (near-term; Cluster 1)
 
+**STATUS: DONE — CODE + TESTS LANDED (2026-07-13, branch `phase78`, commit
+`d06a925`).** All three defects fixed deterministically (no model, no GPU);
+`test_research_stop.py` STOP-001..005 (+2 variants) green; worktree A/B proves
+zero regression (baseline 89 pass → 96 pass, same 94 env-errors from the
+worktree's absent runtime dirs). Landed in a git worktree parallel to the
+Phase 2 session; **ready for merge to master** (disjoint engine.py regions).
+See "§ P7 findings" immediately below.
+
+> **§ P7 findings (stop-path integrity — DONE).** Two-layer fix, both locked by
+> pure-code tests.
+>
+> **Manager (`core/tools/research_tools.py`).** Added the single run-state
+> source the whole fix pivots on: `_all_tags()` (in-memory `_runs` ∪ on-disk
+> `data\research\` ledger dirs — a crash/restart loses `_runs` but the
+> `status.json` survives), `_recency_key()` (sorts by the ledger's `updated`
+> stamp; ISO-8601 strings compare chronologically as-is), `_resolve_tag(tag)`
+> (a non-empty tag passes through; an EMPTY tag resolves to the sole/most-recent
+> run — this is what stops `stop("")` degrading to `_runs.get("")` →
+> *"No active run tagged ''"*, defect #2), and `latest_tag()`/`latest_status()`
+> (the accessor Phase 8's briefing floor also reads, so run-state truth is
+> computed one way — §3). **`stop()` rewritten (defect #2 + the fabrication
+> bug):** it routes through `_resolve_tag`, and it only signals+kills+writes
+> `"stopped"` for a genuinely LIVE run (`setting_up`/`running`). A run that is
+> already terminal (`crashed`/`done`/`stopped` — finalize keeps the object in
+> `_runs` with its terminal `state`, so the old code would have overwritten a
+> crash with a fake "stopped") now reports its ledger state instead:
+> *"Research 'smoke1' is already crashed — nothing is running to stop. Its
+> workspace is kept at data\research\smoke1\; nothing was pushed."*
+> **Note (status_text):** left as-is — `status_text("")` already lists all runs
+> (its documented tool contract) and never degrades to the literal `""`, so the
+> plan's "route it through `_resolve_tag`" concern doesn't apply; the single-run
+> resolver Phase 8 needs is `latest_status()`.
+>
+> **Engine (`core/engine.py`).** Added a sibling branch to the busy-gate,
+> placed AFTER the active-run gate and BEFORE the taint line (`self._taint =
+> self._external_in_context()`): when `research` is wired and the input is
+> stop-shaped (`_looks_like_stop_request`, the existing pure keyword check) but
+> no run is active, resolve the target via `research.latest_tag()` and answer
+> from `research.stop(tag)` (which now reports terminal state) — one coherent
+> deterministic reply, no model call. Because it returns before the taint line,
+> it also kills defect #3 *for stop*: Jack's own typed "stop" no longer trips
+> the CONTENT-TRIGGERED card after a prior status read. Only stop-shaped input
+> is intercepted here; ordinary chat proceeds to the normal loop (nothing holds
+> the GPU now). The broader taint-framing issue (any action after any
+> `external_read` gets carded) remains **explicitly out of scope** per the plan,
+> flagged for Jack below.
+>
+> **Tests (`tests/pillar1/test_research_stop.py`, pure-code, no model/GPU).**
+> STOP-001 live run really stops (behavior preserved); STOP-002 crashed run +
+> "stop research" through a bare Engine → one deterministic message naming the
+> terminal state + kept workspace, no fabricated stop, no tool call, ledger
+> stays `crashed` (+ STOP-002b the manager-level assertion); STOP-003 `stop("")`
+> with one run resolves to it; STOP-004 no runs → graceful "nothing to stop" +
+> the engine no-run branch; STOP-005 most-recent selection across ledger dirs
+> (+ STOP-005b disk-only runs with an empty `_runs`). All 7 pass (1.8s).
+> The engine branch is exercised end-to-end with `Engine.__new__(Engine)` + a
+> real manager (the branch returns before any retriever/brain work, so no heavy
+> `__init__` is needed — same pattern as `test_date_floor`).
+
 > **Source:** 2026-07-13 manual autoresearch smoke test (three transcripts).
 > A run tagged `smoke1` **crashed during setup** ("crashed after 0 attempts,
 > val_bpb undefined"); every "stop research" after that failed incoherently.
@@ -885,7 +944,7 @@ held; non-model suite green.
 | P4    | not started | | | | |
 | P5    | not started | | | | |
 | P6    | not started | | | | Decision-gated: report to Jack, verdict is his |
-| P7    | **write-up landed — awaiting Jack review** | 2026-07-13 | | | Autoresearch stop-path (Cluster 1). Near-term, before P3–P6. No model/GPU in fix or tests. |
+| P7    | **DONE (code+tests)** | 2026-07-13 | STOP-001..005 (+2 variants) green; worktree A/B 89→96 pass, same 94 env-errors (absent runtime dirs), 0 regression | not re-run (no model-visible change to prompts/graders; branch `phase78`) | Autoresearch stop-path (Cluster 1). Deterministic manager resolver + engine stop branch. Commit `d06a925`; ready for merge. Broader taint-framing issue still flagged for Jack (out of scope). |
 | P8    | **write-up landed — awaiting Jack review** | 2026-07-13 | | | Proactive-briefing grounding (Cluster 2). Near-term. Provenance guard has an honest ceiling (soft, not a clean lock). |
 
 ### P0 baseline — GT-C golden set (live `qwen2.5:14b`, 2026-07-13, single run each)
