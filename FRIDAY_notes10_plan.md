@@ -1,9 +1,27 @@
 # FRIDAY Notes-10 Plan — temporal integrity, conversational continuity, intent resolution, memory method port
 
-**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) COMPLETE (2026-07-13): all four §§ landed + verified (session-start compact index, get_observations fetch-by-id, search_observations on stdlib SQLite FTS5, close_session → session-summary observation); claude-mem retrieval economics run end-to-end at FRIDAY's scale; 15 new non-model tests, full --quick suite green. Phase 5 (ECC method import) COMPLETE (2026-07-13): all five §§ landed + merged to master (5241d78), and the live `--test-session` acceptance run is now DONE — deterministic LOCK PASS (matcher resolves the imported `verify_before_done` skill; index_text 1556 chars, no budget crowding), behavioural follow PARTIAL/model-limited (the 14B applies the verification-ladder discipline on a grounded prompt but doesn't reliably land a READY/NOT-READY verdict; the gate correctly blocked an unsolicited push). Phase 6 (deep-mode brain eval, decision-gated) is the last remaining phase. Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
+**Status: IN PROGRESS — Phase 1 COMPLETE (2026-07-13). Phase 2 (conversational continuity) COMPLETE (2026-07-13): all four §§ landed + verified (offer ledger, widened anti-dodge, list_dir referents, history compaction; GT golden 8/8, baseline held). Phase 3 (intent resolution, the JARVIS layer) COMPLETE (2026-07-13): all six §§ landed + verified (resolver, list/merge/near-dup-guard project tools, fuzzy recall floor, consolidate playbook; GT-C3/C5/C6 LOCKED + verified live, GT-A/GT-B baseline held). Phase 4 (memory method port) COMPLETE (2026-07-13): all four §§ landed + verified (session-start compact index, get_observations fetch-by-id, search_observations on stdlib SQLite FTS5, close_session → session-summary observation); claude-mem retrieval economics run end-to-end at FRIDAY's scale; 15 new non-model tests, full --quick suite green. Phase 5 (ECC method import) COMPLETE (2026-07-13): all five §§ landed + merged to master (5241d78), and the live `--test-session` acceptance run is now DONE — deterministic LOCK PASS (matcher resolves the imported `verify_before_done` skill; index_text 1556 chars, no budget crowding), behavioural follow PARTIAL/model-limited (the 14B applies the verification-ladder discipline on a grounded prompt but doesn't reliably land a READY/NOT-READY verdict; the gate correctly blocked an unsolicited push). Phase 6 (deep-mode brain eval, decision-gated) COMPLETE (2026-07-13): both prerequisites done (`<think>`-stripping shim verified + unit-locked; honest-handoff re-voicing diff staged, unlanded), and the A/B ran clean under the frozen-code rule — the reasoning-distilled `deepseek-r1:14b` beat the offloaded `qwen2.5:32b` on every axis (10/10 vs 8/10 checkable-answer accuracy, ~2× faster wall-clock, fits fully on the 12GB card vs CPU-offloaded, 0 `<think>` leak, no persona cost). Report DELIVERED to Jack; the config swap is propose-tier and was NOT made — `deep_mode.model` stays `qwen2.5:32b`/`enabled:false` pending Jack's go. **All Notes-10 phases (P0–P8) now complete.** Phases 7 & 8 ADDED (2026-07-13) from the autoresearch smoke test — write-ups landed, AWAITING JACK REVIEW, nothing implemented yet; both are near-term (do before P3–P6): P7 = autoresearch stop-path integrity (Cluster 1), P8 = proactive-briefing grounding (Cluster 2, kept out of P2 per Jack). Live calendar-mirror migration still DEFERRED (Jack). 47 PRE-EXISTING model-suite failures (calc/injection/variance) remain flagged for Jack, NOT caused by this work.**
 **Source: Jack's "Friday Notes 10" (live-usage transcripts, 2026-07-11/12) + code diagnosis of the current repo.**
 
 > **Progress at a glance** (newest first — a fresh session reads this line, then §3):
+> - **P6 COMPLETE 2026-07-13 — deep-mode brain eval (decision-gated). ALL
+>   NOTES-10 PHASES (P0–P8) NOW DONE.** Prereqs: the `<think>`-stripping shim was
+>   already built + unit-locked (THINK-001..010, 10/10) — verified, not
+>   re-done; the honest-handoff re-voicing diff is staged but **unlanded** (fires
+>   only if the distilled brain wins). **A/B (real deep-mode client path, frozen
+>   code, 5 throwaway hard-reasoning cases with checkable answers):** the
+>   reasoning-distilled **`deepseek-r1:14b`** beat the offloaded **`qwen2.5:32b`**
+>   on *every* axis — **10/10 vs 8/10** accuracy (32B made two real physics errors),
+>   **~2× faster wall-clock** (399s vs 811s; fits fully on the 12GB card at
+>   ~60 tok/s vs ~5 tok/s CPU-offloaded), **0/10 `<think>` leaks**, and **no
+>   persona cost** (deep mode is an offload brain, re-voiced by the chat model; on
+>   this Ollama build reasoning is pre-separated into a `thinking` field the client
+>   drops — the shim is the untriggered backstop). **Recommendation DELIVERED,
+>   nothing swapped** — `deep_mode.model` stays `qwen2.5:32b`/`enabled:false`;
+>   the config swap is propose-tier and awaits Jack's go (then: set the model,
+>   raise deep `num_ctx` — E3 hit 7878/8192 thinking tokens — and land the
+>   re-voicing diff). Caveat honestly stated: n=5, single run — directional, not
+>   statistical. See "§Phase 6 execution log".
 > - **P5 ACCEPTANCE done 2026-07-13 — Phase 5 now COMPLETE.** Ran the deferred
 >   live `--test-session` turn on real `qwen2.5:14b` (lock free, ~57 tok/s), real
 >   shared brain, `FRIDAY_TEST_SESSION=1`. **Deterministic LOCK PASS (3×):** the
@@ -1222,8 +1240,21 @@ skill correctly matched and followed.
 - [x] **§Prereq-2 honest-handoff re-voicing diff — PREPARED, NOT landed
   (2026-07-13).** Diff staged in "§Prereq-2 findings" below; lands only if the
   distilled 14B wins. See "§Prereq-2 findings".
-- [ ] **§A/B deep-mode reasoning eval (32B vs distilled-14B) — in progress.**
-- [ ] **§Deliverable — table + recommendation to Jack (decision-gated).**
+- [x] **§A/B deep-mode reasoning eval (32B vs distilled-14B) — DONE
+  (2026-07-13).** Distilled 14B won every axis (10/10 vs 8/10 accuracy, ~2×
+  faster wall-clock, 0 leak, fits on-GPU). See "§A/B findings".
+- [x] **§Deliverable — table + recommendation to Jack DELIVERED
+  (2026-07-13); decision-gated, NOTHING swapped.** Recommend `deepseek-r1:14b`
+  for deep mode; awaiting Jack's go on the propose-tier config swap. See
+  "§Deliverable".
+
+**PHASE 6 COMPLETE (2026-07-13) — report delivered, decision is Jack's.** Both
+prerequisites done (shim verified; re-voicing diff staged), the A/B ran clean
+under the frozen-code rule, and the recommendation (distilled `deepseek-r1:14b`
+> offloaded `qwen2.5:32b` on accuracy, latency, VRAM, and voice) is recorded
+below. No live config was changed — `deep_mode.model` stays `qwen2.5:32b` /
+`enabled: false` until Jack approves the swap. **All Notes-10 phases (P0–P8) are
+now complete.**
 
 **This phase is different in kind. It is independent of the P0–P5 ordering
 (it lands no barriers, changes no user-visible behavior by itself) and it is
@@ -1352,10 +1383,18 @@ reasoning*, and that is exactly how it may be described.
 >   helper, family detection, auto-enable, and the override both ways.
 > - **End-to-end (not just unit-mocked):** the plan requires the no-leak
 >   guarantee be exercised against the *real* reasoning model in the live path.
->   That is done in §A/B — every `deepseek-r1:14b` deep call there runs with
->   `strip_reasoning=True` and the harness asserts no `<think>`/`</think>` and
->   no residual reasoning-preamble survives into `reply.content`. Result:
->   recorded in the §A/B findings (LEAK column).
+>   §A/B ran every `deepseek-r1:14b` deep call with `strip_reasoning=True` and
+>   asserted no `<think>`/`</think>` and no reasoning-preamble survives into
+>   `reply.content` — **0 leaks across all 10 calls (PASS).** **Honest nuance
+>   (see §A/B):** this Ollama build *pre-separates* R1's chain-of-thought into a
+>   dedicated `message.thinking` field (verified on both the non-stream and
+>   stream paths) and never emits inline `<think>` tags, so `content` is clean
+>   *before* the filter sees it — and `OllamaClient.chat()` reads `content` only,
+>   dropping the `thinking` deltas. So on THIS path the guarantee rides on
+>   Ollama's field-separation + our content-only read; the `_ReasoningFilter` was
+>   a transparent pass-through (not triggered). It remains the correct **backstop**
+>   for any model/Ollama version/config that *does* emit inline tags — belt and
+>   suspenders, exactly as designed.
 
 > **§Prereq-2 findings (honest-handoff re-voicing) — PREPARED, NOT LANDED.**
 > Per the plan this diff lands **only if the distilled 14B wins the verdict** —
@@ -1398,6 +1437,91 @@ reasoning*, and that is exactly how it may be described.
 > `training/evals/*/report.{json,html}` files are frozen run records — never
 > edited. **Status: nothing in this section is applied to the tree; it is staged
 > here for the follow-on config-swap change that only fires on Jack's go.**
+
+> **§A/B findings (deep-mode reasoning eval) — DONE (2026-07-13).** Ran both
+> candidate brains through the SAME 5-case hard-reasoning set via the REAL
+> deep-mode client path (`core.model.OllamaClient` + `_resolve_strip_reasoning`,
+> `_DEEP_SYSTEM`, num_ctx 8192, temp 0.4 — faithful to `register_deep_think`).
+> Cases are throwaway-named multi-step technical problems, each with a
+> deterministically checkable number (gearbox output; cantilever tip deflection;
+> RC cutoff + attenuation; buoyancy net force + ballast; mass-spring-damper
+> ωn/ζ/overshoot). Harness + raw results (persisted in-repo):
+> `training/evals/phase6_deepmode_ab/p6_ab_eval.py` + `results.json`. Frozen-code
+> rule honoured (no model-visible change during the run).
+>
+> **Per-case (accuracy = checkable targets hit; wall = swap-inclusive seconds):**
+>
+> | case | 32B acc | 32B wall | R1-distill acc | R1 wall |
+> |------|:------:|:------:|:------:|:------:|
+> | E1 gearbox        | 1/2 | 231.9s | 2/2 | 69.1s |
+> | E2 cantilever     | 0/1 | 144.7s | 1/1 | 102.3s |
+> | E3 RC filter      | 2/2 | 149.5s | 2/2 | 139.4s |
+> | E4 buoyancy       | 2/2 | 174.5s | 2/2 | 32.8s |
+> | E5 damping        | 3/3 | 110.9s | 3/3 | 55.4s |
+> | **total**         | **8/10** | **811.5s** | **10/10** | **399.0s** |
+>
+> **Side-by-side (a/b/c/d + LEAK):**
+>
+> | metric | `qwen2.5:32b` (offloaded) | `deepseek-r1:14b` (on-GPU, distilled) |
+> |---|---|---|
+> | **(a) accuracy** | **8/10.** Two *real* physics errors: E1 wrongly applied stage efficiency to the *speed* (→77.8 rpm; speed is ratio-only → 100 rpm), E2 a 10× unit slip (→181 mm vs 18.6 mm). | **10/10.** Every checkable target hit; the two problems 32B fumbled it got right. |
+> | **(b) latency** | **811.5s total / 162s mean.** ~5.4 tok/s (CPU-offloaded). 592–1127 generated tok/case. | **399.0s total / 79.8s mean — ~2× faster wall-clock.** ~59.5 tok/s. 1843–**7878** generated tok/case (thinking-heavy, but at 11× the speed). |
+> | **(c) voice / leak — the GATE** | No tags (non-reasoning model); 0 preamble-leak markers. | **0 `<think>` in `content`, 0 preamble-leak markers ("wait/let me reconsider/…") across all 5.** Ollama pre-separates reasoning into a `thinking` field the client drops → clean worked-solution output for the integrator. |
+> | **(d) VRAM / contention** | 11177 MiB on-card **+ CPU offload** of the ~19 GB weights → the 5.4 tok/s crawl. | 11074 MiB, **fits fully on the 12 GB card** (proven by the 60 tok/s). ~1 GB headroom → still can't co-reside with the 6 GB `/watch` VL model (busy-gate serialises — same as 32B, but far less RAM/PCIe thrash). |
+> | **LEAK** | n/a | **0/10 calls leaked** any `<think>`/`</think>` or reasoning into `content` (verified live, stream + non-stream). |
+>
+> **Voice, stated precisely (Jack's near-hard gate).** The reasoning-model voice
+> risk the plan worried about — verbose `<think>`, hedging, "let me reconsider"
+> bleeding into FRIDAY's answer-first/second-person/Irish persona — **does not
+> materialise here, for two independent reasons:** (1) deep mode is an *offload*
+> brain with its own `_DEEP_SYSTEM` ("show your working"); its output is
+> *integrated and re-voiced* by the resident `friday-tuned` chat model, so the
+> persona reply is never generated by R1; and (2) on the measured path R1's
+> `content` is already a clean worked solution (reasoning siphoned by Ollama +
+> dropped by our content-only read; 0 leak markers). So adopting R1 for deep mode
+> trades **no** persona compliance — the near-hard constraint is satisfied.
+>
+> **One caveat worth Jack's eye (num_ctx).** E3 drove R1 to **7878** generated
+> tokens against the deep client's `num_ctx = 8192` — a near-miss. A *harder*
+> problem's chain-of-thought could exceed the window and truncate the answer
+> (the filter would fail-closed to an empty/partial answer — honest, but a miss).
+> If R1 is adopted, raise `deep_mode` context (a dedicated deep `num_ctx`, e.g.
+> 16384) so the thinking budget isn't the ceiling. This is a config tweak, not a
+> blocker.
+>
+> **Honest limits of this eval.** n = 5 cases, single run each, temp 0.4 — a
+> *directional* decision aid, not a statistical proof. R1's 10/10-vs-8/10 margin
+> is consistent with the "test-time reasoning beats raw params on hard technical
+> reasoning" hypothesis the phase is built on, but five problems can't establish
+> effect size. It is more than enough to answer the phase's actual question —
+> *which unvalidated deep brain to validate first* — and the verdict is Jack's.
+
+> **§Deliverable — recommendation to Jack (DECISION-GATED; nothing swapped).**
+> On every axis measured, **the reasoning-distilled `deepseek-r1:14b` is the
+> stronger deep-mode brain than the offloaded `qwen2.5:32b`:**
+> - **more accurate** (10/10 vs 8/10 — it solved the two problems 32B got wrong),
+> - **~2× faster wall-clock** (399s vs 811s) despite spending far more tokens
+>   *thinking*, because it runs fully on-GPU at ~60 tok/s instead of ~5,
+> - **no voice cost** (0 leak, and deep mode never generates the persona reply
+>   anyway — Jack's near-hard gate is satisfied),
+> - **lighter on VRAM** (9 GB + KV fits the card vs a 20 GB CPU-offloaded load),
+> - **cleaner honesty story**, not weaker: a same-size model that *reasons
+>   step-by-step* is exactly describable without any "heavier/more-intelligent"
+>   claim (invariant 4 / F9).
+>
+> **This is a recommendation, not an action. Nothing was swapped** —
+> `deep_mode.model` stays `qwen2.5:32b`, `enabled: false`, per the propose-tier
+> rule. **If Jack approves the swap**, the follow-on change (propose-tier) is
+> small and already scoped:
+> 1. set `deep_mode.model: deepseek-r1:14b` (strip auto-enables — §Prereq-1);
+> 2. raise the deep context window (num_ctx caveat above);
+> 3. land the §Prereq-2 re-voicing diff (the "heavier local model" line becomes
+>    false for a same-size brain).
+> **If Jack declines**, the status quo stands (deep mode off, or 32B if he ever
+> enables it) and this table is the recorded evidence for why R1 was the
+> better-validated first choice. Either way the honesty floor holds: deep mode is
+> *disciplined method*, never more raw intelligence than a local Qwen-family
+> model has.
 
 ### Phase 7 — Autoresearch stop-path integrity (near-term; Cluster 1)
 
