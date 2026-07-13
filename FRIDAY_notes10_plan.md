@@ -1219,7 +1219,9 @@ skill correctly matched and followed.
 - [x] **§Prereq-1 `<think>`-stripping shim — DONE (2026-07-13).** Already
   implemented + unit-locked before this session (THINK-001..010); verified +
   end-to-end leak-checked live in §A/B. See "§Prereq-1 findings" below.
-- [ ] **§Prereq-2 honest-handoff re-voicing diff — prepared, NOT landed.**
+- [x] **§Prereq-2 honest-handoff re-voicing diff — PREPARED, NOT landed
+  (2026-07-13).** Diff staged in "§Prereq-2 findings" below; lands only if the
+  distilled 14B wins. See "§Prereq-2 findings".
 - [ ] **§A/B deep-mode reasoning eval (32B vs distilled-14B) — in progress.**
 - [ ] **§Deliverable — table + recommendation to Jack (decision-gated).**
 
@@ -1354,6 +1356,48 @@ reasoning*, and that is exactly how it may be described.
 >   `strip_reasoning=True` and the harness asserts no `<think>`/`</think>` and
 >   no residual reasoning-preamble survives into `reply.content`. Result:
 >   recorded in the §A/B findings (LEAK column).
+
+> **§Prereq-2 findings (honest-handoff re-voicing) — PREPARED, NOT LANDED.**
+> Per the plan this diff lands **only if the distilled 14B wins the verdict** —
+> for a same-size distilled brain, "heavier / larger local model" is a false
+> horsepower claim (invariant 4 / F9 / SKL-004), so the handoff must be re-voiced
+> to the truthful framing: *"same local model, but it works the problem step by
+> step — slower, the status box will show it."* **If the 32B stays (or deep mode
+> stays off), NOTHING here changes** — the 32B genuinely IS the heavier model, so
+> the current wording is already truthful. I audited the whole repo; the offenders
+> split into two tiers.
+>
+> **Tier 1 — model-visible strings (land these if the distilled model wins):**
+> - `training/exemplars/calibration_batch.json` (the coupled-linkage deep-mode
+>   exemplar, ~line 558) — the one *spoken* false claim:
+>   - OLD: `…I'm switching to **deep mode** for the setup; it's the heavier local
+>     model, so this'll take a bit longer - the status box will show it.…`
+>   - NEW: `…I'm switching to **deep mode** for the setup — same local model, but
+>     it works the problem step by step instead of answering straight off, so it's
+>     slower; the status box will show it.…`
+> - `core/reasoning.py` `_DEEP_ROUTING` (~line 63, injected into the system prompt
+>   — the model reads it every turn):
+>   - OLD: `…offload the heavy thinking to the larger model and integrate its
+>     output critically.`
+>   - NEW: `…offload the heavy thinking to the deep-reasoning model and integrate
+>     its output critically.`
+> - `core/tools/reasoning_tools.py` tool description (~line 115 — tool descriptions
+>   are model-visible):
+>   - OLD: `…offload ONE genuinely hard reasoning question to the larger local
+>     model (slower, deeper).…`
+>   - NEW: `…offload ONE genuinely hard reasoning question to the deep-reasoning
+>     local model (slower, deeper).…`
+>
+> **Tier 2 — comments/docstrings (cosmetic; land for consistency, no behaviour
+> change):** `reasoning_tools.py` module docstring lines 2 & 12 ("the heavier
+> model"), `config/friday_config.yaml:66`, `core/bootstrap.py:337`,
+> `core/engine.py:79`, `core/service.py:95` — swap "heavier"/"larger" → "deep-
+> reasoning". The `gen_controls_architecture.json` exemplars already use the
+> truthful framing ("deep mode — it'll take longer, you'll see it in the status
+> box"; "slower, the status box will show it") and need **no** change. Historical
+> `training/evals/*/report.{json,html}` files are frozen run records — never
+> edited. **Status: nothing in this section is applied to the tree; it is staged
+> here for the follow-on config-swap change that only fires on Jack's go.**
 
 ### Phase 7 — Autoresearch stop-path integrity (near-term; Cluster 1)
 
