@@ -1,12 +1,19 @@
 # FRIDAY armor plan — build the suit, not the person
 
-**Status: KICKOFF DELIVERABLE — awaiting Jack's sign-off on the harness design
-(§4). Nothing below is built.** Once §4 is approved, execution proceeds in the
-§5 order. Per the single-living-doc rule, phase results get recorded INTO this
-file as they land.
+**Status: PLAN FINAL — harness design (§4) SIGNED OFF by Jack 2026-07-13.
+Nothing is built yet; execution starts at phase A0 (§5) next session.** Per
+the single-living-doc rule, phase results get recorded INTO this file (§6) as
+they land.
 
-**Addendum recorded 2026-07-13: Tier 2 armor A6–A11 (Jack's kickoff addendum),
-§3T below — same gate, same scorecard discipline.**
+Scope: Tier 1 (A1–A5, the original directive), Tier 2 (A6–A11, Jack's
+kickoff addendum, §3T), and S1–S3 (Fable's proposals, accepted by Jack
+2026-07-13 and scheduled in §5). Same gate for everything: an armor item
+ships only when the scorecard shows the targeted skill moved, nothing else
+regressed, and the delta is recorded here.
+
+**Next-session pickup: phase A0 — §4 harness extension (skill markers,
+scorecard.json + ledger.jsonl, `--compare`, `--skill` flag) + full-suite
+baseline run on current main, results into §6.**
 
 Directive issued by Jack 2026-07-13; also baked into `CLAUDE.md` so every
 session inherits it.
@@ -304,27 +311,29 @@ Auto-promote passing transcripts into the per-skill few-shot pool A5 consumes.
   out. Promotion is proposed-by-code, applied like any config `propose`
   change — Jack-reviewable, reversible.
 
-### Further candidates (Fable's suggestions, awaiting Jack's take — not scheduled)
+### S1–S3 (Fable's proposals — ACCEPTED by Jack 2026-07-13, scheduled in §5)
 
 - **S1 — Output-script floor (tiny, high-value):** the intermittent Thai
   drift (CFG-007, recurring since coherence Phase 0) is deterministically
   detectable — a Unicode script-range check on the settled reply (expected
   script: Latin) → one regeneration, then honest fallback. Same barrier
-  pattern, ~20 lines + guard test. Could ride along with any phase.
+  pattern, ~20 lines + guard test. **Scheduled with A6+A7** (first cheap
+  wins after the harness).
 - **S2 — Vote-split escalation routing:** A6's agreement rate is a free,
   deterministic hardness signal. A split vote escalates the turn to deep mode
   (deepseek-r1:14b) within `deep_mode.max_calls_per_session` — routing by
-  measurement instead of the model self-assessing difficulty. Natural A6
-  follow-on.
-- **S3 — Retrieval golden set (feeds the A2 embedding gate):** ~50
-  query→expected-note pairs scored recall@k against the live retriever
-  stack. Makes the deferred embedding/vector decision data-driven ("keyword+
-  FTS5 misses these N query shapes") instead of a judgment call, and becomes
-  the memory_recall skill's scorecard backbone.
+  measurement instead of the model self-assessing difficulty. **Scheduled
+  with A8** (the layer that owns the escalation path).
+- **S3 — Retrieval golden set:** ~50 query→expected-note pairs scored
+  recall@k against the live retriever stack. Makes the deferred
+  embedding/vector decision data-driven ("keyword+FTS5 misses these N query
+  shapes") instead of a judgment call, and becomes the memory_recall skill's
+  scorecard backbone. **Scheduled with A2+A10** (it IS the evidence for that
+  phase's embedding gate).
 
 ---
 
-## 4. Eval-harness design (THE SIGN-OFF ITEM)
+## 4. Eval-harness design (SIGNED OFF by Jack, 2026-07-13 — build as specified)
 
 Design goal: turn the existing suite into the directive's measurement loop —
 per-skill scores, before/after deltas per armor change, provenance on every
@@ -389,10 +398,10 @@ floors; A9 parallel; A10 rolling; A11 last).
 | Phase | Content | Verifies via |
 |---|---|---|
 | A0 | Harness extension (§4) + full-suite **baseline run** on current main | scorecard exists; baseline recorded here |
-| A6+A7 | Self-consistency voting (narrow surfaces, N=3) + quote-don't-recall contract | quant_math, memory_recall/persistence |
+| A6+A7+S1 | Self-consistency voting (narrow surfaces, N=3) + quote-don't-recall contract + output-script floor | quant_math, memory_recall/persistence, voice (drift) |
 | A1 | F1 gate fix, F2 ANSWER floor, F4 salience wiring, `format=` plumbing + first structured consumers | injection_defense, quant_math, email_triage |
-| A8 | Confidence/abstention layer (VERIFY logprobs on 0.31.1 first; A6 agreement rate as fallback signal) + subsumption proof for existing honesty floors | thinking_skills, memory_recall; floor-removal branch run |
-| A2+A10 | ONE audit, two lenses (parametric recall out / computation out), F8 write-side floor, F10 via A8; embedding decision teed up for Jack (S3 recall@k set recommended here) | memory_persistence, memory_recall |
+| A8+S2 | Confidence/abstention layer (VERIFY logprobs on 0.31.1 first; A6 agreement rate as fallback signal) + vote-split → deep-mode escalation + subsumption proof for existing honesty floors | thinking_skills, memory_recall; floor-removal branch run |
+| A2+A10+S3 | ONE audit, two lenses (parametric recall out / computation out), F8 write-side floor, F10 via A8; retrieval recall@k golden set built here; embedding decision teed up for Jack WITH that data | memory_persistence, memory_recall |
 | A3 | Planner/decompose step (structured via A1's `format=`); deep-mode honesty now lives in A8 | thinking_skills |
 | A4 | F5/F9 as detectors feeding A8's corrective path; F3 dimensional check; F6/F7 envelope correctives | quant_math, calendar, playbook_following |
 | A9 | *(parallel track, anytime after A0)* speculative decoding (VERIFY 0.31.1 support; llama.cpp-behind-the-seam fallback) + prefix-stable prompt layout for KV reuse | decode tok/s + re-prefill benchmarks recorded here; full suite (always-on prompt change) |
@@ -400,13 +409,13 @@ floors; A9 parallel; A10 rolling; A11 last).
 | A11 | Exemplar bank auto-promotion (needs green suite; 5/5 eligibility; propose-tier apply) | per-skill before/after each promotion |
 
 Each phase: baseline → build (with guard tests per the GND pattern) →
-candidate run → `--compare` → results recorded in this section → GT-A/GT-B
-LOCKED baseline must hold throughout. A10 continues as rolling policy after
-its audit phase; S1 (output-script floor) can ride along with any phase on
-Jack's nod.
+candidate run → `--compare` → results recorded in §6 → GT-A/GT-B LOCKED
+baseline must hold throughout. A10 continues as rolling policy after its
+audit phase.
 
 ---
 
 ## 6. Results log
 
-*(empty — filled per phase as they land)*
+*(empty — filled per phase as they land; first entry will be the A0 baseline
+scorecard)*
