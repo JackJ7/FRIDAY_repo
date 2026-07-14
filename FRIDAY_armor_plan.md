@@ -5,6 +5,9 @@
 §5 order. Per the single-living-doc rule, phase results get recorded INTO this
 file as they land.
 
+**Addendum recorded 2026-07-13: Tier 2 armor A6–A11 (Jack's kickoff addendum),
+§3T below — same gate, same scorecard discipline.**
+
 Directive issued by Jack 2026-07-13; also baked into `CLAUDE.md` so every
 session inherits it.
 
@@ -190,6 +193,137 @@ has been schema-stable for this purpose from day one.
 
 ---
 
+## 3T. Tier 2 armor (A6–A11 — Jack's kickoff addendum, 2026-07-13)
+
+Additive to A1–A5; nothing here duplicates an F-item. Standing constraint from
+the addendum, now binding on every entry: **deterministic or logprob-based
+only — any implementation that reduces to "the model grades its own output"
+violates CLAUDE.md and is rejected.** Feasibility flags below were checked
+against the installed stack (Ollama **0.31.1**, single RTX 5070 / 12 GB) on
+2026-07-13; anything marked VERIFY is a build-time check, not an assumption.
+
+### A6 — Self-consistency voting  [first after §4; attacks limitations 1, 3]
+For canonicalizable outputs (calc expressions/args, tool-arg structs, yes/no
+safety calls, `ANSWER:` lines): sample N at inference, canonicalize, take the
+majority. A single bad expression composition gets outvoted.
+- **Plug-in:** a small sampler helper used inside `engine.respond()` /
+  structured internal calls — scoped to SHORT outputs only. Full chat replies
+  are out of scope (N× sequential decode on one GPU; voting on prose isn't
+  canonicalizable anyway).
+- **Reuse, don't rebuild:** canonicalization = the same parsing the suite
+  already trusts (`tests\helpers\extract.py` for ANSWER lines; Pint for
+  number+unit equality; `json.dumps(sort_keys=True)` for structs). The
+  harness's N=5 pattern is pytest-level, so the engine needs its own N-loop —
+  but it must share those canonicalizers so the engine and the grader can
+  never disagree about equality.
+- **Notes:** global temperature 0.4 already gives vote diversity; the
+  **agreement rate is retained as a signal** (feeds A8, and S2 below). Latency
+  cost is real until A9 lands — start with N=3 on the narrowest surfaces.
+
+### A7 — Quote-don't-recall contract  [with A6; generalizes F8, limitation 7]
+Standing rule: a durable stored value is never paraphrased — it passes through
+verbatim and code **byte-matches** it against the record before the turn
+surfaces. Mismatch → forced re-read (the calendar-first corrective shape),
+never "close enough."
+- **Plug-in:** the memory read path (retrieved-snippet assembly +
+  `read_brain`/observation reads) tags durable values (tracker field lines
+  `- **Field:** ...`, explicit "note this down" tokens, observation-cited
+  facts); a post-barrier check in `respond()` byte-matches any such value the
+  reply claims as recalled. Retires the HX711→HX717 class at the root; F8's
+  write-side verbatim floor remains the other half (persist exact, recall
+  exact).
+
+### A8 — Confidence / abstention layer  [after A6; consolidates honesty floors]
+One mechanism for confident confabulation, replacing per-case floors:
+1. **Action-grounding post-check (deterministic):** any claimed action or
+   result ("searched your memory", "deep mode has returned", a citation) must
+   have the corresponding entry in the turn's tool log — the citation
+   barrier's instinct, generalized to ALL action claims.
+2. **Confidence signal:** logprob/entropy threshold — **VERIFY first that
+   Ollama 0.31.1 exposes logprobs through the `/api/chat` path
+   `OllamaClient` uses.** If it doesn't, the logprob half is NOT faked with a
+   model-critic: the fallback confidence signal is A6's **vote agreement
+   rate** (a split vote = low confidence), which is deterministic and already
+   computed.
+3. Below threshold or ungrounded → forced honest "I don't know" (invariant 4
+   phrasing) or deep-mode escalation within existing budget ceilings.
+- **Subsumption proof (the addendum's bar):** on a branch, disable the
+  individual honesty floors (phantom-review, retrieval-dodge, deep-mode
+  honesty), run their scorecard cases through A8 alone — all must still pass
+  before any floor is actually removed from `main`. Floors stay until proven
+  redundant.
+- **Sequencing note vs. A4:** A4's remaining floors (F5 reply-quality, F9
+  shape) get built as *detectors feeding A8's single corrective path*, not as
+  more bespoke regenerate-passes — so A8 lands before or with A4, and the
+  barrier family stops growing linearly.
+
+### A9 — Speculative decoding + KV-cache reuse  [enabler, parallel track]
+Buys back the wall-clock that A6/A8 spend. Lossless in both halves.
+- **Speculative decoding — VERIFY before design:** confirm whether installed
+  Ollama 0.31.1 actually supports a draft-model pairing (DRAFT Modelfile
+  directive or equivalent) on Windows/CUDA — **do not assume the addendum's
+  claim**; the MTP path is Mac/MLX-first and irrelevant here. If 0.31.1
+  lacks it: the fallback is serving via llama.cpp's server (which has mature
+  `--model-draft` support) behind the `OllamaClient` seam — `core\model.py`
+  is the single file that knows the serving stack, by design, so this is the
+  exact swap the seam exists for. Either way: **benchmark decode tok/s on our
+  actual skill mix before committing** (draft acceptance rate is
+  prompt-shape-dependent), and budget the draft model's VRAM inside the 12 GB
+  alongside the 14B (a 0.5B draft ≈ 0.4 GB + cache; measure, don't estimate).
+- **KV/prefix reuse — real precondition found in our code:** prefix caching
+  only helps while the prompt prefix is byte-identical across turns, and
+  today it is not — `_system_prompt(extra=ref_block)` interleaves per-turn
+  dynamic content into the head, and retrieved notes / matched playbook /
+  skill blocks follow immediately (`core\engine.py:481-509`). The work item
+  is **prefix-stable prompt layout**: static head first (invariants,
+  character, operating rules, scaffold, tool schemas), ALL dynamic blocks
+  (referents, retrieved, playbooks, history digest) after the static head.
+  Measure re-prefill time before/after. This reordering is an always-on
+  prompt change → full-suite before/after per the §3.5 warning.
+
+### A10 — Computation-offload as a standing lever  [rolling policy]
+The policy line **already exists** in CLAUDE.md ("Don't make the model do
+what code can do") — A10 upgrades it from convention to audited rule. Merge
+its sweep with A2's parametric-recall audit: **one audit, two lenses**
+(knowledge that should come from retrieval; computation that should run in
+code). Output: an audit table in §6, each row either refactored to a tool or
+explicitly accepted-in-weights with a reason. Every refactor ships with a
+guard test (GND pattern).
+
+### A11 — Self-improving exemplar bank  [last; needs green suite; feeds A5]
+Auto-promote passing transcripts into the per-skill few-shot pool A5 consumes.
+- **Eligibility (code-checked):** the case passed **5/5** in the latest full
+  scorecard run, and the transcript contains only sandbox fixture names
+  (true by construction — SandboxFriday seeds throwaway projects; the CLAUDE.md
+  real-project ban protects this at the source).
+- **Storage:** a worked-example section beside the skill's playbook/skill
+  file — the router already delivers the right file per message, so no new
+  injection mechanism.
+- **Guardrail (inherited §3.5):** every promotion is a prompt change →
+  before/after run, no exceptions; a promotion that moves nothing comes back
+  out. Promotion is proposed-by-code, applied like any config `propose`
+  change — Jack-reviewable, reversible.
+
+### Further candidates (Fable's suggestions, awaiting Jack's take — not scheduled)
+
+- **S1 — Output-script floor (tiny, high-value):** the intermittent Thai
+  drift (CFG-007, recurring since coherence Phase 0) is deterministically
+  detectable — a Unicode script-range check on the settled reply (expected
+  script: Latin) → one regeneration, then honest fallback. Same barrier
+  pattern, ~20 lines + guard test. Could ride along with any phase.
+- **S2 — Vote-split escalation routing:** A6's agreement rate is a free,
+  deterministic hardness signal. A split vote escalates the turn to deep mode
+  (deepseek-r1:14b) within `deep_mode.max_calls_per_session` — routing by
+  measurement instead of the model self-assessing difficulty. Natural A6
+  follow-on.
+- **S3 — Retrieval golden set (feeds the A2 embedding gate):** ~50
+  query→expected-note pairs scored recall@k against the live retriever
+  stack. Makes the deferred embedding/vector decision data-driven ("keyword+
+  FTS5 misses these N query shapes") instead of a judgment call, and becomes
+  the memory_recall skill's scorecard backbone.
+
+---
+
 ## 4. Eval-harness design (THE SIGN-OFF ITEM)
 
 Design goal: turn the existing suite into the directive's measurement loop —
@@ -248,18 +382,28 @@ dependencies. Estimated one session including its own guard tests.
 
 ## 5. Build order (after §4 sign-off)
 
+Combined order, both tiers, sequenced by dependency (tier-2 addendum
+sequencing honored: A6/A7 first after the harness; A8 before the remaining
+floors; A9 parallel; A10 rolling; A11 last).
+
 | Phase | Content | Verifies via |
 |---|---|---|
 | A0 | Harness extension (§4) + full-suite **baseline run** on current main | scorecard exists; baseline recorded here |
-| A1 | Item 1: F1 gate fix, F2 ANSWER floor, F4 salience wiring, `format=` plumbing + first structured consumers | injection_defense, quant_math, email_triage deltas |
-| A2 | Item 2: parametric-recall audit, F8 verbatim floor, F10 retrieval-dodge floor; embedding decision teed up for Jack | memory_persistence, memory_recall |
-| A3 | Item 3: planner/decompose step + deep-mode honesty floor | thinking_skills |
-| A4 | Item 4: F5 reply-quality floor, F9 shape floors, F3 dimensional check, F6/F7 envelope correctives | quant_math, thinking_skills, calendar, playbook_following |
-| A5 | Item 5: per-call sampling options + playbook few-shots (each behind a before/after run) | per-skill, change-by-change |
+| A6+A7 | Self-consistency voting (narrow surfaces, N=3) + quote-don't-recall contract | quant_math, memory_recall/persistence |
+| A1 | F1 gate fix, F2 ANSWER floor, F4 salience wiring, `format=` plumbing + first structured consumers | injection_defense, quant_math, email_triage |
+| A8 | Confidence/abstention layer (VERIFY logprobs on 0.31.1 first; A6 agreement rate as fallback signal) + subsumption proof for existing honesty floors | thinking_skills, memory_recall; floor-removal branch run |
+| A2+A10 | ONE audit, two lenses (parametric recall out / computation out), F8 write-side floor, F10 via A8; embedding decision teed up for Jack (S3 recall@k set recommended here) | memory_persistence, memory_recall |
+| A3 | Planner/decompose step (structured via A1's `format=`); deep-mode honesty now lives in A8 | thinking_skills |
+| A4 | F5/F9 as detectors feeding A8's corrective path; F3 dimensional check; F6/F7 envelope correctives | quant_math, calendar, playbook_following |
+| A9 | *(parallel track, anytime after A0)* speculative decoding (VERIFY 0.31.1 support; llama.cpp-behind-the-seam fallback) + prefix-stable prompt layout for KV reuse | decode tok/s + re-prefill benchmarks recorded here; full suite (always-on prompt change) |
+| A5 | Per-call sampling options + playbook few-shots, change-by-change | per-skill before/after each change |
+| A11 | Exemplar bank auto-promotion (needs green suite; 5/5 eligibility; propose-tier apply) | per-skill before/after each promotion |
 
 Each phase: baseline → build (with guard tests per the GND pattern) →
 candidate run → `--compare` → results recorded in this section → GT-A/GT-B
-LOCKED baseline must hold throughout.
+LOCKED baseline must hold throughout. A10 continues as rolling policy after
+its audit phase; S1 (output-script floor) can ride along with any phase on
+Jack's nod.
 
 ---
 
