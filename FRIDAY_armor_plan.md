@@ -632,6 +632,15 @@ run**: `scorecard.provenance()` reads `deep_mode` from the *real* config
 default (`qwen2.5:32b`) — so every prior scorecard mislabelled the deep model.
 After F-ENV1 the two agree.
 
+**F-ENV1.1 — provenance hardening (2026-07-14, follow-up).** F-ENV1 made the
+labels agree *by construction*, but `provenance()` still read the live config
+as a proxy for what the sandbox ran — any future harness override would
+mislabel silently again. Now the harness publishes the deep model it actually
+instantiated via `FRIDAY_SANDBOX_DEEP_MODEL` (mirroring the existing
+`FRIDAY_MODEL` channel) and `provenance()` prefers it over the config read, so
+the scorecard records measured truth even if the two diverge. Guarded by
+HARN-008; `--quick` 276/276 green (275 + the new guard).
+
 **Timing / comparability:** applied *after* the a1 full run (stamp
 `2026-07-14_0039`) finished, so baseline `1734`, candidate `2223`, and a1 `0039`
 all ran deep cases on 32b and stay mutually comparable. The **first run after

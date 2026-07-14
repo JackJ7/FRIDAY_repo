@@ -118,6 +118,14 @@ def provenance():
     except Exception:
         pass
     model_name = os.environ.get("FRIDAY_MODEL") or model_name
+    # The sandbox publishes the deep model it ACTUALLY instantiated
+    # (FRIDAY_SANDBOX_DEEP_MODEL, set in harness._make_config). Prefer it:
+    # reading the live config here is only a proxy for what ran, and the
+    # proxy lied once — run 2026-07-14_0039's scorecard said deepseek-r1:14b
+    # while the sandbox ran a stale 32b (armor plan §6, F-ENV1).
+    sandbox_deep = os.environ.get("FRIDAY_SANDBOX_DEEP_MODEL")
+    if sandbox_deep:
+        deep = {**(deep or {}), "model": sandbox_deep}
     return {
         "git_commit": commit,
         "git_dirty": dirty,

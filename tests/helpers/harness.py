@@ -152,6 +152,24 @@ class SandboxFriday:
         override = os.environ.get("FRIDAY_MODEL")
         if override:
             model["name"] = override
+        # Deep model is sourced from the LIVE config (like `model` and
+        # `reasoning`) so the eval can never drift from what FRIDAY actually
+        # runs. The failure that motivated this: a stale hard-coded
+        # "qwen2.5:32b" here — never updated after Jack's 2026-07-13 swap to
+        # deepseek-r1:14b — put a 20.5 GiB model on the 12 GB card on every
+        # full run's deep cases, forcing ~hourly evict/reload thrash that
+        # crash-looped llama-server, and made the scorecard provenance (which
+        # reads the real config) disagree with the model that actually ran.
+        # See FRIDAY_armor_plan.md §6 (F-ENV1). `enabled` is forced False so
+        # deep mode stays off by default; the deep-mode tests flip it on.
+        deep_mode = {**real.get("deep_mode", {}), "enabled": False}
+        # Publish the deep model the sandbox ACTUALLY instantiated so the
+        # scorecard's provenance() records measured truth instead of trusting
+        # the live config to still match at session end. Run 2026-07-14_0039's
+        # scorecard logged deepseek-r1:14b while the sandbox ran the stale 32b
+        # — this channel (mirroring FRIDAY_MODEL) makes that lie impossible.
+        os.environ["FRIDAY_SANDBOX_DEEP_MODEL"] = str(deep_mode.get("model")
+                                                      or "")
         return {
             "model": model,
             "paths": {"brain": str(self.root / "brain"),
@@ -163,17 +181,7 @@ class SandboxFriday:
             "character_note": "character/friday.md",
             "ui": {"hotkey": "ctrl+alt+f", "window_title": "FRIDAY-TEST"},
             "reasoning": real.get("reasoning", {"scaffold": "standard"}),
-            # Deep model is sourced from the LIVE config (like `model` and
-            # `reasoning` above) so the eval can never drift from what FRIDAY
-            # actually runs. The failure that motivated this: a stale hard-coded
-            # "qwen2.5:32b" here — never updated after Jack's 2026-07-13 swap to
-            # deepseek-r1:14b — put a 20.5 GiB model on the 12 GB card on every
-            # full run's deep cases, forcing ~hourly evict/reload thrash that
-            # crash-looped llama-server, and made the scorecard provenance (which
-            # reads the real config) disagree with the model that actually ran.
-            # See FRIDAY_armor_plan.md §6 (F-ENV1). `enabled` is forced False so
-            # deep mode stays off by default; the deep-mode tests flip it on.
-            "deep_mode": {**real.get("deep_mode", {}), "enabled": False},
+            "deep_mode": deep_mode,
             "senses": {"gmail_accounts": [], "calendar_account": "personal",
                        "event_color_id": "6", "poll_minutes": 999,
                        "ping_event_minutes": 15, "web_max_bytes": 200000},

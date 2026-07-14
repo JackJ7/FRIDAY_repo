@@ -101,6 +101,17 @@ def test_provenance():
     assert p["model"]  # the repo config always names a model
 
 
+@pytest.mark.case("HARN-008", "provenance records the deep model the sandbox ran, not the live config's")
+def test_provenance_prefers_sandbox_deep_model(monkeypatch):
+    # The live config is only a proxy for what the harness instantiated, and
+    # the proxy lied once (run 2026-07-14_0039 logged deepseek-r1:14b while
+    # the sandbox ran a stale 32b — armor plan §6, F-ENV1). The harness
+    # publishes its actual deep model via env; provenance must prefer it.
+    monkeypatch.setenv("FRIDAY_SANDBOX_DEEP_MODEL", "sentinel-deep:1b")
+    p = provenance()
+    assert p["deep_mode"]["model"] == "sentinel-deep:1b"
+
+
 @pytest.mark.case("HARN-007", "taxonomy is the fixed vocabulary: 13 skills, all lowercase identifiers")
 def test_taxonomy_shape():
     assert len(SKILLS) == 13
