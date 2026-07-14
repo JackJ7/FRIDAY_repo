@@ -48,11 +48,35 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      re-answers from the result), citation (Phase 5 — the
                      reply cites Jack's saved brain for a fact nothing this
                      turn surfaced; regenerates tool-free to drop the
-                     ungrounded citation or say plainly it isn't saved), and
+                     ungrounded citation or say plainly it isn't saved),
                      the DATE-ANSWER FLOOR (Notes-10 Phase 1 — a "today is
                      <date>" claim contradicting the machine clock is regenerated
                      once then CODE-SUBSTITUTED with the real date; the clock is
-                     authoritative by construction, so the fix can't be wrong).
+                     authoritative by construction, so the fix can't be wrong),
+                     the QUOTE-DON'T-RECALL barrier (armor A7 — every durable
+                     field value surfaced this turn [retrieved snippets +
+                     memory reads] is ledgered; a reply that talks about that
+                     field with a DIFFERENT atom (the HX711->HX717 class) gets
+                     a forced re-read of the source note + one retry, and if
+                     the retry still won't quote it, code APPENDS the record
+                     line verbatim — the stored bytes end up in the reply no
+                     matter what; atom-less prose values are exempt so normal
+                     recall isn't strangled), and the OUTPUT-SCRIPT FLOOR
+                     (armor S1, CFG-007 — the settled reply's letters must be
+                     Latin script; a drifted reply [intermittent Thai] gets
+                     one regeneration then an honest code-built fallback,
+                     never garbled text presented as an answer).
+                     SELF-CONSISTENCY VOTING (armor A6) rides inside the same
+                     loop for canonicalizable SHORT outputs only: a
+                     single-calc round's ARGUMENTS and the final reply of an
+                     ANSWER-contract turn are sampled voting.n times (config,
+                     default 3) and the majority — judged by core\canon.py,
+                     the SAME canonicalizers the suite's graders import, so
+                     engine and grader can never disagree about equality —
+                     wins; a split vote keeps the original and the agreement
+                     rate is logged (the hardness signal A8/S2 will consume).
+                     Full chat replies are never voted (N× decode, and prose
+                     has no canonical form).
                      The greeting/briefing PROACTIVE path is likewise grounded
                      (Notes-10 Phase 1): the engine runs read_calendar itself and
                      injects it as DATA, and strips any phantom scheduled item the
@@ -96,6 +120,15 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
 
 core\model.py        OllamaClient — the ONLY file that knows how the model is
                      served (local HTTP). Swap serving stacks here.
+core\canon.py        shared canonicalizers (armor A6): ANSWER-line extraction,
+                     unit normalization, Pint-equal canonical forms for
+                     answers/calc-args/structs, and the majority() vote rule.
+                     ONE implementation, two callers: the engine's
+                     self-consistency voting AND the suite's graders
+                     (tests\helpers\extract.py / truth.py re-export from
+                     here). Never fork these — a fork could make the engine
+                     outvote an answer the grader calls correct. Regex + Pint
+                     + json only; no model call, by the armor directive.
 core\reasoning.py    scaffold text (config-tunable working discipline).
 
 core\invariants.py   THE CONSTITUTION — the four invariants as a code
