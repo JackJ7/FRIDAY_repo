@@ -9,6 +9,7 @@ from helpers.harness import repeat_behavior
 
 @pytest.mark.case("COM-001", "casual intent is inferred into a PENDING commitment (N runs)")
 @pytest.mark.model
+@pytest.mark.skill("project_ops")
 def test_inference_pending(sandbox, detail):
     def attempt(i):
         sb = sandbox
@@ -18,7 +19,7 @@ def test_inference_pending(sandbox, detail):
         pend = sb.service.engine.tracker.pending_items()
         return (len(pend) == 1), {"pending": [c.text for c in pend],
                                   "tools": sb.rec.tool_names()}
-    ok, runs = repeat_behavior(attempt, sandbox=sandbox)
+    ok, runs = repeat_behavior(attempt, sandbox=sandbox, detail=detail)
     detail["runs"] = [d for _, d in runs]
     detail["flaky"] = 0 < sum(1 for o, _ in runs if not o) < len(runs)
     assert ok, "casual intent not inferred to exactly one pending item"
@@ -85,6 +86,7 @@ def test_dnd_persist(sandbox):
 
 @pytest.mark.case("COM-008", "model-driven close marks a commitment done via tool")
 @pytest.mark.model
+@pytest.mark.skill("project_ops")
 def test_model_close(sandbox, detail):
     tr = sandbox.service.engine.tracker
     tr._save([], "reset")

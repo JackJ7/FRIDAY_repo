@@ -88,6 +88,7 @@ def test_hand_edit(sandbox):
 
 @pytest.mark.case("TML-006", "model creates a timeline from a scope description (tool fires)")
 @pytest.mark.model
+@pytest.mark.skill("project_ops")
 def test_model_creates(sandbox, detail):
     reply = sandbox.ask(
         f"Set up a project timeline for {TP}: first finalize the frame design, "

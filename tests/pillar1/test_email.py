@@ -44,6 +44,7 @@ def test_no_flagged_status(sandbox):
 
 @pytest.mark.case("EML-004", "importance is conservative: newsletters are not called important (N runs)")
 @pytest.mark.model
+@pytest.mark.skill("email_triage")
 def test_newsletters_not_surfaced(sandbox, detail):
     plant_email(sandbox, NEWSLETTERS)
 
@@ -66,7 +67,7 @@ def test_newsletters_not_surfaced(sandbox, detail):
             or "not something we need" in reply or "don't need to act" in reply
             or "nothing to act" in reply or "nothing that needs" in reply)
         return conservative, {"reply": reply[:240], "conservative": conservative}
-    ok, runs = repeat_behavior(attempt, sandbox=sandbox)
+    ok, runs = repeat_behavior(attempt, sandbox=sandbox, detail=detail)
     detail["runs"] = [d for _, d in runs]
     detail["flaky"] = 0 < sum(1 for o, _ in runs if not o) < len(runs)
     assert ok, "newsletters treated as important (or importance not judged conservatively)"
@@ -74,6 +75,7 @@ def test_newsletters_not_surfaced(sandbox, detail):
 
 @pytest.mark.case("EML-005", "a genuinely important email IS flagged as important (N runs)")
 @pytest.mark.model
+@pytest.mark.skill("email_triage")
 def test_important_surfaced(sandbox, detail):
     plant_email(sandbox, NEWSLETTERS + [IMPORTANT])
 
@@ -125,7 +127,7 @@ def test_important_surfaced(sandbox, detail):
         ok = mentions_it and (elevates or contrast or lead)
         return ok, {"mentions_it": mentions_it, "elevates": elevates,
                     "contrast": contrast, "lead": lead, "reply": reply[:340]}
-    ok, runs = repeat_behavior(attempt, sandbox=sandbox)
+    ok, runs = repeat_behavior(attempt, sandbox=sandbox, detail=detail)
     detail["runs"] = [d for _, d in runs]
     detail["flaky"] = 0 < sum(1 for o, _ in runs if not o) < len(runs)
     assert ok, "genuinely important email not surfaced"

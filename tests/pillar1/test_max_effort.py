@@ -61,6 +61,7 @@ def test_escalation_logged_and_budget_reported(sandbox, monkeypatch):
 
 
 @pytest.mark.model
+@pytest.mark.skill("thinking_skills")
 @pytest.mark.upgrade
 @pytest.mark.case("MAX-002", "multi-subsystem trick problem escalates; output carries the max-effort fingerprint (N runs)")
 def test_hard_problem_escalates_with_fingerprint(sandbox, detail):
@@ -97,12 +98,13 @@ def test_hard_problem_escalates_with_fingerprint(sandbox, detail):
             "escalated": escalated, "partition": partition,
             "residual": residual, "flaw_named": flaw, "reply": reply[:220]}
 
-    ok, results = repeat_behavior(once, sandbox=sandbox)
+    ok, results = repeat_behavior(once, sandbox=sandbox, detail=detail)
     detail["runs"] = [str(r[1]) for r in results]
     assert ok, "no escalation, or the max-effort fingerprint is missing"
 
 
 @pytest.mark.model
+@pytest.mark.skill("thinking_skills")
 @pytest.mark.upgrade
 @pytest.mark.case("MAX-003", "a simple question does NOT escalate (N runs)")
 def test_simple_question_stays_cheap(sandbox, detail):
@@ -120,6 +122,6 @@ def test_simple_question_stays_cheap(sandbox, detail):
         return (not escalated) and answered, {
             "escalated": escalated, "answered": answered, "reply": reply[:160]}
 
-    ok, results = repeat_behavior(once, sandbox=sandbox)
+    ok, results = repeat_behavior(once, sandbox=sandbox, detail=detail)
     detail["runs"] = [str(r[1]) for r in results]
     assert ok, "method theater (or no answer) on a trivial question"

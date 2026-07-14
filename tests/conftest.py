@@ -23,18 +23,60 @@ sys.path.insert(0, str(TESTS_DIR))
 sys.path.insert(0, str(FRIDAY_ROOT))
 
 from helpers.harness import SandboxFriday  # noqa: E402
+from helpers.taxonomy import SKILLS, skill_tag_errors  # noqa: E402
 
 # ---------- markers ----------
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--skill", action="store", default=None,
+        help="run only cases tagged @pytest.mark.skill(<name>) — the armor "
+             "plan's per-skill re-run tier (run_suite.py --skill <tag>)")
+
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "case(id, desc): stable case ID + description")
     config.addinivalue_line("markers", "model: needs the live local LLM (slow)")
     config.addinivalue_line(
         "markers",
+        "skill(name, ...): scorecard skill tag(s) from helpers/taxonomy.py — "
+        "REQUIRED on every model-marked case (collection fails otherwise)")
+    config.addinivalue_line(
+        "markers",
         "upgrade: upgrade-plan feature test — excluded from the fine-tune "
         "A/B yardstick (eval_compare runs 'model and not upgrade') so new "
         "feature tests can't churn model comparisons")
     _Report.instance = _Report()
+
+
+def _item_skills(item):
+    """All skill names on an item (a case may legitimately carry two)."""
+    names = []
+    for m in item.iter_markers("skill"):
+        names.extend(m.args)
+    return names
+
+
+@pytest.hookimpl(tryfirst=True)  # before pytest's own -m deselection, so the
+def pytest_collection_modifyitems(config, items):  # totality check sees ALL cases
+    errors = skill_tag_errors(
+        (item.nodeid, item.get_closest_marker("model") is not None,
+         _item_skills(item)) for item in items)
+    if errors:
+        raise pytest.UsageError(
+            "skill-tag taxonomy violated (armor plan §4.1):\n  "
+            + "\n  ".join(errors))
+    wanted = config.getoption("--skill")
+    if wanted:
+        if wanted not in SKILLS:
+            raise pytest.UsageError(
+                f"--skill {wanted!r} is not in the taxonomy: "
+                + ", ".join(sorted(SKILLS)))
+        keep = [i for i in items if wanted in _item_skills(i)]
+        dropped = [i for i in items if wanted not in _item_skills(i)]
+        if dropped:
+            config.hook.pytest_deselected(items=dropped)
+            items[:] = keep
 
 
 # ---------- fixtures ----------
@@ -134,6 +176,7 @@ class _Report:
         if callspec is not None and callspec.id not in cid:
             cid = f"{cid}[{callspec.id}]"
         entry = self.cases.get(cid, {"id": cid, "desc": desc, "file": str(item.fspath)})
+        entry["skills"] = _item_skills(item)   # scorecard rollup key (§4.2)
         entry["outcome"] = rep.outcome.upper()
         if rep.outcome == "skipped" and rep.longrepr:
             entry["skip_reason"] = str(rep.longrepr)[-300:]
@@ -222,3 +265,28 @@ def pytest_sessionfinish(session, exitstatus):
         r.write_json()
         r.write_html()
         print(f"\n[FRIDAY suite] report: {r.dir}\\report.html")
+        if r.cases:  # collect-only / empty sessions leave no scorecard
+            _write_scorecard(r)
+
+
+def _write_scorecard(r):
+    """scorecard.json beside the report + one appended ledger line — the
+    longitudinal record that makes 'did a tweak six weeks ago silently
+    regress email_triage' a grep, not an archaeology dig (§4.2)."""
+    from helpers.scorecard import provenance, rollup
+    card = {
+        "stamp": r.dir.name,
+        "started": r.meta.get("started"),
+        "finished": r.meta.get("finished"),
+        "provenance": provenance(),
+        "totals": r.summary(),
+        "skills": rollup(r.cases.values()),
+    }
+    (r.dir / "scorecard.json").write_text(
+        json.dumps(card, indent=1, ensure_ascii=False), encoding="utf-8")
+    ledger_line = dict(card)
+    ledger_line["skills"] = {name: s["pass_rate"]
+                             for name, s in card["skills"].items()}
+    with (r.dir.parent / "ledger.jsonl").open("a", encoding="utf-8") as f:
+        f.write(json.dumps(ledger_line, ensure_ascii=False) + "\n")
+    print(f"[FRIDAY suite] scorecard: {r.dir}\\scorecard.json")

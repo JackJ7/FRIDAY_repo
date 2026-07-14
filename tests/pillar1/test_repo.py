@@ -111,6 +111,7 @@ def test_workspace_readonly(sandbox, tmp_path):
 
 
 @pytest.mark.model
+@pytest.mark.skill("playbook_following")
 @pytest.mark.upgrade
 @pytest.mark.case("REPO-005", "diff review follows the playbook: intent, correctness first, file:line cited (N runs)")
 def test_review_follows_playbook(sandbox, tmp_path, detail):
@@ -152,6 +153,6 @@ def test_review_follows_playbook(sandbox, tmp_path, detail):
             "cites": cites, "finds_bug": finds_bug, "no_push": no_push,
             "reply": reply[:200]}
 
-    ok, results = repeat_behavior(once, sandbox=sandbox)
+    ok, results = repeat_behavior(once, sandbox=sandbox, detail=detail)
     detail["runs"] = [str(r[1]) for r in results]
     assert ok, "review missed the planted bug, citation, or claimed a push"

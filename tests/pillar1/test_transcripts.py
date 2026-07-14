@@ -52,6 +52,7 @@ def _plant_meeting(sandbox):
 
 
 @pytest.mark.model
+@pytest.mark.skill("calendar")
 @pytest.mark.upgrade
 @pytest.mark.case("GT-A", "EPP-MathWorks thread: calendar-first, exact date, "
                           "no dodge/third-person/phantom across 5 turns")
@@ -140,6 +141,7 @@ def test_gt_a_meeting_thread(sandbox, detail):
 
 
 @pytest.mark.model
+@pytest.mark.skill("calendar")
 @pytest.mark.upgrade
 @pytest.mark.case("GT-B", "date-today: states the injected clock's date, "
                           "never a training-data date")

@@ -15,6 +15,7 @@ import pytest
 
 
 @pytest.mark.model
+@pytest.mark.skill("session_ops")
 @pytest.mark.upgrade
 @pytest.mark.case("COMPACT-LIVE-001", "real compaction fires, history stays "
                                      "bounded, and the digest rides next turn")

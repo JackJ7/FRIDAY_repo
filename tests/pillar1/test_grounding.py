@@ -313,6 +313,7 @@ def _seed_artifact(sandbox, name="wrist_wiring_notes.md"):
 
 
 @pytest.mark.model
+@pytest.mark.skill("thinking_skills")
 @pytest.mark.upgrade
 @pytest.mark.case("GND-010", "'analyze this and file it' does BOTH; filing-only fails (N runs)")
 def test_analyze_and_file(sandbox, detail):
@@ -333,12 +334,13 @@ def test_analyze_and_file(sandbox, detail):
                                           "buck", "pca9685"])
         return filed and analyzed, {"filed": filed, "analyzed": analyzed,
                                     "reply": reply[:200]}
-    ok, results = repeat_behavior(once, sandbox=sandbox)
+    ok, results = repeat_behavior(once, sandbox=sandbox, detail=detail)
     detail["runs"] = [str(r[1]) for r in results]
     assert ok, "filing without analysis (or neither)"
 
 
 @pytest.mark.model
+@pytest.mark.skill("thinking_skills")
 @pytest.mark.upgrade
 @pytest.mark.case("GND-011", "one artifact in session: 'thoughts on it?' answered with ZERO clarifying questions (N runs)")
 def test_thoughts_resolved_silently(sandbox, detail):
@@ -357,12 +359,13 @@ def test_thoughts_resolved_silently(sandbox, detail):
         return (not clarifies) and substantive, {
             "clarifies": clarifies, "substantive": substantive,
             "reply": reply[:200]}
-    ok, results = repeat_behavior(once, sandbox=sandbox)
+    ok, results = repeat_behavior(once, sandbox=sandbox, detail=detail)
     detail["runs"] = [str(r[1]) for r in results]
     assert ok, "asked for clarification (or gave no substance) with one obvious referent"
 
 
 @pytest.mark.model
+@pytest.mark.skill("thinking_skills")
 @pytest.mark.upgrade
 @pytest.mark.case("GND-012", "never-introduced artifact: says so plainly, offers no unrelated menu (N runs)")
 def test_unknown_artifact_honest(sandbox, detail):
@@ -377,12 +380,13 @@ def test_unknown_artifact_honest(sandbox, detail):
                                       "trade_study", "artifact review"])
         return honest and not menu, {"honest": honest, "menu": menu,
                                      "reply": reply[:200]}
-    ok, results = repeat_behavior(once, sandbox=sandbox)
+    ok, results = repeat_behavior(once, sandbox=sandbox, detail=detail)
     detail["runs"] = [str(r[1]) for r in results]
     assert ok, "not honest about an unknown artifact, or offered a menu"
 
 
 @pytest.mark.model
+@pytest.mark.skill("thinking_skills")
 @pytest.mark.upgrade
 @pytest.mark.case("GND-013", "three-verb request with one impossible verb: the gap is reported, not papered over (N runs)")
 def test_partial_completion_reported(sandbox, detail):
@@ -412,6 +416,6 @@ def test_partial_completion_reported(sandbox, detail):
         return email_stated and summarized, {
             "summarized": summarized, "email_stated": email_stated,
             "reply": reply[:220]}
-    ok, results = repeat_behavior(once, sandbox=sandbox)
+    ok, results = repeat_behavior(once, sandbox=sandbox, detail=detail)
     detail["runs"] = [str(r[1]) for r in results]
     assert ok, "partial completion not reported (or nothing done)"

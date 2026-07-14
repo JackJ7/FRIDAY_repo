@@ -60,6 +60,7 @@ def test_slip_classifier():
 
 @pytest.mark.case("PROP-010", "Ohm's law: I = V/R within tolerance over random V,R")
 @pytest.mark.model
+@pytest.mark.skill("quant_math")
 @MODEL_SETTINGS
 @given(v=st.integers(1, 24), r=st.integers(2, 1000))
 def test_ohms_law(sandbox_session, v, r, prop_detail):
@@ -82,6 +83,7 @@ def test_ohms_law(sandbox_session, v, r, prop_detail):
 
 @pytest.mark.case("PROP-011", "power P = V*I within tolerance over random V,I")
 @pytest.mark.model
+@pytest.mark.skill("quant_math")
 @MODEL_SETTINGS
 @given(v=st.integers(1, 48), i=st.integers(1, 40))
 def test_power(sandbox_session, v, i, prop_detail):
@@ -101,6 +103,7 @@ def test_power(sandbox_session, v, i, prop_detail):
 
 @pytest.mark.case("PROP-012", "energy over time: no minutes/hours (x60) magnitude slip")
 @pytest.mark.model
+@pytest.mark.skill("quant_math")
 @MODEL_SETTINGS
 @given(watts=st.integers(1, 200), minutes=st.integers(1, 300))
 def test_energy_no_time_slip(sandbox_session, watts, minutes, prop_detail):

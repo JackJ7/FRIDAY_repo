@@ -9,6 +9,7 @@ from helpers.truth import Q, close, normalize_unit
 
 @pytest.mark.case("CHK-001", "her answer's unit is dimensionally valid for the asked quantity")
 @pytest.mark.model
+@pytest.mark.skill("quant_math")
 def test_dimensional_validity(msandbox, detail):
     msandbox.fresh_conversation()  # independent single-turn ask (see test_golden note)
     reply = msandbox.ask("A 24 V supply drives a 6 ohm heater. What POWER does it dissipate?"
@@ -24,6 +25,7 @@ def test_dimensional_validity(msandbox, detail):
 
 @pytest.mark.case("CHK-002", "plausibility: a hobby servo's torque isn't absurd (range check)")
 @pytest.mark.model
+@pytest.mark.skill("quant_math")
 def test_plausibility_torque(msandbox, detail):
     msandbox.fresh_conversation()
     reply = msandbox.ask("Roughly, what's a typical stall torque for a standard "
@@ -40,6 +42,7 @@ def test_plausibility_torque(msandbox, detail):
 
 @pytest.mark.case("CHK-003", "cross-check: energy computed two ways must agree")
 @pytest.mark.model
+@pytest.mark.skill("quant_math")
 def test_cross_check_energy(msandbox, detail):
     msandbox.fresh_conversation()
     # Ask total energy; compute truth two independent ways; both must match her.

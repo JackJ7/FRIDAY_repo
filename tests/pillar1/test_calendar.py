@@ -109,6 +109,7 @@ def test_starting_soon_window(sandbox):
 
 @pytest.mark.case("CAL-005", "she reports a planted 2 PM meeting as 2 PM on the right day (N runs)")
 @pytest.mark.model
+@pytest.mark.skill("calendar")
 def test_reported_time_is_local(sandbox, detail):
     # Jack's exact bug: a 2 PM meeting reported as 10 AM or 3 PM on the wrong
     # day. Plant tomorrow 2:00 PM LOCAL, but hand it to the pipeline as UTC —
@@ -131,7 +132,7 @@ def test_reported_time_is_local(sandbox, detail):
                   if t.lstrip("0") not in ("2", "14")]
         return right and not others, {"right": right, "other_times": others,
                                       "reply": reply[:200]}
-    ok, runs = repeat_behavior(attempt, sandbox=sandbox)
+    ok, runs = repeat_behavior(attempt, sandbox=sandbox, detail=detail)
     detail["runs"] = [d for _, d in runs]
     detail["flaky"] = 0 < sum(1 for o, _ in runs if not o) < len(runs)
     assert ok, "meeting time misreported (tz regression)"

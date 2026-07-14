@@ -197,6 +197,7 @@ def _seed_note(sandbox, rel, text):
 # ===========================================================================
 
 @pytest.mark.model
+@pytest.mark.skill("calendar")
 @pytest.mark.upgrade
 @pytest.mark.case("GT-C1", "date-today floor: states the machine clock's date, "
                            "never a training-data date")
@@ -220,6 +221,7 @@ def test_gt_c1_date_today(sandbox, detail):
 # ===========================================================================
 
 @pytest.mark.model
+@pytest.mark.skill("briefing")
 @pytest.mark.upgrade
 @pytest.mark.case("GT-C2", "greeting/briefing must not present a stale "
                            "calendar-mirror note's event as current")
@@ -296,6 +298,7 @@ def test_gt_c2_stale_calendar_mirror(sandbox, detail):
 # ===========================================================================
 
 @pytest.mark.model
+@pytest.mark.skill("project_ops")
 @pytest.mark.upgrade
 @pytest.mark.case("GT-C3", "resolve 'the <throwaway> project' to the real "
                            "folder in its note's Folder line, not a guess")
@@ -328,6 +331,7 @@ def test_gt_c3_folder_resolution(sandbox, detail):
 # ===========================================================================
 
 @pytest.mark.model
+@pytest.mark.skill("briefing")
 @pytest.mark.upgrade
 @pytest.mark.case("GT-C4", "a bare affirmative accepts FRIDAY's standing "
                            "offer instead of re-asking for context")
@@ -359,6 +363,7 @@ def test_gt_c4_affirmative_accepts_offer(sandbox, detail):
 # ===========================================================================
 
 @pytest.mark.model
+@pytest.mark.skill("project_ops")
 @pytest.mark.upgrade
 @pytest.mark.case("GT-C5", "'make the 3 <throwaway> projects one' surfaces "
                            "them + proposes a merge; never create_project")
@@ -396,6 +401,7 @@ def test_gt_c5_consolidation(sandbox, detail):
 # ===========================================================================
 
 @pytest.mark.model
+@pytest.mark.skill("memory_recall")
 @pytest.mark.upgrade
 @pytest.mark.case("GT-C6", "recall finds a note whose name is two words "
                            "written as one slug")
@@ -429,6 +435,7 @@ def test_gt_c6_fuzzy_recall(sandbox, detail):
 # ===========================================================================
 
 @pytest.mark.model
+@pytest.mark.skill("briefing")
 @pytest.mark.upgrade
 @pytest.mark.case("GT-C7", "a fresh instance never presents a crashed research "
                            "run as still in progress")
@@ -484,6 +491,7 @@ def test_gt_c7_crashed_run_not_inprogress(sandbox, detail):
 # ===========================================================================
 
 @pytest.mark.model
+@pytest.mark.skill("briefing")
 @pytest.mark.upgrade
 @pytest.mark.case("GT-C8", "a note-recorded action is framed as a record, not "
                            "recited as a fresh first-person action")

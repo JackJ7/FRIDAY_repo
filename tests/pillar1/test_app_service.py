@@ -45,6 +45,7 @@ def test_acquire_lock(monkeypatch):
 
 @pytest.mark.case("APP-003", "service busy guard: a second message mid-reply is refused, not queued")
 @pytest.mark.model
+@pytest.mark.skill("session_ops")
 def test_busy_guard(sandbox, detail):
     errors = []
     sandbox.service._frontend["on_error"] = lambda m: errors.append(m)
@@ -86,6 +87,7 @@ def test_windowless_launch(tmp_path):
 
 @pytest.mark.case("APP-005", "graceful vs hard kill: brain state identical either way")
 @pytest.mark.model
+@pytest.mark.skill("memory_persistence")
 def test_graceful_equals_hard(sandbox):
     # Graceful path already covered by MEM-005 (hard kill). Here: a graceful
     # restart preserves a committed write.

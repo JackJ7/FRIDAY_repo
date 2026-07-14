@@ -12,6 +12,7 @@ from helpers.harness import SEED_PROJECTS, repeat_behavior
 
 @pytest.mark.case("MEM-001", "a stated durable fact is committed to the brain (persisted)")
 @pytest.mark.model
+@pytest.mark.skill("memory_persistence")
 def test_fact_written(sandbox, detail):
     # Assert on PERSISTENCE, not on a main-turn tool call. Durable facts are
     # designed to commit in the post-reply memory pass, whose writes surface via
@@ -29,6 +30,7 @@ def test_fact_written(sandbox, detail):
 
 @pytest.mark.case("MEM-002", "a stated fact survives a service restart (fresh instance recalls it)")
 @pytest.mark.model
+@pytest.mark.skill("memory_persistence")
 def test_restart_recall(sandbox, detail):
     sandbox.ask("Note this down: the alpha rig's load cell amplifier is an HX711 board.")
     sandbox.restart()
@@ -39,6 +41,7 @@ def test_restart_recall(sandbox, detail):
 
 @pytest.mark.case("MEM-003", "a correction UPDATES the authoritative note in place (no contradiction left)")
 @pytest.mark.model
+@pytest.mark.skill("memory_persistence")
 def test_correction_in_place(sandbox, detail):
     reply = sandbox.ask("Correction: the alpha rig's load cell is 50 kg rated, "
                         "not 20 kg - we upgraded it. Fix your note.")
@@ -52,6 +55,7 @@ def test_correction_in_place(sandbox, detail):
 
 @pytest.mark.case("MEM-004", "a pure question commits nothing to memory")
 @pytest.mark.model
+@pytest.mark.skill("memory_persistence")
 def test_question_writes_nothing(sandbox, detail):
     sandbox.ask("What's the pressure rating on the beta probe housing?")
     detail["memory_writes"] = sandbox.rec.memory_writes
@@ -62,6 +66,7 @@ def test_question_writes_nothing(sandbox, detail):
 @pytest.mark.case("MEM-005", "hard-kill durability: a stated status change survives "
                              "process murder at main-turn completion (every project)")
 @pytest.mark.model
+@pytest.mark.skill("memory_persistence")
 @pytest.mark.parametrize("project", list(SEED_PROJECTS))
 def test_hard_kill_durability(sandbox, project, detail):
     child = subprocess.Popen(
@@ -145,6 +150,7 @@ def test_write_through(sandbox):
 
 @pytest.mark.case("MEM-010", "one fact, one place: memory pass never leaves conflicting field values")
 @pytest.mark.model
+@pytest.mark.skill("memory_persistence")
 def test_no_contradiction_after_pass(sandbox, detail):
     sandbox.ask("The alpha rig load cell got swapped again - it's 100 kg rated now. Update it.")
     note = sandbox.note("projects/alpha_rig.md")

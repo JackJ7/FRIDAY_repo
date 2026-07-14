@@ -47,6 +47,7 @@ def test_refine(sandbox):
 
 @pytest.mark.case("PLB-004", "a task matching a seeded playbook is FOLLOWED, not improvised (N runs)")
 @pytest.mark.model
+@pytest.mark.skill("playbook_following")
 def test_cold_match(sandbox, detail):
     # The seeded playbook's full steps are auto-injected into context (small
     # set), so following it no longer depends on the model calling read_playbook
@@ -78,7 +79,7 @@ def test_cold_match(sandbox, detail):
         return followed, {"followed": followed, "has_criteria": has_criteria,
                           "killed_runnerup": killed_runnerup, "has_table": has_table,
                           "reply": reply[:180]}
-    ok, runs = repeat_behavior(attempt, sandbox=sandbox)
+    ok, runs = repeat_behavior(attempt, sandbox=sandbox, detail=detail)
     detail["runs"] = [d for _, d in runs]
     detail["flaky"] = 0 < sum(1 for o, _ in runs if not o) < len(runs)
     assert ok, "matching playbook was not followed (no criteria-based comparison)"

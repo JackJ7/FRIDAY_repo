@@ -417,5 +417,79 @@ audit phase.
 
 ## 6. Results log
 
-*(empty — filled per phase as they land; first entry will be the A0 baseline
-scorecard)*
+### Phase A0 — harness extension + baseline (IN PROGRESS, started 2026-07-13)
+
+Section tracker (updated in place as each lands — next session: resume at the
+first section not marked DONE):
+
+| Section | Content | Status |
+|---|---|---|
+| A0.1 | Skill-tag taxonomy + marker sweep over all model cases + collection-time enforcement | **DONE** |
+| A0.2 | `scorecard.json` per run + `results\ledger.jsonl` + provenance block | **DONE** |
+| A0.3 | `--compare <base> <cand>` + `--skill <tag>` in `run_suite.py` | **DONE** |
+| A0.4 | Guard tests for the harness itself + `--quick` green verification | **DONE** |
+| A0.5 | Full-suite **baseline run** on current main → scorecard recorded below | IN PROGRESS |
+
+*(findings per section appended below as they complete)*
+
+**A0.1 — DONE (2026-07-13).** Taxonomy lives in `tests\helpers\taxonomy.py`
+(single source of truth + `skill_tag_errors()` so guard tests can hit the
+check without a pytest run); enforcement + `--skill` filter in
+`tests\conftest.py` (`tryfirst` hook so the totality check sees all cases
+before `-m` deselection). All **62** model-marked decorator sites tagged.
+Findings / decisions made during the sweep:
+- **Taxonomy landed at 13 skills, not 12**: added `session_ops` for
+  live-model cases that score session *plumbing* (APP-003 busy guard,
+  COMPACT-LIVE-001 history compaction) — filing those under a capability
+  skill would pollute that skill's regression signal.
+- **Multi-tag support**: a case may carry two skills and counts in both
+  rollups. Used once so far: CFG-007 = `project_ops` + `voice` (its content
+  is governance accuracy, but it is THE recurring Thai-drift case, so S1's
+  output-script floor must show up under voice via this case).
+- **`video` currently has zero model cases** (VID-001..008 are code/pipeline
+  tests; VID-008 needs ffmpeg, not the LLM). The skill stays in the taxonomy
+  as vocabulary for future cases.
+- **Exact pass fractions now recorded**: `repeat_behavior()` gained a
+  `detail=` kwarg writing `run_passes`/`run_total` into the report evidence;
+  all 29 call sites threaded. Scorecard scores a case as passes/N per §4.2.
+- Verified: full collection green (331 cases); an untagged model probe fails
+  collection with a named violation; `--skill quant_math` selects 23/331,
+  `--skill injection_defense` 13/331.
+
+**A0.2 — DONE (2026-07-13).** Scoring/provenance math is pure functions in
+`tests\helpers\scorecard.py` (importable by conftest, run_suite AND guard
+tests); conftest writes `results\<stamp>\scorecard.json` + appends one line
+to `results\ledger.jsonl` at session end (skipped for collect-only/empty
+sessions). Notes:
+- Case score = `run_passes/run_total` from evidence when present (all
+  repeat_behavior cases after A0.1), else 1.0/0.0 from the outcome;
+  SKIPPED cases are excluded from `pass_rate` but counted.
+- Provenance block verified live on a smoke run: `git_commit` (+ dirty
+  flag), `config_hash` (sha256 of friday_config.yaml, 12 hex), served model
+  **and its Ollama digest** (best-effort via /api/tags, 3 s timeout — a
+  cold machine yields null, never a failure), `deep_mode` model+enabled,
+  `suite_mode` (env `FRIDAY_SUITE_MODE`, set by run_suite), N, examples.
+- A dual-tagged case counts in BOTH skills' rollups, by design.
+
+**A0.3 — DONE (2026-07-13).** `run_suite.py` gained `--skill <tag>` (runs
+`-m model` + the conftest filter; suite_mode recorded as `skill:<tag>`) and
+`--compare <baseline> <candidate>` (stamps or paths; prints the per-skill
+delta table + newly-failing / newly-passing / only-in-one-run case lists,
+writes `compare_vs_<baseline>.json` into the candidate folder, **exits 1 on
+any regression** so scripts can gate on it). Verified against synthetic
+scorecards (delta table, newly-failing detection on a 1.0→0.6 drop, exit
+codes) and `--skill voice` collect-only (3/331 selected — the dual-tagged
+CFG-007 flows through the filter correctly). Definition tightened while
+building: "newly failing" = perfect at baseline (1.0), imperfect at
+candidate — a 5/5 case dropping to 4/5 IS flagged.
+
+**A0.4 — DONE (2026-07-13).** Guard tests
+`tests\pillar1\test_harness_scorecard.py` (HARN-001..007, code-only, run in
+every `--quick`): taxonomy totality check, case_score fraction/fallback
+rules, rollup buckets + dual-tag double-count, compare deltas +
+newly-failing on a partial drop, repeat_behavior fraction recording,
+provenance contract, taxonomy shape. **HARN-005 caught a real bug on first
+run** — `repeat_behavior` counted all runs as passes (missing `if ok`);
+fixed before any scorecard was ever produced with the wrong math, which is
+exactly why the yardstick gets its own guards. Full `--quick` green through
+`run_suite.py`: **249/249** (242 pre-A0 + 7 HARN).

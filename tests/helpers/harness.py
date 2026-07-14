@@ -239,7 +239,7 @@ class SandboxFriday:
             capture_output=True, text=True).stdout
 
 
-def repeat_behavior(fn, n=None, sandbox=None):
+def repeat_behavior(fn, n=None, sandbox=None, detail=None):
     """Requirement C: run a phrasing-sensitive property n times. Returns
     (all_passed, results) where results = [(ok, detail), ...] for the report.
     Callers attach the x/n count so flaky cases are visible.
@@ -249,14 +249,22 @@ def repeat_behavior(fn, n=None, sandbox=None):
     degraded context suppresses tool-calling in later runs — which silently
     turned real behavior into flaky failures (commitment inference dropped from
     5/5 to 1/5 purely from shared history). Each run should test the behavior
-    from a clean slate, which is also how the feature is actually used."""
+    from a clean slate, which is also how the feature is actually used.
+
+    Pass the test's `detail` dict so the exact pass fraction lands in the
+    report evidence — the per-skill scorecard (armor plan §4.2) scores a case
+    as passes/N, so "flaky" is a measured number, not just a flag."""
     n = n or n_runs()
     results = []
     for i in range(n):
         if sandbox is not None:
             sandbox.fresh_conversation()
-        ok, detail = fn(i)
-        results.append((bool(ok), str(detail)[:400]))
+        ok, run_detail = fn(i)
+        results.append((bool(ok), str(run_detail)[:400]))
+    passed = sum(1 for ok, _ in results if ok)
+    if detail is not None:
+        detail["run_passes"] = passed
+        detail["run_total"] = n
     return all(ok for ok, _ in results), results
 
 

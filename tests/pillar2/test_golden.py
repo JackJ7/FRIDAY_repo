@@ -18,6 +18,7 @@ PROBLEMS = yaml.safe_load(
 
 
 @pytest.mark.model
+@pytest.mark.skill("quant_math")
 @pytest.mark.parametrize("prob", PROBLEMS, ids=[p["id"] for p in PROBLEMS])
 def test_golden(prob, msandbox, request, detail):
     # Stamp this parametrized case with the golden problem's own ID.

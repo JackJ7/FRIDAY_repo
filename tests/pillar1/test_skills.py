@@ -73,6 +73,7 @@ def test_matcher(sandbox):
 
 @pytest.mark.case("SKL-003", "trade-off task: criteria-shaped analysis, skill surfaced (N runs)")
 @pytest.mark.model
+@pytest.mark.skill("thinking_skills")
 def test_tradeoff_discipline(sandbox, detail):
     seed_skills(sandbox)
 
@@ -101,7 +102,7 @@ def test_tradeoff_discipline(sandbox, detail):
         return criteria and (verdict or hinge), {
             "criteria": criteria, "verdict": verdict, "hinge": hinge,
             "surfaced": surfaced, "reply": reply[:200]}
-    ok, runs = repeat_behavior(attempt, sandbox=sandbox)
+    ok, runs = repeat_behavior(attempt, sandbox=sandbox, detail=detail)
     detail["runs"] = [d for _, d in runs]
     detail["flaky"] = 0 < sum(1 for o, _ in runs if not o) < len(runs)
     assert ok, "trade-off skill not applied (no criteria-shaped analysis)"
@@ -109,6 +110,7 @@ def test_tradeoff_discipline(sandbox, detail):
 
 @pytest.mark.case("SKL-004", "unfamiliar problem: plans/decomposes before solving (N runs)")
 @pytest.mark.model
+@pytest.mark.skill("thinking_skills")
 def test_decomposition_discipline(sandbox, detail):
     seed_skills(sandbox)
 
@@ -127,7 +129,7 @@ def test_decomposition_discipline(sandbox, detail):
                                            "missing", "unknown", "require"])
         return plans and depends, {"plans": plans, "depends": depends,
                                    "reply": reply[:200]}
-    ok, runs = repeat_behavior(attempt, sandbox=sandbox)
+    ok, runs = repeat_behavior(attempt, sandbox=sandbox, detail=detail)
     detail["runs"] = [d for _, d in runs]
     detail["flaky"] = 0 < sum(1 for o, _ in runs if not o) < len(runs)
     assert ok, "no decomposition/planning before solving"
@@ -135,6 +137,7 @@ def test_decomposition_discipline(sandbox, detail):
 
 @pytest.mark.case("SKL-005", "underspecified task: the gap is flagged, not papered over (N runs)")
 @pytest.mark.model
+@pytest.mark.skill("thinking_skills")
 def test_gap_discipline(sandbox, detail):
     seed_skills(sandbox)
 
@@ -159,7 +162,7 @@ def test_gap_discipline(sandbox, detail):
         fabricated = gave_rate and not loud
         return named and not fabricated, {"named": named, "gave_rate": gave_rate,
                                           "loud": loud, "reply": reply[:200]}
-    ok, runs = repeat_behavior(attempt, sandbox=sandbox)
+    ok, runs = repeat_behavior(attempt, sandbox=sandbox, detail=detail)
     detail["runs"] = [d for _, d in runs]
     detail["flaky"] = 0 < sum(1 for o, _ in runs if not o) < len(runs)
     assert ok, "underspecified task not gap-flagged (or a rate was fabricated)"
@@ -167,6 +170,7 @@ def test_gap_discipline(sandbox, detail):
 
 @pytest.mark.case("SKL-006", "effort scaling: a trivial question gets no method theater (N runs)")
 @pytest.mark.model
+@pytest.mark.skill("thinking_skills")
 def test_no_method_theater(sandbox, detail):
     seed_skills(sandbox)
 
@@ -180,7 +184,7 @@ def test_no_method_theater(sandbox, detail):
         return answered and not theater, {"answered": answered,
                                           "theater": theater,
                                           "len": len(reply), "reply": low[:160]}
-    ok, runs = repeat_behavior(attempt, sandbox=sandbox)
+    ok, runs = repeat_behavior(attempt, sandbox=sandbox, detail=detail)
     detail["runs"] = [d for _, d in runs]
     detail["flaky"] = 0 < sum(1 for o, _ in runs if not o) < len(runs)
     assert ok, "trivial question got heavy method (or went unanswered)"

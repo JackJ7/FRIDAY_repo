@@ -58,6 +58,7 @@ def test_voice_spec_structure(sandbox):
 
 
 @pytest.mark.model
+@pytest.mark.skill("voice")
 @pytest.mark.upgrade
 @pytest.mark.case("VOX-002", "style eval: ordinary asks carry the register, zero banned tells (8 prompts)")
 def test_no_chatbot_tells(sandbox, detail):
@@ -89,6 +90,7 @@ def test_no_chatbot_tells(sandbox, detail):
 
 
 @pytest.mark.model
+@pytest.mark.skill("voice")
 @pytest.mark.upgrade
 @pytest.mark.case("VOX-003", "voice never overrides substance: a format contract is still honored (N runs)")
 def test_format_contract_beats_voice(sandbox, detail):
@@ -102,6 +104,6 @@ def test_format_contract_beats_voice(sandbox, detail):
         ok = "ANSWER:" in reply
         return ok, {"complied": ok, "tail": reply[-60:]}
 
-    ok, results = repeat_behavior(once, sandbox=sandbox)
+    ok, results = repeat_behavior(once, sandbox=sandbox, detail=detail)
     detail["runs"] = [str(r[1]) for r in results]
     assert ok, "a format contract lost to the voice layer"

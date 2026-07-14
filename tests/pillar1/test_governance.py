@@ -132,6 +132,7 @@ def test_manual_edit_audited(sandbox):
 
 
 @pytest.mark.model
+@pytest.mark.skill("project_ops", "voice")
 @pytest.mark.upgrade
 @pytest.mark.case("CFG-007", "asked what she can change, she enumerates tiers accurately incl. locked (N runs)")
 def test_config_enumeration_in_conversation(sandbox, detail):
@@ -148,6 +149,6 @@ def test_config_enumeration_in_conversation(sandbox, detail):
             "used_tool": used_tool, "tiers_named": tiers_named,
             "reply": reply[:200]}
 
-    ok, results = repeat_behavior(once, sandbox=sandbox)
+    ok, results = repeat_behavior(once, sandbox=sandbox, detail=detail)
     detail["runs"] = [str(r[1]) for r in results]
     assert ok, "config enumeration missing tiers or not grounded in read_own_config"

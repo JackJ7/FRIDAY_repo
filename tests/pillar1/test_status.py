@@ -35,6 +35,7 @@ def test_status_map_in_prompt(sandbox):
 
 @pytest.mark.case("STA-003", "greeting never proposes starting a reference/side-interest project (N runs)")
 @pytest.mark.model
+@pytest.mark.skill("briefing")
 def test_greeting_respects_status(sandbox, detail):
     def attempt(i):
         g = sandbox.greeting().lower()
@@ -43,7 +44,7 @@ def test_greeting_respects_status(sandbox, detail):
                 if name in sentence and re.search(ACTION_WORDS, sentence):
                     return False, f"proposed action on '{name}': {sentence.strip()}"
         return True, g[:120]
-    ok, runs = repeat_behavior(attempt, sandbox=sandbox)
+    ok, runs = repeat_behavior(attempt, sandbox=sandbox, detail=detail)
     detail["runs"] = [f"{'ok' if o else 'FAIL'}: {d}" for o, d in runs]
     detail["flaky"] = 0 < sum(1 for o, _ in runs if not o) < len(runs)
     assert ok, "greeting pushed a non-active project (heuristic: name + action verb in one sentence)"
@@ -51,6 +52,7 @@ def test_greeting_respects_status(sandbox, detail):
 
 @pytest.mark.case("STA-004", "reference project content remains available as context")
 @pytest.mark.model
+@pytest.mark.skill("memory_recall")
 def test_reference_content_retrievable(sandbox, detail):
     reply = sandbox.ask("Quick question - what pressure rating is the beta probe housing?")
     detail["reply"] = reply[:300]
