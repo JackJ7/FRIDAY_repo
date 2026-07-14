@@ -493,3 +493,17 @@ run** — `repeat_behavior` counted all runs as passes (missing `if ok`);
 fixed before any scorecard was ever produced with the wrong math, which is
 exactly why the yardstick gets its own guards. Full `--quick` green through
 `run_suite.py`: **249/249** (242 pre-A0 + 7 HARN).
+
+**A0.5 — baseline run IN FLIGHT (launched 2026-07-13 ~17:34, expect hours).**
+Full overnight run (`python run_suite.py --overnight`, 338 cases, N=5,
+100 examples/property) from commit **3e11671** (the harness-extension
+commit — clean tree, so the scorecard provenance points at exactly what was
+measured). Pre-flight: port 47533 free (FRIDAY not running, no Ollama
+contention), AC standby already 0, `results\ledger.jsonl` reset so the
+baseline is its first line. Results land in `results\2026-07-13_1734\`
+(report + **scorecard.json**). **Code freeze in force until the run
+finishes** (frozen-code-during-evals rule — two runs were poisoned before).
+If this session dies mid-run: check `results\2026-07-13_1734\report.json`
+(it streams per-case); if the run completed, paste the scorecard's
+per-skill table below and flip A0.5 to DONE; if it died, relaunch the
+overnight run from 3e11671 — nothing else is pending.
