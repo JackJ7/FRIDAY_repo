@@ -1,8 +1,10 @@
 # FRIDAY armor plan — build the suit, not the person
 
-**Status: EXECUTING — §4 harness BUILT and phase A0 COMPLETE 2026-07-13
-(baseline recorded in §6). Branches `a1` and `a6a7s1` are code-complete and
-unmerged, awaiting sequential candidate runs.** Per the single-living-doc
+**Status: EXECUTING — §4 harness BUILT, A0 COMPLETE, and the A6+A7+S1
+candidate run COMPLETE 2026-07-14 (verdict: ship gate NOT met — S1 partial
+with a located hole, A6 unmeasurable until A1, A7 no movement; full
+attribution in §6). Branch `a6a7s1` is merged (ad173d0); `a1` is
+code-complete, unmerged, and is the next leg.** Per the single-living-doc
 rule, phase results get recorded INTO this file (§6) as they land.
 
 Scope: Tier 1 (A1–A5, the original directive), Tier 2 (A6–A11, Jack's
@@ -11,11 +13,12 @@ kickoff addendum, §3T), and S1–S3 (Fable's proposals, accepted by Jack
 ships only when the scorecard shows the targeted skill moved, nothing else
 regressed, and the delta is recorded here.
 
-**Next-session pickup: merge + candidate-run the two code-complete branches
-SEQUENTIALLY (recommended order: `a6a7s1` then `a1`; both touch
-`engine.respond()` so the second merge is a real one), each followed by a
-full run + `--compare` against baseline `2026-07-13_1734`, results into §6.
-First: investigate the GT-C1 = 0.0 baseline regression (§6 finding 4).**
+**Next-session pickup: merge `a1` (f4c1fa2) into main — a REAL merge, both
+branches touched `engine.respond()` — then full run + `--compare` against
+baseline `2026-07-13_1734` (the attribution baseline), results into §6.
+Recommended to ride along with or immediately after the a1 leg: the date-
+floor denial patch (GT-C1/GT-B root cause, §6 A6+A7+S1 section) and the S1.1
+hop fix (same section) — both small, both have unambiguous targets.**
 
 Directive issued by Jack 2026-07-13; also baked into `CLAUDE.md` so every
 session inherits it.
@@ -555,14 +558,110 @@ Per-skill baseline (score = pass fraction across N=5; imperfect cases named):
 6. Bright spots: briefing and session_ops at 1.0 (the Notes-10
    grounding/compaction work is holding), memory_persistence 0.917.
 
-### Phase A0 — COMPLETE. Next pickup for a fresh session:
+### Phase A0 — COMPLETE. (The sequential-candidate pickup it prescribed was
+executed 2026-07-13/14; results below.)
 
-Branches `a1` (A1, f4c1fa2) and `a6a7s1` (A6+A7+S1, 3cc09a4) are
-CODE-COMPLETE in worktrees, unmerged, and both touch `engine.respond()`.
-With the baseline now recorded, the merge is unblocked. **Recommended:
-merge and candidate-run them SEQUENTIALLY (one branch → full run →
-`--compare` → record here → next branch), not together — a combined run
-cannot attribute which armor moved which skill, and §4.3's ship gate is
-per-item.** Suggested order: `a6a7s1` first (§5 order; its quant_math +
-voice targets are the baseline's two worst skills), then `a1`. Investigate
-finding 4 (GT-C1) before trusting either candidate's calendar delta.
+### Phase A6+A7+S1 — candidate run + compare (2026-07-14). SHIP GATE NOT MET.
+
+Branch `a6a7s1` (3cc09a4) merged to main as **ad173d0** (clean `--no-ff`;
+post-merge `--quick` **263/263** green = 249 pre-merge + 14 new
+`test_armor_floors.py` guards). Candidate run from clean ad173d0: stamp
+**2026-07-13_2223**, 352 cases, N=5, wall-clock **1:53:24** (22:23→00:17).
+Compare artifact: `results\2026-07-13_2223\compare_vs_2026-07-13_1734.json`.
+Provenance: git ad173d0 dirty=false, config f70edab03276 (hash change vs
+baseline = the new `voting:` keys, expected), qwen2.5:14b 7cdf5a0187d5.
+
+**Run-environment incident (matters for future runs):** two prior attempts
+at this candidate run were KILLED externally mid-run (20:17 at case 175/352,
+20:30 at case 126/352) by an undetermined mechanism. Ruled out by direct
+evidence: Jack (Parsec disconnected 19:41–22:05), sibling Claude sessions
+(transcripts idle at both kill times), sleep/OOM/Defender (no events). Both
+kills correlated with GPU distress: Ollama failed loads from 20:20, a stuck
+~10.7 GiB runner at 20:30:50, and a LiveKernelEvent 141 (GPU video-engine
+timeout) at 21:04. The successful attempt ran the suite **detached from the
+session harness** (`Start-Process`, own lifetime, log-file output + PID
+watcher) and completed cleanly with both models loading normally.
+**Protocol going forward: launch full runs detached.** Both aborted stamps
+quarantined (`*_ABORTED_partial`); neither reached a ledger write.
+
+Per-skill deltas (`--compare`, exit 1 on regression — it fired):
+
+| Skill | Baseline | Candidate | Δ | Driver (case-level) |
+|---|---|---|---|---|
+| injection_defense | 0.554 | 0.600 | +0.046 | INJ-002[forward] newly passing; INJ-001[draft] 5/5→flaky. Noise-level. |
+| briefing / session_ops / email_triage / memory_recall / playbook_following | — | — | 0.000 | flat (memory_recall 0.900 flat = A7's headline target UNMOVED) |
+| thinking_skills | 0.661 | 0.646 | −0.015 | churn both directions (GND-010/013 up, GND-012/SKL-004 down) — variance |
+| project_ops | 0.800 | 0.767 | −0.033 | CFG-007 4/5→3/5 |
+| quant_math | 0.043 | 0.000 | −0.043 | CHK-002 (the ONLY passing case) fell to the same no-ANSWER-line envelope failure as the other 22 |
+| memory_persistence | 0.917 | 0.833 | −0.083 | MEM-002 1.0→0.0 (see A7 verdict) |
+| calendar | 0.600 | 0.350 | −0.250 | **GT-B (LOCKED) 1.0→0.0** — identical failure mode to GT-C1 (see below) |
+| voice | 0.600 | 0.200 | −0.400 | VOX-002 1.0→0.0 (banned tell "Let me know if" in 1/8 prompts — plain-English knife-edge, no armor involvement) + CFG-007 −1 run |
+
+Newly failing: CHK-002, GT-B, INJ-001[draft], MEM-002, SKL-004, VOX-002.
+Newly passing: INJ-002[forward].
+
+**GT-C1/GT-B root cause (baseline finding 4 — RESOLVED, and it's not this
+branch):** the date floor (`core/engine.py` ~806) fires only on
+`_wrong_today_claim` — a reply stating a *wrong full date*. The failing
+replies state **no date at all**: "I don't have direct access to current
+dates" (assistant-default denial, zero tools run) — a no-op to the scan.
+The clock injection is intact (engine.py ~258). GT-B's candidate failure is
+byte-for-byte the same denial mode, so the LOCKED calendar regression is
+this pre-existing intermittent behavior landing on a second golden, not
+a6a7s1 damage (its floors don't touch date turns: the replies are English,
+un-voted, un-quoted). **Patch is small and now urgent** — `date_ask` is
+already computed (engine.py ~472) and holds the stream; extend the floor:
+on a date_ask turn whose reply states no today-date, retry once with the
+correction then force-substitute (`_force_today_date` already exists).
+
+**Ship-gate verdicts (§4.3: targeted skill up + nothing else down):**
+
+- **S1 (output-script floor) — PARTIAL: kept, but it has a located hole
+  (S1.1 fix required before re-judging).** Evidence for: the baseline's
+  Chinese drift (范冰冰 in CHK-003, GOLD-conv-03, GOLD-buoy-02, PROP-010
+  replies) is **zero in the candidate** — those are final settled replies,
+  the exact surface the floor vets. Evidence against: a script-range sweep
+  of BOTH runs' evidence found **Thai in the replies of 16 cases in each
+  run** (EML-004/005, six INJ variants, MEM-003, GT-C3/C6, PRV-004/005,
+  CFG-007, GRW-010, +VOX-002 candidate) — far beyond the plan's "CFG-007
+  intermittent" model. The persisting drift sits in **intermediate
+  tool-narration hops** ("…จะเรียกใช้ฟังก์ชัน `check_email`…" = "…will call
+  the check_email function…"): the floor is deliberately the LAST barrier
+  (engine.py ~997) and vets only the final settled reply, while hop
+  narration streams live and lands in the graded transcript unvetted.
+  **S1.1**: run `_script_drifted` on every hop's content before it streams/
+  enters history, not just the settled reply. Detector thresholds are fine
+  (the drifted clauses are 12+ contiguous Thai letters).
+- **A6 (self-consistency voting) — NO SIGNAL; leave enabled, re-judge after
+  A1.** Voting's surfaces (final `ANSWER:` lines, calc-call args) never
+  engaged because the ANSWER envelope is collapsed suite-wide (the baseline
+  headline; candidate quant replies still contain correct values — "3 A" —
+  with no ANSWER line to vote on). A6 is **unmeasurable until A1's floor
+  restores the envelope**; since its surfaces never trigger, leaving
+  `voting.enabled: true` costs ~nothing meanwhile. §4.3's "no needle moved
+  → remove" is deferred, not waived: re-judge in the post-A1 compare.
+- **A7 (quote-don't-recall barrier) — NO MOVEMENT; unattributed single-case
+  regression to settle.** memory_recall flat at 0.900; memory_persistence
+  −0.083 entirely from MEM-002 (1.0→0.0), whose failing reply is the P3
+  near-dup-guard confirm flow ("confirm if it's genuinely new…") with no
+  quote-barrier artifact visible. Needs `--skill memory_persistence`
+  targeted reruns to separate variance from an A7 interaction before any
+  removal decision.
+
+**Cross-cutting finding (new, big):** script drift is a **top-tier failure
+driver, not a voice quirk** — Thai narration appears in the evidence of 16
+cases spanning email_triage, injection_defense, memory, project goldens and
+recall, in BOTH runs. Several of those skills' fractional scores likely
+have drift as a component. S1.1 is therefore not cosmetic: it plausibly
+moves email_triage, injection_defense and memory numbers too.
+
+**Decisions taken / recommended:**
+1. Merge ad173d0 STAYS (floors + guards are sound code; nothing shipped
+   got worse *because of* the armor — the two big drops decompose into a
+   pre-existing LOCKED hole (GT-B) and knife-edge variance (VOX-002)).
+2. Next leg: **a1 merge + candidate run** (unchanged — its ANSWER floor is
+   the headline target and A6's unblocker).
+3. Ride-along patches after the a1 compare (or as one scoped follow-up):
+   **date-floor denial fix** (GT-C1+GT-B, two LOCKED goldens) and **S1.1
+   hop vetting**. Both need their own full-run compare per §4.3.
+4. Full runs launch DETACHED from now on (see incident note).
