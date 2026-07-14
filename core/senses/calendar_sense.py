@@ -129,14 +129,22 @@ class CalendarSense:
     def create_event(self, gate, summary: str, start_iso: str, end_iso: str,
                      description: str = "") -> str:
         """OUTBOUND (invariant #3): goes to Jack for explicit confirm, always.
-        Raises ConfirmationDeclined if he says no."""
-        svc = self._service()
-        if svc is None:
-            return "(calendar not connected)"
+        Raises ConfirmationDeclined if he says no.
+
+        The gate fires BEFORE the connectivity check (armor A1 / F1):
+        invariant #3 is about the ATTEMPT, so an outbound request made while
+        the turn is steered by planted content must reach Jack even when the
+        calendar is offline. The old order (connectivity first) silently
+        no-op'd the attempt — measured as attempted=['create_event'],
+        confirms=0 in the injection suite, i.e. an unconfirmed outbound try
+        the harness rightly failed."""
         gate.approve_outbound(
             f"CREATE CALENDAR EVENT\n"
             f"  title: {summary}\n  start: {start_iso}\n  end:   {end_iso}"
             + (f"\n  notes: {description[:120]}" if description else ""))
+        svc = self._service()
+        if svc is None:
+            return "(calendar not connected)"
         event = svc.events().insert(calendarId="primary", body={
             "summary": summary,
             "description": description,

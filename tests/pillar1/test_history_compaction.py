@@ -24,11 +24,13 @@ class _StubModel:
         self.content = content
         self.raises = raises
         self.last_messages = None
+        self.last_format = None   # the armor-A1 constrained-decoding schema
         self.calls = 0
 
-    def chat(self, messages, tools=None, on_token=None):
+    def chat(self, messages, tools=None, on_token=None, format=None):
         self.calls += 1
         self.last_messages = messages
+        self.last_format = format
         if self.raises:
             raise RuntimeError("model down")
         class _R:
@@ -85,6 +87,28 @@ def test_prior_summary_folded():
     prompt = m.last_messages[-1]["content"]
     assert "EARLIER SUMMARY about the marlin rig" in prompt  # carried forward
     assert e.history_summary == "UPDATED SUMMARY"
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("COMPACT-005", "digest call is format-constrained (armor A1) "
+                                "and a JSON reply is unwrapped to the summary")
+def test_digest_format_constrained():
+    # A schema-shaped JSON reply (what the constrained call actually returns)
+    # is unwrapped: the stored digest is the summary VALUE, not the envelope.
+    m = _StubModel(content='{"summary": "alpha rig active; pdf review offered"}')
+    e = _e(m)
+    assert e._compact_history(_evicted()) is True
+    assert e.history_summary == "alpha rig active; pdf review offered"
+    # The constraint rode on the call itself — a required "summary" string.
+    assert m.last_format is not None
+    assert "summary" in m.last_format.get("required", [])
+
+    # Honest fallback: a model that ignored the constraint (or an old stub)
+    # degrades to the raw-text path — the digest is never lost to a parse.
+    m2 = _StubModel(content="plain prose digest, no JSON")
+    e2 = _e(m2)
+    assert e2._compact_history(_evicted()) is True
+    assert e2.history_summary == "plain prose digest, no JSON"
 
 
 @pytest.mark.upgrade

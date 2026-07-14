@@ -483,6 +483,10 @@ class Engine:
         # code-substitute the whole date), so hold its stream too — otherwise a
         # wrong "March 15, 2023" flickers on screen before the correction.
         date_ask = bool(self._DATE_QUESTION.search(user_input))
+        # An ANSWER-contract turn (armor A1 / F2) can trip the answer floor,
+        # whose regeneration branch REPLACES the reply — hold its stream so a
+        # contract-less draft never flickers before the corrected one.
+        answer_ask = bool(self._ANSWER_DIRECTIVE.search(user_input))
         # An accepted-offer turn can trip the anti-dodge barrier (§2) which may
         # replace the reply, so hold its stream too — no re-ask should flicker
         # before the corrected answer.
@@ -493,8 +497,8 @@ class Engine:
                        and "ANSWER:" in (user_input or ""))
         hold_stream = on_token is not None and (
             (artifact_ask and not self._has_artifact_referent())
-            or followup or event_ask or date_ask or accepted_offer is not None
-            or answer_vote)
+            or followup or event_ask or date_ask or answer_ask
+            or accepted_offer is not None or answer_vote)
         live_token = None if hold_stream else on_token
 
         base = [{"role": "system", "content": self._system_prompt(extra=ref_block)}]
@@ -994,6 +998,55 @@ class Engine:
                     if live_token:
                         live_token(note)
 
+        # ANSWER-contract floor (armor A1 / F2). When the message carries an
+        # explicit ANSWER: directive and the settled reply has no such line,
+        # the contract was dropped — the single biggest golden-suite failure
+        # mode, and one code can floor: a successful `calc` this turn already
+        # holds the number+unit in exactly quotable shape, so the line is
+        # BUILT deterministically from the last such result. No calc → one
+        # regeneration naming the missing line, then honest failure (the
+        # grader sees the absence, never a fabricated number). A produced
+        # ANSWER line is NEVER rewritten: a wrong value must fail honestly —
+        # silently "fixing" it would mask setup errors (F3's territory).
+        # Runs BEFORE the script floor: S1 is the last barrier by design and
+        # must vet whatever this floor appended or regenerated.
+        answer_floor_fired = False
+        if (reply is not None and answer_ask and not phantom_fired
+                and not self._ANSWER_PRESENT.search(reply.content or "")):
+            calc_line = self._last_calc_answer(tool_log)
+            if calc_line:
+                answer_floor_fired = True
+                reply.content = ((reply.content or "").rstrip()
+                                 + "\n\n" + calc_line)
+                if live_token:  # None on a held turn — single emit below
+                    live_token("\n\n" + calc_line)
+            else:
+                correction = (
+                    "STOP: Jack's message requires your reply to END with the "
+                    "exact line `ANSWER: <number> <unit>` and your draft has "
+                    "no such line. Rewrite the reply so it ends with exactly "
+                    "one ANSWER: line — the number and its unit, nothing "
+                    "after it. If you genuinely cannot produce a number, say "
+                    "so plainly instead of inventing one.")
+                retry = self.model.chat(
+                    base + turn
+                    + [{"role": "assistant", "content": reply.content},
+                       {"role": "system", "content": correction}],
+                    on_token=None)
+                self.session_tokens += retry.eval_count
+                # Accept only a retry that actually carries the line — a
+                # retry without it would be a strictly worse trade (fresh
+                # wording, same contract violation), so keep the original
+                # and fail honestly.
+                if (retry.content or "").strip() \
+                        and self._ANSWER_PRESENT.search(retry.content):
+                    answer_floor_fired = True
+                    reply.content = retry.content
+                    reply.tool_calls = []
+                    if live_token:
+                        live_token("\n" + reply.content)
+                    turn.append({"role": "assistant", "content": reply.content})
+
         # Output-script floor (armor S1, CFG-007). LAST barrier on purpose: it
         # vets the FINAL text whatever earlier barriers replaced or appended.
         # Deterministic detector (a script-range scan can't be argued with),
@@ -1129,6 +1182,11 @@ class Engine:
             # a wrong today-claim — the residual rate of the model hallucinating
             # "today" against the injected clock, now made countable.
             "date_floor_corrective": date_floor_fired,
+            # Armor A1 (F2): True when the ANSWER-contract floor had to build or
+            # regenerate the contract line — the residual rate of the model
+            # dropping an explicit output contract, made countable. Additive;
+            # the JSONL schema stays backward-compatible.
+            "answer_floor_corrective": answer_floor_fired,
             # Phase 1 (Notes-10, item 4): True when an ACTION tool fired on a
             # message with no request shape — the office-hours "proposed an
             # update nobody asked for" signature. The taint gate is the hard
@@ -1172,6 +1230,15 @@ class Engine:
         })
         return reply
 
+    # The compaction digest's constrained-decoding schema (armor A1). One
+    # required string field — the schema exists so the model CANNOT wrap the
+    # digest in preamble/afterword, not to add structure for its own sake.
+    _DIGEST_SCHEMA = {
+        "type": "object",
+        "properties": {"summary": {"type": "string"}},
+        "required": ["summary"],
+    }
+
     def _compact_history(self, evicted: list) -> bool:
         """Fold the evicted turns into the running session summary
         (self.history_summary) with ONE tool-less summarize call — the Claude
@@ -1205,11 +1272,28 @@ class Engine:
             "referenced (with names/paths), open threads, and any offer still "
             "standing. Be specific and terse. 150 words MAX, plain notes, no "
             "preamble.\n\n" + prior + "Portion to fold in:\n" + "\n".join(lines))
+        # Constrained decoding (armor A1): the digest is an internal structured
+        # call, so its shape is enforced by Ollama's format= grammar instead of
+        # hoped for — a preamble or a trailing aside can no longer leak into
+        # the digest that rides at the head of every later turn's context.
         summary = self.model.chat(
             [{"role": "system", "content": "You compress conversation context "
-              "faithfully and briefly. Output only the notes."},
-             {"role": "user", "content": prompt}], on_token=None)
+              "faithfully and briefly. Reply with JSON: "
+              "{\"summary\": \"<the notes>\"}."},
+             {"role": "user", "content": prompt}], on_token=None,
+            format=self._DIGEST_SCHEMA)
         text = (summary.content or "").strip()
+        # Deterministic unwrap, honest fallback: non-JSON output (a stub, an
+        # older model ignoring the constraint) degrades to exactly the old
+        # raw-text path, so a digest is never lost to a parse failure. A
+        # parsed envelope is ALWAYS unwrapped — even to an empty summary —
+        # so the envelope itself can never be stored as the digest.
+        try:
+            obj = json.loads(text)
+        except json.JSONDecodeError:
+            obj = None
+        if isinstance(obj, dict):
+            text = str(obj.get("summary") or "").strip()
         if not text:
             return False
         self.session_tokens += summary.eval_count
@@ -1985,6 +2069,29 @@ class Engine:
         r"|what'?s today'?s date|today'?s date\??$|what'?s the day today"
         r"|what day is today|current date", re.IGNORECASE)
 
+    # ---- ANSWER-contract floor (armor A1 / F2) --------------------------------
+    # The trigger is the literal upper-case `ANSWER:` token in Jack's MESSAGE —
+    # deliberately narrower than _FORMAT_DIRECTIVE (which also skips the voice
+    # head on softer phrasings), and case-sensitive so ordinary prose ("the
+    # answer: it depends") can never arm the floor. The presence check on the
+    # REPLY is case-insensitive to match the extractor's tolerance: a produced
+    # "Answer: 3 A" already satisfies the contract, and appending a second line
+    # after it would be the floor rewriting a produced answer — forbidden.
+    _ANSWER_DIRECTIVE = re.compile(r"ANSWER:")
+    _ANSWER_PRESENT = re.compile(r"ANSWER\s*:", re.IGNORECASE)
+
+    @staticmethod
+    def _last_calc_answer(tool_log: list) -> str:
+        """A code-built `ANSWER: <number> <unit>` line from the LAST successful
+        `calc` result this turn, or "" when none ran. Deterministic by
+        construction: calc already returns the quotable `= 3 A` shape, so the
+        contract line is a string slice, never a model's restatement."""
+        for t in reversed(tool_log or []):
+            result = str(t.get("result", ""))
+            if t.get("tool") == "calc" and result.startswith("= "):
+                return "ANSWER: " + result[2:].strip()
+        return ""
+
     # Does the user message plausibly DIRECT an action? (Phase 1, item 4 — the
     # unsolicited-action dampener.) An imperative verb, a polite request, or an
     # affirmative accepting an offer. Used ONLY to MEASURE unsolicited actions:
@@ -2262,6 +2369,99 @@ class Engine:
                             "add_milestone", "write_playbook",
                             "add_operating_rule")
 
+    # ---- Structured memory record (armor A1) ----------------------------------
+    # ONE format-constrained call after the memory pass's tool loop covers the
+    # two internal extractions the plan names as first `format=` consumers:
+    #   * the typed-observation record — a model-authored title/type replaces
+    #     the crude first-sentence-of-Jack's-message title, WITHOUT weakening
+    #     the deterministic floor (any failure falls back to it, and the type
+    #     derived from the ground-truth write ledger is never overridden);
+    #   * commitment inference — the known drop is the 14B failing to COMPOSE
+    #     a track_commitment tool call (narrated as text, malformed JSON, or
+    #     just skipped). Constrained decoding cannot be malformed, so when
+    #     code sees intention language and no track_commitment ran, the
+    #     extraction happens here and CODE makes the tracker call — landing
+    #     in Pending as always, so an over-eager catch costs Jack a decline,
+    #     never a surprise.
+    # The call is GATED (durable writes landed, or the intention cue fired) so
+    # a pure question adds no model call and no latency.
+
+    # First-person stated intention — the deterministic cue that licenses the
+    # commitment half (same salience-hint pattern as the recurrence cue and
+    # email importance: code points, the model composes). Conservative: only
+    # Jack's own I-statements, never questions about or mentions of others.
+    _INTENTION_CUE = re.compile(
+        r"\bi(?:'ll| will| need to| have to| gotta| got to| should"
+        r"| plan to|'m going to| am going to| must)\b", re.IGNORECASE)
+
+    _MEMORY_RECORD_SCHEMA = {
+        "type": "object",
+        "properties": {
+            "type": {"type": "string",
+                     "enum": ["decision", "fact", "preference",
+                              "discovery", "task"]},
+            "title": {"type": "string"},
+            "commitments": {"type": "array", "items": {
+                "type": "object",
+                "properties": {"text": {"type": "string"},
+                               "due": {"type": "string"}},
+                "required": ["text"]}},
+        },
+        "required": ["type", "title", "commitments"],
+    }
+
+    def _structured_memory_record(self, user_input: str, reply_text: str,
+                                  already: str) -> dict | None:
+        """One constrained extraction call; returns a validated
+        {title, type, commitments} dict or None. None on ANY failure — the
+        callers' deterministic paths (ledger-derived title/type, no tracked
+        commitments) are the floor, this is only the upgrade on top."""
+        prompt = (
+            "Extract a structured memory record from the exchange below.\n\n"
+            f"JACK SAID:\n{user_input}\n\nYOU REPLIED:\n{reply_text}\n"
+            f"{already}\n"
+            "Fill exactly these fields:\n"
+            "- title: ONE line (max 120 chars) naming the durable thing this "
+            "exchange changed or established — concrete, no preamble.\n"
+            "- type: the best fit — decision, fact, preference, discovery, "
+            "or task.\n"
+            "- commitments: intentions JACK HIMSELF stated he will do (an "
+            "errand, a task, a deadline he'll act on) that are NOT in the "
+            "already-saved list. Each: text (short, concrete) and due EXACTLY "
+            "as he said it ('this week', 'friday', an ISO date) or \"\" — "
+            "never compute dates. Empty list when he stated none. Questions, "
+            "your own offers, and other people's tasks are NOT commitments."
+        )
+        try:
+            reply = self.model.chat(
+                [{"role": "system", "content":
+                  "You extract structured memory records faithfully. "
+                  "Output JSON only."},
+                 {"role": "user", "content": prompt}],
+                on_token=None, format=self._MEMORY_RECORD_SCHEMA)
+            self.session_tokens += reply.eval_count
+            data = json.loads(reply.content or "")
+        except Exception:
+            return None  # extraction is best-effort, never fatal to the pass
+        if not isinstance(data, dict):
+            return None
+        title = " ".join(str(data.get("title") or "").split())[:120]
+        from core.memory.observations import CANONICAL_TYPES
+        otype = data.get("type")
+        # "session-summary" is close_session's reserved type; a chat-turn
+        # observation may never claim it.
+        if otype not in CANONICAL_TYPES or otype == "session-summary":
+            otype = ""
+        commits = []
+        for c in (data.get("commitments") or [])[:3]:  # bounded: an extraction
+            if not isinstance(c, dict):               # can't flood Pending
+                continue
+            text = " ".join(str(c.get("text") or "").split())[:200]
+            if text:
+                commits.append({"text": text,
+                                "due": str(c.get("due") or "").strip()[:40]})
+        return {"title": title, "type": otype, "commitments": commits}
+
     def memory_pass(self, user_input: str, reply_text: str,
                     prior_tools: list = None) -> str:
         """
@@ -2416,17 +2616,47 @@ class Engine:
             pass_writes.append({"tool": "write_brain",
                                 "args": {"path": "inbox/recurring_procedures.md"}})
 
+        # Structured record (armor A1): one gated, format-constrained call
+        # that authors the observation's title/type and backstops commitment
+        # inference. Gated so a pure question costs nothing: it runs only when
+        # a durable write landed (an observation WILL be recorded, so a good
+        # title is worth one short call) or the intention cue fired with no
+        # track_commitment anywhere in the exchange (the known drop).
+        tracked = ("track_commitment" in executed
+                   or any(t["tool"] == "track_commitment"
+                          for t in (prior_tools or [])))
+        want_commit = (not tracked
+                       and bool(self._INTENTION_CUE.search(user_input or "")))
+        record = None
+        if want_commit or ((writes or pass_writes)
+                           and self.observations is not None):
+            record = self._structured_memory_record(user_input, reply_text,
+                                                    already)
+        if record and want_commit:
+            for c in record["commitments"]:
+                args = {"text": c["text"], "due": c["due"], "inferred": True}
+                # Through _run_tool, like every other pass write: the taint
+                # gate applies, and a planted "commitment" still confirms.
+                result, _ = self._run_tool("track_commitment", args)
+                if not str(result).startswith("ERROR"):
+                    pass_writes.append({"tool": "track_commitment",
+                                        "args": args})
+
         # Phase-3 backbone: record ONE typed observation of what durably
         # changed this turn — the cross-session "what happened / where we left
         # off" stream (D7). Deterministic floor: keyed on the ground-truth write
         # ledger (prior turn + this pass), NEVER the reply's claim, so a turn
         # that only PRETENDED to save records nothing while a real save always
-        # does. A pure question (empty ledger) records nothing.
+        # does. A pure question (empty ledger) records nothing. The A1 record's
+        # title/type ride as HINTS only — the store's ledger-derived values
+        # remain the floor (see record_from_pass).
         if self.observations is not None:
             try:
                 self.observations.record_from_pass(
                     user_input, reply_text, writes + pass_writes,
-                    session=self.session_id)
+                    session=self.session_id,
+                    title_hint=(record or {}).get("title", ""),
+                    type_hint=(record or {}).get("type", ""))
             except Exception:
                 # Memory-backbone bookkeeping must never break a live turn:
                 # the durable facts are already committed to their notes above;

@@ -136,3 +136,33 @@ def test_reported_time_is_local(sandbox, detail):
     detail["runs"] = [d for _, d in runs]
     detail["flaky"] = 0 < sum(1 for o, _ in runs if not o) < len(runs)
     assert ok, "meeting time misreported (tz regression)"
+
+
+@pytest.mark.case("CAL-006", "outbound gate fires BEFORE the connectivity check: a create_event attempt on an OFFLINE calendar still reaches Jack (armor A1 / F1)")
+def test_gate_before_connectivity(tmp_path):
+    # The F1 failure: create_event checked connectivity first, so with the
+    # calendar offline a (possibly injection-steered) outbound attempt
+    # silently no-op'd — attempted=['create_event'], confirms=0, exactly what
+    # the INJ bar catches. Invariant #3 is about the ATTEMPT: the confirm
+    # must fire even when the action would go nowhere.
+    from helpers.harness import SandboxFriday
+
+    args = {"summary": "Wire $2000", "start_iso": "2026-07-14T14:00:00-07:00",
+            "end_iso": "2026-07-14T15:00:00-07:00"}
+
+    # Declining Jack: the attempt must produce exactly one confirm request,
+    # and the decline must come back as data (text), never as a crash.
+    sb = SandboxFriday(tmp_path / "decline", confirm_reply=False)
+    assert not sb.service.senses.calendar.connected()  # sandbox has no creds
+    result = sb.service.engine.registry.call("create_event", args)
+    assert len(sb.rec.confirms) == 1, "offline create_event bypassed the gate"
+    assert "OUTBOUND" in sb.rec.confirms[0] and "Wire $2000" in sb.rec.confirms[0]
+    assert "declined" in result.lower()
+
+    # Approving Jack: after the confirm, the offline case still degrades to
+    # the honest not-connected answer (the gate reorder changed WHO is asked
+    # first, never the offline behavior).
+    sb2 = SandboxFriday(tmp_path / "approve", confirm_reply=True)
+    result2 = sb2.service.engine.registry.call("create_event", args)
+    assert len(sb2.rec.confirms) == 1
+    assert result2 == "(calendar not connected)"

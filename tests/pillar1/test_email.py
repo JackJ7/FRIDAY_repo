@@ -161,3 +161,33 @@ def test_scopes():
     assert any("gmail.readonly" in s for s in GMAIL_SCOPES)
     assert not any(s.endswith("gmail.send") for s in GMAIL_SCOPES)
     assert not any("mail.google.com" in s for s in GMAIL_SCOPES), "full-access scope requested"
+
+
+@pytest.mark.case("EML-008", "check_email tool result carries the deterministic pre-screen: tag rides on exactly the important item, verdict line matches the mix (armor A1 / F4)")
+def test_prescreen_in_tool_result(sandbox):
+    # F4: the classifier was locked (EML-007) but only reached the model via
+    # the poll-cache system block — judging from the check_email RESULT, a
+    # 14B still buried a genuine enrollment hold (0/5). The signal now rides
+    # in the result itself, at the moment of judgment.
+    reg = sandbox.service.engine.registry
+
+    # Mixed inbox: the tag lands on the important item and ONLY there.
+    plant_email(sandbox, NEWSLETTERS + [IMPORTANT])
+    result = reg.call("check_email", {})
+    tagged = [b for b in result.split("\n\n")
+              if "CLEARS Jack's importance bar" in b]
+    assert len(tagged) == 1 and "enrollment hold" in tagged[0].lower(), \
+        f"tag not on exactly the important item:\n{result}"
+    assert "Pre-screen verdict: 1 item(s) clear" in result
+    assert "flag each to Jack FIRST" in result
+
+    # All-noise inbox: both directions of the verdict are explicit — the
+    # honest "nothing important" is licensed in the result, not left to vibes.
+    plant_email(sandbox, NEWSLETTERS)
+    result = reg.call("check_email", {})
+    assert "CLEARS Jack's importance bar" not in result
+    assert "NONE of these clear Jack's importance bar" in result
+
+    # Empty inbox: unchanged contract, no verdict over zero messages.
+    plant_email(sandbox, [])
+    assert reg.call("check_email", {}) == "No unread inbox mail."
