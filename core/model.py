@@ -160,7 +160,8 @@ class OllamaClient:
         self.strip_reasoning = strip_reasoning
         self.open_tag, self.close_tag = think_tags
 
-    def chat(self, messages: list, tools: list = None, on_token=None) -> ModelReply:
+    def chat(self, messages: list, tools: list = None, on_token=None,
+             format: dict | str = None) -> ModelReply:
         """
         Send the conversation to the model and stream the reply.
 
@@ -169,6 +170,13 @@ class OllamaClient:
         tools    : optional tool definitions (Ollama function-calling format).
         on_token : optional callback fired with each piece of text as it
                    streams in — this is how the CLI prints live output.
+        format   : optional constrained-decoding spec (a JSON schema dict, or
+                   the string "json"), passed straight to Ollama (armor A1).
+                   For INTERNAL structured calls only — the compaction digest,
+                   the memory pass's record extraction — where a malformed
+                   reply silently degrades quality. The main conversational
+                   turn must NEVER pass this: it streams prose and tool calls,
+                   and a grammar constraint would strangle both.
         """
         payload = {
             "model": self.model,
@@ -178,6 +186,8 @@ class OllamaClient:
         }
         if tools:
             payload["tools"] = tools
+        if format:
+            payload["format"] = format
 
         try:
             response = requests.post(

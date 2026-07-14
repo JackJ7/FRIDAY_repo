@@ -146,12 +146,22 @@ class ObservationStore:
     _TYPE_PRIORITY = ("preference", "decision", "task", "discovery", "fact")
 
     def record_from_pass(self, user_input: str, reply_text: str,
-                         writes: list, session: str = "") -> str | None:
+                         writes: list, session: str = "",
+                         title_hint: str = "", type_hint: str = "") -> str | None:
         """The deterministic floor: after the memory pass, if any durable write
         actually landed this turn, record ONE observation summarizing it. Empty
         writes -> nothing (a pure question commits no observation, matching the
         memory-pass rule). `writes` is the ground-truth ledger of {tool, args}
-        that persisted — never the reply's claim (the reply lies about saves)."""
+        that persisted — never the reply's claim (the reply lies about saves).
+
+        title_hint/type_hint (armor A1): a model-authored title and type from
+        the engine's format-constrained record call — the "future nicety" the
+        Phase-4 handoff noted, now safe because constrained decoding can't be
+        malformed. Hints only: the title falls back to the deterministic
+        first-sentence floor when empty, and the type can only refine the
+        generic "fact" bucket — a type derived from the actual write ledger
+        (task from track_commitment, decision from write_playbook, ...) is
+        ground truth and is never overridden by a model's opinion."""
         if not writes:
             return None
 
@@ -167,9 +177,14 @@ class ObservationStore:
             types.add(self._WRITE_TYPE.get(tool, "fact"))
             saved.append(self._describe_write(tool, args))
 
-        # Pick the single most specific type present.
+        # Pick the single most specific type present. The model's type_hint may
+        # only refine the generic fallback bucket, never a ledger-derived type.
         otype = next((t for t in self._TYPE_PRIORITY if t in types), "fact")
-        title = self._title_from(user_input)
+        if (otype == "fact" and type_hint in CANONICAL_TYPES
+                and type_hint != "session-summary"):
+            otype = type_hint
+        title = " ".join((title_hint or "").split())[:120] \
+            or self._title_from(user_input)
         body = (f"{title}\n\nFrom the exchange — Jack: "
                 f"\"{(user_input or '').strip()[:200]}\".\n"
                 f"Committed this turn: " + "; ".join(saved) + ".")

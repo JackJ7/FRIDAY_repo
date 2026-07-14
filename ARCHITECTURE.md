@@ -79,7 +79,19 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      date_floor_corrective, unsolicited_action, and
                      proactive_grounded on greeting/briefing records; Phase 2:
                      offer_accepted, offer_armed, offer_dodge_corrective,
-                     history_compacted).
+                     history_compacted; armor A1: answer_floor_corrective).
+                     ARMOR A1 (FRIDAY_armor_plan.md §3.1): the ANSWER-CONTRACT
+                     FLOOR — when the message carries a literal `ANSWER:`
+                     directive and the settled reply lacks the line, it is
+                     BUILT from the turn's last successful calc result
+                     (deterministic) or regenerated once; a produced ANSWER
+                     line is never rewritten (a wrong value fails honestly).
+                     The compaction digest and the memory pass's record
+                     extraction are format-constrained (see model.py below);
+                     the memory pass also backstops commitment inference —
+                     intention language with no track_commitment anywhere in
+                     the exchange triggers one constrained extraction and CODE
+                     makes the tracker call (lands Pending, as always).
                      After each durably-writing turn the memory pass records ONE
                      typed observation, and session_greeting resumes from the
                      recent observation stream ("where we left off") — the
@@ -451,8 +463,12 @@ friday_documents\    her outbox
   `on_activity/on_memory`), then `send_message`, `resolve_confirm`, and the
   read-only view APIs. Nothing else. A voice frontend = a new file in
   interface\ that does exactly this.
-- **Engine ↔ model:** `OllamaClient.chat(messages, tools, on_token)` →
+- **Engine ↔ model:** `OllamaClient.chat(messages, tools, on_token, format)` →
   `ModelReply`. Nothing above the engine imports requests or knows Ollama.
+  `format=` (armor A1) is a JSON-schema constrained-decoding spec for
+  INTERNAL structured calls only (compaction digest, memory-record
+  extraction); the main conversational turn never passes it — it streams
+  prose and tool calls, and a grammar would strangle both.
 - **Everything ↔ disk:** through `Brain` (notes) or the gate (files). The
   model's write path (`write_brain`) is guarded: read-before-overwrite, and
   tracker-owned files are off-limits (their tools mutate them).
