@@ -99,7 +99,12 @@ voting:
   # A8/S2 later). Full chat replies are never voted. Each vote costs n-1
   # extra generations on the GPU, so n is a budget ceiling — Jack's number,
   # LOCKED (raise it only after A9 buys the latency back).
-  enabled: true
+  # OFF by measurement (a1 leg, 2026-07-14, plan §6): with the F2 ANSWER
+  # floor in place, quant_math held 21/23 with voting disabled — the same
+  # residual failures as voting-on, so the n-1 extra generations bought
+  # nothing. Code + guards stay (A8 wants the vote-agreement hardness
+  # signal); re-enable only with its own before/after compare.
+  enabled: false
   n: 3
 
 memory:

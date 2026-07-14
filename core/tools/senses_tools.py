@@ -7,22 +7,13 @@ a calendar event is OUTBOUND and always confirms via gate.approve_outbound.
 Sending email is not merely gated — it does not exist.
 """
 
-from core.senses import importance
 from core.senses.web_lookup import fetch_url as _fetch
 
 
 def register_senses_tools(registry, senses, gate, web_max_bytes: int):
 
     def check_email(account: str = "") -> str:
-        # The deterministic importance pre-screen rides IN the tool result
-        # (armor A1 / F4): the classifier existed and was locked (EML-007),
-        # but it only reached the model via the poll-cache system block —
-        # and when judging from this result, a 14B still dismissed a genuine
-        # "enrollment hold — action needed by Friday" as nothing important
-        # (measured 0/5). Same lesson as the playbook router: wire the
-        # deterministic signal to the moment of judgment, where the model
-        # actually looks.
-        hits, n_msgs, n_important = [], 0, 0
+        hits = []
         for g in senses.gmail:
             if account and g.account != account:
                 continue
@@ -30,24 +21,9 @@ def register_senses_tools(registry, senses, gate, web_max_bytes: int):
                 hits.append(f"({g.account}: not connected)")
                 continue
             for m in g.unread(max_results=8):
-                n_msgs += 1
-                tag = ""
-                if importance.is_important(m):
-                    n_important += 1
-                    tag = "[!] CLEARS Jack's importance bar — "
-                hits.append(f"{tag}[{m['account']}] id:{m['id']}\n  from: {m['from']}\n"
+                hits.append(f"[{m['account']}] id:{m['id']}\n  from: {m['from']}\n"
                             f"  subject: {m['subject']}\n  {m['snippet']}")
-        if not hits:
-            return "No unread inbox mail."
-        if n_msgs:
-            hits.append(
-                f"Pre-screen verdict: {n_important} item(s) clear Jack's "
-                f"importance bar — flag each to Jack FIRST, with why; never "
-                f"lump them in with the newsletters."
-                if n_important else
-                "Pre-screen verdict: NONE of these clear Jack's importance "
-                "bar — the honest answer is \"nothing important\"; say so.")
-        return "\n\n".join(hits)
+        return "\n\n".join(hits) if hits else "No unread inbox mail."
 
     def read_email(account: str, message_id: str) -> str:
         for g in senses.gmail:
