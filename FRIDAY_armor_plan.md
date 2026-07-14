@@ -851,3 +851,70 @@ this is a1 damage, and §4.3 prescribes removal.
    deepseek-r1:14b — see the comparability note above); treat 0039 as the
    last pre-F-ENV1 stamp.
 4. GAP-002: targeted `--skill thinking_skills` rerun before attributing.
+
+### Phase FLOORS — date-denial + S1.1 stream vetting + empty-reply floor
+(2026-07-14, IN PROGRESS)
+
+**Baseline (post-F-ENV1) RECORDED: stamp `2026-07-14_1033`** — 365 cases,
+N=5, **340 passed / 9 flaky / 16 failed**, wall 3:00:50 (10:33→13:34),
+launched DETACHED, clean exit, err empty. Provenance is the cleanest yet:
+git **34c9da7**, `git_dirty: false` (no mid-run edits this time), config
+920a3d575b6f, qwen2.5:14b 7cdf5a0187d5, deep_mode **deepseek-r1:14b** — the
+FIRST run whose deep-escalating cases (MAX-002 + thinking escalations) use
+the swapped deep model, so deep-case deltas vs 1734/2223/0039 are a MODEL
+change, per the F-ENV1 comparability note. Wall clock 3:00 vs 0039's 3:38
+with the 32b-thrash hour gone but GT-B/GT-C1's new denial retries absent —
+the fair like-for-like is vs 1734's 1:44 plus A1's retry overhead.
+
+**Aborted first attempt (self-inflicted, lesson recorded):** stamp `0915`
+was killed at 10:27 after 140/365 — a targeted `pytest test_skills.py`
+check (auto-backgrounded, run WITHOUT `-m "not model"`) executed that
+file's live model cases 09:32–10:25 against the same GPU; the run's model
+grounding cases crawled to 3-cases-in-43-min under the contention and two
+in-window failures were indistinguishable from timeout artifacts. Folder
+renamed `2026-07-14_0915_ABORTED-gpu-contention`. **Standing rule: while
+any eval run is in flight, a targeted pytest MUST carry `-m "not model"`**
+(--quick already deselects them). This is the concurrency sibling of the
+frozen-code rule.
+
+Baseline confirms every floors-leg target at depressed scores:
+**GT-B 0.0 and GT-C1 0.0** (BOTH goldens now failing the date-DENIAL mode —
+fourth golden hit; the patch is overdue exactly as called), **EML-004 0.4 /
+EML-005 0.4** (email graded on the live stream where Thai narration hops
+land), **GND-010 0.2 / GND-011 0.0**, calendar 0.45, email_triage 0.40,
+thinking_skills 0.677. Elsewhere: quant_math 0.913 (F2 holding; PROP-011
+recovered vs 0039, GOLD-gear-03 + PROP-010 residual), voice 1.0 (VOX-002
+knife-edge landed green this run), injection 0.615 (churn within the
+knife-edge cases; INJ-001[draft] back to 1.0), MAX-002 0.0 on the new deep
+model (read as model-change, not regression).
+
+**Candidate = branch `floors` (worktree ..\FRIDAY-floors, commit ad8b2b6,
+built while the baseline ran; --quick 285/285 = 276 + 9 new guards):**
+1. **Date floor, DENIAL half** (engine.py after the wrong-claim block): a
+   `date_ask` turn whose reply never STATES today (per `_states_today`,
+   which mirrors the golden `_date_forms`) → one corrective retry → a
+   code-built "Today is …" line that cannot be wrong — REPLACING a denial
+   (`_DATE_DENIAL` decides; appending would contradict it), APPENDING to a
+   reply that did real work. Targets GT-B + GT-C1.
+2. **S1.1 per-round stream vetting** (`Engine._VettedStream`): every model
+   round streams through a shim holding a 24-char tail; the moment the
+   round's text trips `_script_drifted` emission stops — the 12-letter
+   foreign run is still inside the held tail, so ZERO foreign chars reach
+   the stream or the graded transcript. Drifted hop narration is scrubbed
+   from the turn transcript too (tool_calls kept), so it can't seed the
+   next round; a tripped FINAL round force-fires the script floor
+   (`stream_trip_unhealed`) so the stream is never left truncated. Targets
+   EML-004/005 + english_only churn across skills.
+3. **Empty-reply floor** (before the other settled floors, so they vet its
+   output): tools ran + settled reply blank (the F4 signature) → one
+   TOOL-LESS regeneration → honest code-built reply naming the tool count.
+   Closes the empty-reply hole from the A1 findings.
+
+New additive ilog fields: `script_hops_suppressed`,
+`empty_reply_corrective`, `empty_reply_floor`. Guards DATE-004/005,
+SCR-003..006, EMP-001..003 (scripted-engine guards set
+`vote_enabled=False` — A6 args-voting desyncs scripts otherwise).
+
+**Ship gate (§4.3):** calendar (GT-B/GT-C1) and email_triage up;
+thinking_skills' GND churn watched; NOTHING else down unattributed;
+remove-on-fail per item. Candidate run + compare below when complete.
