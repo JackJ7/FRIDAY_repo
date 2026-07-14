@@ -553,32 +553,62 @@ class Engine:
             self._collect_durable_values(r.snippet, r.path, quote_ledger)
 
         reply = None
+        vstream = None       # the current round's vetting shim (armor S1.1)
+        hops_suppressed = 0  # drifted narration hops withheld from the stream
         for _ in range(self.max_rounds):
+            # Armor S1.1: every round streams through a per-round vetting
+            # shim, never raw. The a6a7s1/a1 full-run sweeps measured Thai
+            # narration in INTERMEDIATE tool-round hops reaching the live
+            # stream (which the golden harness grades) unvetted — the script
+            # floor below only ever saw the settled reply. The shim holds a
+            # short tail back and stops emitting the moment the round's text
+            # drifts script, so the foreign run is still inside the held tail
+            # when it trips and never reaches the screen or the transcript.
+            vstream = self._VettedStream(live_token, self._script_drifted) \
+                if live_token else None
             reply = self.model.chat(base + turn, tools=self.registry.to_ollama(),
-                                    on_token=live_token)
+                                    on_token=vstream)
             self.session_tokens += reply.eval_count
             if not reply.tool_calls:
                 # The model may have written a tool call as TEXT instead of
                 # calling it (a qwen quirk that silently drops the action).
                 reply.tool_calls = self._recover_tool_calls(reply.content)
                 if not reply.tool_calls:
-                    break  # genuinely a final text answer — done
+                    # Genuinely a final text answer. A clean stream flushes
+                    # its held tail now; a tripped one stays withheld — the
+                    # script floor below regenerates and streams the vetted
+                    # replacement instead.
+                    if vstream is not None and not vstream.tripped:
+                        vstream.flush()
+                    break
             # A6 surface 1: a round that is exactly ONE calc call gets its
             # ARGUMENTS voted before execution — the mis-composed-expression
             # failure a single sample can't catch. Only the winning args run.
             self._vote_calc_round(base + turn, reply)
 
-            # The model wants tools: run each one, feed results back, ask again.
+            # The model wants tools: run each one, feed results back, ask
+            # again. Hop narration is DECORATIVE (tool status rides on_tool),
+            # so a drifted hop is dropped whole — from the stream AND from the
+            # transcript, where it would otherwise sit as established context
+            # seeding the next round's drift. On a held turn (no live stream)
+            # the detector runs directly so the transcript stays clean too.
+            hop_text = reply.content or ""
+            if (vstream.tripped if vstream is not None
+                    else self._script_drifted(hop_text)):
+                hops_suppressed += 1
+                hop_text = ""
+            elif vstream is not None:
+                vstream.flush()
             # If this round streamed visible text, break the line before the
             # next round streams: without this, round texts glue together for
             # every consumer of the token stream (the UI, and the test
             # harness's ask() — a recovered narrated call once produced
             # "ANSWER: 20 ohmANSWER: 20 ohm" on one line, failing a correct
             # answer because the grader read the unit as 'ohmANSWER: 20 ohm').
-            if live_token and (reply.content or "").strip() \
-                    and not (reply.content or "").endswith("\n"):
+            if live_token and hop_text.strip() \
+                    and not hop_text.endswith("\n"):
                 live_token("\n")
-            turn.append({"role": "assistant", "content": reply.content,
+            turn.append({"role": "assistant", "content": hop_text,
                          "tool_calls": reply.tool_calls})
             self._pretaint_round(reply.tool_calls)
             for tc in reply.tool_calls:
@@ -612,6 +642,53 @@ class Engine:
         # (answer_vote in hold_stream), so only the winner is ever shown.
         if reply is not None and answer_vote:
             self._vote_answer_line(base + turn, reply)
+
+        # What the tool loop actually settled on, captured before any floor
+        # rewrites it — the script floor at the end uses it to tell whether a
+        # mid-stream trip was already superseded by a floor's replacement.
+        settled_content = reply.content if reply is not None else ""
+
+        # Empty-reply floor (floors leg). The F4 incident's signature: the
+        # model re-polls tools to the round cap and then settles with an EMPTY
+        # reply — and emptiness slips EVERY other floor here (script, date,
+        # ANSWER, citation all inspect content that isn't there), so Jack
+        # would receive silence after watching tools run. One regeneration
+        # WITHOUT tools (text is the only way out), then the honest code-built
+        # reply — tool activity is never presented as an answer, and silence
+        # is never shipped (invariant 4).
+        empty_reply_fired = False
+        empty_reply_floor = False
+        if (reply is not None and tool_log
+                and not (reply.content or "").strip()):
+            empty_reply_fired = True
+            correction = (
+                "STOP: you ran tools this turn but your final reply is EMPTY "
+                "— Jack would receive silence. Using the tool results above, "
+                "write the answer now, plain text only; do not call any more "
+                "tools. If the results don't answer his question, say plainly "
+                "what you checked and what you couldn't determine.")
+            retry = self.model.chat(
+                base + turn + [{"role": "system", "content": correction}],
+                on_token=None)
+            self.session_tokens += retry.eval_count
+            if (retry.content or "").strip():
+                # Later floors (date, ANSWER, script) vet this text as usual —
+                # the floor runs first precisely so they get real content.
+                reply.content = retry.content
+            else:
+                # Two empty generations: fail HONEST with a code-built reply.
+                empty_reply_floor = True
+                names = ", ".join(dict.fromkeys(t["tool"] for t in tool_log))
+                reply.content = (
+                    f"I have to be straight with you — I ran {len(tool_log)} "
+                    f"tool call{'s' if len(tool_log) != 1 else ''} ({names}) "
+                    "but couldn't put an answer together from the results. "
+                    "Ask me again, or narrow it down, and I'll take another "
+                    "run at it.")
+            reply.tool_calls = []
+            if live_token:  # None on a held turn — single emit below streams it
+                live_token("\n" + reply.content)
+            turn.append({"role": "assistant", "content": reply.content})
 
         # Phantom-review barrier (Task 6, structural). The base model cannot
         # be PROMPTED out of "I've reviewed the spreadsheet you provided"
@@ -961,6 +1038,48 @@ class Engine:
                 live_token("\n" + reply.content)
             turn.append({"role": "assistant", "content": reply.content})
 
+        # The DENIAL half of the date floor (floors leg). GT-B/GT-C1's other
+        # failure mode, hit on three full runs: instead of stating a WRONG
+        # date (caught above), the model answers a bare date question with
+        # "I don't have access to today's date" — no date stated at all, so
+        # _wrong_today_claim has nothing to substitute. The clock is injected
+        # in the system prompt, so the denial is simply false. Same posture:
+        # one corrective retry, then a floor that cannot be wrong. The
+        # code-built fallback REPLACES a denial (appending a date after
+        # "I can't know the date" would contradict itself) but APPENDS to a
+        # reply that did real work and merely omitted the date.
+        if (reply is not None and not phantom_fired and date_ask
+                and not self._states_today(reply.content)):
+            today = datetime.now().astimezone()
+            today_line = (f"Today is {today:%A}, {today:%B} "
+                          f"{today.day}, {today.year}.")
+            correction = (
+                "STOP: Jack asked for today's date and your draft never "
+                "states it (or claims you cannot know it — you can: the "
+                "machine clock in your system prompt is authoritative). "
+                f"{today_line} Rewrite the reply answering with that date "
+                "plainly, in your own voice; never claim you lack access "
+                "to the date.")
+            retry = self.model.chat(
+                base + turn
+                + [{"role": "assistant", "content": reply.content},
+                   {"role": "system", "content": correction}],
+                on_token=None)
+            self.session_tokens += retry.eval_count
+            candidate = self._force_today_date(
+                (retry.content or "").strip() or (reply.content or ""))
+            if self._states_today(candidate):
+                reply.content = candidate
+            elif not candidate.strip() or self._DATE_DENIAL.search(candidate):
+                reply.content = today_line
+            else:
+                reply.content = candidate.rstrip() + "\n\n" + today_line
+            reply.tool_calls = []
+            date_floor_fired = True
+            if live_token:  # None on a held turn — single emit below streams it
+                live_token("\n" + reply.content)
+            turn.append({"role": "assistant", "content": reply.content})
+
         # Conjunct-completion floor (Task 6 bullet 5, structural half): parts
         # of a multi-part request the reply left with NO echo get one
         # corrective pass (text-only — the honest floor for an undoable part
@@ -1054,7 +1173,16 @@ class Engine:
         # out of English twice is withheld, never handed over as if it were
         # an answer (invariant 4: no bluffing, including in Thai).
         script_fired = False
-        if reply is not None and self._script_drifted(reply.content):
+        # S1.1 corollary: if the FINAL round's stream tripped mid-emission and
+        # no floor since replaced the reply (each replacement re-streams in
+        # full), the on-screen text is truncated at the trip point — treat it
+        # as drifted even when dilution keeps the full text under the share
+        # threshold, so the floor always streams a complete vetted reply.
+        stream_trip_unhealed = (vstream is not None and vstream.tripped
+                                and reply is not None
+                                and reply.content == settled_content)
+        if reply is not None and (self._script_drifted(reply.content)
+                                  or stream_trip_unhealed):
             script_fired = True
             correction = (
                 "STOP: your draft reply drifted out of English into another "
@@ -1227,6 +1355,16 @@ class Engine:
             # Armor S1: True when the output-script floor caught a non-Latin
             # drifted reply (CFG-007's signature, now countable).
             "script_drift_corrective": script_fired,
+            # Floors leg (S1.1): drifted tool-narration hops withheld from
+            # the live stream and transcript by the per-round shim — the hop
+            # drift rate the a6a7s1 sweep flagged, now countable per turn.
+            "script_hops_suppressed": hops_suppressed,
+            # Floors leg: True when the settled reply came back EMPTY after
+            # tools ran (the F4 signature — silence would have shipped), and
+            # whether the code-built honest reply had to stand in because the
+            # tool-less retry came back empty too.
+            "empty_reply_corrective": empty_reply_fired,
+            "empty_reply_floor": empty_reply_floor,
         })
         return reply
 
@@ -1739,6 +1877,71 @@ class Engine:
         if longest >= 12:
             return True
         return foreign >= 8 and total > 0 and foreign / total >= 0.25
+
+    class _VettedStream:
+        """Per-round live-stream shim (armor S1.1). Wraps on_token so a
+        round's text reaches the stream only while it stays in Latin script:
+        a short tail is held back, and the moment the accumulated text trips
+        the drift detector the shim stops emitting. The detector's run
+        criterion fires at 12 foreign letters, so with a 24-char holdback the
+        whole foreign run is still inside the unsent tail when it trips —
+        zero drifted text reaches the screen or the graded transcript. The
+        failure that motivated it: Thai tool-narration hops streamed live in
+        16 cases across two full runs while the script floor only ever vetted
+        the settled reply (a6a7s1/a1 sweeps). A clean round's tail is flushed
+        by flush(); the holdback lag is imperceptible at token speed."""
+        HOLDBACK = 24
+
+        def __init__(self, emit, drifted):
+            self.emit = emit          # the real on_token
+            self.drifted = drifted    # Engine._script_drifted
+            self.text = ""
+            self.sent = 0
+            self.tripped = False
+
+        def __call__(self, token: str):
+            self.text += token
+            if self.tripped:
+                return
+            if self.drifted(self.text):
+                self.tripped = True
+                return
+            cut = len(self.text) - self.HOLDBACK
+            if cut > self.sent:
+                self.emit(self.text[self.sent:cut])
+                self.sent = cut
+
+        def flush(self):
+            """Emit the held tail — call only once the round settled clean."""
+            if not self.tripped and self.sent < len(self.text):
+                self.emit(self.text[self.sent:])
+                self.sent = len(self.text)
+
+    # ---- date floor, denial half (floors leg) -----------------------------
+    # A denial phrase near a date/time word — used ONLY to decide whether the
+    # code-built fallback replaces the reply (a denial would contradict an
+    # appended date) or appends to it (real work that merely omitted the
+    # date). Never a trigger by itself, so a false match is harmless.
+    _DATE_DENIAL = re.compile(
+        r"\b(can'?t|cannot|don'?t|do not|unable|no way to|not able)\b"
+        r"[^.?!\n]{0,60}\b(date|day it is|time|clock|calendar|real-?time)",
+        re.IGNORECASE)
+
+    def _states_today(self, text: str) -> bool:
+        """True when `text` names today's date in any form Jack (and the
+        golden checkers) would accept: ISO, 'July 14' / 'Jul 14' (any casing,
+        year or not), or numeric 7/14 / 07/14. The denial floor keys on its
+        ABSENCE, so the forms deliberately mirror the golden harness's
+        _date_forms — the guarantee is 'states today', never 'uses one
+        blessed format'."""
+        if not text:
+            return False
+        t = datetime.now().astimezone()
+        low = text.lower()
+        forms = (f"{t:%Y-%m-%d}", f"{t:%B} {t.day}".lower(),
+                 f"{t:%b} {t.day}".lower(), f"{t.month}/{t.day}",
+                 f"{t.month:02d}/{t.day:02d}")
+        return any(f in low for f in forms)
 
     # ---------- working-memory referent stack (Task 6) ----------
     # "The ones I just handed off" once resolved to NOTHING because no record

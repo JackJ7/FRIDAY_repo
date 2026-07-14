@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 import pytest
 
 from core.engine import Engine
+from core.model import ModelReply
 
 
 def _engine():
@@ -22,6 +23,30 @@ def _engine():
     class-level regexes, self._MONTHS, and datetime.now(), so __init__ (which
     wires the model, brain, gate, ...) is unnecessary and deliberately skipped."""
     return Engine.__new__(Engine)
+
+
+class _ScriptModel:
+    """Returns scripted replies in order (same posture as test_answer_floor's
+    stub): the denial floor's end-to-end branches are proven through the real
+    respond() path with zero model cost."""
+
+    def __init__(self, contents):
+        self.contents = list(contents)
+        self.calls = 0
+
+    def chat(self, messages, tools=None, on_token=None, format=None):
+        self.calls += 1
+        r = ModelReply()
+        r.content = self.contents.pop(0) if self.contents else ""
+        r.eval_count = 5
+        return r
+
+
+def _scripted(sandbox, contents):
+    eng = sandbox.service.engine
+    eng.model = _ScriptModel(contents)
+    eng.vote_enabled = False
+    return eng
 
 
 @pytest.mark.upgrade
@@ -79,3 +104,82 @@ def test_off_by_one_day_corrected():
     fixed = e._force_today_date(text)
     assert e._wrong_today_claim(fixed) is None
     assert f"{today:%B} {today.day}, {today.year}" in fixed
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("DATE-004", "denial-half detectors: _states_today accepts the "
+                             "golden checkers' date forms; _DATE_DENIAL matches "
+                             "the measured refusal phrasings")
+def test_denial_detectors():
+    e = _engine()
+    t = datetime.now().astimezone()
+    # Every form the golden harness's _date_forms accepts counts as "stated".
+    stated = [
+        f"Today is {t:%Y-%m-%d}.",
+        f"It's {t:%B} {t.day}, {t.year} — all yours.",
+        f"it's {t:%b} {t.day} already",
+        f"Today: {t.month}/{t.day}.",
+        f"the header shows {t.month:02d}/{t.day:02d}",
+    ]
+    for s in stated:
+        assert e._states_today(s), f"missed stated form: {s!r}"
+    # A denial, a weekday alone, or no date at all is NOT stating today.
+    for s in ["I don't have access to today's date.",
+              f"It's a lovely {t:%A}.", "", "Grand day for it."]:
+        assert not e._states_today(s), f"false positive: {s!r}"
+    # The GT-B/GT-C1 refusal phrasings the full runs actually produced.
+    denials = [
+        "I don't have access to today's date.",
+        "I cannot determine the current date.",
+        "I'm unable to access real-time information.",
+        "there is no way to check the calendar from here",
+    ]
+    for s in denials:
+        assert e._DATE_DENIAL.search(s), f"denial missed: {s!r}"
+    assert not e._DATE_DENIAL.search("The date is set for the demo.")
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("DATE-005", "denial floor end-to-end: accepted retry, code-built "
+                             "replacement of a stubborn denial, append to a real "
+                             "answer, and no fire off a date turn")
+def test_denial_floor_end_to_end(sandbox):
+    today = datetime.now().astimezone()
+    named = f"{today:%B} {today.day}, {today.year}"
+    today_line = f"Today is {today:%A}, {today:%B} {today.day}, {today.year}."
+
+    # 1. Retry states the date -> accepted as-is.
+    eng = _scripted(sandbox, [
+        "I don't have access to today's date.",
+        f"It's {named} — all yours.",
+    ])
+    reply = eng.respond("What is the date today?")
+    assert named in reply.content and eng.model.calls == 2
+
+    # 2. Retry still denies -> the reply IS the code-built date line
+    #    (a denial with a date appended would contradict itself).
+    sandbox.fresh_conversation()
+    eng = _scripted(sandbox, [
+        "I can't access the current date.",
+        "I still cannot determine the date, sorry.",
+    ])
+    reply = eng.respond("What is the date today?")
+    assert reply.content == today_line
+
+    # 3. Retry did real work but omitted the date -> the line is APPENDED,
+    #    never destroying the work.
+    sandbox.fresh_conversation()
+    eng = _scripted(sandbox, [
+        "No date from me, I'm afraid.",
+        "It's a lovely day, whatever the calendar says.",
+    ])
+    reply = eng.respond("What's the current date?")
+    assert reply.content.endswith(today_line)
+    assert "lovely day" in reply.content
+
+    # 4. A non-date turn never arms the floor — one generation, untouched.
+    sandbox.fresh_conversation()
+    eng = _scripted(sandbox, ["Grand, thanks for asking."])
+    reply = eng.respond("How are you feeling?")
+    assert reply.content == "Grand, thanks for asking."
+    assert eng.model.calls == 1

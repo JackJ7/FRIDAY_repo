@@ -103,13 +103,31 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      date_floor_corrective, unsolicited_action, and
                      proactive_grounded on greeting/briefing records; Phase 2:
                      offer_accepted, offer_armed, offer_dodge_corrective,
-                     history_compacted; armor A1: answer_floor_corrective).
+                     history_compacted; armor A1: answer_floor_corrective;
+                     floors leg: script_hops_suppressed,
+                     empty_reply_corrective, empty_reply_floor).
                      ARMOR A1 (FRIDAY_armor_plan.md §3.1): the ANSWER-CONTRACT
                      FLOOR — when the message carries a literal `ANSWER:`
                      directive and the settled reply lacks the line, it is
                      BUILT from the turn's last successful calc result
                      (deterministic) or regenerated once; a produced ANSWER
                      line is never rewritten (a wrong value fails honestly).
+                     FLOORS LEG (armor plan §6, Phase A1 findings): the date
+                     floor gained a DENIAL half — a bare date question answered
+                     with "I can't know the date" (or no date at all) gets one
+                     retry, then a code-built "Today is ..." line (REPLACING a
+                     denial, APPENDING to a reply that did real work); an
+                     EMPTY-REPLY floor — tools ran but the settled reply is
+                     blank (the F4 re-poll signature) → one tool-less
+                     regeneration, then an honest code-built reply naming the
+                     tool activity (silence never ships); and S1.1 STREAM
+                     VETTING — every model round streams through a per-round
+                     shim (Engine._VettedStream) that holds back a short tail
+                     and stops emitting the moment the round's text drifts
+                     script, so foreign-script tool-narration hops never reach
+                     the live stream OR the transcript (drifted hop narration
+                     is scrubbed; the settled-reply script floor remains the
+                     last barrier).
                      The compaction digest and the memory pass's record
                      extraction are format-constrained (see model.py below);
                      the memory pass also backstops commitment inference —

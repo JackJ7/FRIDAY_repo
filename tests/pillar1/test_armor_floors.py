@@ -372,3 +372,88 @@ def test_script_floor_regen_and_fallback(sandbox):
     reply = eng.respond("explain the config tiers")
     assert reply.content == Engine._SCRIPT_FALLBACK
     assert eng._script_drifted(reply.content) is False
+
+
+# ---------------------------------------------------------------------------
+# S1.1 — per-round stream vetting (hop narration; floors leg)
+# ---------------------------------------------------------------------------
+
+def _no_foreign(text):
+    """No non-Latin LETTER anywhere — the stream-cleanliness assertion."""
+    e = _bare_engine()
+    return all(e._is_latin_letter(ch) for ch in text if ch.isalpha())
+
+
+@pytest.mark.case("SCR-003", "vetting shim: a clean round streams in full; a "
+                              "drifted round emits ZERO foreign characters")
+def test_vetted_stream_unit():
+    e = _bare_engine()
+    # Clean text: everything arrives once flushed, byte-identical.
+    out = []
+    vs = Engine._VettedStream(out.append, e._script_drifted)
+    for tok in ("The tiers ", "are self_serve, ", "propose, locked."):
+        vs(tok)
+    vs.flush()
+    assert "".join(out) == "The tiers are self_serve, propose, locked."
+    # Drift mid-round: emission stops before ANY foreign letter escapes —
+    # the 12-letter run trips inside the 24-char holdback.
+    out = []
+    vs = Engine._VettedStream(out.append, e._script_drifted)
+    for tok in ("The governance tiers are: ", THAI_DRIFT, " more text"):
+        vs(tok)
+    assert vs.tripped
+    vs.flush()  # a tripped stream must refuse to flush the tail
+    assert _no_foreign("".join(out)), f"foreign leaked: {''.join(out)!r}"
+
+
+@pytest.mark.case("SCR-004", "hop vetting end-to-end: a Thai narration hop is "
+                              "withheld from the stream AND the transcript; the clean final answer still streams")
+def test_drifted_hop_suppressed(sandbox):
+    eng = _script_engine(sandbox, [
+        {"content": THAI_DRIFT, "tool_calls": [_calc_call("2+2")]},
+        "The result is 4.",
+    ], retrieved=[])
+    # Isolate the shim under test: A6 args-voting also samples on a
+    # single-calc round and would desync the script (same isolation as
+    # test_answer_floor.py; voting has its own VOTE-* guards).
+    eng.vote_enabled = False
+    tokens = []
+    reply = eng.respond("run the numbers for me", on_token=tokens.append)
+    stream = "".join(tokens)
+    assert _no_foreign(stream), f"hop drift reached the stream: {stream!r}"
+    assert "The result is 4." in stream
+    assert reply.content == "The result is 4."
+    # The drifted narration is scrubbed from history too — nothing for the
+    # next round (or a later floor's retry transcript) to drift from.
+    assert all(_no_foreign(m.get("content") or "") for m in eng.history)
+
+
+@pytest.mark.case("SCR-005", "hop vetting no-false-positive: clean English "
+                              "narration hops stream exactly as before")
+def test_clean_hop_streams(sandbox):
+    eng = _script_engine(sandbox, [
+        {"content": "Checking the numbers now...",
+         "tool_calls": [_calc_call("2+2")]},
+        "Done — the result is 4.",
+    ], retrieved=[])
+    eng.vote_enabled = False  # same isolation as SCR-004
+    tokens = []
+    eng.respond("run the numbers for me", on_token=tokens.append)
+    stream = "".join(tokens)
+    assert "Checking the numbers now..." in stream
+    assert "Done — the result is 4." in stream
+
+
+@pytest.mark.case("SCR-006", "a drifted FINAL round never reaches the live "
+                              "stream either — the floor's replacement is what streams")
+def test_drifted_final_stream_clean(sandbox):
+    eng = _script_engine(sandbox, [
+        THAI_DRIFT,
+        "Back in English: all sorted.",
+    ], retrieved=[])
+    tokens = []
+    reply = eng.respond("explain the config tiers", on_token=tokens.append)
+    stream = "".join(tokens)
+    assert _no_foreign(stream), f"final drift reached the stream: {stream!r}"
+    assert "Back in English: all sorted." in stream
+    assert reply.content == "Back in English: all sorted."
