@@ -89,6 +89,19 @@ deep_mode:
   # hard-stops at the ceiling, saying so.
   max_calls_per_session: 8
 
+voting:
+  # Self-consistency voting (armor plan A6). On canonicalizable SHORT outputs
+  # only — a calc tool call's arguments, or the final ANSWER: line of a
+  # format-contract turn — FRIDAY samples the model n times and takes the
+  # majority (equality judged by the same Pint/JSON canonicalizers the
+  # regression suite grades with, core\canon.py). One mis-composed expression
+  # gets outvoted; a split vote is recorded as a hardness signal (feeds
+  # A8/S2 later). Full chat replies are never voted. Each vote costs n-1
+  # extra generations on the GPU, so n is a budget ceiling — Jack's number,
+  # LOCKED (raise it only after A9 buys the latency back).
+  enabled: true
+  n: 3
+
 memory:
   # keyword — notes only (pre-Phase-3). layered — notes + the typed-observation
   # stream, self-citing (Phase 3 memory backbone). vector — RESERVED seam for a

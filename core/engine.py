@@ -16,6 +16,7 @@ import json
 import re
 from datetime import datetime, timedelta
 
+from core.canon import canon_answer, canon_calc_args, majority
 from core.invariants import INVARIANTS
 from core.model import ModelReply
 from core.reasoning import scaffold_text
@@ -65,6 +66,18 @@ class Engine:
         # Guards close_session (Phase 4 §4) against writing the end-of-session
         # summary twice (a quit + atexit, or two frontends closing).
         self._session_summary_recorded = False
+        # Self-consistency voting (armor A6): on canonicalizable SHORT outputs
+        # (a calc tool-arg struct, an ANSWER: line) the engine samples the
+        # model vote_n times and takes the majority, so one mis-composed
+        # expression gets outvoted. Scoped to those two surfaces ONLY — full
+        # chat replies are never voted (N× decode on one GPU, and prose has
+        # no canonical form). vote_n is a latency budget (Jack's number,
+        # locked); the agreement rate is retained per turn (self.last_votes,
+        # logged) as the hardness signal A8/S2 will consume later.
+        vote_cfg = config.get("voting") or {}
+        self.vote_enabled = bool(vote_cfg.get("enabled", True))
+        self.vote_n = max(1, int(vote_cfg.get("n", 3)))
+        self.last_votes = []  # this turn's vote records (surface, agreement…)
         # Optional provider of accountability state (commitments, stale items)
         # for the system prompt — wired in bootstrap/service, may stay None.
         self.acc_summary = None
@@ -473,9 +486,15 @@ class Engine:
         # An accepted-offer turn can trip the anti-dodge barrier (§2) which may
         # replace the reply, so hold its stream too — no re-ask should flicker
         # before the corrected answer.
+        # An ANSWER-contract turn is voted (armor A6): the majority sample may
+        # replace the settled reply, so hold its stream too — the user should
+        # see one vetted answer, never a losing sample followed by the winner.
+        answer_vote = (self.vote_enabled and self.vote_n >= 2
+                       and "ANSWER:" in (user_input or ""))
         hold_stream = on_token is not None and (
             (artifact_ask and not self._has_artifact_referent())
-            or followup or event_ask or date_ask or accepted_offer is not None)
+            or followup or event_ask or date_ask or accepted_offer is not None
+            or answer_vote)
         live_token = None if hold_stream else on_token
 
         base = [{"role": "system", "content": self._system_prompt(extra=ref_block)}]
@@ -518,6 +537,16 @@ class Engine:
         # Messages created during this turn; persisted into history at the end.
         turn = [{"role": "user", "content": user_input}]
         tool_log = []
+        # Self-consistency voting (armor A6) — this turn's records. Reset per
+        # turn so the log's agreement rates are per-exchange, never stale.
+        self.last_votes = []
+        # Quote-don't-recall ledger (armor A7): every durable field value
+        # SURFACED this turn (retrieved snippets + memory reads), collected so
+        # the post-barrier below can byte-match what the reply claims to
+        # recall against what the record actually holds.
+        quote_ledger = []
+        for r in retrieved:
+            self._collect_durable_values(r.snippet, r.path, quote_ledger)
 
         reply = None
         for _ in range(self.max_rounds):
@@ -530,6 +559,10 @@ class Engine:
                 reply.tool_calls = self._recover_tool_calls(reply.content)
                 if not reply.tool_calls:
                     break  # genuinely a final text answer — done
+            # A6 surface 1: a round that is exactly ONE calc call gets its
+            # ARGUMENTS voted before execution — the mis-composed-expression
+            # failure a single sample can't catch. Only the winning args run.
+            self._vote_calc_round(base + turn, reply)
 
             # The model wants tools: run each one, feed results back, ask again.
             # If this round streamed visible text, break the line before the
@@ -559,6 +592,22 @@ class Engine:
                              "content": self._wrap_data(result, external)})
                 tool_log.append({"tool": name, "args": args,
                                  "result": result[:500]})
+                # A7: a memory read surfaced stored content — ledger its
+                # durable field values (full result text, not the 500-char
+                # log truncation) so the quote barrier can byte-match them.
+                if (name in self._QUOTE_SOURCES
+                        and not str(result).startswith("ERROR")):
+                    src = (args or {}).get("path") if name == "read_brain" \
+                        else None
+                    self._collect_durable_values(str(result), src, quote_ledger)
+
+        # A6 surface 2: the turn asked for the ANSWER-contract format (the
+        # canonicalizable final line), so the settled reply is voted — N
+        # samples over the SAME transcript (tool results included), grouped
+        # by Pint-equal canonical form, majority wins. The stream was held
+        # (answer_vote in hold_stream), so only the winner is ever shown.
+        if reply is not None and answer_vote:
+            self._vote_answer_line(base + turn, reply)
 
         # Phantom-review barrier (Task 6, structural). The base model cannot
         # be PROMPTED out of "I've reviewed the spreadsheet you provided"
@@ -794,6 +843,84 @@ class Engine:
                     live_token("\n" + reply.content)
                 turn.append({"role": "assistant", "content": reply.content})
 
+        # Quote-don't-recall barrier (armor A7). The byte-level sibling of the
+        # citation barrier: that one catches citing a store nothing surfaced;
+        # this one catches CORRUPTING a value the store DID surface (the
+        # HX711->HX717 class — a durable field paraphrased with one atom
+        # wrong). Detection is deterministic (_quote_mismatch over the turn's
+        # surfaced-value ledger). Corrective shape is calendar-first's: the
+        # ENGINE re-reads the source note itself (through _run_tool, so taint
+        # and referents apply), regenerates ONCE demanding the verbatim value,
+        # and then applies a floor that cannot be wrong — if the retry still
+        # doesn't carry the stored bytes, code appends the record line
+        # verbatim, so the true value is IN the reply no matter what. Never
+        # "close enough".
+        quote_fired = False
+        quote_floor = False
+        mism = None
+        if reply is not None and not phantom_fired and quote_ledger:
+            mism = self._quote_mismatch(reply.content, user_input, quote_ledger)
+        if mism:
+            quote_fired = True
+            record_line = f"- **{mism['field']}:** {mism['value']}"
+            # Forced re-read when the source note is known: live bytes beat
+            # the ledger copy, and the read lands referents/taint like any
+            # real read. Transcript stays well-formed (the draft carries the
+            # call, the result follows as a TOOL message — calendar-first's
+            # exact shape, so the draft is already in `turn` afterwards).
+            reread_wired = False
+            if mism.get("source"):
+                rr_args = {"path": mism["source"]}
+                if on_tool:
+                    on_tool("read_brain", rr_args)
+                result, external = self._run_tool("read_brain", rr_args)
+                if not str(result).startswith("ERROR"):
+                    tool_log.append({"tool": "read_brain", "args": rr_args,
+                                     "result": result[:500]})
+                    call = {"function": {"name": "read_brain",
+                                         "arguments": rr_args}}
+                    if turn and turn[-1].get("role") == "assistant":
+                        turn[-1]["tool_calls"] = (turn[-1].get("tool_calls")
+                                                  or []) + [call]
+                    else:
+                        turn.append({"role": "assistant",
+                                     "content": reply.content,
+                                     "tool_calls": [call]})
+                    turn.append({"role": "tool",
+                                 "content": self._wrap_data(result, external)})
+                    reread_wired = True
+            correction = (
+                "STOP: your draft states a saved value differently from the "
+                "record. The stored note holds EXACTLY this line:\n"
+                f"{record_line}\n"
+                "A durable saved value is never paraphrased or restated from "
+                "memory — it is quoted byte-for-byte. Rewrite the reply "
+                "quoting that exact value verbatim; if you meant some other "
+                "figure, say plainly that it is not the saved one.")
+            extra = [{"role": "system", "content": correction}]
+            if not reread_wired:
+                # No re-read landed the draft in `turn`, so show the model
+                # what it wrote (the citation barrier's shape instead).
+                extra.insert(0, {"role": "assistant", "content": reply.content})
+            retry = self.model.chat(base + turn + extra, on_token=None)
+            self.session_tokens += retry.eval_count
+            candidate = (retry.content if (retry.content or "").strip()
+                         else reply.content)
+            # The deterministic floor: the stored bytes end up in the reply
+            # whatever the retry did. An appended verbatim record can't be
+            # wrong (it IS the record) — same posture as the date floor's
+            # code-substitution and the conjunct disclosure.
+            if mism["value"] not in (candidate or ""):
+                candidate = ((candidate or "").rstrip()
+                             + f"\n\n(Quoting the saved record exactly: "
+                               f"**{mism['field']}:** {mism['value']})")
+                quote_floor = True
+            reply.content = candidate
+            reply.tool_calls = []
+            if live_token:  # None on a held turn — single emit below streams it
+                live_token("\n" + reply.content)
+            turn.append({"role": "assistant", "content": reply.content})
+
         # Date-answer floor (Phase 1, item 1). Pure determinism: the clock is
         # authoritative for "today", so a reply that states a today-cued full
         # date contradicting it is simply wrong (the "March 15, 2023" hallucination
@@ -866,6 +993,44 @@ class Engine:
                     reply.content += note
                     if live_token:
                         live_token(note)
+
+        # Output-script floor (armor S1, CFG-007). LAST barrier on purpose: it
+        # vets the FINAL text whatever earlier barriers replaced or appended.
+        # Deterministic detector (a script-range scan can't be argued with),
+        # one regeneration, then the honest fallback — a reply that drifted
+        # out of English twice is withheld, never handed over as if it were
+        # an answer (invariant 4: no bluffing, including in Thai).
+        script_fired = False
+        if reply is not None and self._script_drifted(reply.content):
+            script_fired = True
+            correction = (
+                "STOP: your draft reply drifted out of English into another "
+                "script. Rewrite the SAME answer — same content, same facts — "
+                "entirely in English (Latin script only). Every reply must be "
+                "in English, always.")
+            retry = self.model.chat(
+                base + turn
+                + [{"role": "assistant", "content": reply.content},
+                   {"role": "system", "content": correction}],
+                on_token=None)
+            self.session_tokens += retry.eval_count
+            if (retry.content or "").strip() \
+                    and not self._script_drifted(retry.content):
+                reply.content = retry.content
+            else:
+                # Two drifted generations: fail HONEST with a code-built reply
+                # rather than emit text neither Jack nor FRIDAY can vouch for.
+                reply.content = self._SCRIPT_FALLBACK
+            reply.tool_calls = []
+            if live_token:  # None on a held turn — single emit below streams it
+                live_token("\n" + reply.content)
+            # Keep history clean: the drifted draft is replaced, not stacked —
+            # a later turn must not see garbled text as established context.
+            if turn and turn[-1].get("role") == "assistant" \
+                    and not turn[-1].get("tool_calls"):
+                turn[-1]["content"] = reply.content
+            else:
+                turn.append({"role": "assistant", "content": reply.content})
 
         # Deferred single stream for a held turn (see hold_stream above): now
         # that every post-generation barrier has settled, emit the VETTED reply
@@ -991,6 +1156,19 @@ class Engine:
             # often Jack's free-text project references were resolved in CODE
             # (so the model didn't have to guess a path). Additive; schema stable.
             "entity_resolved": bool(getattr(self, "_entity_hint", "")),
+            # Armor A6: this turn's self-consistency votes (surface, n,
+            # agreement, switched). The agreement rate is the retained
+            # hardness signal A8/S2 will consume; empty on unvoted turns.
+            "votes": list(self.last_votes),
+            # Armor A7: True when the quote-don't-recall barrier caught a
+            # surfaced durable value stated non-verbatim (quote_corrective),
+            # and when the deterministic floor had to append the record line
+            # because the retry still didn't quote it (quote_floor).
+            "quote_corrective": quote_fired,
+            "quote_floor": quote_floor,
+            # Armor S1: True when the output-script floor caught a non-Latin
+            # drifted reply (CFG-007's signature, now countable).
+            "script_drift_corrective": script_fired,
         })
         return reply
 
@@ -1236,6 +1414,247 @@ class Engine:
             self._track_referents(name, args)
             self._track_result_referents(name, args, result)
         return result, kind == "external_read"
+
+    # ---------- self-consistency voting (armor A6) ----------
+    # A 14B composes a calc expression (or a final ANSWER line) wrong just
+    # often enough to matter, and a single sample can't tell a slip from a
+    # solid answer. For CANONICALIZABLE short outputs — and only those — the
+    # engine samples the model vote_n times and takes the majority: one bad
+    # composition gets outvoted. Equality comes from core\canon.py, the SAME
+    # functions the suite's graders use, so engine and grader can never
+    # disagree about whether two samples are "the same answer". Full chat
+    # replies are deliberately out of scope: N× sequential decode on one GPU
+    # is too expensive, and prose has no canonical form to vote on. The
+    # agreement rate is retained (self.last_votes -> the interaction log) as
+    # a deterministic hardness signal — nothing consumes it yet; A8/S2 will
+    # route split votes to deep mode in a later phase.
+
+    def _single_calc_call(self, reply):
+        """The round's ONE calc call — real, or narrated as text (the same
+        recovery the main loop trusts) — with parsed args; None when the
+        round is anything else. Voting stays scoped to the narrowest surface:
+        a round that mixes calc with other tools (or makes several calls) is
+        left alone rather than half-voted."""
+        calls = list(reply.tool_calls or [])
+        if not calls:
+            calls = self._recover_tool_calls(reply.content)
+        if len(calls) != 1:
+            return None
+        fn = calls[0].get("function", {})
+        if fn.get("name") != "calc":
+            return None
+        args = fn.get("arguments") or {}
+        if isinstance(args, str):
+            try:
+                args = json.loads(args)
+            except json.JSONDecodeError:
+                return None
+        return {"function": {"name": "calc", "arguments": args}}
+
+    def _vote_calc_round(self, messages, reply):
+        """A6 surface 1: vote the ARGUMENTS of a single-calc round before the
+        call executes. Two equal-but-differently-written expressions group
+        together (canon_calc_args evaluates them via Pint), so the vote is
+        about the MATH, not the spelling. On a majority the winning args are
+        grafted onto the round in place — the already-streamed round text
+        stays (it's the model's short preamble, not the answer); only the
+        executed call changes. No majority -> the original runs unchanged
+        (the safe direction). Mutates reply.tool_calls; never raises."""
+        if not (self.vote_enabled and self.vote_n >= 2):
+            return
+        original = self._single_calc_call(reply)
+        if original is None:
+            return
+        calls = [original]
+        forms = [canon_calc_args(original["function"]["arguments"])]
+        for _ in range(self.vote_n - 1):
+            try:
+                s = self.model.chat(messages, tools=self.registry.to_ollama(),
+                                    on_token=None)
+            except Exception:
+                continue  # a failed sample abstains; a vote must never
+                #           break the turn it was meant to harden
+            self.session_tokens += s.eval_count
+            c = self._single_calc_call(s)
+            calls.append(c)
+            forms.append(canon_calc_args(c["function"]["arguments"])
+                         if c else None)
+        winner, agreement, _counts = majority(forms)
+        switched = False
+        if winner is not None and forms[0] != winner:
+            for c, f in zip(calls, forms):
+                if f == winner and c is not None:
+                    reply.tool_calls = [c]
+                    switched = True
+                    break
+        self.last_votes.append({"surface": "calc_args", "n": len(forms),
+                                "agreement": round(agreement, 3),
+                                "switched": switched})
+
+    def _vote_answer_line(self, messages, reply):
+        """A6 surface 2: vote the settled reply of an ANSWER-contract turn.
+        Samples see the SAME transcript (this turn's tool results included),
+        so they re-derive the final line from identical evidence; grouping is
+        by Pint-equal canonical form ('0.06 kWh' == '60 Wh'). A sample with
+        no parseable ANSWER line abstains. On a majority the winning sample's
+        full text replaces the reply (the stream was held, so the user only
+        ever sees the winner); no majority keeps the original. Never raises."""
+        if not (self.vote_enabled and self.vote_n >= 2):
+            return
+        contents = [reply.content or ""]
+        forms = [canon_answer(contents[0])]
+        for _ in range(self.vote_n - 1):
+            try:
+                s = self.model.chat(messages, tools=self.registry.to_ollama(),
+                                    on_token=None)
+            except Exception:
+                continue
+            self.session_tokens += s.eval_count
+            contents.append(s.content or "")
+            forms.append(canon_answer(s.content))
+        winner, agreement, _counts = majority(forms)
+        switched = False
+        if winner is not None and forms[0] != winner:
+            for text, f in zip(contents, forms):
+                if f == winner and text.strip():
+                    reply.content = text
+                    reply.tool_calls = []
+                    switched = True
+                    break
+        self.last_votes.append({"surface": "answer_line", "n": len(forms),
+                                "agreement": round(agreement, 3),
+                                "switched": switched})
+
+    # ---------- quote-don't-recall contract (armor A7) ----------
+    # The HX711->HX717 failure class: a durable stored value (a tracker field,
+    # a part number, a rating) surfaced from the brain gets PARAPHRASED into
+    # the reply with one atom corrupted — confidently, plausibly, wrong. The
+    # contract: a stored value passes through verbatim, and code byte-matches
+    # what the reply claims against what the record holds — never "close
+    # enough". Scope is deliberately narrow: only field lines
+    # (`- **Field:** value`) whose value carries at least one ATOM (a
+    # digit-bearing token — HX717, 30 bar, 2026-07-12, v3.1). Atom-less prose
+    # values are exempt (rewording prose is legitimate recall, and
+    # byte-matching it would fire on every natural sentence).
+
+    # A tracker/note field line — the shape project_meta owns and the memory
+    # pass writes ("- **Status:** active", "- **Load cell:** 20 kg rated").
+    _FIELD_LINE = re.compile(
+        r"^\s*-\s*\*\*([A-Za-z][^:*\n]{0,40}):\*\*\s*(\S[^\n]*?)\s*$",
+        re.MULTILINE)
+    # An "atom": a token carrying a digit — the byte-exact core of a durable
+    # value (part numbers, ratings, dates, versions). Matching is by token
+    # SET, never substring, so a stored '30 bar' is not satisfied by a
+    # reply's '300 bar'.
+    _ATOM = re.compile(r"[\w.\-/]*\d[\w.\-/]*")
+    # The memory reads whose results carry stored values this turn (retrieved
+    # snippets are ledgered separately at turn start). read_calendar is NOT
+    # here — event dates are the calendar-first barrier's territory.
+    _QUOTE_SOURCES = ("read_brain", "search_brain", "get_observations",
+                      "search_observations", "read_timeline")
+
+    @classmethod
+    def _atoms(cls, text: str) -> set:
+        """The atom TOKEN SET of a text, sentence punctuation stripped off the
+        edges ('30.' at a sentence end must match a stored '30' — the token
+        core is what byte-matches, not the period after it)."""
+        return {a.strip(".-/") for a in cls._ATOM.findall(text or "")} - {""}
+
+    def _collect_durable_values(self, text: str, source, ledger: list):
+        """Ledger every atom-bearing field line in surfaced content. `source`
+        is the brain path when known (read_brain / a retrieved snippet) so
+        the barrier can force a real re-read; None otherwise."""
+        for m in self._FIELD_LINE.finditer(text or ""):
+            field, value = m.group(1).strip(), m.group(2).strip()
+            if not self._ATOM.search(value):
+                continue  # prose value — paraphrase is legitimate, exempt
+            if any(e["field"].lower() == field.lower() and e["value"] == value
+                   for e in ledger):
+                continue
+            ledger.append({"field": field, "value": value, "source": source})
+
+    def _quote_mismatch(self, reply_text: str, user_input: str, ledger: list):
+        """The A7 detector: the first ledgered value the reply talks about
+        WITHOUT quoting it byte-exactly. A clause must (a) name the field and
+        (b) state some atom for the mismatch to count — mentioning a field
+        with no value claim ("want me to update the Status?") never fires,
+        and a clause whose atoms Jack himself just supplied (he's SETTING a
+        new value, not recalling the old one) never fires. Returns the
+        offending ledger entry, or None."""
+        if not reply_text or not ledger:
+            return None
+        user_atoms = self._atoms(user_input)
+        for entry in ledger:
+            field, value = entry["field"], entry["value"]
+            if value in reply_text:
+                continue  # quoted verbatim — the contract is met
+            # The same field can hold different values in different notes
+            # (Status across projects); any of them verbatim satisfies it.
+            if any(e["value"] in reply_text for e in ledger
+                   if e["field"].lower() == field.lower()):
+                continue
+            value_atoms = self._atoms(value)
+            fpat = re.compile(r"\b" + re.escape(field) + r"\b", re.IGNORECASE)
+            for clause in self._CLAUSE_SPLIT.split(reply_text):
+                if not fpat.search(clause):
+                    continue
+                claim_atoms = self._atoms(clause)
+                if not claim_atoms:
+                    continue  # no value stated — an offer/question, not recall
+                if claim_atoms <= user_atoms:
+                    continue  # echoing Jack's own (new) value, not recalling
+                if value_atoms <= claim_atoms:
+                    continue  # every stored atom present byte-exact — quoted
+                return entry
+        return None
+
+    # ---------- output-script floor (armor S1) ----------
+    # CFG-007, recurring since coherence Phase 0: qwen intermittently drifts
+    # mid-reply into Thai (or another script) and finishes the answer there.
+    # Prompt rules ("Respond ONLY in English", kept in the max-obedience slot)
+    # reduced but never eliminated it — and a drifted reply is deterministically
+    # detectable, so code is the floor: a Unicode script check on the settled
+    # reply, one regeneration, then an honest fallback (never hand Jack text
+    # the system can't stand behind).
+
+    # Letters we accept as Latin script: ASCII + IPA/Latin-1/Extended A-B
+    # (é, ñ, ā — all < U+0250) + Latin Extended Additional (U+1E00-1EFF,
+    # Vietnamese etc.). Everything alphabetic outside these is foreign.
+    @staticmethod
+    def _is_latin_letter(ch: str) -> bool:
+        cp = ord(ch)
+        return cp < 0x0250 or 0x1E00 <= cp <= 0x1EFF
+
+    _SCRIPT_FALLBACK = (
+        "I have to be straight with you — that reply came out garbled in the "
+        "wrong language, twice, so I'm not handing it over. Ask me again and "
+        "I'll answer it properly in English.")
+
+    def _script_drifted(self, text: str) -> bool:
+        """True when the reply's LETTERS have left the Latin script. Fires on
+        a contiguous foreign run (>= 12 letters — a drifted clause) or a
+        foreign share of the whole reply (>= 25% with at least 8 letters — a
+        short reply drifted wholesale). Thresholds sit well above a quoted
+        name or a stray symbol, so ordinary English replies never trip it;
+        accents and Vietnamese diacritics are Latin and always pass."""
+        if not text:
+            return False
+        latin = foreign = run = longest = 0
+        for ch in text:
+            if not ch.isalpha():
+                continue  # digits/punct/space neither count nor break a run:
+                #           Thai and CJK drift arrives with separators mixed in
+            if self._is_latin_letter(ch):
+                latin += 1
+                run = 0
+            else:
+                foreign += 1
+                run += 1
+                longest = max(longest, run)
+        total = latin + foreign
+        if longest >= 12:
+            return True
+        return foreign >= 8 and total > 0 and foreign / total >= 0.25
 
     # ---------- working-memory referent stack (Task 6) ----------
     # "The ones I just handed off" once resolved to NOTHING because no record

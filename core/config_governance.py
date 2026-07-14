@@ -96,6 +96,12 @@ TIERS = {
     # uses different ones.
     "deep_mode.strip_reasoning": {"tier": "locked"},
     "deep_mode.think_tags":      {"tier": "locked"},
+    # --- self-consistency voting (armor A6): the switch is a capability flag
+    #     (self_serve, the deep-mode posture); N is a LATENCY BUDGET — every
+    #     vote costs N-1 extra decodes on the one GPU, so the ceiling is
+    #     Jack's number, like deep_mode.max_calls_per_session. ---
+    "voting.enabled": {"tier": "self_serve", "type": bool},
+    "voting.n":       {"tier": "locked"},
     # --- memory: machinery locked except the recall width ---
     "memory.retriever":      {"tier": "locked"},
     "memory.top_k":          {"tier": "self_serve", "type": int, "min": 1, "max": 12},

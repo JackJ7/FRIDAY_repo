@@ -8,10 +8,11 @@ classifier (the 60x minutes-as-hours family of errors).
 
 import math
 
-import pint
-
-ureg = pint.UnitRegistry()
-Q = ureg.Quantity
+# Armor A6: the unit registry and normalize_unit MOVED to core\canon.py so the
+# engine's self-consistency voting and this grader share ONE equality (they
+# must never disagree about whether "0.06 kWh" equals "60 Wh"). Re-exported
+# here so every existing `from helpers.truth import ...` keeps working.
+from core.canon import Q, normalize_unit, ureg  # noqa: F401
 
 
 # ---------- electrical ----------
@@ -76,44 +77,3 @@ def convert(value, from_unit, to_unit):
 def dimensionally(unit_str, expected_dim):
     """True if unit_str has the dimensionality of expected_dim (e.g. '[energy]')."""
     return Q(1, normalize_unit(unit_str)).check(expected_dim)
-
-
-def normalize_unit(u: str) -> str:
-    """Model unit spellings -> Pint spellings.
-
-    Torque shorthands need care: Pint reads 'kg*cm' as mass*length, but in
-    engineering a servo's 'kg·cm' means kilogram-FORCE·cm (a torque), so those
-    map to force_kilogram. Likewise 'in-lb' means pound-FORCE·inch."""
-    # Unicode multiplication first: models write 'N⋅m' (dot operator, U+22C5),
-    # 'N·m' (middle dot), or 'N×m'. The v2 tuned eval failed a CORRECT
-    # "ANSWER: 30 N⋅m" because only the middle-dot spelling was mapped —
-    # translate them all to '*' before the table so every spelling lands on
-    # the same entry (and kg·cm still resolves as force, via kg*cm).
-    u = u.replace("⋅", "*").replace("·", "*").replace("×", "*")
-    u = u.strip().strip(".").strip()
-    table = {
-        "Ω": "ohm", "ohms": "ohm", "Ohms": "ohm", "Ohm": "ohm",
-        "N·m": "N*m", "N-m": "N*m", "Nm": "N*m", "n*m": "N*m", "N.m": "N*m",
-        "newton-meter": "N*m", "newton-meters": "N*m", "newton_meter": "N*m",
-        "Wh": "watt_hour", "wh": "watt_hour", "kWh": "kilowatt_hour",
-        "mAh": "milliampere_hour", "Ah": "ampere_hour",
-        "amps": "ampere", "Amps": "ampere", "amp": "ampere", "A": "ampere",
-        "volts": "volt", "V": "volt", "watts": "watt", "W": "watt",
-        "kPa": "kilopascal", "psi": "psi", "hp": "horsepower",
-        "in": "inch", "inches": "inch", "lbs": "pound", "lb": "pound",
-        "N": "newton", "newtons": "newton", "rpm": "rpm",
-        "m/s": "meter/second", "km/h": "kilometer/hour",
-        # Torque as force*length (see docstring):
-        "in-lb": "pound_force*inch", "in-lbs": "pound_force*inch",
-        "in*lb": "pound_force*inch", "in-lbf": "pound_force*inch",
-        "in*lbf": "pound_force*inch", "inlb": "pound_force*inch",
-        "inch-pound": "pound_force*inch", "inch-pounds": "pound_force*inch",
-        "inch_pound": "pound_force*inch", "inch-lb": "pound_force*inch",
-        "ft-lb": "pound_force*foot", "ft*lb": "pound_force*foot",
-        "ft-lbf": "pound_force*foot", "foot-pound": "pound_force*foot",
-        "kg*cm": "force_kilogram*centimeter", "kg-cm": "force_kilogram*centimeter",
-        "kgcm": "force_kilogram*centimeter", "kg·cm": "force_kilogram*centimeter",
-        "kgf*cm": "force_kilogram*centimeter", "kgf-cm": "force_kilogram*centimeter",
-        "kgf·cm": "force_kilogram*centimeter", "kgfcm": "force_kilogram*centimeter",
-    }
-    return table.get(u, u)
