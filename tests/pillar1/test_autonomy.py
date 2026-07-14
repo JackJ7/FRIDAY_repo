@@ -94,8 +94,8 @@ def test_deep_think_available(sandbox, monkeypatch):
     # Engaging it flips the status flag the console reads and, when the heavier
     # model isn't reachable, takes the honest-fallback path (never a bluff). We
     # FORCE the unreachable case so this is deterministic and fast regardless of
-    # whether qwen2.5:32b happens to be pulled on this machine - otherwise the
-    # test would run a real (slow) 32B inference and its assertion would flip.
+    # whether the deep model happens to be pulled on this machine - otherwise
+    # the test would run a real (slow) deep inference and its assertion would flip.
     from core.model import ModelError, OllamaClient
 
     def unavailable(*a, **k):
