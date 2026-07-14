@@ -38,6 +38,10 @@ class _ScriptModel:
 def _scripted(sandbox, contents):
     eng = sandbox.service.engine
     eng.model = _ScriptModel(contents)
+    # Isolate the floor under test: A6 voting also arms on ANSWER: turns and
+    # would pop extra scripted replies (desynchronizing the script) — voting
+    # has its own guards in test_armor_floors.py.
+    eng.vote_enabled = False
     return eng
 
 
