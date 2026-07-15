@@ -1138,19 +1138,40 @@ the first section not marked DONE):
 
 | Section | Content | Status |
 |---|---|---|
-| RF.0 | Fresh full baseline on main 7954e90 (detached + watchdog) | **IN FLIGHT** |
+| RF.0 | Fresh full baseline on main 7954e90 (detached + watchdog) | **DONE** |
 | RF.1 | `normalize_unit` case-fold for known unit spellings (core/canon.py) + guard | **DONE** (+RF.1b) |
 | RF.2 | GND-010: web_fetch local-path/non-http arg-guard (pre-exec reroute or corrective hint) + guard | **DONE** |
 | RF.3 | GND-011: artifact-denial floor (denial-near-referent + one session artifact → re-ground + regenerate; date-denial shape) + guard | **DONE** |
 | RF.4 | CFG-007: Shape-D tool-call recovery, RESTRICTED to zero-required-argument tools + guard | **DONE** |
-| RF.5 | Merge to main + candidate full run (detached + watchdog) | pending |
+| RF.5 | Merge to main + candidate full run (detached + watchdog) | **IN FLIGHT** |
 | RF.6 | `--compare` + per-item verdicts recorded here + ship/remove decisions | pending |
 
 *(findings per section appended below as they complete)*
 
-**RF.0 — baseline launched 2026-07-15 01:29** (detached, suite PID 3932,
-watchdog PID 24588, log `results\launch_logs\baseline_rf_2026-07-15_0129.out.log`),
-from clean main **7954e90**, 375 cases. Healthy at launch + spot checks.
+**RF.0 — DONE. Baseline RECORDED: stamp `2026-07-15_0129`** — 375 cases,
+N=5, **350 passed / 25 failed**, wall **2:26:42** (01:29→03:56), detached,
+clean exit, err empty, watchdog green throughout. Provenance: config
+920a3d575b6f, qwen2.5:14b 7cdf5a0187d5, deep deepseek-r1:14b;
+`git_commit a61428b, git_dirty false` is HEAD at REPORT time — this
+session's four DOC-ONLY commits (3310353/80d82fc/6255576/a61428b, all
+FRIDAY_armor_plan.md) landed mid-run; pytest collected at 01:29 from
+7954e90, non-model-visible, run valid (same class as 0039/2244 notes).
+Target cases at baseline: **GND-010 0/5, GND-011 0/5, CFG-007 4/5** —
+depressed as expected, clean targets. **GOLD-gear-02 PASSED this run** —
+the model happened to spell `rpm` lowercase (the RPM crash is
+intermittent), so RF.1's delta may not show case-level movement; the
+grader fix is locked deterministically by CHK-006 regardless. Elsewhere:
+calendar 0.95 + GT-B/GT-C1 both green (floors leg holding), quant 0.826
+(GOLD-gear-03 residual + PROP-010 churn back down — both known),
+email_triage 0.50, thinking_skills 0.708, voice 0.93.
+
+**RF.5 — merge DONE, candidate IN FLIGHT.** `rf` merged to main
+**48944b5** (`--no-ff`, zero conflicts — rf touched no file the doc
+commits touched); post-merge `--quick` **294/294** green on main.
+Candidate full run launched DETACHED from clean 48944b5: **stamp
+`2026-07-15_0400`, suite PID 29196, watchdog PID 29560**, log
+`results\launch_logs\rf_candidate_2026-07-15_0400.out.log`, 383 items
+(375 + 8 new guards). Expected done ~06:30.
 
 **RF.1 — DONE (2026-07-15, rf branch 517e161; worktree ..\FRIDAY-rf).**
 `normalize_unit` (core/canon.py) now case-folds a unit spelling ONLY when
