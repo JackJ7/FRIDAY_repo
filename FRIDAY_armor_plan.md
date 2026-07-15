@@ -1142,7 +1142,7 @@ the first section not marked DONE):
 | RF.1 | `normalize_unit` case-fold for known unit spellings (core/canon.py) + guard | **DONE** (+RF.1b) |
 | RF.2 | GND-010: web_fetch local-path/non-http arg-guard (pre-exec reroute or corrective hint) + guard | **DONE** |
 | RF.3 | GND-011: artifact-denial floor (denial-near-referent + one session artifact → re-ground + regenerate; date-denial shape) + guard | **DONE** |
-| RF.4 | CFG-007: Shape-D tool-call recovery, RESTRICTED to zero-required-argument tools + guard | pending |
+| RF.4 | CFG-007: Shape-D tool-call recovery, RESTRICTED to zero-required-argument tools + guard | **DONE** |
 | RF.5 | Merge to main + candidate full run (detached + watchdog) | pending |
 | RF.6 | `--compare` + per-item verdicts recorded here + ship/remove decisions | pending |
 
@@ -1227,3 +1227,20 @@ respond() path with a scripted model and a REAL read_file referent push.
 `--quick` 293/293. Known limit (recorded at characterization): the 2/20
 fabrication tail — engaging the file but inventing its contents — is
 A7-quote-ledger territory, not this floor's.
+
+**RF.4 — DONE (2026-07-15, rf branch 4416f1e).** Shape D added to
+`_recover_tool_calls` for the CFG-007 residual ("Running read_own_config
+to check the settings..." — no parens, no JSON, matched none of shapes
+A/B/C, fell through as a text-only final reply). Exactly as the root-cause
+note prescribed, it is the NARROWEST shape, four guards deep: (1) an
+intent verb directly before the name (`_SHAPE_D_INTENT`: "Running X",
+"let me check X", "I'll use X" — a bare mention like "you could use X"
+never fires), (2) only tools with ZERO required parameters — prose carries
+no argument text and recovery must never invent arguments, so args are
+always `{}`, (3) never action-kind tools (state changes don't auto-fire
+from prose, even zero-arg ones), (4) only when shapes A/B/C recovered
+nothing. Guard **MEM-014** (the exact CFG-007 narration + backtick/let-me
+variants recovered and executed; all four guards each proven inert;
+paren forms still owned by A/C). MEM-011's existing "bare mention" and
+scaffold-placeholder rejections still green — the guards compose.
+`--quick` 294/294.
