@@ -2231,3 +2231,37 @@ per respond(). Design decisions, each measured or inherited:
   the task (freshest ask wins, offer-ledger posture).
 - Escalation (engine executes the merge itself) still HELD per the
   design — CN.5 batches decide.
+
+**CN.2.1 — ESCALATION ACTIVATED BY MEASUREMENT (2026-07-15, cn
+5fe014b; guards 7/7, --quick 306/306):** post-CN.2 conversion batches
+stayed 4/4 unconverted, and the evidence is unambiguous — **GT-C9 T7
+(stamp 1548): the model read the ACT NOW directive correctly and
+NARRATED the exact call ("Calling merge_projects with
+target='fluxbeam' ..." + a python code fence with the right args) —
+prose, not a native tool call, tools=[]**. CFG-007/Shape-D family;
+required args put it outside Shape D's deliberately-restricted
+recovery, and that restriction stays right — no arg fabrication. The
+design's held-back clause is now satisfied verbatim ("unless batches
+show the 14B still fumbles the exact-args call"), so the engine
+executes the merge itself on the survivor-confirm turn (or a later
+re-affirmation), calendar-first posture:
+
+- Args from CODE-owned ledger state only (Jack's confirmed survivor +
+  resolver-validated candidates) — fabrication-proof by construction.
+- Gate still batch-confirms file moves inside the tool (invariant 3);
+  a declined/errored merge is ATOMIC, keeps the task pending, and the
+  directive states plainly the merge did NOT land (no phantom-merge
+  narration possible).
+- A landed merge retires the task and the directive flips to "report
+  this result, do not re-call".
+- The executed call is prepended into the turn's tool_log —
+  memory-pass ALREADY-SAVED note and durable-write ledger stay
+  truthful (TM.1 posture, from the other direction).
+- Code-picked default survivor (note+folder rule, from the original
+  design) now rides the no-survivor directive too.
+
+Run-ops: **result stamps are minute-resolution — back-to-back targeted
+invocations OVERWRITE each other's results dir** (both CN.2 GT-C10
+reports were clobbered by the GT-C9 runs that followed them in the
+same minute; the .all.log failure text survived). Batch drivers now
+sleep 70s between invocations.
