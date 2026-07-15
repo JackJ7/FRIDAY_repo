@@ -1140,7 +1140,7 @@ the first section not marked DONE):
 |---|---|---|
 | RF.0 | Fresh full baseline on main 7954e90 (detached + watchdog) | **IN FLIGHT** |
 | RF.1 | `normalize_unit` case-fold for known unit spellings (core/canon.py) + guard | **DONE** (+RF.1b) |
-| RF.2 | GND-010: web_fetch local-path/non-http arg-guard (pre-exec reroute or corrective hint) + guard | pending |
+| RF.2 | GND-010: web_fetch local-path/non-http arg-guard (pre-exec reroute or corrective hint) + guard | **DONE** |
 | RF.3 | GND-011: artifact-denial floor (denial-near-referent + one session artifact → re-ground + regenerate; date-denial shape) + guard | pending |
 | RF.4 | CFG-007: Shape-D tool-call recovery, RESTRICTED to zero-required-argument tools + guard | pending |
 | RF.5 | Merge to main + candidate full run (detached + watchdog) | pending |
@@ -1188,3 +1188,17 @@ asserts the outer repo is untouched. `--quick` 288/288. Run-ops rule for
 future legs: copy `brain\`/`data\`/`friday_documents\` into a worktree
 BEFORE its first suite invocation (APP-004 boots the real app from
 whatever tree it runs in).
+
+**RF.2 — DONE (2026-07-15, rf branch a0c75dc).** `web_fetch` (the wrapper
+in core/tools/senses_tools.py — `web_lookup.fetch_url` keeps its pure
+URL-only contract) now arg-guards non-http(s) arguments: one that names a
+real file is REROUTED to the same read the `read_file` tool performs
+(identical `gate.check_read` + DATA/taint posture — both tools are
+`external_read`, so no trust boundary moves), with shell-style quotes
+stripped and the read_file truncation convention kept; one that names
+nothing gets a corrective hint naming `read_file`/`list_dir` instead of the
+old dead-end "ERROR: only http(s) URLs can be fetched." that the model
+parroted as its final reply in 13/20 sampled GND-010 failures. Guard
+**GND-014** (code-only: posix spelling, quoted-backslash spelling, and the
+missing-file corrective). `--quick` 289/289. GND-010 itself stays a model
+case — RF.5's candidate run judges whether the reroute converts `analyzed`.
