@@ -2037,10 +2037,48 @@ Section tracker (updated in place as each lands):
 
 | Section | Content | Status |
 |---|---|---|
-| CN.0 | Baseline (reuse TM.5 candidate if clean; else fresh run) + GT-C9/GT-C10 capture failing on baseline | queued |
+| CN.0 | Baseline (reuse TM.5 candidate if clean; else fresh run) + GT-C9/GT-C10 capture failing on baseline | **IN PROGRESS** |
 | CN.1 | Merge-intent operand hint (hint_for "many" branch, intent-aware) + MRG-001 | queued |
 | CN.2 | Pending-consolidation ledger (durable, structured, affirmative-prefix resolution) + MRG-002 | queued |
 | CN.3 | Project-identifier grounding floor (post-gen, held+retry, pre-ledger) + MRG-003 | queued |
 | CN.4 | Narration-terminated internal-read probe → scoped fix + MRG-004 | queued |
 | CN.5 | Merge + candidate full run (detached + watchdog) | queued |
 | CN.6 | `--compare` + per-item verdicts + ship/remove decisions | queued |
+
+**CN.0 (2026-07-15 afternoon, this session — leg opened on the monitor's
+TM-idle signal):**
+
+- **Baseline = the TM.5 candidate `2026-07-15_1118`, VALIDATED for
+  reuse:** every commit on main after 77c4491 (7a1cf86 / ce851b4 /
+  9a0c5d7 plan-doc-only + c7295ca watchdog script) is non-model-visible
+  — `git diff --stat 77c4491..HEAD` touches only FRIDAY_armor_plan.md
+  and scripts/ollama_watchdog.py; tree clean. No fresh CN baseline run
+  needed.
+- Build on **branch `cn` (worktree ..\FRIDAY-cn, from main 9a0c5d7,
+  runtime dirs copied per the RF.1b rule before first --quick)**.
+- **GT-C9/GT-C10 LANDED on cn** (tests/pillar1/test_notes10.py, GT-C
+  home): throwaway "fluxbeam / flux_beam_tool / flux_beam_v2" family.
+  Design decisions recorded in the module docstring + case comments:
+  (a) the execution/fabrication checks are **LOCKED FROM CAPTURE, by
+  design** — the cases must FAIL on baseline and convert as CN.1–CN.4
+  land (they are the leg's conversion metric); behavioral re-ask checks
+  stay TARGET per GT convention. (b) execution is asserted as **DISK
+  TRUTH** (`merged-on-disk`: duplicate notes carry merge_projects'
+  "- **Status:** merged into" line), never as tool narration — CN.2's
+  escalation branch may have the ENGINE make the call, and the metric
+  must be agnostic to who called it. (c) fabrication check =
+  QUOTED-span scan, `_norm`-normalized, substring-tolerant (partial
+  references like 'flux' clear; a fabricated sibling like
+  'flux-beam-utils' does not); unquoted prose fabrication is CN.3's
+  engine floor (MRG-003), not the golden's job. (d) GT-C10's which-ask
+  check ALLOWS the survivor-confirm question ("at most the
+  survivor-confirm" is the pass condition, verbatim). (e) notes-only
+  seeding (no folders on disk) — merge_projects handles folderless
+  merges as pure note surgery, and GT-C5 set the pattern.
+- `--quick` on cn: **299/299**, 91 deselected (89 + the 2 new model
+  cases — collected clean).
+- Capture batch 1 (`--skill project_ops --runs 3 -- -k "test_gt_c9 or
+  test_gt_c10"`) DETACHED from cn, PID 29944, log
+  `..\FRIDAY-cn\results\launch_logs\cn_capture_gtc9c10.out.log` —
+  expecting BOTH cases to fail (that is the capture); results below
+  when it lands.
