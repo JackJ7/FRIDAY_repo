@@ -266,3 +266,42 @@ def test_recover_narrated_tool_calls(sandbox):
     result, _ = eng._run_tool(ccalls[0]["function"]["name"],
                               ccalls[0]["function"]["arguments"])
     assert result.strip() == "= 3 A"
+
+
+@pytest.mark.case("MEM-014", "Shape D recovery: intent-verb + bare tool-name prose runs a zero-required-arg tool; guarded four ways")
+def test_recover_bare_name_prose(sandbox):
+    """The CFG-007 residual (armor plan RF.4): 'Running read_own_config to
+    check the settings...' has no parens and no JSON, matches none of shapes
+    A/B/C, and silently fell through as a text-only reply — the tool never
+    ran. Shape D recovers it, but ONLY under all four guards: an intent verb
+    directly before the name, a registered tool with ZERO required
+    parameters (prose carries no argument text — recovery must never invent
+    args), never an action-kind tool, and only when no other shape matched."""
+    eng = sandbox.service.engine
+
+    # The exact CFG-007 narration shape — recovered with empty args.
+    rec = eng._recover_tool_calls("Running read_own_config to check the settings...")
+    assert rec == [{"function": {"name": "read_own_config", "arguments": {}}}]
+    # Common variants: backticked name, 'let me check', 'I'll use'.
+    assert eng._recover_tool_calls("Let me check `read_own_config` first.")[0][
+        "function"]["name"] == "read_own_config"
+    assert eng._recover_tool_calls("I'll use read_own_config for that.")[0][
+        "function"]["name"] == "read_own_config"
+
+    # Guard 1 — a bare MENTION without an intent verb never fires.
+    assert eng._recover_tool_calls(
+        "read_own_config shows every key and tier.") == []
+    # Guard 2 — required-parameter tools are never invented-args'd.
+    assert eng._recover_tool_calls("Running read_email now...") == []
+    # Guard 3 — action-kind tools never auto-fire from prose.
+    assert eng._recover_tool_calls("Running change_own_config now...") == []
+    # Guard 4 — paren forms belong to shapes A/C, not D.
+    assert eng._recover_tool_calls("Running read_own_config() now") \
+        == eng._recover_tool_calls("read_own_config()")
+    # Unknown names stay inert even with a perfect intent verb.
+    assert eng._recover_tool_calls("Running warp_drive to check...") == []
+
+    # End to end: the recovered call actually executes.
+    result, _ = eng._run_tool(rec[0]["function"]["name"],
+                              rec[0]["function"]["arguments"])
+    assert "tier" in result.lower() or "config" in result.lower()

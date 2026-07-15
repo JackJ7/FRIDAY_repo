@@ -1555,7 +1555,15 @@ class Engine:
              positional literals, parroted from a tool description's examples
              (the friday-tuned-v1 eval failed 15 golden math cases this way:
              correct expression every time, emitted as text, action dropped)
-        We parse all three and run them for real. Only invoked when the model
+          D) "Running read_own_config to check..." — bare tool-name PROSE,
+             no parens, no JSON (the CFG-007 residual: the turn loop treated
+             it as a final text answer and the tool never ran). Prose carries
+             no argument text, so recovery would have to invent arguments —
+             therefore Shape D is deliberately the narrowest: an intent verb
+             directly before a registered name, ONLY tools with zero required
+             parameters (args stay {}), never action-kind tools, and only
+             when no other shape recovered anything.
+        We parse all four and run them for real. Only invoked when the model
         made NO real tool call, and only for REGISTERED tool names, so ordinary
         prose can't trigger a spurious action. Returns tool_calls-shaped dicts.
         """
@@ -1605,7 +1613,27 @@ class Engine:
                 out.append({"function": {"name": obj["name"],
                                          "arguments": obj["arguments"]}})
 
-        # De-dupe identical (name,args) recoveries from the two passes.
+        # Shape D: intent-verb + bare tool name in prose ("Running
+        # read_own_config to check..."). Guarded four ways — see docstring.
+        if not out:
+            for m in self._SHAPE_D_INTENT.finditer(content):
+                name = m.group(1).lower()
+                tool = self.registry._tools.get(name)
+                if tool is None:
+                    continue
+                # Paren forms belong to shapes A/C (they carry real args).
+                rest = content[m.end():].lstrip("`'\" ")
+                if rest.startswith("("):
+                    continue
+                # Never invent arguments: only zero-required-parameter tools.
+                if (tool.parameters or {}).get("required"):
+                    continue
+                # Never auto-fire a state-changing tool from prose.
+                if tool.kind in ("action", "action_confirmed"):
+                    continue
+                out.append({"function": {"name": name, "arguments": {}}})
+
+        # De-dupe identical (name,args) recoveries from the passes.
         uniq, keys = [], set()
         for c in out:
             k = (c["function"]["name"],
@@ -1614,6 +1642,16 @@ class Engine:
                 keys.add(k)
                 uniq.append(c)
         return uniq
+
+    # Shape D's intent gate: the tool name must be the direct object of an
+    # "I am doing this now" verb ("Running X", "let me check X", "I'll use
+    # X") — a bare mention ("you could use read_calendar") never fires.
+    _SHAPE_D_INTENT = re.compile(
+        r"\b(?:running|calling|invoking|executing|using|checking"
+        r"|let me (?:run|call|use|check)"
+        r"|i(?:'ll| will| am going to)? (?:run|call|use|check)"
+        r"|now (?:running|calling|checking))\s+(?:the\s+)?"
+        r"[`'\"]?([A-Za-z_][A-Za-z0-9_]*)", re.IGNORECASE)
 
     @staticmethod
     def _find_call_end(content: str, open_idx: int) -> int:
