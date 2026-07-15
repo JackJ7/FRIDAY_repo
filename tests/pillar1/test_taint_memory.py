@@ -186,3 +186,45 @@ def test_tainted_observation_quarantines_model_channel(tmp_path):
     assert len(new_ids) == 1
     newest = store.get(new_ids.pop())
     assert newest.tainted and newest.title == "Note the second fix as well."
+
+
+# Recurrence language that fires the deterministic playbook-trace floor.
+_RECUR_ASK = "Same procedure as the last board: flash, trim pots, log serials."
+
+
+@pytest.mark.case("MEM-018", "the recurrence-trace floor gates on taint: decline skips it (HEAD unmoved), approve lands it, clean turns never ask")
+def test_recurrence_floor_gates_on_taint(tmp_path):
+    # Tainted + declining Jack: the last unconfirmed write path in the pass
+    # stays closed — no trace, no observation, brain HEAD unmoved.
+    sandbox = SandboxFriday(tmp_path, confirm_reply=False)
+    eng = sandbox.service.engine
+    eng._taint = TAINT
+    before = _head(sandbox.brain.root)
+    eng.model = _ScriptModel(["MEMORY: nothing durable"])
+    eng.memory_pass(_RECUR_ASK, "Done - same steps as before.")
+    assert len(sandbox.rec.confirms) == 1, "trace write never asked the gate"
+    assert not (sandbox.brain.root / "inbox" /
+                "recurring_procedures.md").exists()
+    assert _obs_files(sandbox) == []
+    assert _head(sandbox.brain.root) == before, \
+        "declined recurrence trace still moved the brain HEAD"
+
+    # Tainted + approving Jack: the trace lands (and its observation records
+    # with the tainted provenance mark, floor title).
+    sandbox2 = SandboxFriday(tmp_path / "ok", confirm_reply=True)
+    eng2 = sandbox2.service.engine
+    eng2._taint = TAINT
+    eng2.model = _ScriptModel(["MEMORY: nothing durable"])
+    eng2.memory_pass(_RECUR_ASK, "Done - same steps as before.")
+    assert len(sandbox2.rec.confirms) == 1
+    assert "recurrence noticed" in sandbox2.note("inbox/recurring_procedures.md")
+    obs = sandbox2.service.engine.observations.all()
+    assert len(obs) == 1 and obs[0].tainted
+
+    # Clean turn: free exactly as before — no confirm asked, trace lands.
+    sandbox3 = SandboxFriday(tmp_path / "clean", confirm_reply=False)
+    eng3 = sandbox3.service.engine
+    eng3.model = _ScriptModel(["MEMORY: nothing durable"])
+    eng3.memory_pass(_RECUR_ASK, "Done - same steps as before.")
+    assert sandbox3.rec.confirms == [], "clean turn asked a confirm"
+    assert "recurrence noticed" in sandbox3.note("inbox/recurring_procedures.md")

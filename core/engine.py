@@ -2991,15 +2991,33 @@ class Engine:
         # model provides the upside (a real playbook); code provides the floor.
         if recur and "write_playbook" not in executed and not any(
                 t["tool"] == "write_playbook" for t in (prior_tools or [])):
-            self.brain.write_note(
-                "inbox/recurring_procedures.md",
-                f"- {datetime.now():%Y-%m-%d}: recurrence noticed "
-                f"(\"{recur.group(0)}\") — Jack: "
-                f"\"{user_input[:150].strip()}\" -> worth capturing as a "
-                f"playbook next time it comes up.\n",
-                mode="append", summary="Recurrence trace (deterministic floor)")
-            pass_writes.append({"tool": "write_brain",
-                                "args": {"path": "inbox/recurring_procedures.md"}})
+            # Same taint posture as tool writes (TM.3): this is a CODE-level
+            # brain write, and while external content is in context even a
+            # Jack-derived trace must not move the brain ungated (it was the
+            # last unconfirmed write path in the pass). A decline skips it —
+            # the trace is a nicety, never worth an ungated commit.
+            trace_ok = True
+            if self._taint and self.gate is not None:
+                from core.permissions import ConfirmationDeclined
+                try:
+                    self.gate.approve_tainted(
+                        "write_brain",
+                        "inbox/recurring_procedures.md (recurrence trace)",
+                        self._taint)
+                except ConfirmationDeclined:
+                    trace_ok = False
+            if trace_ok:
+                self.brain.write_note(
+                    "inbox/recurring_procedures.md",
+                    f"- {datetime.now():%Y-%m-%d}: recurrence noticed "
+                    f"(\"{recur.group(0)}\") — Jack: "
+                    f"\"{user_input[:150].strip()}\" -> worth capturing as a "
+                    f"playbook next time it comes up.\n",
+                    mode="append",
+                    summary="Recurrence trace (deterministic floor)")
+                pass_writes.append(
+                    {"tool": "write_brain",
+                     "args": {"path": "inbox/recurring_procedures.md"}})
 
         # Structured record (armor A1): one gated, format-constrained call
         # that authors the observation's title/type and backstops commitment
