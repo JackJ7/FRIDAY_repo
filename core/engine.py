@@ -495,8 +495,11 @@ class Engine:
         # see one vetted answer, never a losing sample followed by the winner.
         answer_vote = (self.vote_enabled and self.vote_n >= 2
                        and "ANSWER:" in (user_input or ""))
+        # An artifact-ask can trip the phantom barrier (no referent) OR the
+        # artifact-denial floor (referent exists, reply denies having it) —
+        # both may replace the reply, so hold the stream either way.
         hold_stream = on_token is not None and (
-            (artifact_ask and not self._has_artifact_referent())
+            artifact_ask
             or followup or event_ask or date_ask or answer_ask
             or accepted_offer is not None or answer_vote)
         live_token = None if hold_stream else on_token
@@ -820,6 +823,66 @@ class Engine:
                 reply.content = retry.content
                 reply.tool_calls = []
                 if live_token:  # None on a held turn — single emit below streams it
+                    live_token("\n" + reply.content)
+                turn.append({"role": "assistant", "content": reply.content})
+
+        # Artifact-denial floor (armor RF.3 — GND-011's dominant mode, the
+        # date-DENIAL floor's shape applied to artifacts). Measured 16/20:
+        # asked for "thoughts on the notes I just handed you" with the file
+        # READ INTO THIS SESSION one turn earlier, the model answers an
+        # embodiment-denial script ("I don't have direct access to physical
+        # items / real-time input") — which dodges both the phantom barrier
+        # (a referent EXISTS) and the anti-dodge net (a denial is not a
+        # clarification question). The denial is simply false: the artifact's
+        # content sits on the referent stack. One re-grounded retry (the
+        # excerpt rides in the correction), then a code-built honest reply
+        # that hands back the artifact's REAL content — grounded by
+        # construction, never invented. The overlap check keeps the floor
+        # narrow: a reply that already engages the artifact's actual words
+        # is never touched, even if it hedges about access somewhere.
+        artifact_denial_fired = False
+        if (reply is not None and not phantom_fired and not dodge_fired
+                and artifact_ask and self._has_artifact_referent()
+                and self._ARTIFACT_DENIAL.search(reply.content or "")):
+            art = next((r for r in self.referents
+                        if r["kind"] in self._ARTIFACT_REFERENT_KINDS), None)
+            excerpt = ((art or {}).get("summary") or "").strip()
+            if art is not None and not self._grounding_overlap(
+                    reply.content or "", excerpt):
+                correction = (
+                    "STOP: Jack is asking about an artifact he ALREADY "
+                    f"shared in this conversation — {art['name']} "
+                    f"({art['kind']}, {art['when']}). Your draft denies "
+                    "having it; that is false — its content was read into "
+                    "this conversation and is quoted below. Rewrite the "
+                    "reply engaging its ACTUAL content (what it says, "
+                    "what's sound, what worries you, what you'd check "
+                    "next); never a denial, never invented details."
+                    + (f"\nCONTENT of {art['name']}:\n{excerpt}"
+                       if excerpt else ""))
+                retry = self.model.chat(
+                    base + turn
+                    + [{"role": "assistant", "content": reply.content},
+                       {"role": "system", "content": correction}],
+                    on_token=None)
+                self.session_tokens += retry.eval_count
+                candidate = (retry.content or "").strip()
+                if (candidate
+                        and not self._ARTIFACT_DENIAL.search(candidate)
+                        and (not excerpt
+                             or self._grounding_overlap(candidate, excerpt))):
+                    reply.content = candidate
+                else:
+                    # Deterministic honest floor: name the artifact and hand
+                    # back its real content. Never wrong, never invented.
+                    reply.content = (
+                        f"I do have it — {art['name']}, from earlier in "
+                        "this session. Here's what it actually says:\n"
+                        + (excerpt or art["detail"])
+                        + "\n\nSay the word and I'll dig into any part of it.")
+                reply.tool_calls = []
+                artifact_denial_fired = True
+                if live_token:  # None on a held turn — single emit streams it
                     live_token("\n" + reply.content)
                 turn.append({"role": "assistant", "content": reply.content})
 
@@ -1322,6 +1385,10 @@ class Engine:
             # dropping an explicit output contract, made countable. Additive;
             # the JSONL schema stays backward-compatible.
             "answer_floor_corrective": answer_floor_fired,
+            # Armor RF.3 (GND-011): True when the artifact-denial floor had to
+            # re-ground a reply that denied having an artifact the session
+            # ledger holds — the embodiment-denial residual, made countable.
+            "artifact_denial_floor": artifact_denial_fired,
             # Phase 1 (Notes-10, item 4): True when an ACTION tool fired on a
             # message with no request shape — the office-hours "proposed an
             # update nobody asked for" signature. The taint gate is the hard
@@ -2127,6 +2194,43 @@ class Engine:
         r"|which file (are|do) you|what file (are|do) you|share (it|the file)"
         r"|specify (the )?(exact )?(file|path)|point me to (the )?file"
         r"|provide (me )?(with )?(the )?(exact )?(file|path)", re.IGNORECASE)
+
+    # Artifact-denial floor (armor RF.3, GND-011): the embodiment-denial
+    # script a 14B answers when an artifact-ask says "handed"/"gave" — it
+    # denies having the thing even though its content was read into the
+    # session. Only consulted when a reviewable artifact IS on the stack
+    # (GND-012's honest "I don't have it" with an EMPTY ledger is correct
+    # and must survive), and only when the reply shows zero engagement with
+    # the artifact's actual words (_grounding_overlap).
+    _ARTIFACT_DENIAL = re.compile(
+        r"(don'?t|do not|cannot|can'?t|unable to)\s+(currently\s+)?"
+        r"(have\s+)?(direct(ly)?\s+)?(access|see|view|interact|perceive"
+        r"|receive|open|read)"
+        r"|physical (items?|objects?|documents?|notes?|world)"
+        r"|real[- ]time (input|data|access|information)"
+        r"|\bas an ai\b|\bi'?m (just |only )?an? (ai|language model)"
+        r"|(haven'?t|have not) (actually )?(received|been (given|handed|shown))",
+        re.IGNORECASE)
+
+    _STOP_WORDS = frozenset(
+        "this that with from have will would your them then than what when "
+        "where which about there their been being into just only also some "
+        "more most over under after before because could should might such "
+        "very each other between while these those does doing done shared "
+        "point pointed".split())
+
+    @classmethod
+    def _grounding_overlap(cls, text: str, summary: str) -> bool:
+        """Does the reply engage the artifact's actual content? Deterministic
+        token intersection: any distinctive word (4+ chars, minus stopwords)
+        from the artifact excerpt appearing in the reply counts. Empty
+        excerpt -> False (nothing to ground against)."""
+        words = {w.lower() for w in re.findall(r"[A-Za-z0-9]{4,}", summary or "")}
+        words -= cls._STOP_WORDS
+        if not words:
+            return False
+        reply_words = {w.lower() for w in re.findall(r"[A-Za-z0-9]{4,}", text or "")}
+        return bool(words & reply_words)
 
     # Evidence-form on purpose: the instruction-form version ("never review
     # content you haven't seen") lost to the user's presupposition 5/5 — the
