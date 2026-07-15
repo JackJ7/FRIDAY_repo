@@ -577,9 +577,20 @@ def no_foreign_identifier(allowed_names, status: str) -> Check:
     SUBSTRING of an allowed name's normalization ('flux', 'Flux Beam' clear;
     a fabricated sibling like 'flux-beam-utils' does not). Word-boundary
     lookarounds keep possessive apostrophes (Fluxbeam's) from opening a span;
-    spans with a path separator or more than four words are prose, skipped."""
+    spans with a path separator or more than four words are prose, skipped.
+    Tool/argument vocabulary is excluded: capture batch 2 showed the model
+    narrating a JSON-shaped merge plan in prose, and the plan's own quoted
+    KEYS ('action', 'merge_projects', 'source_notes'...) are not project
+    identifiers — flagging them would grade tool-call phrasing, not
+    fabrication."""
     from core.project_resolver import _norm  # the resolver's own semantics
     allowed_norms = {_norm(n) for n in allowed_names}
+    excluded = {"action", "merge_projects", "list_projects",
+                "resolve_project", "create_project", "add_files_to_project",
+                "write_brain", "read_brain", "search_brain", "read_file",
+                "source_notes", "target_note", "target", "duplicates",
+                "survivor", "name", "path", "content", "mode", "summary",
+                "slug", "title", "status", "folder", "note", "merged into"}
     quoted = re.compile(
         r"(?<![A-Za-z0-9])['\"‘“]"
         r"([A-Za-z][A-Za-z0-9 _\-]{2,40})"
@@ -590,6 +601,8 @@ def no_foreign_identifier(allowed_names, status: str) -> Check:
             cand = m.group(1).strip()
             if len(cand.split()) > 4:
                 continue                      # sentence-length quote, not a name
+            if cand.lower() in excluded:
+                continue                      # tool/arg vocabulary, not a name
             trimmed = re.sub(r"^the\s+|\s+project$", "", cand,
                              flags=re.IGNORECASE)
             n = _norm(trimmed)
