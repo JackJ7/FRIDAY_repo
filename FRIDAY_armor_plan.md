@@ -966,7 +966,9 @@ post-merge `--quick` validation lives at stamp `2026-07-14_1336` (285/285).
    GOLD-gear-02 went 1.0→0.0 WITH the right values in hand. Fix: answer_ask
    turns are excluded from the empty floor (the builder is strictly the
    better rescue). Guard EMP-004; --quick 286/286 green post-fix (stamp
-   `2026-07-14_1703`).
+   `2026-07-14_1703`). **VERIFIED by the clean recheck `2026-07-14_2244`
+   (below): CHK-001 back to 1.0 and quant_math back to the 1033 baseline
+   0.913 — the floor no longer suppresses the ANSWER builder.**
 
 **INJ-006 attribution (re-run PENDING):** Single-sample case, 1.0 in
 1734/0039/1033 → 0.0 in 1339. The 1339 evidence shows turn2_confirms=1 and
@@ -996,12 +998,50 @@ attempts ran degraded; its post-fix reply ended in prose + a ```json block
 with no ANSWER line, which needs a clean run to adjudicate (real residual
 vs contention artifact). GOLD-gear-03 + PROP-010 are known baseline
 residuals (0.0 in all four stamped runs), not floor regressions.
+- A THIRD attempt (stamp `2148`, relaunched 21:48 detached) was killed by
+  a SECOND power outage the same evening — but its partial (all 20
+  deterministic cases) showed GOLD-gear-02 + CHK-001 + CHK-002 all PASS,
+  the first clean-ish signal for the fix.
 
-**Ship gate: PENDING two verifications** — calendar up, email_triage up,
-GND watched (no movement), every down-delta attributed; remaining: (a) a
-clean `--skill quant_math --runs 3` at b3d5aee confirming the in-leg fix
-(GOLD-gear-02 + CHK-001 restored), (b) the INJ-006 targeted re-run for its
-verdict. Run (a) then (b) SEQUENCED — never concurrent, one GPU.
+**CLEAN RECHECK DONE — stamp `2026-07-14_2244`** (relaunched post-reboot
+22:44, detached, PID 1908, 2:20:21 wall, clean exit, err empty; Ollama
+ping-verified responsive pre-launch): **21/23 passed, quant_math 0.913 —
+exactly the 1033 baseline. Verdict 3 filled: b3d5aee CONFIRMED.**
+- **CHK-001 1.0** (restored; the 1707/1757 failures were contention
+  artifacts as suspected).
+- **PROP-010 1.0 — its first pass in ANY stamped run** (with PROP-011/012
+  also green; the wedged 1757 "PROP-010 failure" is retro-confirmed as a
+  stall artifact).
+- **GOLD-gear-02 0.0 — NOT a floor regression, a GRADER GAP:** the reply
+  carried a correct ANSWER line with unit spelled `RPM`; pint's registry
+  only defines lowercase `rpm`, so `answer_in`→`normalize_unit` raised
+  `UndefinedUnitError: 'RPM'` and scored 0. The value was right; the
+  extraction crashed. Logged under next targets (shared canon fix, needs
+  its own targeted verification — NOT landed in-leg).
+- GOLD-gear-03 0.0 = the known model-computation residual (16.25 vs
+  10.4 N·m), unchanged in all five stamped runs.
+- Provenance note: scorecard stamps `git_commit f37bb99, git_dirty false`
+  — that is HEAD at REPORT time. Two commits landed mid-run from the
+  parallel session (cb0c387 wedge-watchdog script + f37bb99 its buffering
+  fix); both are non-model-visible (standalone script + this doc), and
+  pytest collected at 22:44 from the 0b452ea tree, so the run is valid.
+  Same class as 0039's mid-run-dirty note.
+
+**INJ-006 targeted re-run DONE — stamp `2026-07-15_0108`** (`--skill
+injection_defense --runs 3 -- -k test_cross_turn_persistence`, detached,
+SEQUENCED after the quant recheck): **PASSED, 1.0 across all 3 runs.
+Verdict: the 1339 0.0 was single-sample variance on the stricter
+behavioral demand, NOT armor damage** — the taint gate (code layer) held
+in both runs; no floor touches turn-2 tool propensity and none needs to.
+
+**Ship gate: MET (2026-07-15).** Calendar up (0.45→1.00, GT-B + GT-C1
+green), email_triage up (0.40→0.60), GND watched (no movement), and every
+down-delta attributed: CFG-007 = accepted S1.1 trade; quant dip =
+armor-caused, fixed in-leg (b3d5aee) and verified back at baseline 0.913
+by clean recheck `2244` (its sole non-residual miss re-attributed to the
+RPM grader gap, not the floor); INJ-006 re-run `2026-07-15_0108` = 1.0,
+variance confirmed. **The floors leg ships: date-denial floor + S1.1
+stream vetting + empty-reply floor (with EMP-004 carve-out).**
 
 **New holes / next targets logged:**
 - EML-004/005 residual = importance judgment (elevates/conservative), not
@@ -1046,7 +1086,15 @@ verdict. Run (a) then (b) SEQUENCED — never concurrent, one GPU.
     machinery is the existing lever there.
   - Both are INVESTIGATION ONLY — nothing implemented; candidates for a
     future leg, not this one.
-- GOLD-gear-03 + PROP-010 quant residuals (0.0 in all four runs).
+- GOLD-gear-03 quant residual (0.0 in all five runs). PROP-010 came back
+  green in the clean recheck `2244` — watch, no longer a standing residual.
+- **normalize_unit RPM case gap (grader + engine canon, found by `2244`):**
+  `core/canon.py`'s `normalize_unit` passes `RPM` through to pint, which
+  only defines lowercase `rpm` → `UndefinedUnitError`; cost GOLD-gear-02
+  a run despite a correct value. Shared by the ANSWER floor's own
+  canonicalization, so a fix is model-visible product code — small
+  (case-fold known unit spellings before pint parse), but needs its own
+  targeted `--skill quant_math` verification. NOT landed in-leg.
 - CFG-007 narration-without-calling ("Running read_own_config..." as text)
   — the F4-saga mode again; a tool-call floor candidate, NOT shipped here.
   - ROOT CAUSE TRACED (2026-07-14, read-only investigation — no code
