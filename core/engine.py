@@ -2941,6 +2941,12 @@ class Engine:
         # The autonomous memory pass must inherit the turn's taint: if this
         # exchange (now in history) touched external content, its writes gate.
         self._taint = self._external_in_context() or self._taint
+        # Snapshot for the observation record (TM.2): reads inside the pass's
+        # own loop below re-set self._taint, but what matters for provenance
+        # is whether THIS exchange carried external content at all — so any
+        # taint by the time the record is made marks it. Recomputed after the
+        # loop; this early flag only gates the extraction call.
+        tainted = bool(self._taint)
         # pass_writes: the durable writes THIS pass performed, with args — the
         # Phase-3 observation is recorded from the full ledger (prior + these).
         turn, reply, executed, pass_writes = [], None, [], []
@@ -3006,8 +3012,15 @@ class Engine:
                           for t in (prior_tools or [])))
         want_commit = (not tracked
                        and bool(self._INTENTION_CUE.search(user_input or "")))
+        # The pass's own loop may have read external content just above —
+        # fold that into the provenance flag before anything consumes it.
+        tainted = tainted or bool(self._taint)
         record = None
-        if want_commit or ((writes or pass_writes)
+        # On a TAINTED turn the extraction's title/type hints are dropped by
+        # the store (TM.2 — the extraction reads the tainted context, the
+        # exact channel INJ-006 caught), so the call is only worth its
+        # latency when the commitment half needs it.
+        if want_commit or (not tainted and (writes or pass_writes)
                            and self.observations is not None):
             record = self._structured_memory_record(user_input, reply_text,
                                                     already)
@@ -3035,7 +3048,8 @@ class Engine:
                     user_input, reply_text, writes + pass_writes,
                     session=self.session_id,
                     title_hint=(record or {}).get("title", ""),
-                    type_hint=(record or {}).get("type", ""))
+                    type_hint=(record or {}).get("type", ""),
+                    tainted=tainted)
             except Exception:
                 # Memory-backbone bookkeeping must never break a live turn:
                 # the durable facts are already committed to their notes above;

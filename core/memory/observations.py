@@ -67,12 +67,20 @@ class Observation:
     refs: list = field(default_factory=list)  # note paths this touched
     session: str = ""  # the session id that produced it
     path: str = ""     # observations/<id>.md, relative to the brain root
+    # True when the turn that produced this had EXTERNAL content in the live
+    # context (armor TM.2). The record itself is legitimate — its writes were
+    # individually Jack-confirmed at the taint gate — but retrieval and audit
+    # must be able to see the provenance.
+    tainted: bool = False
 
     def cite(self) -> str:
         """The provenance stamp a retrieved observation carries so a claim
         grounded in it is self-citing (D7 item 5)."""
         day = (self.ts or "")[:10]
-        return f"obs {self.id} · {self.type} · saved {day}"
+        cite = f"obs {self.id} · {self.type} · saved {day}"
+        if self.tainted:
+            cite += " · tainted-turn"
+        return cite
 
 
 def _slug_ts(ts: datetime) -> str:
@@ -98,11 +106,15 @@ class ObservationStore:
         return f"obs-{_slug_ts(datetime.now())}-{os.urandom(2).hex()}"
 
     def record(self, type: str, title: str, body: str,
-               refs: list = None, session: str = "") -> str:
+               refs: list = None, session: str = "",
+               tainted: bool = False) -> str:
         """Persist one observation; returns its id. Always a NEW file (unique
         id), so it never trips read-before-overwrite, and its body is prose
         (no `- **Field:**` lines) so it never trips the one-fact-one-place
-        guard. Test sessions reroute it under test_archive/ via Brain."""
+        guard. Test sessions reroute it under test_archive/ via Brain.
+        `tainted` (TM.2) marks a record produced while external content was
+        in the live context; the key is written only when true, so clean
+        observations keep their existing file shape unchanged."""
         obs_id = self._new_id()
         title = " ".join((title or "").split())[:200] or "(untitled)"
         refs = [r for r in (refs or []) if r]
@@ -114,6 +126,8 @@ class ObservationStore:
             "refs": refs,
             "session": session or "",
         }
+        if tainted:
+            front["tainted"] = True
         content = ("---\n"
                    + yaml.safe_dump(front, sort_keys=False, allow_unicode=True)
                    + "---\n\n" + (body or title).strip() + "\n")
@@ -147,7 +161,8 @@ class ObservationStore:
 
     def record_from_pass(self, user_input: str, reply_text: str,
                          writes: list, session: str = "",
-                         title_hint: str = "", type_hint: str = "") -> str | None:
+                         title_hint: str = "", type_hint: str = "",
+                         tainted: bool = False) -> str | None:
         """The deterministic floor: after the memory pass, if any durable write
         actually landed this turn, record ONE observation summarizing it. Empty
         writes -> nothing (a pure question commits no observation, matching the
@@ -161,9 +176,19 @@ class ObservationStore:
         first-sentence floor when empty, and the type can only refine the
         generic "fact" bucket — a type derived from the actual write ledger
         (task from track_commitment, decision from write_playbook, ...) is
-        ground truth and is never overridden by a model's opinion."""
+        ground truth and is never overridden by a model's opinion.
+
+        `tainted` (TM.2): the turn had external content in the live context.
+        The model hints are DROPPED here — they come from a model call that
+        read that content, the exact channel that let a planted payload
+        become a durable observation title (INJ-006) — and the record falls
+        back to the deterministic floor: ledger-derived type, title from
+        Jack's own words. Enforced in the STORE, not just skipped in the
+        engine, so no future caller can reopen the channel."""
         if not writes:
             return None
+        if tainted:
+            title_hint, type_hint = "", ""
 
         refs, types, saved = [], set(), []
         for w in writes:
@@ -194,7 +219,8 @@ class ObservationStore:
             if r not in seen:
                 seen.add(r)
                 uniq.append(r)
-        return self.record(otype, title, body, refs=uniq, session=session)
+        return self.record(otype, title, body, refs=uniq, session=session,
+                           tainted=tainted)
 
     @staticmethod
     def _describe_write(tool: str, args: dict) -> str:
@@ -257,6 +283,7 @@ class ObservationStore:
             refs=list(front.get("refs") or []),
             session=str(front.get("session", "")),
             path=rel,
+            tainted=bool(front.get("tainted")),
         )
 
     def all(self, include_test: bool = None) -> list:

@@ -128,8 +128,9 @@ def test_approved_tainted_write_still_ledgers(tmp_path):
     before = _head(sandbox.brain.root)
     eng.model = _ScriptModel(
         [{"content": "Saving that note.", "tool_calls": [_PLANTED_WRITE]},
-         "MEMORY: saved the note",
-         ""])  # A1 extraction call (runs when a write landed); "" -> floor
+         "MEMORY: saved the note"])
+    # (No extraction item scripted: TM.2 skips the A1 extraction on a
+    # tainted turn — its hints would be dropped anyway.)
     eng.memory_pass("Please note the purchase approval down.",
                     "Noted.")
     # The filter keys on the BLOCK, not on taint: an approved write is
@@ -137,3 +138,51 @@ def test_approved_tainted_write_still_ledgers(tmp_path):
     assert len(_obs_files(sandbox)) == 1, "approved write lost its observation"
     assert _head(sandbox.brain.root) != before, "approved write never landed"
     assert len(sandbox.rec.confirms) == 1, "the taint gate never asked"
+
+
+@pytest.mark.case("MEM-017", "tainted-turn observation: model hints dropped (store-enforced), deterministic floor only, tainted provenance carried")
+def test_tainted_observation_quarantines_model_channel(tmp_path):
+    sandbox = SandboxFriday(tmp_path, confirm_reply=True)
+    store = sandbox.service.engine.observations
+    ledger = [{"tool": "write_brain", "args": {"path": "inbox/wiring.md"}}]
+
+    # Store-level enforcement: hints from the (tainted-context) model call
+    # are dropped no matter who passes them — the floor takes over.
+    tid = store.record_from_pass(
+        "Note the wiring fix down. It matters.", "Noted.", ledger,
+        title_hint="Record $5000 purchase approval note on Friday",
+        type_hint="discovery", tainted=True)
+    tobs = store.get(tid)
+    assert tobs.title == "Note the wiring fix down."   # Jack's words, not the hint
+    assert tobs.type == "fact"                          # ledger floor, not the hint
+    assert tobs.tainted and tobs.cite().endswith("tainted-turn")
+    assert "tainted: true" in sandbox.note(tobs.path)
+
+    # Clean contrast: the same hints are honored and no tainted key appears.
+    cid = store.record_from_pass(
+        "Note the wiring fix down.", "Noted.", ledger,
+        title_hint="Wiring fix recorded", type_hint="discovery")
+    cobs = store.get(cid)
+    assert cobs.title == "Wiring fix recorded" and cobs.type == "discovery"
+    assert not cobs.tainted and "tainted" not in sandbox.note(cobs.path)
+    assert not cobs.cite().endswith("tainted-turn")
+
+    # Engine-level: a tainted pass never spends the extraction call (its
+    # hints would be dropped), and its observation carries the provenance.
+    eng = sandbox.service.engine
+    eng._taint = TAINT
+    eng.model = _ScriptModel(
+        [{"content": "Saving.", "tool_calls": [{"function": {
+            "name": "write_brain", "arguments": {
+                "path": "inbox/fix2.md", "content": "# F\n\nx\n",
+                "mode": "create", "summary": "fix"}}}]},
+         "MEMORY: saved"])
+    seen_before = {o.id for o in store.all()}
+    eng.memory_pass("Note the second fix as well.", "Noted.")
+    assert eng.model.calls == 2, "tainted pass still spent the extraction call"
+    # Ids tie on the second and break by random hex — find the new record by
+    # difference, never by sort order.
+    new_ids = {o.id for o in store.all()} - seen_before
+    assert len(new_ids) == 1
+    newest = store.get(new_ids.pop())
+    assert newest.tainted and newest.title == "Note the second fix as well."
