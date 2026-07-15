@@ -1514,7 +1514,7 @@ the first section not marked DONE):
 | TM.0 | Fresh full baseline on main (detached + watchdog) | **IN FLIGHT** (see below) |
 | TM.1 | BLOCKED results never ledger as durable (3 sites) + guard | **DONE** |
 | TM.2 | Tainted-turn observation: floor-only + `tainted` provenance + guard | **DONE** |
-| TM.3 | Recurrence-floor taint gate + guard | pending |
+| TM.3 | Recurrence-floor taint gate + guard | **DONE** |
 | TM.4 | Targeted INJ-006 stability batches on the tm branch | pending |
 | TM.5 | Merge to main + candidate full run (detached + watchdog) | pending |
 | TM.6 | `--compare` + per-item verdicts + ship/remove decisions | pending |
@@ -1580,3 +1580,19 @@ hex — the guard finds the new record by set difference, never sort order
 `close_session`'s session-summary observation rides `record()` with the
 default `tainted=False` — a session-level provenance mark would need its
 own design (what does "tainted" mean across a whole session?).
+
+**TM.3 — DONE (2026-07-15, tm branch 49b0f98).** The recurrence-trace
+floor (`inbox/recurring_procedures.md`) was the LAST unconfirmed
+brain-write path in the memory pass — code-level, so it never crossed
+`_run_tool`'s taint barrier; its content is Jack-derived (his own message
+excerpt) but while tainted it still moved the brain HEAD unconfirmed. It
+now goes through `gate.approve_tainted` exactly like a tool write when
+the turn is tainted, free as before when clean; a decline skips the
+trace. Guard **MEM-018** (three postures: tainted+decline → no trace, no
+observation, HEAD unmoved, confirm counted; tainted+approve → trace
+lands + its observation carries the tainted mark; clean → zero confirms,
+trace lands as always). With TM.1–TM.3 in, the memory pass has NO
+remaining ungated brain-write path: tool writes gate at `_run_tool`, the
+observation ledger only holds gate-approved writes, the trace floor
+gates, and the pass's declined turns produce zero brain commits.
+`--quick` **299/299** (294 + 5 TM guards).
