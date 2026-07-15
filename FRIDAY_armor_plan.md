@@ -2038,8 +2038,8 @@ Section tracker (updated in place as each lands):
 | Section | Content | Status |
 |---|---|---|
 | CN.0 | Baseline (reuse TM.5 candidate if clean; else fresh run) + GT-C9/GT-C10 capture failing on baseline | **DONE** |
-| CN.1b | *(added in-leg from capture)* projects/-create guard on write_brain — phantom-project channel | queued |
-| CN.1 | Merge-intent operand hint (hint_for "many" branch, intent-aware) + MRG-001 | queued |
+| CN.1b | *(added in-leg from capture)* projects/-create guard on write_brain — phantom-project channel | **code DONE (MRG-005)** |
+| CN.1 | Merge-intent operand hint (hint_for "many" branch, intent-aware) + MRG-001 | **code DONE, conversion batches in flight** |
 | CN.2 | Pending-consolidation ledger (durable, structured, affirmative-prefix resolution) + MRG-002 | queued |
 | CN.3 | Project-identifier grounding floor (post-gen, held+retry, pre-ledger) + MRG-003 | queued |
 | CN.4 | Narration-terminated internal-read probe → scoped fix + MRG-004 | queued |
@@ -2151,3 +2151,39 @@ metrics.** The picture across all five batches:
 
 **CN.0 DONE.** Baseline = `2026-07-15_1118` (validated above); goldens
 captured failing with attributed anatomy; next = CN.1 (+ CN.1b).
+
+**CN.1 + CN.1b — code DONE (2026-07-15, cn a02f3b4; --quick 302/302 =
+299 + MRG-001/001b/005):**
+
+- **CN.1 (operand hint).** `hint_for` gets a merge-intent branch ahead
+  of resolve_one: `merge_intent()` (module-level, shared with CN.2's
+  ledger so the two can never drift) + operand directive listing EVERY
+  candidate with the exact merge_projects call shape; replaces both
+  the ask-which friendly fire AND the "one"-steer (CN.0 batch 1's
+  partial merge). Non-merge turns byte-identical (MRG-001 regression
+  arms assert the ask-which and use-DIRECTLY hints verbatim).
+- **DESIGN DISCOVERY (caught by MRG-001, would have shipped broken
+  otherwise): the forward scorer cannot see filter-style references
+  AT ALL.** "projects with flux in the name" carries only the FRAGMENT
+  'flux' — containment needs the full compact name, token-cover needs
+  every distinctive word, difflib windows score ~0.5 < PLAUSIBLE; the
+  fuzzy-filter message resolved to ZERO candidates (and the live
+  transcript's "related to claude code" has the same property, so the
+  operand hint would NEVER have fired on the very shape that opened
+  this leg). Fix: an inverse-containment **filter tier** on merge
+  turns only — a project qualifies when a distinctive message word
+  (len>=3, not _GENERIC, not _MERGE_VOCAB) sits inside its compact
+  name ('flux' ⊂ 'fluxbeam'). Worst case = an extra candidate on the
+  operand list; Jack's survivor confirm drops it.
+- **CN.1b (phantom-project guard).** `write_brain` refuses to CREATE a
+  projects/ note in any mode (append-to-missing creates too), with a
+  create_project redirect; ERROR prefix keeps refusals out of the
+  durable-write ledger (TM.1 filter). Guard placed in the TOOL wrapper
+  (brain_tools.py), NOT Brain.write_note — create_project and merge
+  surgery flow through the Brain API and must stay free; the tool is
+  the model-facing channel and is exactly the hole the capture caught
+  (memory pass = same tool surface). MRG-005 drives it through the
+  registry, asserts the backslash dodge, existing-note appends, and
+  inbox/ redirect all behave.
+- Conversion batches (GT-C10 ×2 + GT-C9 ×1, detached driver PID
+  22724, logs `cn1_gtc{9,10}_v*.all.log`): results below.
