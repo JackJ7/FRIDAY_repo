@@ -197,6 +197,12 @@ def main() -> int:
                    help="single check; exit 0 ok / 1 attention / 2 unknown")
     args = p.parse_args()
 
+    # A watchdog whose alerts sit in a stdio buffer is no watchdog: when
+    # output is redirected to a file (the normal detached usage) Python
+    # block-buffers, and a status line can lag hours behind the check that
+    # produced it. Force line-buffering so every verdict lands immediately.
+    sys.stdout.reconfigure(line_buffering=True)
+
     if args.once:
         return check_once(args)
     print(f"watchdog polling every {args.poll_sec:.0f}s "
