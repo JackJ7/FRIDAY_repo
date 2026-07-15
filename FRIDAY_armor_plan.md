@@ -29,7 +29,11 @@ resume at the first TM section not marked DONE in its tracker (end of
 script-floor retry recovery (CFG-007), web_fetch arg extension.**
 
 Directive issued by Jack 2026-07-13; also baked into `CLAUDE.md` so every
-session inherits it.
+session inherits it. **North star added by Jack 2026-07-15 (§0b):
+conversation parity — chatting with FRIDAY should feel like chatting with
+Claude; §0b decomposes that into the seven harness mechanisms (P1–P7),
+the friction scorecard (m1–m5), and the transcript→golden→floor pipeline
+that now governs leg ranking.**
 
 ---
 
@@ -51,6 +55,82 @@ best existing mechanisms already do (the calendar-first barrier, `calc`, the
 date-answer floor, `_recover_tool_calls` are all armor in exactly this sense).
 The directive makes it the *required* reflex rather than a recurring
 discovery.
+
+---
+
+## 0b. The north star (Jack, 2026-07-15): conversation parity
+
+Jack's directive, issued off the F-graded consolidation transcript (see
+Phase CONSOLIDATE, §6): *"I want to be able to chat and talk to FRIDAY
+the same way I do with Claude. Bake that way of understanding into
+FRIDAY's framework. I've never had any of the failures or friction in
+conversation with Claude the way I've been having with FRIDAY."*
+
+**The honest split first (invariant 4 applied to ourselves).** What makes
+a Claude conversation frictionless is two things, and only one of them
+transfers:
+
+1. **The method** — the harness *around* the model does most of the
+   coherence work, and the model is held to explicit per-turn contracts.
+   This transfers completely: it is prompts, ledgers, floors, and
+   barriers, which is exactly what this plan builds.
+2. **The weights** — frontier-scale breadth, fluency, and one-shot
+   reasoning. This does not transfer, and per CLAUDE.md it is never
+   faked (capability moves into this repo as METHOD, not as a fictional
+   clone). The long-range levers for the weights half are §3.5 (per-skill
+   configs + A11 exemplar bank) and the later-phase QLoRA adapter — the
+   interaction-log schema is kept stable precisely so a future adapter
+   can be tuned on FRIDAY's own best conversations.
+
+**The claim that makes parity a legitimate goal rather than a wish:
+every friction Jack has actually hit falls in the transferable half.**
+All five traced mechanics of the F-graded transcript (Phase CONSOLIDATE)
+are harness-class failures — dropped task state, ungrounded identifiers,
+narration dead-ends, intent-blind hints — not raw-intelligence failures.
+The same was true of the v3.1 failure map (§2: format contracts,
+plumbing order, salience burial). Nothing Jack has graded F required
+frontier weights to do right.
+
+**The method, decomposed.** What the Claude-side harness actually does,
+each item mapped to FRIDAY's analog (shipped, queued, or GAP). This
+table is the standing checklist for leg selection — friction Jack hits
+in live chat should trace to one of these rows, and the row names the
+armor family that closes it.
+
+| # | Claude-side mechanism | FRIDAY analog | State |
+|---|---|---|---|
+| P1 | **The harness remembers; the model reads.** Structured state is re-fed every turn (working dir, git status, standing rules, memory index, mid-turn reminders) — the model never carries coherence in its head | The referent block: entity hints, offer ledger, session summary, artifacts list | SHIPPED, keep widening (every new ledger rides it) |
+| P2 | **Turn contract.** A turn ends only when the task is done or genuinely blocked; "let me do X" is never a valid ending; questions only when blocked, and specific | Shape-D recovery (RF.4), empty-reply floor, CN.4 probe | PARTIAL — GAP: a general end-of-turn dangling-intent floor (reply ends in first-person-future + zero tools ran → recover or re-prompt) |
+| P3 | **Grounding contract.** Identifiers, paths, quotes come from tool output verbatim; what wasn't seen is declared unknown | Entity resolver, citation enforcement, calendar-first, CN.3 identifier floor | PARTIAL — GAP: generalize CN.3 beyond projects to any tool-surfaced namespace (files, runs, notes) |
+| P4 | **Standing-instruction persistence.** The user's ask stays the goal until done or superseded; qualified affirmatives resolve against it, never re-asked | Offer ledger (one-turn, bare-affirmative) → CN.2 pending-consolidation ledger (one verb, durable) | PARTIAL — GAP: the general small pending-task ledger (bounded verb set, structured state, affirmative-prefix resolution) |
+| P5 | **Correction durability.** A user correction becomes a session constraint and is never re-violated | nothing — the transcript shows fabrication repeated AFTER Jack's correction | GAP: correction ledger (detect the correction shape, pin it into the referent block for the session) |
+| P6 | **Intent-aware dispatch.** Question vs. command vs. thinking-out-loud, per-verb handling | calendar-first (date verbs), CN.1 merge-intent test | PARTIAL by design — grown verb-by-verb where live friction shows, never a grand classifier |
+| P7 | **Context economy.** Long sessions compact into summaries instead of degrading | session-summary compaction (Notes-10 P2) | SHIPPED — same method already |
+
+**Measurement (no armor ships on plausibility — parity included).**
+"Chats like Claude" is graded, not felt. The conversation-friction
+scorecard, gradeable on any multi-turn transcript, golden or live:
+
+- m1 — redundant asks: questions answerable from turn history or the
+  referent block;
+- m2 — fabricated identifiers: any name/slug/path not present in a tool
+  result or Jack's own words;
+- m3 — dropped-instruction turns: the standing ask neither advanced nor
+  honestly blocked;
+- m4 — turns-to-completion vs. the minimal path;
+- m5 — narration dead-ends: turns ending in first-person-future with no
+  tool run.
+
+Parity is asymptotic and measured: the golden conversation family trends
+to m1=m2=m3=m5=0 with m4 near-minimal, and STAYS there run over run.
+
+**The standing pipeline this creates:** every live conversation Jack
+grades F (or flags as friction) becomes (a) a multi-turn golden case
+with throwaway names, (b) a traced-mechanics writeup in §6, (c) a floor
+or ledger closing its class, (d) a before/after compare. GT-C9/C10 +
+Phase CONSOLIDATE are the first instance of the pipeline; this section
+makes it the rule. Leg ranking inherits the north star: legs that close
+live-conversation friction classes outrank abstract capability legs.
 
 ---
 
