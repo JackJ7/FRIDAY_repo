@@ -658,7 +658,14 @@ class Engine:
         # is never shipped (invariant 4).
         empty_reply_fired = False
         empty_reply_floor = False
-        if (reply is not None and tool_log
+        # ANSWER-contract turns are EXCLUDED: an empty settle there is the
+        # ANSWER floor's territory, whose builder writes the line from the
+        # turn's REAL calc — deterministic, so strictly better than model
+        # prose. Measured (run 2026-07-14_1339): this floor's retry produced
+        # "...provide the answer:" / its own wrong "ANSWER: 4 W", which
+        # satisfied _ANSWER_PRESENT and SUPPRESSED the builder — GOLD-gear-02
+        # and CHK-001 went 1.0 -> 0.0 (values right, envelope lost/wrong).
+        if (reply is not None and tool_log and not answer_ask
                 and not (reply.content or "").strip()):
             empty_reply_fired = True
             correction = (

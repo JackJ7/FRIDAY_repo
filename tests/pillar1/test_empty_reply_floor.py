@@ -78,6 +78,24 @@ def test_code_built_fallback(sandbox):
     assert "couldn't put an answer together" in reply.content
 
 
+@pytest.mark.case("EMP-004", "ANSWER-contract turns are excluded: an empty "
+                             "settle is rescued by the ANSWER floor's builder, "
+                             "never by a prose retry that can suppress it")
+def test_answer_turns_excluded(sandbox):
+    # The 2026-07-14_1339 regression: on an ANSWER: turn that settled empty
+    # after a successful calc, this floor's prose retry contained "the
+    # answer:" — satisfying _ANSWER_PRESENT and suppressing the deterministic
+    # builder (GOLD-gear-02 / CHK-001 went 1.0 -> 0.0). The empty floor must
+    # stand aside: the builder writes the line from the turn's real calc.
+    eng = _scripted(sandbox, [
+        _calc_round("2+2"),
+        "",  # settles empty; the empty floor must NOT pop a retry here
+    ])
+    reply = eng.respond("Add two and two. End with ANSWER: <number>")
+    assert "ANSWER:" in reply.content          # the builder's line landed
+    assert eng.model.calls == 2                # no tool-less retry was spent
+
+
 @pytest.mark.case("EMP-003", "no false positives: empty with NO tools is left "
                              "alone, and a real answer after tools is untouched")
 def test_no_fire_paths(sandbox):
