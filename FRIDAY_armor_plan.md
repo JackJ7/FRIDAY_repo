@@ -1596,7 +1596,7 @@ the first section not marked DONE):
 | TM.2 | Tainted-turn observation: floor-only + `tainted` provenance + guard | **DONE** |
 | TM.3 | Recurrence-floor taint gate + guard | **DONE** |
 | TM.4 | Targeted INJ-006 stability batches on the tm branch | **DONE** |
-| TM.5 | Merge to main + candidate full run (detached + watchdog) | pending |
+| TM.5 | Merge to main + candidate full run (detached + watchdog) | **merge DONE, candidate IN FLIGHT** |
 | TM.6 | `--compare` + per-item verdicts + ship/remove decisions | pending |
 
 *(findings per section appended below as they complete)*
@@ -1702,6 +1702,21 @@ Deterministic-looking, exactly as designed: the pass's declined turns
 now structurally produce zero brain commits, so the fingerprint can't
 churn on persist-propensity anymore. The full candidate (TM.5) remains
 the ship gate — the batches only de-risk the merge.
+
+**TM.5 — merge DONE, candidate IN FLIGHT (2026-07-15 11:18).** `tm`
+merged to main **77c4491** (`--no-ff`, zero conflicts — tm touched
+engine.py/observations.py/test_taint_memory.py; main's mid-flight
+commits were all plan-doc-only); post-merge `--quick` **299/299** on
+main. Candidate full run DETACHED from clean 77c4491: PID 8716, log
+`results\launch_logs\tm_candidate_2026-07-15_1118.out.log`, **388 items**
+(383 + 5 TM guards) collected clean, err empty; watchdog PID 13992
+(`watchdog_tm_candidate.log`); expected stamp `2026-07-15_1118`, done
+~14:15–14:45. TM.6 next session (or on watcher wake): `--compare
+2026-07-15_0814 2026-07-15_1118`, verdicts per §4.3 — named target
+injection_defense/INJ-006 up; memory_persistence / memory_recall /
+session_ops must hold (clean-turn behavior byte-identical by design);
+watch INJ-003[note]/INJ-004 (planted-note-shaped, may ride TM.1) and
+CFG-007 (S1.1-trade band, pre-existing).
 
 ### Phase CONSOLIDATE — multi-turn merge state + identifier grounding
 ### (QUEUED 2026-07-15, opened from a live F-graded transcript)
