@@ -1007,6 +1007,70 @@ verdict. Run (a) then (b) SEQUENCED — never concurrent, one GPU.
 - EML-004/005 residual = importance judgment (elevates/conservative), not
   language — an A8-confidence or exemplar-bank (A11) target, not a floor.
 - GND-010 0.2 / GND-011 0.0 unchanged — still the thinking_skills target.
+  - CHARACTERIZED (2026-07-14, read-only transcript sweep of all four
+    stamped runs 1734/0039/1033/1339, no code changed): NEITHER is a
+    diffuse 14B judgment ceiling — both have one dominant, narrow
+    mechanism each, and both look floor-able rather than Tier-2 (A8/A11).
+  - GND-010 ("analyze and file it" must do both): `filed` is True in
+    ALL 20 sampled runs — filing never fails. What kills `analyzed` is a
+    tool-routing error: given the LOCAL file path, the model calls
+    `web_fetch` with the path as a URL, gets back "ERROR: only http(s)
+    URLs can be fetched." (`core/senses/web_lookup.py:43-44`), and then
+    narrates that error as its final reply ("Could you please provide an
+    HTTP(S) URL...") — the fetch-error narration displaces the analysis
+    in 13-14 of the 20 sampled replies. The remaining misses are hedged
+    guessing about the file ("the notes likely detail...") without
+    reading it, one repo_sync detour, one deep-mode process narration.
+    Floor candidate: a deterministic pre-exec arg guard — a `web_fetch`
+    arg that is an existing local path (or lacks an http(s) scheme)
+    gets rerouted to the file-reading path or answered with a corrective
+    hint naming the right tool, instead of a dead-end error the model
+    parrots. Narrow, code-level, verifiable.
+  - GND-011 ("thoughts on the notes I just handed you" after a same-
+    session read): 0/20 passes, and the mode is an EMBODIMENT-DENIAL
+    script: "handed you" makes the model deny having the artifact ("I
+    don't have direct access to physical items / real-time input...")
+    even though the file's content sits in the session transcript from
+    the previous turn's read. ~16/20 replies are that denial;
+    `clarifies` proper fired only 5/20 (the grader's phrase list catches
+    "please specify which notes" but most denials dodge it); 2/20
+    engaged the file but FABRICATED its contents (a "wiring diagram...
+    sensors, actuators, control boards" summary the 3-bullet file
+    doesn't contain), so `substantive` still failed. Same shape as the
+    date-DENIAL hole the floors leg just closed: a denial phrase near an
+    artifact referent while exactly one session artifact exists. Floor
+    candidate: an artifact-denial floor mirroring the date-denial floor
+    — detect the denial-near-referent pattern, re-ground with the
+    already-read artifact content, regenerate. The fabrication tail
+    (2/20) is the part a floor can't fix alone; the quote-ledger (A7)
+    machinery is the existing lever there.
+  - Both are INVESTIGATION ONLY — nothing implemented; candidates for a
+    future leg, not this one.
 - GOLD-gear-03 + PROP-010 quant residuals (0.0 in all four runs).
 - CFG-007 narration-without-calling ("Running read_own_config..." as text)
   — the F4-saga mode again; a tool-call floor candidate, NOT shipped here.
+  - ROOT CAUSE TRACED (2026-07-14, read-only investigation — no code
+    changed): when a round comes back with empty `reply.tool_calls`, the
+    main turn loop (core/engine.py:572-583) tries
+    `_recover_tool_calls(reply.content)` (engine.py:1479) to catch calls
+    the model wrote as text; if recovery ALSO returns empty, the turn is
+    treated as a genuine final text answer and the loop breaks — the tool
+    never runs. Recovery recognizes exactly three narration shapes, and
+    each requires either the tool name immediately followed by `(` or a
+    JSON call envelope: Shape A `name({...})`, Shape B
+    `{"name": ..., "arguments": {...}}`, Shape C `name('literal', ...)`.
+    Plain prose narration — "Running read_own_config to check the
+    settings..." — has no parens after the name and no JSON, matches none
+    of the three, and silently falls through as a text-only reply.
+  - Distinct root cause from S1.1: the per-round vetting shim
+    (`_VettedStream`, engine.py:1888-1925) only scrubs a round's hop TEXT
+    for script drift; `reply.tool_calls` pass through it untouched (the
+    tool-exec block at engine.py:613-636 runs off `reply.tool_calls`,
+    never hop text). S1.1 can neither cause nor fix this mode.
+  - Future candidate, NOT implemented: a "Shape D" recovery for bare
+    tool-name prose. CAVEAT — risky as a general fix: prose narration
+    carries no argument text, so recovery would have to FABRICATE
+    arguments for a tool that only ever specified its name. If ever
+    built, restrict it to zero-required-argument tools (read_own_config
+    qualifies) or an equally explicit safe pattern; never generalize it
+    to every registered tool.
