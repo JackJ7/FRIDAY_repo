@@ -2077,8 +2077,50 @@ TM-idle signal):**
   merges as pure note surgery, and GT-C5 set the pattern.
 - `--quick` on cn: **299/299**, 91 deselected (89 + the 2 new model
   cases — collected clean).
-- Capture batch 1 (`--skill project_ops --runs 3 -- -k "test_gt_c9 or
-  test_gt_c10"`) DETACHED from cn, PID 29944, log
-  `..\FRIDAY-cn\results\launch_logs\cn_capture_gtc9c10.out.log` —
-  expecting BOTH cases to fail (that is the capture); results below
-  when it lands.
+- Run-ops lesson: `-k "a or b"` does NOT survive Start-Process
+  ArgumentList quoting (pytest read `or` as a path, 0 collected) — one
+  `-k` token per invocation, batches per case. Also: `--runs N`
+  multiplies BEHAVIOR cases (repeat_behavior), not golden replays — a
+  GT case is one shot per invocation, so stability sampling = separate
+  batches (the TM.4 pattern, which produced its three stamps).
+
+**CN.0 capture batch 1 (stamp `2026-07-15_1503`, cn 2c1b70a): GT-C9
+FAILED exactly as designed — and the anatomy is better than the live
+transcript's.** Per-turn (from the report's evidence):
+
+1. **NEW MECHANISM — phantom project from the memory pass.**
+   `projects/consolidate_flux_projects.md` appeared at T1 with ZERO
+   main-turn tools; every subsequent turn flags it. Traced:
+   `MEMORY_TOOLS` (engine.py:2719) has `write_brain` but NOT
+   `create_project`, so the pass — told "NOTHING was saved... you MUST
+   save it now" — write_brain'd Jack's TASK STATEMENT as a note and
+   chose a projects/ path. The resolver (project_resolver.py:116)
+   treats every projects/*.md as inventory, and the near-dup guard
+   lives only INSIDE create_project — write_brain bypasses it. The
+   consolidation ask itself became a fourth project. **New floor
+   candidate CN.1b: projects/-create guard on write_brain** (calendar-
+   mirror-guard shape: a NEW file under projects/ from write_brain is
+   refused with a corrective "use create_project" hint; edits to
+   EXISTING project notes stay free — merge surgery needs them).
+2. **Partial merge, exactly as the scorer predicted.** merge_projects
+   RAN once, at T5 (the turn Jack pasted exact names) — but T8's disk
+   truth shows flux_beam_tool merged, flux_beam_v2 NOT. Scoring
+   analysis (recorded here for CN.1): on the fuzzy-filter turn the
+   compacted message contains "fluxbeam" → 1.0 CONTAINMENT for that
+   slug, while flux_beam_tool/v2 window-ratio ≈0.75–0.8 vs STRONG=0.82
+   → `resolve_one` answers **"one", not "many"** — today's hint steers
+   FRIDAY toward a SINGLE project on a merge-ALL turn. **CN.1 must
+   therefore override BOTH branches under merge intent: the operand
+   set = every PLAUSIBLE(0.6)+ match, not the single best and not only
+   the strong-tie set.**
+3. Live-transcript friction reproduced as TARGET misses: T1
+   surfaces-duplicates (didn't list the dupes), T3 no-generic-clarify
+   (the "could you specify which folder" re-ask). T2 intent re-ask and
+   T5 which-slug PASSED this run — churn, watch across batches.
+4. no-foreign-identifier: clean in batch 1 (no fabricated quoted
+   names). The live transcript fabricated freely — churn dimension,
+   watch across batches.
+
+Capture batches 2–5 (GT-C10 ×2 + GT-C9 ×2 more, sequential, detached
+driver PID 31556, logs `cn_capture_gtc{9,10}_b*.all.log`): results
+below when they land.
