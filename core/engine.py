@@ -15,6 +15,7 @@ import ast
 import json
 import re
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from core.canon import canon_answer, canon_calc_args, majority
 from core.invariants import INVARIANTS
@@ -523,7 +524,12 @@ class Engine:
         hold_stream = on_token is not None and (
             artifact_ask
             or followup or event_ask or date_ask or answer_ask
-            or accepted_offer is not None or answer_vote)
+            or accepted_offer is not None or answer_vote
+            # CN.3: a project-context reply may be replaced by the identifier
+            # floor (fabricated name, or a naked which-ask on a pending
+            # consolidation) — Jack must never watch the retracted draft.
+            or self.consolidation is not None
+            or bool(consolidation_directive))
         live_token = None if hold_stream else on_token
 
         base = [{"role": "system", "content": self._system_prompt(extra=ref_block)}]
@@ -917,6 +923,84 @@ class Engine:
                 if live_token:  # None on a held turn — single emit streams it
                     live_token("\n" + reply.content)
                 turn.append({"role": "assistant", "content": reply.content})
+
+        # Project-identifier grounding floor (armor CONSOLIDATE CN.3) — the
+        # citation-enforcement sibling for project names. The live F-graded
+        # transcript proposed merging 'claude-code-updates' and friends —
+        # quoted, identifier-shaped, matching NOTHING on disk — and Jack
+        # approved a merge of projects that did not exist; a later turn
+        # surfaced the model's own normalization ('claudecodeupgrade') as if
+        # it were a distinct project. Deliberately NARROW: fires only when
+        # project context is LIVE this turn (pending consolidation task /
+        # its directive / the entity or operand hint), and only on a reply
+        # that quotes a project-shaped identifier resolving to NOTHING. One
+        # corrective retry naming the real set; a second miss falls back to
+        # the honest deterministic list. Runs BEFORE the offer ledger arms
+        # (end of respond), so a fabricated proposal can never become an
+        # accepted offer's quoted directive. The same floor converts the
+        # measured GT-C10 residual: on a pending-task no-survivor turn, a
+        # NAKED which-ask (no survivor framing) is replaced by the
+        # code-built survivor-confirm question — the one question the flow
+        # legitimately owes Jack, phrased right by construction.
+        identifier_floor_fired = False
+        _resolver = getattr(self, "project_resolver", None)
+        project_context_live = (
+            _resolver is not None
+            and (self.consolidation is not None
+                 or bool(consolidation_directive)
+                 or bool(self._entity_hint)))
+        if (reply is not None and project_context_live
+                and not artifact_denial_fired and not phantom_fired):
+            task = self.consolidation
+            # (b) first — the naked which-ask backstop is code-built, so a
+            # reply it replaces never needs the fabrication scan.
+            if (task and not task.get("survivor")
+                    and self._WHICH_SLUG_ASK.search(reply.content or "")
+                    and not self._SURVIVOR_FRAMING.search(reply.content or "")):
+                cands = task["candidates"]
+                default = task.get("default") or cands[0]
+                reply.content = (
+                    "These all match: " + ", ".join(cands) + ". I suggest "
+                    f"keeping '{default}' as the survivor and folding the "
+                    "others into it — shall I go ahead with that?")
+                reply.tool_calls = []
+                identifier_floor_fired = True
+                if live_token:
+                    live_token("\n" + reply.content)
+                turn.append({"role": "assistant", "content": reply.content})
+            else:
+                foreign = self._foreign_identifiers(reply.content or "")
+                if foreign:
+                    real = sorted(p["title"] for p in _resolver.projects())
+                    correction = (
+                        "STOP: your draft names project identifiers that do "
+                        f"not exist on disk: {', '.join(foreign)}. Jack's "
+                        "REAL projects are exactly: " + ", ".join(real) +
+                        ". Rewrite the reply using ONLY names from that list "
+                        "— never invent, abbreviate, or re-spell a project "
+                        "name.")
+                    retry = self.model.chat(
+                        base + turn
+                        + [{"role": "assistant", "content": reply.content},
+                           {"role": "system", "content": correction}],
+                        on_token=None)
+                    self.session_tokens += retry.eval_count
+                    candidate = (retry.content or "").strip()
+                    if candidate and not self._foreign_identifiers(candidate):
+                        reply.content = candidate
+                    else:
+                        # Deterministic honest floor: own the mis-naming and
+                        # hand back the real inventory verbatim.
+                        reply.content = (
+                            "I mis-named some projects there — ignore those "
+                            "names. Your actual projects are: "
+                            + ", ".join(real) + ".")
+                    reply.tool_calls = []
+                    identifier_floor_fired = True
+                    if live_token:
+                        live_token("\n" + reply.content)
+                    turn.append({"role": "assistant",
+                                 "content": reply.content})
 
         # Calendar-first corrective pass (Phase 2, item 1; plan D2). Phase 1
         # measured the prompt rule failing: on a bare "what day is X?" the 14B
@@ -1431,6 +1515,7 @@ class Engine:
             # re-ground a reply that denied having an artifact the session
             # ledger holds — the embodiment-denial residual, made countable.
             "artifact_denial_floor": artifact_denial_fired,
+            "identifier_floor": identifier_floor_fired,
             # Phase 1 (Notes-10, item 4): True when an ACTION tool fired on a
             # message with no request shape — the office-hours "proposed an
             # update nobody asked for" signature. The taint gate is the hard
@@ -2627,6 +2712,67 @@ class Engine:
     _AFFIRMATIVE_PREFIX = re.compile(
         r"^\s*(ok(ay)?|yes|yeah|yep|sure|alright|please|go ahead|do it"
         r"|sounds good)\b", re.IGNORECASE)
+
+    _WHICH_SLUG_ASK = re.compile(
+        r"\bwhich (one|project|of these)\b|\bdo you mean\b", re.IGNORECASE)
+    _SURVIVOR_FRAMING = re.compile(
+        r"\bsurviv\w*\b|\bkeep\b|\bmerge\w* into\b|\btarget\b", re.IGNORECASE)
+    # Quoted identifier spans (CN.3): word-boundary lookarounds keep
+    # possessives (Fluxbeam's) from opening a span; the charclass has no path
+    # separator, so a quoted path never parses as a name; >4-word spans are
+    # prose. Known residual: a quoted lowercase PHRASE ('go ahead') in a
+    # project-context reply would scan as an identifier — accepted, because
+    # the floor's worst case is one retry + the honest project list, and the
+    # live fabrications ('claudecodeupgrade') are exactly lowercase
+    # single-word slugs a tighter shape test would exempt.
+    _QUOTED_IDENTIFIER = re.compile(
+        r"(?<![A-Za-z0-9])['\"‘“]"
+        r"([A-Za-z][A-Za-z0-9 _\-]{2,40})"
+        r"['\"’”](?![A-Za-z])")
+    # Tool-call/argument vocabulary the model quotes when narrating a plan —
+    # never project identifiers (the GT-C9 capture false-positive lesson).
+    _IDENTIFIER_NOISE = {
+        "action", "target", "duplicates", "survivor", "name", "path",
+        "content", "mode", "summary", "slug", "title", "status", "folder",
+        "note", "merged into", "source_notes", "target_note"}
+
+    def _foreign_identifiers(self, text: str) -> list:
+        """Quoted project-shaped identifiers in `text` that resolve to NO
+        project surface on disk (CN.3). Substring tolerance mirrors the
+        resolver's semantics: a candidate is real when its normalization sits
+        inside a real surface's normalization ('flux' clears via 'fluxbeam';
+        a fabricated sibling like 'flux-beam-utils' does not)."""
+        from core.project_resolver import _norm
+        resolver = getattr(self, "project_resolver", None)
+        if resolver is None:
+            return []
+        surfaces = set()
+        try:
+            for p in resolver.projects():
+                surfaces.add(_norm(p["slug"]))
+                surfaces.add(_norm(p["title"]))
+                if p.get("folder"):
+                    surfaces.add(_norm(Path(p["folder"]).name))
+        except Exception:
+            return []
+        surfaces.discard("")
+        tool_names = {t["function"]["name"].lower()
+                      for t in self.registry.to_ollama()}
+        foreign = []
+        for m in self._QUOTED_IDENTIFIER.finditer(text):
+            cand = m.group(1).strip()
+            if len(cand.split()) > 4:
+                continue
+            low = cand.lower()
+            if low in self._IDENTIFIER_NOISE or low in tool_names:
+                continue
+            trimmed = re.sub(r"^the\s+|\s+project$", "", cand,
+                             flags=re.IGNORECASE)
+            n = _norm(trimmed)
+            if not n or any(n in s for s in surfaces):
+                continue
+            foreign.append(cand)
+        return foreign
 
     def _consolidation_update(self, user_input: str) -> str:
         """Arm/refresh/expire the pending-consolidation task for this turn and

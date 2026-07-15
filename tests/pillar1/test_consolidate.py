@@ -291,6 +291,91 @@ def test_mrg002d_expiry_cancel_noarm(sandbox):
 
 
 @pytest.mark.upgrade
+@pytest.mark.case("MRG-003", "identifier grounding floor: a fabricated quoted "
+                             "project name is held and retried; a second miss "
+                             "falls back to the honest real list; the offer "
+                             "ledger never arms on the fabricated draft")
+def test_mrg003_identifier_floor(sandbox):
+    # Retry comes back clean -> the retry is accepted verbatim.
+    eng = _armed_engine(sandbox, [
+        "Listing them.",
+        "Would you like me to merge them into 'flux-beam-utils'?",   # draft
+        "I suggest keeping 'Fluxbeam' as the survivor — confirm?",   # retry
+    ])
+    reply = eng.respond("How's it looking?")
+    assert "flux-beam-utils" not in reply.content
+    assert "Fluxbeam" in reply.content
+    # The fabricated draft never became a standing offer.
+    assert not eng.offer or "utils" not in eng.offer["text"]
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("MRG-003b", "identifier floor second miss: honest fallback "
+                              "with the real project list; clean replies and "
+                              "no-context turns untouched")
+def test_mrg003b_fallback_and_negatives(tmp_path):
+    from helpers.harness import SandboxFriday
+    sb = SandboxFriday(tmp_path / "a")
+    for slug in FLUX_SLUGS:
+        _plant_note(sb, slug)
+    eng = sb.service.engine
+    eng.vote_enabled = False
+    eng.model = _ScriptModel([
+        "Listing them.",
+        "Merging into 'flux-beam-mega' now.",   # draft: fabricated
+        "Then 'flux-beam-mega' it is.",         # retry: fabricated again
+    ])
+    eng.respond("Please consolidate all the projects with flux in the name.")
+    reply = eng.respond("How's it looking?")
+    assert "flux-beam-mega" not in reply.content
+    assert "mis-named" in reply.content
+    for title in ("Fluxbeam", "Flux Beam Tool", "Flux Beam V2"):
+        assert title in reply.content
+
+    # Clean reply with a REAL quoted name is untouched, no retry spent.
+    sb2 = SandboxFriday(tmp_path / "b")
+    for slug in FLUX_SLUGS:
+        _plant_note(sb2, slug)
+    eng2 = sb2.service.engine
+    eng2.vote_enabled = False
+    clean = "I suggest keeping 'Fluxbeam' as the survivor — shall I proceed?"
+    eng2.model = _ScriptModel(["Listing them.", clean])
+    eng2.respond("Please consolidate all the projects with flux in the name.")
+    calls_before = len(eng2.model.seen)
+    reply2 = eng2.respond("How's it looking?")
+    assert reply2.content == clean
+    assert len(eng2.model.seen) == calls_before + 1   # no retry call
+
+    # No project context -> quoted junk is never scanned.
+    sb3 = SandboxFriday(tmp_path / "c")
+    eng3 = sb3.service.engine
+    eng3.vote_enabled = False
+    junk = "Try 'weird-thing-x' maybe."
+    eng3.model = _ScriptModel([junk])
+    reply3 = eng3.respond("Any ideas for the weekend?")
+    assert reply3.content == junk
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("MRG-003c", "naked which-ask on a pending no-survivor turn "
+                              "is replaced by the code-built survivor-confirm "
+                              "question (the GT-C10 T1 residual, converted by "
+                              "construction)")
+def test_mrg003c_which_ask_backstop(sandbox):
+    eng = _armed_engine(sandbox, [
+        "Which one do you mean?",   # T1 draft: the naked which-ask
+    ])
+    # The floor replaced it in the SAME turn the task armed.
+    last = eng.history[-1]["content"] if eng.history else ""
+    assert "These all match:" in last, last
+    assert "shall I go ahead" in last
+    for slug in FLUX_SLUGS:
+        assert slug in last
+    assert eng.consolidation is not None          # still pending, no survivor
+    assert eng.consolidation["survivor"] is None
+
+
+@pytest.mark.upgrade
 @pytest.mark.case("MRG-005", "write_brain refuses to CREATE a projects/ note "
                              "(the phantom-project channel); existing-note "
                              "edits and other folders unaffected")
