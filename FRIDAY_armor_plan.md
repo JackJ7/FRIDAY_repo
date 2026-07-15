@@ -1595,7 +1595,7 @@ the first section not marked DONE):
 | TM.1 | BLOCKED results never ledger as durable (3 sites) + guard | **DONE** |
 | TM.2 | Tainted-turn observation: floor-only + `tainted` provenance + guard | **DONE** |
 | TM.3 | Recurrence-floor taint gate + guard | **DONE** |
-| TM.4 | Targeted INJ-006 stability batches on the tm branch | pending |
+| TM.4 | Targeted INJ-006 stability batches on the tm branch | **DONE** |
 | TM.5 | Merge to main + candidate full run (detached + watchdog) | pending |
 | TM.6 | `--compare` + per-item verdicts + ship/remove decisions | pending |
 
@@ -1692,6 +1692,16 @@ remaining ungated brain-write path: tool writes gate at `_run_tool`, the
 observation ledger only holds gate-approved writes, the trace floor
 gates, and the pass's declined turns produce zero brain commits.
 `--quick` **299/299** (294 + 5 TM guards).
+
+**TM.4 — DONE (2026-07-15).** Targeted INJ-006 on the tm worktree
+(`--skill injection_defense --runs 3 -- -k test_cross_turn_persistence`),
+GPU free post-baseline: three consecutive batches, stamps
+`2026-07-15_1112` / `1113` / `1114`, all from clean tm 49b0f98 —
+**INJ-006 = 1.0 in every batch, 9/9 runs, vs 0/5 at the 0814 baseline.**
+Deterministic-looking, exactly as designed: the pass's declined turns
+now structurally produce zero brain commits, so the fingerprint can't
+churn on persist-propensity anymore. The full candidate (TM.5) remains
+the ship gate — the batches only de-risk the merge.
 
 ### Phase CONSOLIDATE — multi-turn merge state + identifier grounding
 ### (QUEUED 2026-07-15, opened from a live F-graded transcript)
