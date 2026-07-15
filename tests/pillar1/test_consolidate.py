@@ -13,11 +13,21 @@ MRG-005  write_brain phantom-project guard (CN.1b): CREATING a projects/ note
          projects/ as a fourth project, and every later turn surfaced it as
          real. Edits to existing project notes and other folders stay free.
 
-(MRG-002/003/004 arrive with CN.2/CN.3/CN.4.)
+MRG-002  the pending-consolidation ledger (CN.2): armed by JACK's merge-intent
+         message with the resolved operand set, it persists across qualified
+         affirmatives and distraction turns (the shapes that defeat the offer
+         ledger BY DESIGN), rides a deterministic status directive at the END
+         of the referent block (max-obedience slot — measured on GT-C10 T1:
+         the mid-block operand hint rode and the 14B re-asked anyway), sets
+         the survivor from an exact name, clears on a LANDED merge / cancel /
+         expiry, and never arms on ordinary chat.
+
+(MRG-003/004 arrive with CN.3/CN.4.)
 """
 
 import pytest
 
+from core.model import ModelReply
 from core.project_resolver import merge_intent
 
 
@@ -36,6 +46,34 @@ def _plant_note(sandbox, slug, title=None):
 
 
 FLUX_SLUGS = ("fluxbeam", "flux_beam_tool", "flux_beam_v2")
+
+
+class _ScriptModel:
+    """Scripted replies in order; records every chat() message list. An item
+    is a string (text reply) or {"content": ..., "tool_calls": [...]}."""
+
+    def __init__(self, script):
+        self.script = list(script)
+        self.seen = []
+
+    def chat(self, messages, tools=None, on_token=None, format=None):
+        self.seen.append(messages)
+        item = self.script.pop(0) if self.script else ""
+        r = ModelReply()
+        if isinstance(item, dict):
+            r.content = item.get("content", "")
+            r.tool_calls = list(item.get("tool_calls", []))
+        else:
+            r.content = item
+        r.eval_count = 5
+        return r
+
+
+def _sys_text(model) -> str:
+    """The system content of the model's most recent chat() call."""
+    msgs = model.seen[-1]
+    return "\n".join(m.get("content") or "" for m in msgs
+                     if m.get("role") == "system")
 
 
 @pytest.mark.upgrade
@@ -107,6 +145,129 @@ def test_mrg001b_merge_intent_vocabulary():
         assert merge_intent(msg), f"should fire: {msg}"
     for msg in quiet:
         assert not merge_intent(msg), f"should stay quiet: {msg}"
+
+
+def _armed_engine(sandbox, script):
+    """Plant the flux trio, script the model, and arm the ledger with the
+    GT-C9 T1 fuzzy-filter ask. Returns the engine mid-conversation."""
+    for slug in FLUX_SLUGS:
+        _plant_note(sandbox, slug)
+    eng = sandbox.service.engine
+    eng.vote_enabled = False
+    eng.model = _ScriptModel(script)
+    eng.respond("Please consolidate all the projects with flux in the name.")
+    return eng
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("MRG-002", "pending-consolidation ledger: arms on Jack's "
+                             "merge ask, survives qualified affirmatives and "
+                             "distraction turns, sets the survivor from an "
+                             "exact name, directive rides after the entity "
+                             "hint")
+def test_mrg002_ledger_lifecycle(sandbox):
+    eng = _armed_engine(sandbox, ["Here are the flux projects.",
+                                  "On it.",
+                                  "Still working through it.",
+                                  "Right, Fluxbeam it is."])
+    task = eng.consolidation
+    assert task and set(task["candidates"]) == set(FLUX_SLUGS), task
+    assert task["survivor"] is None
+    sys_txt = _sys_text(eng.model)
+    assert "PENDING CONSOLIDATION TASK" in sys_txt
+    # The measured placement requirement: the task directive rides AFTER the
+    # entity-resolution hint (toward the max-obedience end of the block).
+    if "Entity resolution" in sys_txt:
+        assert (sys_txt.index("PENDING CONSOLIDATION TASK")
+                > sys_txt.index("Entity resolution"))
+
+    # Qualified affirmative with residue — the offer ledger drops these BY
+    # DESIGN (residue rule); the task must survive and refresh.
+    eng.respond("Ok, please update the project folder.")
+    assert eng.consolidation is not None
+    assert eng.consolidation["turns_left"] == eng._CONSOLIDATION_TTL
+    assert "PENDING CONSOLIDATION TASK" in _sys_text(eng.model)
+
+    # A distraction turn only ticks the TTL down, never drops the task.
+    eng.respond("How's it looking?")
+    assert eng.consolidation is not None
+    assert eng.consolidation["turns_left"] < eng._CONSOLIDATION_TTL
+
+    # Exact-name survivor confirm -> ACT NOW directive naming the real call.
+    eng.respond("Keep Fluxbeam as the survivor.")
+    assert eng.consolidation["survivor"] == "fluxbeam"
+    sys_txt = _sys_text(eng.model)
+    assert "ACT NOW" in sys_txt and "target='fluxbeam'" in sys_txt
+    assert "flux_beam_tool" in sys_txt and "flux_beam_v2" in sys_txt
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("MRG-002b", "survivor naming: the longest candidate match "
+                              "wins — 'Flux Beam Tool' must not read as its "
+                              "prefix candidate 'fluxbeam'")
+def test_mrg002b_survivor_longest_match(sandbox):
+    eng = _armed_engine(sandbox, ["Listing them.", "Tool it is."])
+    eng.respond("Keep Flux Beam Tool as the survivor.")
+    assert eng.consolidation["survivor"] == "flux_beam_tool", eng.consolidation
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("MRG-002c", "only a LANDED merge clears the task: an ERROR "
+                              "merge stays pending; the real merge clears it "
+                              "and the duplicate notes carry merged status")
+def test_mrg002c_clear_on_landed_merge(sandbox):
+    bad_merge = {"function": {"name": "merge_projects", "arguments": {
+        "target": "no_such_project", "duplicates": ["Flux Beam Tool"]}}}
+    good_merge = {"function": {"name": "merge_projects", "arguments": {
+        "target": "Fluxbeam",
+        "duplicates": ["Flux Beam Tool", "Flux Beam V2"]}}}
+    eng = _armed_engine(sandbox, [
+        "Listing them.",
+        "Fluxbeam will survive.",
+        {"content": "Merging now.", "tool_calls": [bad_merge]},
+        "That didn't work.",
+        {"content": "Merging for real.", "tool_calls": [good_merge]},
+        "Done - merged into Fluxbeam.",
+    ])
+    eng.respond("Keep Fluxbeam as the survivor.")
+
+    # ERROR result -> the task is still pending (nothing durable happened).
+    eng.respond("Yes, go ahead.")
+    assert eng.consolidation is not None
+
+    # Landed merge -> task retired, disk truth shows the merge.
+    eng.respond("Try again please.")
+    assert eng.consolidation is None
+    for dup in ("projects/flux_beam_tool.md", "projects/flux_beam_v2.md"):
+        assert "merged into" in sandbox.brain.read_note(dup).lower()
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("MRG-002d", "expiry after sustained disengagement; cancel "
+                              "clears immediately; ordinary chat never arms")
+def test_mrg002d_expiry_cancel_noarm(sandbox):
+    for slug in FLUX_SLUGS:
+        _plant_note(sandbox, slug)
+    eng = sandbox.service.engine
+    eng.vote_enabled = False
+    eng.model = _ScriptModel(["A text reply."] * 20)
+
+    # Ordinary project chat never arms the ledger.
+    eng.respond("Tell me about the fluxbeam project.")
+    assert eng.consolidation is None
+
+    # Cancel clears immediately.
+    eng.respond("Please merge the flux projects into one.")
+    assert eng.consolidation is not None
+    eng.respond("Never mind, cancel that.")
+    assert eng.consolidation is None
+
+    # Sustained disengagement expires the task (engagement-based TTL).
+    eng.respond("Please merge the flux projects into one.")
+    assert eng.consolidation is not None
+    for i in range(eng._CONSOLIDATION_TTL):
+        eng.respond(f"Random filler question number {i}, nothing to do?")
+    assert eng.consolidation is None
 
 
 @pytest.mark.upgrade

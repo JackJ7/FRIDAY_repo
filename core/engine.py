@@ -55,6 +55,14 @@ class Engine:
         self.offer = None
         self._had_pending_offer = False   # was an offer live at THIS turn's start?
         self._last_offer_accepted = False  # did a bare affirmative accept it?
+        # Pending-consolidation ledger (armor CONSOLIDATE CN.2): the ONE
+        # durable cross-turn task the offer ledger cannot carry (it lives one
+        # turn, arms only on FRIDAY's own offers, and fires only on bare
+        # affirmatives). Armed by JACK's merge-intent message with the
+        # resolved operand set; persists until executed / cancelled /
+        # superseded / expired. None, or {filter, candidates, survivor,
+        # turns_left}. See _consolidation_update.
+        self.consolidation = None
         # Session compaction summary (Notes-10 Phase 2, §4): a running ≤150-word
         # digest of turns evicted by the history trim, injected at the head of
         # context so the session never loses what scrolled off. None until the
@@ -458,6 +466,20 @@ class Engine:
             directive = self._OFFER_ACCEPTED_DIRECTIVE.format(
                 offer=accepted_offer["text"], affirm=user_input.strip()[:40])
             ref_block = (ref_block + "\n\n" + directive) if ref_block else directive
+
+        # Pending-consolidation ledger (armor CONSOLIDATE CN.2). The offer
+        # ledger above cannot carry a merge task — one-turn life, arms only
+        # on FRIDAY's own offers, bare affirmatives only — so the live
+        # F-graded transcript re-derived Jack's standing merge ask from raw
+        # history every turn until the 14B dropped it. This is durable
+        # one-verb task state, armed by JACK's message, updated in code each
+        # turn; its status directive rides at the very END of the block (the
+        # max-obedience slot — measured: CN.1's mid-block operand hint rode
+        # GT-C10 T1 and the model still re-asked).
+        consolidation_directive = self._consolidation_update(user_input)
+        if consolidation_directive:
+            ref_block = ((ref_block + "\n\n" + consolidation_directive)
+                         if ref_block else consolidation_directive)
 
         # Streaming-preview guard (Phase 1, finding #2). On turns where a
         # post-generation barrier below may REPLACE the whole reply, DON'T
@@ -1313,6 +1335,16 @@ class Engine:
             offer_text = self._offer_in_reply(turn_text or reply.content)
             self.offer = ({"text": offer_text, "referents": list(self.referents)}
                           if offer_text else None)
+
+        # Retire the pending consolidation once the merge actually LANDED
+        # (armor CONSOLIDATE CN.2) — disk truth, not narration: a merge the
+        # gate declined ("BLOCKED") or that errored stays pending, exactly
+        # like the golden's merged-on-disk check.
+        if self.consolidation and any(
+                t["tool"] == "merge_projects"
+                and self._write_landed(t.get("result", ""))
+                for t in tool_log):
+            self.consolidation = None
 
         # Persist this turn and bound the context. Per-turn system guidance (the
         # referent block) is NOT persisted — a stale copy in history would
@@ -2567,6 +2599,117 @@ class Engine:
         residue = self._AFFIRMATIVE_WORDS.sub("", stripped)
         residue = re.sub(r"[\s,.!?'\"-]+", "", residue)
         return residue == ""
+
+    # Pending-consolidation ledger (armor CONSOLIDATE CN.2) --------------------
+    # TTL is engagement-based: a turn that touches the task (merge intent
+    # re-fires, a candidate is named, or the message opens affirmatively)
+    # refreshes it; only turns that ignore the task tick it down. Expiry
+    # exists for ABANDONED tasks, not active ones — the live F transcript
+    # needed the task alive across eight turns of friction.
+    _CONSOLIDATION_TTL = 6
+
+    _CONSOLIDATION_CANCEL = re.compile(
+        r"\b(never ?mind|cancel (that|it|the merge)|forget (it|that)"
+        r"|don'?t bother|leave (it|them) as (is|they are))\b", re.IGNORECASE)
+
+    # A message that OPENS affirmatively engages the pending task even when
+    # residue follows ("Ok, please update the project folder") — exactly the
+    # shape the bare-affirmative offer rule rejects by design, and the shape
+    # the live transcript lost the intent on, twice.
+    _AFFIRMATIVE_PREFIX = re.compile(
+        r"^\s*(ok(ay)?|yes|yeah|yep|sure|alright|please|go ahead|do it"
+        r"|sounds good)\b", re.IGNORECASE)
+
+    def _consolidation_update(self, user_input: str) -> str:
+        """Arm/refresh/expire the pending-consolidation task for this turn and
+        return the status directive that rides the END of the referent block
+        ("" when nothing is pending). Deterministic code owns this state; the
+        model only ever READS the directive. WHY the end slot: measured on
+        GT-C10 T1 — the CN.1 operand hint rode mid-block and the 14B re-asked
+        anyway; the offer-accepted directive earned the same slot the same
+        way (see _OFFER_ACCEPTED_DIRECTIVE)."""
+        from core.project_resolver import _norm, merge_intent
+        resolver = getattr(self, "project_resolver", None)
+        if resolver is None:
+            return ""
+
+        if self.consolidation and self._CONSOLIDATION_CANCEL.search(user_input):
+            self.consolidation = None
+            return ""
+
+        engaged = False
+        # A merge-intent message that resolves 2+ operands ARMS the task,
+        # superseding any prior one (freshest ask wins, like the offer
+        # ledger). With <2 operands it still counts as ENGAGEMENT: "merge all
+        # of the similar projects into one" re-states the wish but names
+        # nothing — the pending operand set stands (measured on GT-C9 T2:
+        # that message alone resolves to zero candidates).
+        if merge_intent(user_input):
+            engaged = True
+            try:
+                cands = resolver.merge_candidates(user_input)
+            except Exception:
+                cands = []
+            if len(cands) >= 2:
+                self.consolidation = {
+                    "filter": " ".join(user_input.split())[:160],
+                    "candidates": [p["slug"] for p in cands],
+                    "survivor": None,
+                    "turns_left": self._CONSOLIDATION_TTL,
+                }
+
+        task = self.consolidation
+        if not task:
+            return ""
+
+        # Survivor: the message names a candidate by its compact form; the
+        # LONGEST match wins, so "Keep Flux Beam Tool" cannot also count as
+        # naming fluxbeam (a strict-prefix candidate). Exactly ONE named
+        # candidate = Jack chose the keep; two or more = he restated the set
+        # (no elimination guessing — "the two extras are X and Y" leaves the
+        # survivor for his explicit confirm; a wrong inference here would
+        # merge the wrong way, which is not worth the saved turn).
+        msg_norm = _norm(user_input)
+        named = [s for s in task["candidates"]
+                 if len(_norm(s)) >= 4 and _norm(s) in msg_norm]
+        named = [s for s in named
+                 if not any(o != s and _norm(s) in _norm(o) for o in named)]
+        if named:
+            engaged = True
+            if len(named) == 1:
+                task["survivor"] = named[0]
+
+        if self._AFFIRMATIVE_PREFIX.match(user_input):
+            engaged = True
+
+        if engaged:
+            task["turns_left"] = self._CONSOLIDATION_TTL
+        else:
+            task["turns_left"] -= 1
+            if task["turns_left"] <= 0:
+                self.consolidation = None
+                return ""
+
+        survivor = task["survivor"]
+        lines = ["PENDING CONSOLIDATION TASK (deterministic status, kept in "
+                 f"code): Jack asked: \"{task['filter']}\"",
+                 "- merge candidates (all real, from his project records): "
+                 + ", ".join(task["candidates"])]
+        if survivor:
+            dups = [s for s in task["candidates"] if s != survivor]
+            lines.append(f"- survivor CONFIRMED by Jack: {survivor}")
+            lines.append(
+                "- ACT NOW, this turn: call merge_projects with target="
+                f"'{survivor}' and duplicates={dups}. Do not re-ask anything "
+                "— he already confirmed, and the gate will confirm any file "
+                "moves itself.")
+        else:
+            lines.append(
+                "- survivor: NOT chosen yet. Propose exactly ONE candidate "
+                "from the list above (by its exact title) as the survivor and "
+                "ask Jack to confirm THAT — never ask him to restate which "
+                "projects to merge; the list above IS the answer.")
+        return "\n".join(lines)
 
     # Citation enforcement (Phase 5, item 3.3 — promoting D7 item 5 / D8 item 3
     # from LOGGED to ENFORCED). This is the non-date sibling of the

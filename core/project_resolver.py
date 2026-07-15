@@ -258,6 +258,33 @@ class ProjectResolver:
             return "one", strong[0]
         return "many", strong
 
+    # ---------- merge operands (armor CONSOLIDATE CN.1/CN.2) ----------
+
+    def merge_candidates(self, message: str) -> list:
+        """The operand set a merge-intent message names: every PLAUSIBLE
+        forward match PLUS the filter tier. Shared by hint_for's operand
+        branch (CN.1) and the engine's pending-consolidation ledger (CN.2) so
+        the two can never disagree about what a merge message names.
+
+        Filter tier: "anything with <word> in the name" names projects by a
+        FRAGMENT, which the forward scorer cannot see — 'flux' is a substring
+        of 'fluxbeam', so containment, token-cover, and the difflib window all
+        miss it (measured: the fuzzy-filter message resolved to ZERO
+        candidates). Inverse containment closes it: a project qualifies when a
+        distinctive message word sits inside its compact name. Merge-request
+        vocabulary and generic words never count as filters."""
+        cands = list(self.resolve(message))
+        have = {p["slug"] for p in cands}
+        toks = {t for t in _tokens(message)
+                if t not in _MERGE_VOCAB and len(t) >= 3}
+        for p in self.projects():
+            if p["slug"] in have:
+                continue
+            surface = _norm(p["slug"]) + " " + _norm(p["title"])
+            if any(t in surface for t in toks):
+                cands.append(p)
+        return cands
+
     # ---------- the engine-side hint ----------
 
     def hint_for(self, message: str) -> str:
@@ -278,24 +305,7 @@ class ProjectResolver:
         # survivor confirm drops it. Non-merge turns are byte-identical to
         # before.
         if merge_intent(message):
-            cands = list(self.resolve(message))
-            # Filter tier: "anything with <word> in the name" names projects
-            # by a FRAGMENT, which the forward scorer cannot see — 'flux' is a
-            # substring of 'fluxbeam', so containment, token-cover, and the
-            # difflib window all miss it (measured: the fuzzy-filter message
-            # resolved to ZERO candidates). Inverse containment closes it: a
-            # project is an operand when a distinctive message word sits
-            # inside its compact name. Merge-request vocabulary and generic
-            # words never count as filters.
-            have = {p["slug"] for p in cands}
-            toks = {t for t in _tokens(message)
-                    if t not in _MERGE_VOCAB and len(t) >= 3}
-            for p in self.projects():
-                if p["slug"] in have:
-                    continue
-                surface = _norm(p["slug"]) + " " + _norm(p["title"])
-                if any(t in surface for t in toks):
-                    cands.append(p)
+            cands = self.merge_candidates(message)
             if len(cands) >= 2:
                 rows = "; ".join(
                     f"'{p['title']}' (slug {p['slug']}, folder "
