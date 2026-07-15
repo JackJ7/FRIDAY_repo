@@ -35,13 +35,23 @@ def _call(sandbox, name, args=None):
     return sandbox.service.engine.registry.call(name, args or {})
 
 
-def _plant_note(sandbox, slug, title=None):
+def _plant_note(sandbox, slug, title=None, files=None):
     """A project note via the brain API directly — the legitimate code path
-    (create_project / test fixtures), deliberately NOT the guarded tool."""
+    (create_project / test fixtures), deliberately NOT the guarded tool.
+    With `files`, also plants a project-zone folder so a merge has real
+    moves for the gate to confirm (the test_merge_projects pattern)."""
     title = title or slug.replace("_", " ").title()
+    folder_line = ""
+    if files is not None:
+        folder = sandbox.root / "Projects" / slug
+        folder.mkdir(parents=True, exist_ok=True)
+        for fn, content in files.items():
+            (folder / fn).write_text(content, encoding="utf-8")
+        folder_line = f"- **Folder:** {folder}\n"
     sandbox.brain.write_note(
         f"projects/{slug}.md",
-        f"# {title}\n\n- **Status:** active\n\nFlux beam tooling.\n",
+        f"# {title}\n\n- **Status:** active\n{folder_line}\n"
+        "Flux beam tooling.\n",
         mode="create", summary=f"plant {slug}")
 
 
@@ -193,12 +203,17 @@ def test_mrg002_ledger_lifecycle(sandbox):
     assert eng.consolidation is not None
     assert eng.consolidation["turns_left"] < eng._CONSOLIDATION_TTL
 
-    # Exact-name survivor confirm -> ACT NOW directive naming the real call.
-    eng.respond("Keep Fluxbeam as the survivor.")
-    assert eng.consolidation["survivor"] == "fluxbeam"
+    # Exact-name survivor confirm -> the ENGINE executes the merge itself
+    # (CN.2.1 escalation, calendar-first posture): notes-only merge lands
+    # immediately, the task retires, the directive reports the execution, and
+    # the merge appears in the turn's tool ledger (memory-pass truth, TM.1).
+    reply = eng.respond("Keep Fluxbeam as the survivor.")
+    assert eng.consolidation is None
     sys_txt = _sys_text(eng.model)
-    assert "ACT NOW" in sys_txt and "target='fluxbeam'" in sys_txt
-    assert "flux_beam_tool" in sys_txt and "flux_beam_v2" in sys_txt
+    assert "CONSOLIDATION EXECUTED" in sys_txt, sys_txt[-400:]
+    for dup in ("projects/flux_beam_tool.md", "projects/flux_beam_v2.md"):
+        assert "merged into" in sandbox.brain.read_note(dup).lower()
+    assert any(t["tool"] == "merge_projects" for t in reply.tool_log)
 
 
 @pytest.mark.upgrade
@@ -208,38 +223,43 @@ def test_mrg002_ledger_lifecycle(sandbox):
 def test_mrg002b_survivor_longest_match(sandbox):
     eng = _armed_engine(sandbox, ["Listing them.", "Tool it is."])
     eng.respond("Keep Flux Beam Tool as the survivor.")
-    assert eng.consolidation["survivor"] == "flux_beam_tool", eng.consolidation
+    # The escalation executed on the confirm, so the proof is disk truth:
+    # flux_beam_tool survived (no merged status), the OTHER TWO were folded —
+    # naming 'Flux Beam Tool' did not read as its prefix candidate 'fluxbeam'.
+    assert eng.consolidation is None
+    assert "merged into" not in sandbox.brain.read_note(
+        "projects/flux_beam_tool.md").lower()
+    for dup in ("projects/fluxbeam.md", "projects/flux_beam_v2.md"):
+        assert "merged into" in sandbox.brain.read_note(dup).lower(), dup
 
 
 @pytest.mark.upgrade
-@pytest.mark.case("MRG-002c", "only a LANDED merge clears the task: an ERROR "
-                              "merge stays pending; the real merge clears it "
-                              "and the duplicate notes carry merged status")
-def test_mrg002c_clear_on_landed_merge(sandbox):
-    bad_merge = {"function": {"name": "merge_projects", "arguments": {
-        "target": "no_such_project", "duplicates": ["Flux Beam Tool"]}}}
-    good_merge = {"function": {"name": "merge_projects", "arguments": {
-        "target": "Fluxbeam",
-        "duplicates": ["Flux Beam Tool", "Flux Beam V2"]}}}
-    eng = _armed_engine(sandbox, [
-        "Listing them.",
-        "Fluxbeam will survive.",
-        {"content": "Merging now.", "tool_calls": [bad_merge]},
-        "That didn't work.",
-        {"content": "Merging for real.", "tool_calls": [good_merge]},
-        "Done - merged into Fluxbeam.",
-    ])
-    eng.respond("Keep Fluxbeam as the survivor.")
+@pytest.mark.case("MRG-002c", "a DECLINED escalation merge is atomic and the "
+                              "task stays pending, with an honest directive — "
+                              "never a claimed merge")
+def test_mrg002c_declined_escalation_stays_pending(tmp_path):
+    from helpers.harness import SandboxFriday
+    sb = SandboxFriday(tmp_path, confirm_reply=False)   # declining Jack
+    for slug in FLUX_SLUGS:
+        _plant_note(sb, slug, files={f"{slug}.txt": "data"})
+    eng = sb.service.engine
+    eng.vote_enabled = False
+    eng.model = _ScriptModel(["Listing them.", "Understood."])
 
-    # ERROR result -> the task is still pending (nothing durable happened).
-    eng.respond("Yes, go ahead.")
+    eng.respond("Please consolidate all the projects with flux in the name.")
     assert eng.consolidation is not None
 
-    # Landed merge -> task retired, disk truth shows the merge.
-    eng.respond("Try again please.")
-    assert eng.consolidation is None
+    # Survivor confirm triggers the escalation; the gate DECLINES the file
+    # moves -> merge is atomic (nothing on disk), the task stays pending, and
+    # the directive says so in plain terms.
+    eng.respond("Keep Fluxbeam as the survivor.")
+    assert eng.consolidation is not None
+    assert eng.consolidation["survivor"] == "fluxbeam"
+    sys_txt = _sys_text(eng.model)
+    assert "did NOT land" in sys_txt, sys_txt[-400:]
+    assert "CONSOLIDATION EXECUTED" not in sys_txt
     for dup in ("projects/flux_beam_tool.md", "projects/flux_beam_v2.md"):
-        assert "merged into" in sandbox.brain.read_note(dup).lower()
+        assert "merged into" not in sb.brain.read_note(dup).lower()
 
 
 @pytest.mark.upgrade

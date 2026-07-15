@@ -566,6 +566,14 @@ class Engine:
         # Messages created during this turn; persisted into history at the end.
         turn = [{"role": "user", "content": user_input}]
         tool_log = []
+        # A code-executed consolidation (CN.2.1 escalation, run during the
+        # referent-block build above) must appear in this turn's ledger like
+        # any tool call — the memory pass's "ALREADY SAVED" note and the
+        # durable-write ledger key off tool_log, and a merge they can't see
+        # would make both lie (the TM.1 lesson, from the other direction).
+        if getattr(self, "_pre_loop_tool_log", None):
+            tool_log.extend(self._pre_loop_tool_log)
+            self._pre_loop_tool_log = []
         # Self-consistency voting (armor A6) — this turn's records. Reset per
         # turn so the log's agreement rates are per-exchange, never stale.
         self.last_votes = []
@@ -2651,10 +2659,19 @@ class Engine:
             except Exception:
                 cands = []
             if len(cands) >= 2:
+                # Code-picked default survivor (the design's "note+folder
+                # present" rule): the model only relays the confirm question,
+                # it never has to choose — choosing is where fabrication and
+                # which-asks crept in.
+                default = next(
+                    (p["slug"] for p in cands
+                     if p.get("note_path") and p.get("folder_exists")),
+                    cands[0]["slug"])
                 self.consolidation = {
                     "filter": " ".join(user_input.split())[:160],
                     "candidates": [p["slug"] for p in cands],
                     "survivor": None,
+                    "default": default,
                     "turns_left": self._CONSOLIDATION_TTL,
                 }
 
@@ -2674,9 +2691,11 @@ class Engine:
                  if len(_norm(s)) >= 4 and _norm(s) in msg_norm]
         named = [s for s in named
                  if not any(o != s and _norm(s) in _norm(o) for o in named)]
+        survivor_confirmed_now = False
         if named:
             engaged = True
             if len(named) == 1:
+                survivor_confirmed_now = task["survivor"] != named[0]
                 task["survivor"] = named[0]
 
         if self._AFFIRMATIVE_PREFIX.match(user_input):
@@ -2690,7 +2709,51 @@ class Engine:
                 self.consolidation = None
                 return ""
 
+        # ESCALATION (CN.2.1, activated by measurement): the ENGINE executes
+        # the merge, calendar-first posture. Held back at design time "unless
+        # batches show the 14B still fumbles the exact-args call" — they did,
+        # 4/4 post-CN.2, with the model NARRATING the correct call as prose +
+        # a python fence instead of a native tool call (GT-C9 T7, stamp 1548;
+        # required args put it outside Shape D's deliberately-restricted
+        # recovery). Args come from CODE-owned ledger state (Jack's confirmed
+        # survivor, resolver-validated candidates) — never model text, so
+        # nothing can be fabricated; the gate still batch-confirms any file
+        # moves inside the tool, so invariant 3 holds. Fires when the
+        # survivor is confirmed (that message IS the go) or re-affirmed.
         survivor = task["survivor"]
+        if survivor and (survivor_confirmed_now
+                         or self._AFFIRMATIVE_PREFIX.match(user_input)):
+            dups = [s for s in task["candidates"] if s != survivor]
+            try:
+                result = str(self.registry.call(
+                    "merge_projects",
+                    {"target": survivor, "duplicates": dups}))
+            except Exception as e:   # registry normally wraps; belt-and-braces
+                result = f"ERROR: merge failed in code: {e!r}"
+            self._pre_loop_tool_log = [{"tool": "merge_projects",
+                                        "args": {"target": survivor,
+                                                 "duplicates": dups},
+                                        "result": result[:500]}]
+            if self._write_landed(result) and not result.startswith("Merged 0"):
+                self.consolidation = None
+                return (
+                    "CONSOLIDATION EXECUTED (deterministic code ran it on "
+                    f"Jack's confirmed survivor '{survivor}'; do NOT call "
+                    "merge_projects again):\n" + result[:400] + "\n"
+                    "Report this result to Jack plainly — the merge already "
+                    "happened this turn.")
+            # Declined or errored: the task stays pending; tell the model the
+            # truth so the reply can't narrate a merge that didn't happen.
+            lines = ["PENDING CONSOLIDATION TASK (deterministic status, kept "
+                     f"in code): Jack asked: \"{task['filter']}\"",
+                     "- merge candidates (all real, from his project "
+                     "records): " + ", ".join(task["candidates"]),
+                     f"- survivor confirmed: {survivor}, but the merge did "
+                     f"NOT land this turn: {result[:200]}",
+                     "- Tell Jack exactly that. Do not claim the merge "
+                     "happened."]
+            return "\n".join(lines)
+
         lines = ["PENDING CONSOLIDATION TASK (deterministic status, kept in "
                  f"code): Jack asked: \"{task['filter']}\"",
                  "- merge candidates (all real, from his project records): "
@@ -2704,11 +2767,15 @@ class Engine:
                 "— he already confirmed, and the gate will confirm any file "
                 "moves itself.")
         else:
+            default = task.get("default")
             lines.append(
-                "- survivor: NOT chosen yet. Propose exactly ONE candidate "
-                "from the list above (by its exact title) as the survivor and "
-                "ask Jack to confirm THAT — never ask him to restate which "
-                "projects to merge; the list above IS the answer.")
+                "- survivor: NOT chosen yet. Propose "
+                + (f"'{default}' (code-picked default: it has a note and a "
+                   "folder on disk)" if default else
+                   "exactly ONE candidate from the list above")
+                + " as the survivor and ask Jack to confirm THAT — never ask "
+                "him to restate which projects to merge; the list above IS "
+                "the answer.")
         return "\n".join(lines)
 
     # Citation enforcement (Phase 5, item 3.3 — promoting D7 item 5 / D8 item 3
