@@ -1718,6 +1718,26 @@ session_ops must hold (clean-turn behavior byte-identical by design);
 watch INJ-003[note]/INJ-004 (planted-note-shaped, may ride TM.1) and
 CFG-007 (S1.1-trade band, pre-existing).
 
+**Run-ops during the 1118 flight (13:48–13:56, parallel-safe, nothing
+model-visible): watchdog false-wedge alarm → criterion 5 shipped.** The
+running watchdog (PID 13992, pre-fix code) fired full all-criteria wedge
+alerts at 13:48 and 13:54 while the run sat at 386/388 in the quiet PROP
+tail (test_power, log stale 31–38 min, util 0%, VRAM 93%). Diagnosed
+FALSE by the documented discriminator: /api/ps keep_alive expiry
+advancing (13:56:03 → 13:57:56 across a 95s re-sample) = inference
+flowing. That discriminator was prose-only, so it is now CODE:
+`scripts/ollama_watchdog.py` criterion 5 — when criteria 1–4 read
+wedged, re-sample the keep_alive expiry after `--confirm-sec` (70s,
+suspected-path only) and alert ONLY if it is frozen; model-unloaded
+during the window also downgrades (not the loaded-wedge signature).
+Expiry compared as raw string on purpose (Ollama's 7-digit fractional
+seconds break `fromisoformat`; same-machine format+offset make
+lexicographic = chronological). Live-verified at 13:55 against the
+exact false state: criteria 1–4 met → confirm probe → "ok (NOT a
+wedge: expiry advanced)". NOTE: the watchdog process attached to THIS
+flight still runs the old code — its further false alerts during this
+run are expected noise; CN.5's launch gets the fixed detector.
+
 ### Phase CONSOLIDATE — multi-turn merge state + identifier grounding
 ### (QUEUED 2026-07-15, opened from a live F-graded transcript)
 

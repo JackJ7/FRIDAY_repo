@@ -16,6 +16,16 @@ A suspected wedge is flagged only when ALL of these hold at once:
      single sample legitimately reads ~0% between token batches mid-run
   4. Ollama's /api/ps still reports a resident model (a wedge keeps the
      model loaded; if nothing is resident the GPU story is something else)
+  5. the resident model's keep_alive expiry does NOT advance across a
+     --confirm-sec re-sample (default 70s). Every inference request resets
+     expires_at to now+keep_alive, so an advancing expiry PROVES calls are
+     still flowing even with the log stale and util reading 0% between
+     bursts. This is the discriminator the 2026-07-15 false alarm was
+     missing: quiet Hypothesis property tests (the "PROP tail") log nothing
+     for 30+ minutes while inference continues — criteria 1-4 all read
+     wedged on a machine that was fine. A truly wedged runner freezes
+     expires_at (the 2026-07-14 incident held the model resident for
+     hours with no request ever landing).
 
 Known ambiguity the thresholds alone cannot resolve: a run that FINISHED
 also leaves the log stale while Ollama keeps the model resident for its
@@ -83,13 +93,24 @@ def gpu_state(samples: int = 3, gap_sec: float = 3.0) -> tuple:
     return max(utils), vram_pct, mem_line
 
 
-def ollama_resident(host: str) -> list:
-    """Names of models Ollama currently holds in memory (GET /api/ps —
-    metadata only, touches no inference path). Raises on connection failure
-    so the caller can tell 'Ollama died' apart from 'nothing resident'."""
+def ollama_resident(host: str) -> tuple:
+    """(model names, latest expires_at string) for models Ollama currently
+    holds in memory (GET /api/ps — metadata only, touches no inference path).
+    Raises on connection failure so the caller can tell 'Ollama died' apart
+    from 'nothing resident'.
+
+    expires_at is compared as a RAW STRING, deliberately: Ollama emits
+    7-digit fractional seconds ("...13:56:03.3801052-07:00") which
+    datetime.fromisoformat rejects on some Pythons, and same-machine
+    timestamps share one fixed offset+format, so lexicographic order IS
+    chronological order for the only comparison made here (advanced or not).
+    """
     r = requests.get(f"{host}/api/ps", timeout=10)
     r.raise_for_status()
-    return [m.get("name", "?") for m in r.json().get("models", [])]
+    models = r.json().get("models", [])
+    names = [m.get("name", "?") for m in models]
+    expiry = max((m.get("expires_at", "") for m in models), default="")
+    return names, expiry
 
 
 def pid_alive(pid: int) -> bool:
@@ -122,10 +143,10 @@ def check_once(args) -> int:
     run_alive = pid_alive(args.pid) if args.pid else None
 
     try:
-        resident = ollama_resident(args.host)
+        resident, expiry = ollama_resident(args.host)
         ollama_up = True
     except requests.RequestException:
-        resident, ollama_up = [], False
+        resident, expiry, ollama_up = [], "", False
 
     status = (f"log stale {age:.1f} min | GPU util {util:.0f}% "
               f"| VRAM {vram:.0f}% ({mem_line}) "
@@ -156,11 +177,40 @@ def check_once(args) -> int:
         return OK
 
     if wedge:
-        print(f"[{stamp}] *** SUSPECTED OLLAMA WEDGE *** {status}")
+        # Criteria 1-4 met — but they cannot tell a wedge from a healthy run
+        # inside a quiet stretch (Hypothesis PROP tests log nothing for 30+
+        # minutes while inference continues; false alarm, 2026-07-15). The
+        # discriminator is criterion 5: every inference request resets the
+        # model's keep_alive expiry, so re-sample it and alert only if it is
+        # FROZEN. The wait is confined to this suspected-wedge path — the
+        # common healthy check never pays it.
+        print(f"[{stamp}] wedge criteria 1-4 met — confirming via keep_alive "
+              f"expiry re-sample in {args.confirm_sec:.0f}s | {status}")
+        time.sleep(args.confirm_sec)
+        try:
+            resident2, expiry2 = ollama_resident(args.host)
+        except requests.RequestException as e:
+            print(f"[{stamp}] INDETERMINATE: Ollama unreachable during the "
+                  f"confirm re-sample: {e}")
+            return INDETERMINATE
+        if resident2 and expiry2 > expiry:
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] ok (NOT a wedge: "
+                  f"keep_alive expiry advanced {expiry} -> {expiry2} — "
+                  "inference is flowing; quiet-test stretch, e.g. PROP tail)")
+            return OK
+        if not resident2:
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] ok (model "
+                  "unloaded during the confirm window — not the "
+                  "loaded-but-idle wedge signature; keep watching)")
+            return OK
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] "
+              f"*** SUSPECTED OLLAMA WEDGE *** {status}")
         print(
             "  All wedge criteria met: log stale >= "
             f"{args.stale_min} min, VRAM >= {args.vram_pct}%, util <= "
-            f"{args.util_pct}%, model resident.\n"
+            f"{args.util_pct}%, model resident, keep_alive expiry FROZEN "
+            f"at {expiry2 or expiry} across {args.confirm_sec:.0f}s (no "
+            "inference request landed).\n"
             "  -> DETECTOR ONLY — nothing has been touched. Confirm "
             "manually before acting:\n"
             "     1. Check who owns the run/Ollama processes (CLAUDE.md "
@@ -192,6 +242,11 @@ def main() -> int:
     p.add_argument("--vram-pct", type=float, default=85.0)
     p.add_argument("--util-pct", type=float, default=25.0)
     p.add_argument("--poll-sec", type=float, default=60.0)
+    p.add_argument("--confirm-sec", type=float, default=70.0,
+                   help="when criteria 1-4 read wedged, wait this long and "
+                        "re-sample the keep_alive expiry; alert only if it "
+                        "did not advance (70s > the suite's between-call "
+                        "gaps, so a healthy run always refreshes within it)")
     p.add_argument("--host", default="http://localhost:11434")
     p.add_argument("--once", action="store_true",
                    help="single check; exit 0 ok / 1 attention / 2 unknown")
