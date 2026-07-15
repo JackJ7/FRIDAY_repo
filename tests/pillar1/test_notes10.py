@@ -605,6 +605,12 @@ def no_foreign_identifier(allowed_names, status: str) -> Check:
                 continue                      # tool/arg vocabulary, not a name
             trimmed = re.sub(r"^the\s+|\s+project$", "", cand,
                              flags=re.IGNORECASE)
+            # Status-value quoting: the merge writes "- **Status:** merged
+            # into <slug>" and the model truthfully quotes the whole value
+            # ('merged into fluxbeam', GT-C9 2026-07-15_1623) — judge only
+            # the <slug> part, so a fabricated target still trips.
+            trimmed = re.sub(r"^merged into\s+", "", trimmed,
+                             flags=re.IGNORECASE)
             n = _norm(trimmed)
             if not n or any(n in a for a in allowed_norms):
                 continue
