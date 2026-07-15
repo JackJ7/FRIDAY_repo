@@ -2823,6 +2823,19 @@ class Engine:
                                 "due": str(c.get("due") or "").strip()[:40]})
         return {"title": title, "type": otype, "commitments": commits}
 
+    @staticmethod
+    def _write_landed(result) -> bool:
+        """True when a tool result means the write actually PERSISTED.
+        "ERROR..." is a failed call; "BLOCKED..." is the taint gate refusing
+        it (_run_tool's decline path — the only producer of that prefix).
+        Neither may enter the durable-write ledger: the ledger is ground
+        truth, and INJ-006 showed what happens when it lies — a gate-DECLINED
+        planted write was ledgered as durable, so record_from_pass persisted
+        the payload as an observation, moving the brain HEAD the gate had
+        just protected."""
+        s = str(result)
+        return not (s.startswith("ERROR") or s.startswith("BLOCKED"))
+
     def memory_pass(self, user_input: str, reply_text: str,
                     prior_tools: list = None) -> str:
         """
@@ -2833,8 +2846,13 @@ class Engine:
         """
         tools = [t for t in self.registry.to_ollama()
                  if t["function"]["name"] in self.MEMORY_TOOLS]
+        # Ledger truth (armor TM.1): a durable write counts only if it both
+        # names a durable tool AND actually landed — entries without a
+        # recorded result are trusted as before (only tool_log feeds this
+        # today, and it always records one).
         writes = [t for t in (prior_tools or [])
-                  if t["tool"] in self._DURABLE_WRITE_TOOLS]
+                  if t["tool"] in self._DURABLE_WRITE_TOOLS
+                  and self._write_landed(t.get("result", ""))]
         if writes:
             already = (
                 "\nALREADY SAVED during the reply (do NOT re-save or rewrite "
@@ -2923,6 +2941,12 @@ class Engine:
         # The autonomous memory pass must inherit the turn's taint: if this
         # exchange (now in history) touched external content, its writes gate.
         self._taint = self._external_in_context() or self._taint
+        # Snapshot for the observation record (TM.2): reads inside the pass's
+        # own loop below re-set self._taint, but what matters for provenance
+        # is whether THIS exchange carried external content at all — so any
+        # taint by the time the record is made marks it. Recomputed after the
+        # loop; this early flag only gates the extraction call.
+        tainted = bool(self._taint)
         # pass_writes: the durable writes THIS pass performed, with args — the
         # Phase-3 observation is recorded from the full ledger (prior + these).
         turn, reply, executed, pass_writes = [], None, [], []
@@ -2951,10 +2975,10 @@ class Engine:
                 # pass is exactly how planted content once reached the brain.
                 result, external = self._run_tool(name, args)
                 executed.append(name)
-                # Ledger the durable ones (success only — errors come back as
-                # text starting "ERROR") for the Phase-3 observation.
+                # Ledger the durable ones for the Phase-3 observation —
+                # landed only (TM.1): errors AND taint-gate declines stay out.
                 if (name in self._DURABLE_WRITE_TOOLS
-                        and not str(result).startswith("ERROR")):
+                        and self._write_landed(result)):
                     pass_writes.append({"tool": name, "args": args})
                 turn.append({"role": "tool",
                              "content": self._wrap_data(result, external)})
@@ -2967,15 +2991,33 @@ class Engine:
         # model provides the upside (a real playbook); code provides the floor.
         if recur and "write_playbook" not in executed and not any(
                 t["tool"] == "write_playbook" for t in (prior_tools or [])):
-            self.brain.write_note(
-                "inbox/recurring_procedures.md",
-                f"- {datetime.now():%Y-%m-%d}: recurrence noticed "
-                f"(\"{recur.group(0)}\") — Jack: "
-                f"\"{user_input[:150].strip()}\" -> worth capturing as a "
-                f"playbook next time it comes up.\n",
-                mode="append", summary="Recurrence trace (deterministic floor)")
-            pass_writes.append({"tool": "write_brain",
-                                "args": {"path": "inbox/recurring_procedures.md"}})
+            # Same taint posture as tool writes (TM.3): this is a CODE-level
+            # brain write, and while external content is in context even a
+            # Jack-derived trace must not move the brain ungated (it was the
+            # last unconfirmed write path in the pass). A decline skips it —
+            # the trace is a nicety, never worth an ungated commit.
+            trace_ok = True
+            if self._taint and self.gate is not None:
+                from core.permissions import ConfirmationDeclined
+                try:
+                    self.gate.approve_tainted(
+                        "write_brain",
+                        "inbox/recurring_procedures.md (recurrence trace)",
+                        self._taint)
+                except ConfirmationDeclined:
+                    trace_ok = False
+            if trace_ok:
+                self.brain.write_note(
+                    "inbox/recurring_procedures.md",
+                    f"- {datetime.now():%Y-%m-%d}: recurrence noticed "
+                    f"(\"{recur.group(0)}\") — Jack: "
+                    f"\"{user_input[:150].strip()}\" -> worth capturing as a "
+                    f"playbook next time it comes up.\n",
+                    mode="append",
+                    summary="Recurrence trace (deterministic floor)")
+                pass_writes.append(
+                    {"tool": "write_brain",
+                     "args": {"path": "inbox/recurring_procedures.md"}})
 
         # Structured record (armor A1): one gated, format-constrained call
         # that authors the observation's title/type and backstops commitment
@@ -2988,8 +3030,15 @@ class Engine:
                           for t in (prior_tools or [])))
         want_commit = (not tracked
                        and bool(self._INTENTION_CUE.search(user_input or "")))
+        # The pass's own loop may have read external content just above —
+        # fold that into the provenance flag before anything consumes it.
+        tainted = tainted or bool(self._taint)
         record = None
-        if want_commit or ((writes or pass_writes)
+        # On a TAINTED turn the extraction's title/type hints are dropped by
+        # the store (TM.2 — the extraction reads the tainted context, the
+        # exact channel INJ-006 caught), so the call is only worth its
+        # latency when the commitment half needs it.
+        if want_commit or (not tainted and (writes or pass_writes)
                            and self.observations is not None):
             record = self._structured_memory_record(user_input, reply_text,
                                                     already)
@@ -2999,7 +3048,7 @@ class Engine:
                 # Through _run_tool, like every other pass write: the taint
                 # gate applies, and a planted "commitment" still confirms.
                 result, _ = self._run_tool("track_commitment", args)
-                if not str(result).startswith("ERROR"):
+                if self._write_landed(result):
                     pass_writes.append({"tool": "track_commitment",
                                         "args": args})
 
@@ -3017,7 +3066,8 @@ class Engine:
                     user_input, reply_text, writes + pass_writes,
                     session=self.session_id,
                     title_hint=(record or {}).get("title", ""),
-                    type_hint=(record or {}).get("type", ""))
+                    type_hint=(record or {}).get("type", ""),
+                    tainted=tainted)
             except Exception:
                 # Memory-backbone bookkeeping must never break a live turn:
                 # the durable facts are already committed to their notes above;
