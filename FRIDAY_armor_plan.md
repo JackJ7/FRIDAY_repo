@@ -2041,8 +2041,8 @@ Section tracker (updated in place as each lands):
 | CN.1b | *(added in-leg from capture)* projects/-create guard on write_brain — phantom-project channel | **DONE (MRG-005)** |
 | CN.1 | Merge-intent operand hint (hint_for "many" branch, intent-aware) + MRG-001 | **DONE** (wiring proven; obedience gap closed by CN.2.1/CN.3) |
 | CN.2 | Pending-consolidation ledger + CN.2.1 code-executed merge (escalation, measured activation) + MRG-002 set | **DONE — GT-C9 2/2 PASS, merged-on-disk 4/4 converted** |
-| CN.3 | Project-identifier grounding floor + which-ask backstop (post-gen, held+retry, pre-ledger) + MRG-003 set | **code DONE (49955a8), conversion batches in flight** |
-| CN.4 | Narration-terminated internal-read probe → scoped fix + MRG-004 | queued |
+| CN.3 | Project-identifier grounding floor + which-ask backstop (post-gen, held+retry, pre-ledger) + MRG-003 set | **DONE — GT-C10 2/2 full boards (which-ask converted), GT-C9 locked-clean ×3 after one grader fix (197edc8), zero fabricated identifiers** |
+| CN.4 | Narration-terminated internal-read probe → scoped fix + MRG-004 | queued — reproduction already captured (1623 T2, in-flow narration termination) |
 | CN.5 | Merge + candidate full run (detached + watchdog) | queued |
 | CN.6 | `--compare` + per-item verdicts + ship/remove decisions | queued |
 
@@ -2299,3 +2299,44 @@ lowercase PHRASE in a project-context reply can scan as an identifier
 — worst case is one retry + the honest list; the live fabrications
 were exactly the lowercase slug shape a tighter test would exempt.
 CN.5's full run measures collateral.
+
+**CN.3 CONVERSION MEASURED (2026-07-15 late afternoon; GT-C10 ×2 +
+GT-C9 ×3 on cn 49955a8, grader fix 197edc8 mid-sequence):**
+
+- **GT-C10 2/2 PASS, full boards (locked 7/7, target 3/3; stamps
+  1620/1622): zero which-slug re-asks — the measured T1 naked-which-ask
+  residual converted by construction (trigger b), exactly as designed.**
+- **GT-C9 locked tier clean in all three batches once ONE grader gap
+  was fixed.** Batch 1623's only locked miss was the checker, not the
+  model: the merge had landed on disk and the reply truthfully quoted
+  the merge's own status VALUE ('merged into fluxbeam' — fluxbeam is
+  planted), and no-foreign-identifier scanned the whole 3-word phrase
+  as an identifier — the lowercase-phrase shape CN.3's design note
+  predicted, biting the TEST tripwire instead of the engine floor. Fix
+  (cn 197edc8, test-side only): strip a leading 'merged into ' and
+  judge the slug, so a fabricated target ('merged into
+  flux-beam-utils') still trips. Confirm runs v3 (1634) + v4 (1637):
+  PASSED, 18/18 locked both. No fabricated identifier slipped in any
+  batch; merged-on-disk held everywhere.
+- Target-tier residuals (recorded, non-blocking): **T3
+  no-generic-clarify missed in ALL three GT-C9 batches** — when the
+  CN.2.1 engine-executed merge lands early, the consolidation task
+  retires and the T3 generic continuation ("update the project
+  folder") draws a generic clarify again; CN.2's directive absorbs it
+  only while the task is live. That is P4's general pending-task-ledger
+  gap resurfacing, not a CN.3 regression — CN.5 watch item. T1
+  surfaces-duplicates churned 2/3 (named 0/4 in v4).
+- **CN.4 reproduction captured in flight:** 1623's T2 ("merge all" →
+  reply ends "Let's start by listing them", tools=[]) is a live
+  instance of the narration-terminated shape inside a consolidation
+  flow that RF.4.1 did not recover — the probe starts from evidence,
+  not reconstruction.
+
+Run-ops, two new hazards (both bit this sequence): (1) `--collect-only`
+still claims a minute-stamped results dir (conftest writes the report
+on sessionfinish even for collection), so a sanity collect collides
+with a real run launched the same minute; (2) never delete anything
+under results\ while any suite process is alive — the writer re-opens
+report.json incrementally per test, and cleaning "the collect-only
+artifact" at 1631 mid-flight crashed the first confirm run
+(INTERNALERROR, run void, replaced by v4).
