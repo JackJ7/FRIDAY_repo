@@ -1141,7 +1141,7 @@ the first section not marked DONE):
 | RF.0 | Fresh full baseline on main 7954e90 (detached + watchdog) | **IN FLIGHT** |
 | RF.1 | `normalize_unit` case-fold for known unit spellings (core/canon.py) + guard | **DONE** (+RF.1b) |
 | RF.2 | GND-010: web_fetch local-path/non-http arg-guard (pre-exec reroute or corrective hint) + guard | **DONE** |
-| RF.3 | GND-011: artifact-denial floor (denial-near-referent + one session artifact → re-ground + regenerate; date-denial shape) + guard | pending |
+| RF.3 | GND-011: artifact-denial floor (denial-near-referent + one session artifact → re-ground + regenerate; date-denial shape) + guard | **DONE** |
 | RF.4 | CFG-007: Shape-D tool-call recovery, RESTRICTED to zero-required-argument tools + guard | pending |
 | RF.5 | Merge to main + candidate full run (detached + watchdog) | pending |
 | RF.6 | `--compare` + per-item verdicts recorded here + ship/remove decisions | pending |
@@ -1202,3 +1202,28 @@ parroted as its final reply in 13/20 sampled GND-010 failures. Guard
 **GND-014** (code-only: posix spelling, quoted-backslash spelling, and the
 missing-file corrective). `--quick` 289/289. GND-010 itself stays a model
 case — RF.5's candidate run judges whether the reroute converts `analyzed`.
+
+**RF.3 — DONE (2026-07-15, rf branch d044831).** Artifact-denial floor in
+`engine.respond()` (placed after the anti-dodge barrier so conjunct/ANSWER/
+script floors still vet its output), mirroring the date-DENIAL floor's
+shape. Fires only when ALL hold: artifact-ask turn, a reviewable artifact
+ON the referent stack (`_has_artifact_referent`), reply matches the new
+`_ARTIFACT_DENIAL` regex (embodiment-denial script: "no direct access /
+physical items / real-time input / as an AI / never been given"), AND the
+reply shows ZERO engagement with the artifact's actual words
+(`_grounding_overlap`: distinctive-token intersection with the referent's
+content excerpt — a reply that hedges about access but quotes real content
+is never touched). Action: one re-grounded retry with the artifact's
+excerpt IN the correction; accepted only if it drops the denial AND gains
+content overlap; else a code-built honest reply that names the artifact and
+hands back its REAL excerpt — grounded by construction. GND-012 protection
+is structural: an empty ledger never reaches the floor, so the honest
+"I don't have it" stays intact. Stream-holding widened: artifact asks hold
+the stream in BOTH branches now (phantom needs no referent, this floor
+needs one). New additive ilog field `artifact_denial_floor`. Guards
+**ADF-001..004** (re-grounded retry accepted / code-built fallback /
+grounded-reply-untouched / empty-ledger-denial-survives), driving the real
+respond() path with a scripted model and a REAL read_file referent push.
+`--quick` 293/293. Known limit (recorded at characterization): the 2/20
+fabrication tail — engaging the file but inventing its contents — is
+A7-quote-ledger territory, not this floor's.
