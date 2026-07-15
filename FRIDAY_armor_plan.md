@@ -2040,7 +2040,7 @@ Section tracker (updated in place as each lands):
 | CN.0 | Baseline (reuse TM.5 candidate if clean; else fresh run) + GT-C9/GT-C10 capture failing on baseline | **DONE** |
 | CN.1b | *(added in-leg from capture)* projects/-create guard on write_brain — phantom-project channel | **code DONE (MRG-005)** |
 | CN.1 | Merge-intent operand hint (hint_for "many" branch, intent-aware) + MRG-001 | **code DONE, conversion batches in flight** |
-| CN.2 | Pending-consolidation ledger (durable, structured, affirmative-prefix resolution) + MRG-002 | queued |
+| CN.2 | Pending-consolidation ledger (durable, structured, affirmative-prefix resolution) + MRG-002 | **code DONE, conversion batches in flight** |
 | CN.3 | Project-identifier grounding floor (post-gen, held+retry, pre-ledger) + MRG-003 | queued |
 | CN.4 | Narration-terminated internal-read probe → scoped fix + MRG-004 | queued |
 | CN.5 | Merge + candidate full run (detached + watchdog) | queued |
@@ -2202,3 +2202,32 @@ captured failing with attributed anatomy; next = CN.1 (+ CN.1b).
   hint), T5/GT-C10-T2 carry the NAMES but no verb (old hints ride) —
   intent and operands never co-occur in one message after T1; only
   durable state closes that.
+
+**CN.2 — code DONE (2026-07-15, cn 1f70ad6; --quick 306/306 = 302 +
+MRG-002/002b/002c/002d):** `Engine.consolidation` = None or {filter,
+candidates, survivor, turns_left}; `_consolidation_update()` runs once
+per respond(). Design decisions, each measured or inherited:
+
+- **Operands from `resolver.merge_candidates()`** — extracted as ONE
+  shared method so CN.1's hint and CN.2's ledger can never disagree.
+- **Status directive rides the block END** (after the offer-accepted
+  directive) — the measured CN.1 placement requirement. Pending turns
+  with no survivor say "propose exactly ONE from this list, never ask
+  him to restate"; a confirmed survivor upgrades it to "ACT NOW: call
+  merge_projects(target=..., duplicates=[...])".
+- **Engagement-based TTL (6)**: merge verb / candidate named /
+  affirmative-PREFIX message (the "Ok, please ..." shape the offer
+  ledger rejects by design) refreshes; only disengaged turns tick down
+  — expiry is for ABANDONED tasks (the live transcript needed 8 alive
+  turns; a fixed countdown would have expired at T7).
+- **Survivor set in code from an exact candidate name, LONGEST match
+  wins** ("Keep Flux Beam Tool" must not read as its prefix candidate
+  'fluxbeam'). NO elimination guessing ("the two extras are X and Y"
+  does not infer the survivor — a wrong inference merges the wrong
+  way; the explicit confirm is worth the turn).
+- **Retire on LANDED merge only** (disk truth via _write_landed —
+  ERROR and gate-BLOCKED merges stay pending), on cancel vocabulary,
+  or on expiry. Supersede: a fresh merge ask with 2+ operands replaces
+  the task (freshest ask wins, offer-ledger posture).
+- Escalation (engine executes the merge itself) still HELD per the
+  design — CN.5 batches decide.
