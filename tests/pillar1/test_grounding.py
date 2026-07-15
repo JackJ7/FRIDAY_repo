@@ -339,6 +339,29 @@ def test_analyze_and_file(sandbox, detail):
     assert ok, "filing without analysis (or neither)"
 
 
+@pytest.mark.case("GND-014", "web_fetch arg-guard: a local-path arg reroutes to a disk read, never a dead-end error")
+def test_web_fetch_local_path_guard(sandbox):
+    """GND-010's dominant failure mechanism (13/20 sampled runs): handed the
+    artifact's LOCAL path, the model calls web_fetch, gets 'ERROR: only
+    http(s) URLs can be fetched.' and narrates that dead end as its final
+    reply — the fetch error displaces the analysis. Deterministic guard:
+    a non-URL arg naming a real file is read from disk (same gate check and
+    taint posture as read_file); a non-URL arg naming nothing gets a
+    corrective hint naming the right tool. Code-only, no model."""
+    src = _plant_file(sandbox, "wiring_notes.md",
+                      "# Wiring\n5V rail feeds the PCA9685 via a buck.\n")
+    reg = sandbox.service.engine.registry
+    # Posix-style spelling (what GND-010's prompt hands the model):
+    out = reg.call("web_fetch", {"url": src.as_posix()})
+    assert "PCA9685" in out and not out.startswith("ERROR")
+    # Windows backslashes + shell-style quoting survive the reroute:
+    out2 = reg.call("web_fetch", {"url": f'"{src}"'})
+    assert "PCA9685" in out2
+    # A non-URL naming nothing: corrective hint, names the right tool.
+    out3 = reg.call("web_fetch", {"url": "C:/nope/definitely_missing.md"})
+    assert "read_file" in out3
+
+
 @pytest.mark.model
 @pytest.mark.skill("thinking_skills")
 @pytest.mark.upgrade

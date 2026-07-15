@@ -279,13 +279,39 @@ class Brain:
         """Make brain\\ a git repo if it isn't one yet (idempotent)."""
         if (self.root / ".git").exists():
             return
+        # The dir itself may not exist yet (fresh install, worktree checkout):
+        # `git -C <missing dir> init` fails SILENTLY (output captured,
+        # unchecked) and every later `add -A` would bind to an ENCLOSING repo
+        # instead — see the guard in _commit for the incident this caused.
+        self.root.mkdir(parents=True, exist_ok=True)
         self._git("init")
         self._git("config", "user.name", "FRIDAY")
         self._git("config", "user.email", "friday@local")
         self._git("add", "-A")
         self._git("commit", "-m", "Initial brain snapshot")
 
+    def _owns_repo(self) -> bool:
+        """True iff the git repo that commands at self.root would act on IS
+        the brain's own repo — not a repo that merely contains the brain."""
+        top = self._git("rev-parse", "--show-toplevel")
+        if top.returncode != 0:
+            return False
+        return Path(top.stdout.strip()).resolve() == self.root
+
     def _commit(self, message: str):
+        # Guard (2026-07-15): when the brain dir exists but is NOT its own
+        # repo (its `git init` failed because the dir was missing at
+        # construction), `git -C brain add -A` discovers an enclosing repo
+        # and stages THAT repo's entire working tree. In a source worktree
+        # this swept a session's uncommitted code edits into a bogus commit
+        # under a brain-write message. Re-init once, then refuse loudly —
+        # never commit into a repo that isn't the brain's.
+        if not self._owns_repo():
+            self._ensure_repo()
+            if not self._owns_repo():
+                raise RuntimeError(
+                    f"brain git repo missing at {self.root}; refusing to "
+                    f"auto-commit into an enclosing repository")
         self._git("add", "-A")
         # Skip the commit when nothing actually changed (e.g. identical content).
         status = self._git("status", "--porcelain")

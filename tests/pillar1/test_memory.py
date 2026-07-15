@@ -148,6 +148,50 @@ def test_write_through(sandbox):
     assert "durability check" in sandbox.git_log(), "write returned before git commit"
 
 
+@pytest.mark.case("MEM-013", "brain auto-commit can never land in an ENCLOSING git repo (worktree incident guard)")
+def test_autocommit_never_touches_enclosing_repo(tmp_path):
+    """2026-07-15 incident: a Brain constructed on a NONEXISTENT root (a git
+    worktree checkout, where ignored runtime dirs aren't copied in) had its
+    `git init` fail silently (`git -C <missing dir> init`); a later brain
+    write's `add -A` then bound to the ENCLOSING source repo and swept the
+    session's uncommitted code edits into a bogus commit under the
+    brain-write message. Recreates exactly that shape: outer repo with a
+    dirty edit, brain root inside it that does not exist yet."""
+    def git(cwd, *a):
+        return subprocess.run(["git", "-C", str(cwd), *a],
+                              capture_output=True, text=True)
+
+    outer = tmp_path / "outer"
+    outer.mkdir()
+    git(outer, "init")
+    git(outer, "config", "user.name", "T")
+    git(outer, "config", "user.email", "t@local")
+    (outer / "source.py").write_text("x = 1\n", encoding="utf-8")
+    git(outer, "add", "-A")
+    git(outer, "commit", "-m", "outer baseline")
+    (outer / "source.py").write_text("x = 2\n", encoding="utf-8")  # dirty
+
+    class _StubLog:
+        def log(self, *a, **k):
+            pass
+
+    class _StubGate:
+        log = _StubLog()
+
+    from core.memory.brain import Brain
+    brain_root = outer / "brain"  # the incident precondition: missing dir
+    brain = Brain(brain_root, _StubGate(), autocommit=True)
+    brain.system_write("character/operating_rules.md", "# rules\n",
+                       summary="migration probe")
+
+    # The enclosing repo saw NOTHING: tip unchanged, dirty edit still dirty.
+    assert git(outer, "log", "-1", "--format=%s").stdout.strip() == "outer baseline"
+    assert "source.py" in git(outer, "status", "--porcelain").stdout
+    # And the brain became its OWN repo with the write committed to it.
+    assert (brain_root / ".git").exists()
+    assert "migration probe" in git(brain_root, "log", "-1", "--format=%s").stdout
+
+
 @pytest.mark.case("MEM-010", "one fact, one place: memory pass never leaves conflicting field values")
 @pytest.mark.model
 @pytest.mark.skill("memory_persistence")
@@ -222,3 +266,42 @@ def test_recover_narrated_tool_calls(sandbox):
     result, _ = eng._run_tool(ccalls[0]["function"]["name"],
                               ccalls[0]["function"]["arguments"])
     assert result.strip() == "= 3 A"
+
+
+@pytest.mark.case("MEM-014", "Shape D recovery: intent-verb + bare tool-name prose runs a zero-required-arg tool; guarded four ways")
+def test_recover_bare_name_prose(sandbox):
+    """The CFG-007 residual (armor plan RF.4): 'Running read_own_config to
+    check the settings...' has no parens and no JSON, matches none of shapes
+    A/B/C, and silently fell through as a text-only reply — the tool never
+    ran. Shape D recovers it, but ONLY under all four guards: an intent verb
+    directly before the name, a registered tool with ZERO required
+    parameters (prose carries no argument text — recovery must never invent
+    args), never an action-kind tool, and only when no other shape matched."""
+    eng = sandbox.service.engine
+
+    # The exact CFG-007 narration shape — recovered with empty args.
+    rec = eng._recover_tool_calls("Running read_own_config to check the settings...")
+    assert rec == [{"function": {"name": "read_own_config", "arguments": {}}}]
+    # Common variants: backticked name, 'let me check', 'I'll use'.
+    assert eng._recover_tool_calls("Let me check `read_own_config` first.")[0][
+        "function"]["name"] == "read_own_config"
+    assert eng._recover_tool_calls("I'll use read_own_config for that.")[0][
+        "function"]["name"] == "read_own_config"
+
+    # Guard 1 — a bare MENTION without an intent verb never fires.
+    assert eng._recover_tool_calls(
+        "read_own_config shows every key and tier.") == []
+    # Guard 2 — required-parameter tools are never invented-args'd.
+    assert eng._recover_tool_calls("Running read_email now...") == []
+    # Guard 3 — action-kind tools never auto-fire from prose.
+    assert eng._recover_tool_calls("Running change_own_config now...") == []
+    # Guard 4 — paren forms belong to shapes A/C, not D.
+    assert eng._recover_tool_calls("Running read_own_config() now") \
+        == eng._recover_tool_calls("read_own_config()")
+    # Unknown names stay inert even with a perfect intent verb.
+    assert eng._recover_tool_calls("Running warp_drive to check...") == []
+
+    # End to end: the recovered call actually executes.
+    result, _ = eng._run_tool(rec[0]["function"]["name"],
+                              rec[0]["function"]["arguments"])
+    assert "tier" in result.lower() or "config" in result.lower()
