@@ -2037,7 +2037,8 @@ Section tracker (updated in place as each lands):
 
 | Section | Content | Status |
 |---|---|---|
-| CN.0 | Baseline (reuse TM.5 candidate if clean; else fresh run) + GT-C9/GT-C10 capture failing on baseline | **IN PROGRESS** |
+| CN.0 | Baseline (reuse TM.5 candidate if clean; else fresh run) + GT-C9/GT-C10 capture failing on baseline | **DONE** |
+| CN.1b | *(added in-leg from capture)* projects/-create guard on write_brain — phantom-project channel | queued |
 | CN.1 | Merge-intent operand hint (hint_for "many" branch, intent-aware) + MRG-001 | queued |
 | CN.2 | Pending-consolidation ledger (durable, structured, affirmative-prefix resolution) + MRG-002 | queued |
 | CN.3 | Project-identifier grounding floor (post-gen, held+retry, pre-ledger) + MRG-003 | queued |
@@ -2121,6 +2122,32 @@ transcript's.** Per-turn (from the report's evidence):
    names). The live transcript fabricated freely — churn dimension,
    watch across batches.
 
-Capture batches 2–5 (GT-C10 ×2 + GT-C9 ×2 more, sequential, detached
-driver PID 31556, logs `cn_capture_gtc{9,10}_b*.all.log`): results
-below when they land.
+**CN.0 capture batches 2–5 DONE (sequential detached driver; logs
+`cn_capture_gtc{9,10}_b*.all.log`): GT-C9 3/3 FAILED, GT-C10 2/2
+FAILED — capture COMPLETE, both goldens are valid conversion
+metrics.** The picture across all five batches:
+
+- **merged-on-disk failed 5/5** — the leg's needle, and it is solid:
+  GT-C9 b1 = PARTIAL merge (tool merged, v2 orphaned — the "one"-hint
+  steering), b2/b3 = ZERO merge (the live transcript's exact shape);
+  GT-C10 b1/b2 = no merge despite the pasted pair.
+- **GT-C10's which-slug re-ask fired 2/2** ('which one' / 'which
+  project', no survivor framing) — CN.1's fingerprint, deterministic
+  on this shape.
+- **Phantom project (memory-pass write_brain): 1/3 GT-C9 batches** —
+  churny but real; CN.1b stays in scope.
+- **no-foreign-identifier: 0 true positives in 5 batches**; the live
+  transcript's free fabrication didn't reproduce in the sandbox (its
+  live context was busier). 1 false-positive batch: the model narrated
+  a JSON-shaped merge plan in PROSE and the check flagged the plan's
+  own quoted arg keys ('action', 'merge_projects', 'source_notes') —
+  check refined in-leg with a tool/arg-vocabulary exclusion (on cn).
+  The check stays LOCKED as a fabrication tripwire; CN.3's engine
+  floor + MRG-003 remain the real barrier. SIDE FINDING for CN.4: a
+  "go ahead" turn producing a prose-JSON plan instead of a tool call
+  is another CFG-007-family shape — fold into the probe scope.
+- Run-ops: PowerShell `*>` redirect writes UTF-16 logs — bash grep
+  reads nothing; parse them with PowerShell (or redirect via cmd).
+
+**CN.0 DONE.** Baseline = `2026-07-15_1118` (validated above); goldens
+captured failing with attributed anatomy; next = CN.1 (+ CN.1b).
