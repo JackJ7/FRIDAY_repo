@@ -2038,10 +2038,10 @@ Section tracker (updated in place as each lands):
 | Section | Content | Status |
 |---|---|---|
 | CN.0 | Baseline (reuse TM.5 candidate if clean; else fresh run) + GT-C9/GT-C10 capture failing on baseline | **DONE** |
-| CN.1b | *(added in-leg from capture)* projects/-create guard on write_brain — phantom-project channel | **code DONE (MRG-005)** |
-| CN.1 | Merge-intent operand hint (hint_for "many" branch, intent-aware) + MRG-001 | **code DONE, conversion batches in flight** |
-| CN.2 | Pending-consolidation ledger (durable, structured, affirmative-prefix resolution) + MRG-002 | **code DONE, conversion batches in flight** |
-| CN.3 | Project-identifier grounding floor (post-gen, held+retry, pre-ledger) + MRG-003 | queued |
+| CN.1b | *(added in-leg from capture)* projects/-create guard on write_brain — phantom-project channel | **DONE (MRG-005)** |
+| CN.1 | Merge-intent operand hint (hint_for "many" branch, intent-aware) + MRG-001 | **DONE** (wiring proven; obedience gap closed by CN.2.1/CN.3) |
+| CN.2 | Pending-consolidation ledger + CN.2.1 code-executed merge (escalation, measured activation) + MRG-002 set | **DONE — GT-C9 2/2 PASS, merged-on-disk 4/4 converted** |
+| CN.3 | Project-identifier grounding floor + which-ask backstop (post-gen, held+retry, pre-ledger) + MRG-003 set | **code DONE (49955a8), conversion batches in flight** |
 | CN.4 | Narration-terminated internal-read probe → scoped fix + MRG-004 | queued |
 | CN.5 | Merge + candidate full run (detached + watchdog) | queued |
 | CN.6 | `--compare` + per-item verdicts + ship/remove decisions | queued |
@@ -2265,3 +2265,37 @@ invocations OVERWRITE each other's results dir** (both CN.2 GT-C10
 reports were clobbered by the GT-C9 runs that followed them in the
 same minute; the .all.log failure text survived). Batch drivers now
 sleep 70s between invocations.
+
+**CN.2.1 CONVERSION MEASURED (4 spaced batches, cn 5fe014b): GT-C9
+PASSED 2/2 — the eight-turn live-F-transcript golden passes end-to-end
+for the first time ever. GT-C10 1/2 — and its only failure is the T1
+naked which-ask phrasing ('which project', no survivor framing);
+merged-on-disk converted in ALL FOUR batches (0/5 at capture → 4/4
+now: once the survivor is named, execution is code).** Residual = one
+model-phrasing churn on GT-C10's propose turn (v2 proves the 14B CAN
+comply — the code-picked default rides the directive). Deterministic
+conversion for it folds into CN.3: the held-reply floor gains a
+trigger for a naked which-ask on a pending-consolidation no-survivor
+turn, with a CODE-BUILT fallback (the survivor-confirm question naming
+the default — fully deterministic, so GT-C10 T1 converts by
+construction).
+
+**CN.3 — code DONE (2026-07-15, cn 49955a8; guards 10/10, --quick
+309/309 = 306 + MRG-003/003b/003c):** post-generation identifier floor,
+narrow by construction (fires only when project context is live:
+pending task / its directive / entity or operand hint). Trigger (a) =
+fabricated quoted identifier (norm-substring tolerance mirrors the
+resolver; tool/arg vocabulary excluded per the capture lesson): one
+corrective retry naming the real set, then the deterministic honest
+list. Runs before the offer ledger arms — a fabricated proposal can
+never become an accepted offer's quoted directive (MRG-003 asserts
+exactly that). Trigger (b) = the measured GT-C10 residual: a NAKED
+which-ask on a pending no-survivor turn is REPLACED by the code-built
+survivor-confirm question (candidates + code-picked default) — no
+retry needed, correct by construction (MRG-003c: fires in the arming
+turn itself). Consolidation turns now hold the stream (no watched
+retractions). Known accepted residual (commented in code): a quoted
+lowercase PHRASE in a project-context reply can scan as an identifier
+— worst case is one retry + the honest list; the live fabrications
+were exactly the lowercase slug shape a tighter test would exempt.
+CN.5's full run measures collateral.
