@@ -54,6 +54,34 @@ def register_senses_tools(registry, senses, gate, web_max_bytes: int):
         return senses.calendar.create_event(gate, summary, start_iso, end_iso, description)
 
     def web_fetch(url: str) -> str:
+        # Local-path arg-guard (armor plan RF.2, GND-010): handed a LOCAL
+        # path, the 14B sometimes routes it here, and the old dead-end
+        # "only http(s) URLs" error displaced the analysis in 13/20 sampled
+        # failures — the model parrots the error as its final reply instead
+        # of switching tools. A non-URL arg naming a real file is rerouted
+        # to the same read the read_file tool performs (same gate check,
+        # same DATA/taint posture — both are external_read); anything else
+        # gets a corrective hint naming the right tool, never a dead end.
+        arg = (url or "").strip()
+        if not arg.lower().startswith(("http://", "https://")):
+            candidate = arg.strip('"').strip("'")
+            try:
+                p = gate.check_read(candidate)
+            except Exception:
+                p = None
+            if p is not None and p.is_file():
+                data = p.read_bytes()
+                text = data[:web_max_bytes].decode("utf-8", errors="replace")
+                if len(data) > web_max_bytes:
+                    text += (f"\n... [truncated: file is {len(data):,} bytes,"
+                             f" showing first {web_max_bytes:,}]")
+                gate.log.log("SENSE",
+                             f"web_fetch arg was a local path; read it from "
+                             f"disk instead: {p}")
+                return (f"[that was a local file path, not a URL — here is "
+                        f"the file read from disk]\n{text}")
+            return ("ERROR: web_fetch takes an http(s) URL. If you meant a "
+                    "local file, use read_file; for a folder, use list_dir.")
         return _fetch(url, max_bytes=web_max_bytes, action_logger=gate.log)
 
     registry.register(
