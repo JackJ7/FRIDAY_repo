@@ -31,12 +31,62 @@ ureg = pint.UnitRegistry()
 Q = ureg.Quantity
 
 
+# Model unit spellings -> Pint spellings. Module-level (not inside
+# normalize_unit) so the case-fold rescue below derives its fold table from
+# the same source — one table, zero drift between the two lookups.
+_UNIT_TABLE = {
+    "Ω": "ohm", "ohms": "ohm", "Ohms": "ohm", "Ohm": "ohm",
+    "N·m": "N*m", "N-m": "N*m", "Nm": "N*m", "n*m": "N*m", "N.m": "N*m",
+    "newton-meter": "N*m", "newton-meters": "N*m", "newton_meter": "N*m",
+    "Wh": "watt_hour", "wh": "watt_hour", "kWh": "kilowatt_hour",
+    "mAh": "milliampere_hour", "Ah": "ampere_hour",
+    "amps": "ampere", "Amps": "ampere", "amp": "ampere", "A": "ampere",
+    "volts": "volt", "V": "volt", "watts": "watt", "W": "watt",
+    "kPa": "kilopascal", "psi": "psi", "hp": "horsepower",
+    "in": "inch", "inches": "inch", "lbs": "pound", "lb": "pound",
+    "N": "newton", "newtons": "newton", "rpm": "rpm",
+    "m/s": "meter/second", "km/h": "kilometer/hour",
+    # Torque as force*length (see normalize_unit docstring):
+    "in-lb": "pound_force*inch", "in-lbs": "pound_force*inch",
+    "in*lb": "pound_force*inch", "in-lbf": "pound_force*inch",
+    "in*lbf": "pound_force*inch", "inlb": "pound_force*inch",
+    "inch-pound": "pound_force*inch", "inch-pounds": "pound_force*inch",
+    "inch_pound": "pound_force*inch", "inch-lb": "pound_force*inch",
+    "ft-lb": "pound_force*foot", "ft*lb": "pound_force*foot",
+    "ft-lbf": "pound_force*foot", "foot-pound": "pound_force*foot",
+    "kg*cm": "force_kilogram*centimeter", "kg-cm": "force_kilogram*centimeter",
+    "kgcm": "force_kilogram*centimeter", "kg·cm": "force_kilogram*centimeter",
+    "kgf*cm": "force_kilogram*centimeter", "kgf-cm": "force_kilogram*centimeter",
+    "kgf·cm": "force_kilogram*centimeter", "kgfcm": "force_kilogram*centimeter",
+}
+
+# Lowercased spelling -> Pint spelling, for normalize_unit's crash rescue.
+# Built defensively: if two table spellings fold to the same lowercase form
+# but disagree on the target, that fold is poisoned (None) — the rescue must
+# never guess between meanings.
+_UNIT_TABLE_CI = {}
+for _k, _v in _UNIT_TABLE.items():
+    _low = _k.lower()
+    if _low in _UNIT_TABLE_CI and _UNIT_TABLE_CI[_low] != _v:
+        _UNIT_TABLE_CI[_low] = None
+    else:
+        _UNIT_TABLE_CI.setdefault(_low, _v)
+
+
 def normalize_unit(u: str) -> str:
     """Model unit spellings -> Pint spellings.
 
     Torque shorthands need care: Pint reads 'kg*cm' as mass*length, but in
     engineering a servo's 'kg·cm' means kilogram-FORCE·cm (a torque), so those
-    map to force_kilogram. Likewise 'in-lb' means pound-FORCE·inch."""
+    map to force_kilogram. Likewise 'in-lb' means pound-FORCE·inch.
+
+    Case handling: unit case is MEANINGFUL to Pint ('mW' vs 'MW'), so there is
+    no blanket fold. But a spelling Pint would CRASH on gets one chance at a
+    case-insensitive table match — run 2026-07-14_2244 failed GOLD-gear-02's
+    correct answer because the model wrote 'RPM' and Pint only defines
+    lowercase 'rpm' (UndefinedUnitError during extraction). The gate means the
+    rescue can only fix spellings that today score 0 by crashing; it can never
+    reinterpret a spelling Pint already accepts."""
     # Unicode multiplication first: models write 'N⋅m' (dot operator, U+22C5),
     # 'N·m' (middle dot), or 'N×m'. The v2 tuned eval failed a CORRECT
     # "ANSWER: 30 N⋅m" because only the middle-dot spelling was mapped —
@@ -44,32 +94,15 @@ def normalize_unit(u: str) -> str:
     # the same entry (and kg·cm still resolves as force, via kg*cm).
     u = u.replace("⋅", "*").replace("·", "*").replace("×", "*")
     u = u.strip().strip(".").strip()
-    table = {
-        "Ω": "ohm", "ohms": "ohm", "Ohms": "ohm", "Ohm": "ohm",
-        "N·m": "N*m", "N-m": "N*m", "Nm": "N*m", "n*m": "N*m", "N.m": "N*m",
-        "newton-meter": "N*m", "newton-meters": "N*m", "newton_meter": "N*m",
-        "Wh": "watt_hour", "wh": "watt_hour", "kWh": "kilowatt_hour",
-        "mAh": "milliampere_hour", "Ah": "ampere_hour",
-        "amps": "ampere", "Amps": "ampere", "amp": "ampere", "A": "ampere",
-        "volts": "volt", "V": "volt", "watts": "watt", "W": "watt",
-        "kPa": "kilopascal", "psi": "psi", "hp": "horsepower",
-        "in": "inch", "inches": "inch", "lbs": "pound", "lb": "pound",
-        "N": "newton", "newtons": "newton", "rpm": "rpm",
-        "m/s": "meter/second", "km/h": "kilometer/hour",
-        # Torque as force*length (see docstring):
-        "in-lb": "pound_force*inch", "in-lbs": "pound_force*inch",
-        "in*lb": "pound_force*inch", "in-lbf": "pound_force*inch",
-        "in*lbf": "pound_force*inch", "inlb": "pound_force*inch",
-        "inch-pound": "pound_force*inch", "inch-pounds": "pound_force*inch",
-        "inch_pound": "pound_force*inch", "inch-lb": "pound_force*inch",
-        "ft-lb": "pound_force*foot", "ft*lb": "pound_force*foot",
-        "ft-lbf": "pound_force*foot", "foot-pound": "pound_force*foot",
-        "kg*cm": "force_kilogram*centimeter", "kg-cm": "force_kilogram*centimeter",
-        "kgcm": "force_kilogram*centimeter", "kg·cm": "force_kilogram*centimeter",
-        "kgf*cm": "force_kilogram*centimeter", "kgf-cm": "force_kilogram*centimeter",
-        "kgf·cm": "force_kilogram*centimeter", "kgfcm": "force_kilogram*centimeter",
-    }
-    return table.get(u, u)
+    if u in _UNIT_TABLE:
+        return _UNIT_TABLE[u]
+    fold = _UNIT_TABLE_CI.get(u.lower())
+    if fold is not None and fold != u:
+        try:
+            ureg.Unit(u)  # Pint knows the raw spelling -> honor it as-is
+        except Exception:
+            return fold   # Pint would crash -> the fold is strictly a rescue
+    return u
 
 
 # ---------- ANSWER: line extraction (moved verbatim from tests\helpers) -----

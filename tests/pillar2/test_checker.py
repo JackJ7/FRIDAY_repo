@@ -90,3 +90,25 @@ def test_extractor_unit_parsing():
     assert abs(answer_in("ANSWER: 30 N·m", "N*m") - 30.0) < 1e-9
     assert abs(answer_in("ANSWER: 6.3 W⋅h", "watt_hour") - 6.3) < 1e-9
     assert abs(answer_in("ANSWER: 1.5 kg⋅cm", "N*m") - 0.1471) < 0.001
+
+
+@pytest.mark.case("CHK-006", "grader self-test: case-fold rescue for spellings Pint would crash on (RPM)")
+def test_unit_case_fold_rescue():
+    """Run 2026-07-14_2244 failed GOLD-gear-02's CORRECT 'ANSWER: 200 RPM':
+    Pint defines only lowercase 'rpm', so answer_in -> normalize_unit raised
+    UndefinedUnitError and the case scored 0 on an extraction crash. The
+    rescue folds case ONLY for spellings Pint cannot parse — case-meaningful
+    SI spellings must never be reinterpreted."""
+    # The exact 2244 failure, end to end through the grader:
+    assert normalize_unit("RPM") == "rpm"
+    from helpers.extract import answer_in
+    assert abs(answer_in("ANSWER: 200 RPM", "rpm") - 200.0) < 1e-9
+    # Other all-caps spellings of table units get the same rescue:
+    assert normalize_unit("PSI") == "psi"
+    assert normalize_unit("WH") == "watt_hour"
+    # Spellings Pint accepts pass through UNTOUCHED — case is meaning here:
+    assert normalize_unit("mW") == "mW"    # milliwatt, NOT megawatt
+    assert normalize_unit("MW") == "MW"    # megawatt, NOT milliwatt
+    # Exact table hits still win before any fold runs:
+    assert normalize_unit("Wh") == "watt_hour"
+    assert normalize_unit("rpm") == "rpm"
