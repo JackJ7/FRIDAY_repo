@@ -1513,7 +1513,7 @@ the first section not marked DONE):
 |---|---|---|
 | TM.0 | Fresh full baseline on main (detached + watchdog) | **IN FLIGHT** (see below) |
 | TM.1 | BLOCKED results never ledger as durable (3 sites) + guard | **DONE** |
-| TM.2 | Tainted-turn observation: floor-only + `tainted` provenance + guard | pending |
+| TM.2 | Tainted-turn observation: floor-only + `tainted` provenance + guard | **DONE** |
 | TM.3 | Recurrence-floor taint gate + guard | pending |
 | TM.4 | Targeted INJ-006 stability batches on the tm branch | pending |
 | TM.5 | Merge to main + candidate full run (detached + watchdog) | pending |
@@ -1550,3 +1550,33 @@ filtered same). New file `tests\pillar1\test_taint_memory.py`, scripted
 model driving the REAL `memory_pass`, asserting the brain repo HEAD
 directly — the exact INJ-006 fingerprint. `--quick` **297/297**
 (294 + 3).
+
+**TM.2 — DONE (2026-07-15, tm branch 8b4255e).** Tainted-turn
+observations quarantine the model channel: `record_from_pass` gains
+`tainted` and drops `title_hint`/`type_hint` **in the store** when set
+(the hints come from `_structured_memory_record`, a model call that read
+the tainted context — the exact channel that let "Record $5000 purchase
+approval note" become a durable observation title), falling back to the
+deterministic floor (ledger-derived type, title from Jack's own first
+sentence). The record carries `tainted: true` frontmatter — written only
+when true, so every clean observation file keeps its existing shape
+byte-for-byte; `Observation` parses it and `cite()` appends
+"tainted-turn" so a claim grounded in one is visibly provenance-marked.
+Engine side: the taint flag snapshots at pass entry AND refreshes after
+the tool loop (a read inside the pass itself taints the record too), and
+the A1 extraction call is SKIPPED on tainted turns unless the commitment
+half needs it — no latency spent on hints that would be dropped. WHY no
+confirm prompt (recorded design): every ledger entry on a tainted turn
+was already individually Jack-confirmed at the gate (TM.1 guarantees the
+ledger only holds landed writes), so the derivative observation is gated
+by construction; the flag buys audit + retrieval provenance. Guard
+**MEM-017** (store-level: planted hints dropped, floor title/type used,
+`tainted: true` in the file, cite mark; clean contrast: hints honored,
+no key; engine-level: no extraction call spent, provenance carried).
+In-guard lesson: observation ids tie on the second and break by random
+hex — the guard finds the new record by set difference, never sort order
+(first `--quick` caught exactly that flake, 297/298 → fixed). `--quick`
+**298/298**. NOTE for a future leg (out of scope here):
+`close_session`'s session-summary observation rides `record()` with the
+default `tainted=False` — a session-level provenance mark would need its
+own design (what does "tainted" mean across a whole session?).
