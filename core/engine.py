@@ -579,6 +579,14 @@ class Engine:
         # would make both lie (the TM.1 lesson, from the other direction).
         if getattr(self, "_pre_loop_tool_log", None):
             tool_log.extend(self._pre_loop_tool_log)
+            # The faces must see the code-executed call too: on_tool is how
+            # the UI shows "FRIDAY ran X", and a merge that moves files with
+            # no visible tool event reads as FRIDAY hiding what she did
+            # (found via GT-C9 transcripts: merged-on-disk passed while every
+            # turn showed tools=[] — the harness records at this boundary).
+            if on_tool:
+                for t in self._pre_loop_tool_log:
+                    on_tool(t["tool"], t["args"])
             self._pre_loop_tool_log = []
         # Self-consistency voting (armor A6) — this turn's records. Reset per
         # turn so the log's agreement rates are per-exchange, never stale.
@@ -1001,6 +1009,40 @@ class Engine:
                         live_token("\n" + reply.content)
                     turn.append({"role": "assistant",
                                  "content": reply.content})
+
+        # Narrated-listing floor (armor CONSOLIDATE CN.4). Measured shape
+        # (GT-C9 stamp 1623 T2, and the live F-transcript's turn 1): the reply
+        # ENDS on first-person-future narration of a project listing — "I
+        # first need to list all your current projects... Let's start by
+        # listing them." — with ZERO tools run, so the turn dies on a promise.
+        # RF.4.1/Shape D is structurally blind here (no tool name in the
+        # prose; recovery never invents one), so the ENGINE fulfills the
+        # narrated read itself: run list_projects deterministically and APPEND
+        # the real listing as the narration's continuation. Appending — never
+        # replacing, never a second model hop — means no watched retraction,
+        # no empty-reply risk (the F4/A1 lesson), and the narration becomes
+        # true instead of dangling. Internal zero-arg READ only; an action
+        # narration ("let me merge them") never matches the pattern.
+        narrated_list_fired = False
+        if (reply is not None and not tool_log
+                and not identifier_floor_fired and not artifact_denial_fired
+                and not phantom_fired
+                and self._NARRATED_LIST_TAIL.search(
+                    (reply.content or "").strip()[-200:])):
+            if on_tool:
+                on_tool("list_projects", {})
+            nl_result, nl_external = self._run_tool("list_projects", {})
+            tool_log.append({"tool": "list_projects", "args": {},
+                             "result": nl_result[:500]})
+            turn.append({"role": "tool",
+                         "content": self._wrap_data(nl_result, nl_external)})
+            addition = "\n\n" + nl_result
+            reply.content = (reply.content or "").rstrip() + addition
+            reply.tool_calls = []
+            turn.append({"role": "assistant", "content": reply.content})
+            if live_token:
+                live_token(addition)
+            narrated_list_fired = True
 
         # Calendar-first corrective pass (Phase 2, item 1; plan D2). Phase 1
         # measured the prompt rule failing: on a bare "what day is X?" the 14B
@@ -1516,6 +1558,9 @@ class Engine:
             # ledger holds — the embodiment-denial residual, made countable.
             "artifact_denial_floor": artifact_denial_fired,
             "identifier_floor": identifier_floor_fired,
+            # CN.4: the engine fulfilled an end-of-reply narrated project
+            # listing the model promised but never ran.
+            "narrated_list_floor": narrated_list_fired,
             # Phase 1 (Notes-10, item 4): True when an ACTION tool fired on a
             # message with no request shape — the office-hours "proposed an
             # update nobody asked for" signature. The taint gate is the hard
@@ -2735,6 +2780,18 @@ class Engine:
         "action", "target", "duplicates", "survivor", "name", "path",
         "content", "mode", "summary", "slug", "title", "status", "folder",
         "note", "merged into", "source_notes", "target_note"}
+
+    # CN.4 — end-of-reply narration of an internal PROJECT LISTING the model
+    # never ran ("...Let's start by listing them.", tools=[]). Shape D can't
+    # recover this: the prose names NO tool, and recovery never invents one.
+    # The floor maps the one measured verb-object pair (list + projects/them)
+    # to list_projects — grown verb-by-verb where live friction shows (P6),
+    # never a general intent classifier. Must MATCH AT THE END of the reply:
+    # mid-reply narration followed by real content means the model finished.
+    _NARRATED_LIST_TAIL = re.compile(
+        r"(?:let'?s start by listing|let me list|start by listing"
+        r"|i(?:'ll| will)(?: start by)? list|i (?:first )?need to list)"
+        r"[^.!?\n]{0,80}[.!?]?\s*$", re.IGNORECASE)
 
     def _foreign_identifiers(self, text: str) -> list:
         """Quoted project-shaped identifiers in `text` that resolve to NO

@@ -22,7 +22,17 @@ MRG-002  the pending-consolidation ledger (CN.2): armed by JACK's merge-intent
          the survivor from an exact name, clears on a LANDED merge / cancel /
          expiry, and never arms on ordinary chat.
 
-(MRG-003/004 arrive with CN.3/CN.4.)
+MRG-003  the identifier grounding floor + which-ask backstop (CN.3): a
+         fabricated quoted project name is held, retried once, then falls
+         back to the honest real list; a naked which-ask on a pending
+         no-survivor turn becomes the code-built survivor-confirm question.
+
+MRG-004  the narrated-listing floor (CN.4): a reply that ENDS on
+         first-person-future narration of a project listing with ZERO tools
+         run gets the listing appended by code (engine runs list_projects
+         itself — Shape D can't recover prose that names no tool). Completed
+         answers, mid-reply narration, turns where tools ran, and ACTION
+         narration ("let me merge them") are all untouched.
 """
 
 import pytest
@@ -414,3 +424,79 @@ def test_mrg005_write_brain_projects_guard(sandbox):
         "content": "# Task\n\nMerge the flux projects.\n",
         "summary": "task"})
     assert not out.startswith("ERROR"), out
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("MRG-004", "narrated-listing floor: a reply ending on "
+                             "first-person-future listing narration with zero "
+                             "tools run gets the REAL listing appended by "
+                             "code; the narration itself is preserved")
+def test_mrg004_narrated_list_floor(sandbox):
+    # The GT-C9 stamp-1623 T2 shape verbatim: promise to list, no tool call.
+    narration = ("To proceed I first need the full set of flux projects. "
+                 "Let's start by listing them.")
+    eng = _armed_engine(sandbox, [narration])
+    reply = eng.history[-1]["content"] if eng.history else ""
+    assert reply.startswith(narration), reply       # appended, never replaced
+    assert "project(s):" in reply, reply            # list_projects' real text
+    for title in ("Fluxbeam", "Flux Beam Tool", "Flux Beam V2"):
+        assert title in reply, f"{title} missing from fulfilled listing"
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("MRG-004b", "narrated-listing floor negatives: completed "
+                              "answers, mid-reply narration, and turns where "
+                              "tools already ran are byte-identical")
+def test_mrg004b_negatives(tmp_path):
+    from helpers.harness import SandboxFriday
+
+    # Completed answer, no narration tail -> untouched.
+    sb = SandboxFriday(tmp_path / "a")
+    for slug in FLUX_SLUGS:
+        _plant_note(sb, slug)
+    eng = sb.service.engine
+    eng.vote_enabled = False
+    done = "You have three flux projects: Fluxbeam, Flux Beam Tool, Flux Beam V2."
+    eng.model = _ScriptModel([done])
+    assert eng.respond("What flux projects do we have?").content == done
+
+    # Narration mid-reply, real content after it -> the model finished; quiet.
+    sb2 = SandboxFriday(tmp_path / "b")
+    for slug in FLUX_SLUGS:
+        _plant_note(sb2, slug)
+    eng2 = sb2.service.engine
+    eng2.vote_enabled = False
+    finished = ("Let me list them. You have Fluxbeam, Flux Beam Tool and "
+                "Flux Beam V2 — all active.")
+    eng2.model = _ScriptModel([finished])
+    assert eng2.respond("What flux projects do we have?").content == finished
+
+    # A tool RAN this turn -> the promise was kept by the model; quiet even
+    # though the tail narrates (no doubled listing).
+    sb3 = SandboxFriday(tmp_path / "c")
+    for slug in FLUX_SLUGS:
+        _plant_note(sb3, slug)
+    eng3 = sb3.service.engine
+    eng3.vote_enabled = False
+    tail = "Those are all three. Now let me list the next steps."
+    eng3.model = _ScriptModel([
+        {"content": "", "tool_calls": [
+            {"function": {"name": "list_projects", "arguments": {}}}]},
+        tail])
+    reply3 = eng3.respond("What flux projects do we have?")
+    assert reply3.content.count("project(s):") <= 1, reply3.content
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("MRG-004c", "narrated-listing floor never fires on ACTION "
+                              "narration: 'let me merge them' runs nothing "
+                              "and moves nothing on disk")
+def test_mrg004c_action_narration_quiet(sandbox):
+    narration = "Understood. Let me merge them into one project now."
+    eng = _armed_engine(sandbox, [narration])
+    reply = eng.history[-1]["content"] if eng.history else ""
+    assert reply == narration, reply                # no append, no replacement
+    # Nothing moved on disk — narrating an action is never a license to act.
+    for slug in FLUX_SLUGS:
+        assert "merged into" not in sandbox.brain.read_note(
+            f"projects/{slug}.md").lower()

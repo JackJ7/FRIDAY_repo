@@ -726,7 +726,11 @@ def test_gt_c9_fuzzy_consolidation_executes(sandbox, detail):
              guard + [not_mentions(
                           ["what would you like", "what should i do",
                            "could you clarify what", "what do you want"],
-                          "no-intent-reask", TARGET)]),
+                          "no-intent-reask", TARGET),
+                      # CN.4: stamp 1623's T2 died on "Let's start by listing
+                      # them." with zero tools — the narrated-listing floor
+                      # must leave this turn ending on substance.
+                      not_narration_terminated(TARGET)]),
         Turn("Ok, please update the project folder.",
              guard + [not_mentions(
                           ["could you specify", "please specify",
