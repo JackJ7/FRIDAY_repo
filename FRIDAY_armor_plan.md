@@ -1511,8 +1511,8 @@ the first section not marked DONE):
 
 | Section | Content | Status |
 |---|---|---|
-| TM.0 | Fresh full baseline on main (detached + watchdog) | pending |
-| TM.1 | BLOCKED results never ledger as durable (3 sites) + guard | pending |
+| TM.0 | Fresh full baseline on main (detached + watchdog) | **IN FLIGHT** (see below) |
+| TM.1 | BLOCKED results never ledger as durable (3 sites) + guard | **DONE** |
 | TM.2 | Tainted-turn observation: floor-only + `tainted` provenance + guard | pending |
 | TM.3 | Recurrence-floor taint gate + guard | pending |
 | TM.4 | Targeted INJ-006 stability batches on the tm branch | pending |
@@ -1520,3 +1520,33 @@ the first section not marked DONE):
 | TM.6 | `--compare` + per-item verdicts + ship/remove decisions | pending |
 
 *(findings per section appended below as they complete)*
+
+**TM.0 — LAUNCHED (2026-07-15 08:14).** Detached full run from main
+368a56f (410c539 + the leg-opening doc commit, non-model-visible), PID
+23892, log `results\launch_logs\tm_baseline_2026-07-15_0814.out.log`,
+383 items collected, clean start, err empty. Watchdog detached alongside
+(PID 29332, `watchdog_tm_baseline.log`). Expected stamp
+`2026-07-15_0814`; expect ~2.5–3.5 h wall.
+
+**TM.1 — DONE (2026-07-15, tm branch 2d4572f; worktree ..\FRIDAY-tm).**
+`Engine._write_landed()` — a result starting `ERROR` OR `BLOCKED` never
+enters a durable-write ledger — applied at all three sites: the pass's
+own writes (old engine.py:2956), the commitment backstop (:3002), and
+the `writes` filter over the main turn's `tool_log` (:2836; entries
+without a recorded result stay trusted — only tool_log feeds it and it
+always records one). `BLOCKED` has exactly ONE producer (`_run_tool`'s
+taint-decline path, engine.py:1749 — verified by grep), so the prefix
+check is grounded. Consequences by design: the "ALREADY SAVED" note
+stops lying after a declined write (the pass may re-attempt; the gate
+blocks it again), and a fully-declined tainted turn hands
+`record_from_pass` an EMPTY ledger → no observation → no brain commit →
+INJ-006's fingerprint holds deterministically. Guards **MEM-015**
+(declined pass-write: no observation, HEAD unmoved, gate fired),
+**MEM-015b** (contrast: same write Jack-APPROVED still ledgers + records
+its observation — the filter keys on the BLOCK, not on taint),
+**MEM-016** (BLOCKED main-turn write: pass told "NOTHING was actually
+saved", declined path never listed as saved, no observation; ERROR
+filtered same). New file `tests\pillar1\test_taint_memory.py`, scripted
+model driving the REAL `memory_pass`, asserting the brain repo HEAD
+directly — the exact INJ-006 fingerprint. `--quick` **297/297**
+(294 + 3).
