@@ -2185,5 +2185,20 @@ captured failing with attributed anatomy; next = CN.1 (+ CN.1b).
   (memory pass = same tool surface). MRG-005 drives it through the
   registry, asserts the backslash dodge, existing-note appends, and
   inbox/ redirect all behave.
-- Conversion batches (GT-C10 ×2 + GT-C9 ×1, detached driver PID
-  22724, logs `cn1_gtc{9,10}_v*.all.log`): results below.
+- **Conversion batches: NOT CONVERTED YET — and the attribution is the
+  leg's most valuable measurement so far.** GT-C10 re-asked 'which
+  one'/'which project' in 3/3 post-CN.1 batches and GT-C9 still ends
+  unmerged. A new LOCKED structural check (`operand-hint-rode`, cn
+  fecaf48) settles WHERE it fails: **the operand directive RODE
+  GT-C10's T1 and the 14B re-asked anyway** — CN.1's code holds
+  (resolver + engine wiring proven in-run), the residual is MODEL
+  OBEDIENCE of a mid-block directive. Same failure the offer ledger
+  already solved by placement: its acceptance directive rides LAST
+  ("the max-obedience slot ... outranks the re-ask habit",
+  engine.py:2527). **Measured requirement for CN.2: the pending-task
+  status/execute directive rides the END of the referent block.**
+  Turn anatomy also confirmed CN.2's whole reason to exist: GT-C9 T2
+  carries the VERB but the filter lived in T1 (zero candidates → no
+  hint), T5/GT-C10-T2 carry the NAMES but no verb (old hints ride) —
+  intent and operands never co-occur in one message after T1; only
+  durable state closes that.
