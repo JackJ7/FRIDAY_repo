@@ -651,6 +651,20 @@ def not_narration_terminated(status: str) -> Check:
     return Check("not-narration-terminated", status, _fn)
 
 
+def operand_hint_rode(status: str) -> Check:
+    """LOCKED structural guard (CN.1): the ENGINE injected the merge-operand
+    directive this turn — deterministic resolver+wiring truth, independent of
+    whether the model then obeys it. Splits code-vs-model attribution: if this
+    passes while the reply still re-asks, CN.1's code held and the failure is
+    an obedience gap (a CN.2 directive-placement concern), not a resolver one."""
+    def _fn(ctx):
+        hint = getattr(ctx.engine, "_entity_hint", "") or ""
+        ok = "merge CANDIDATES" in hint
+        return ok, ("operand directive rode the referent block" if ok
+                    else f"operand directive did NOT ride (hint={hint[:120]!r})")
+    return Check("operand-hint-rode", status, _fn)
+
+
 def merged_on_disk(dup_notes, status: str) -> Check:
     """Disk-truth conversion metric: every non-survivor duplicate note carries
     the '- **Status:** merged into' line that merge_projects writes. Keys on
@@ -696,7 +710,8 @@ def test_gt_c9_fuzzy_consolidation_executes(sandbox, detail):
         Turn("I've noticed we have a few duplicate projects for the flux "
              "beam work. Please consolidate all the projects with flux in "
              "the name.",
-             guard + [surfaces_at_least(
+             guard + [operand_hint_rode(LOCKED),          # CN.1 wiring truth
+                      surfaces_at_least(
                           ["fluxbeam", "flux beam tool", "flux beam v2",
                            "flux_beam"], 2, "surfaces-duplicates", TARGET),
                       not_narration_terminated(TARGET),
@@ -748,7 +763,8 @@ def test_gt_c10_exact_pair_merge(sandbox, detail):
         Turn("Please merge these two duplicate projects into one: 'Flux "
              "Beam Tool' (note projects/flux_beam_tool.md) and 'Flux Beam "
              "V2' (note projects/flux_beam_v2.md). They're the same project.",
-             guard + [no_which_slug_reask(LOCKED),          # capture-LOCKED (CN.1)
+             guard + [operand_hint_rode(LOCKED),            # CN.1 wiring truth
+                      no_which_slug_reask(LOCKED),          # capture-LOCKED (CN.1)
                       not_narration_terminated(TARGET),
                       english_only(TARGET)]),
         Turn("Keep Flux Beam Tool as the survivor. Go ahead.",
