@@ -575,7 +575,9 @@ class Engine:
             if not reply.tool_calls:
                 # The model may have written a tool call as TEXT instead of
                 # calling it (a qwen quirk that silently drops the action).
-                reply.tool_calls = self._recover_tool_calls(reply.content)
+                # bare=True: the main turn is Shape D's ONE licensed surface.
+                reply.tool_calls = self._recover_tool_calls(reply.content,
+                                                            bare=True)
                 if not reply.tool_calls:
                     # Genuinely a final text answer. A clean stream flushes
                     # its held tail now; a tripped one stays withheld — the
@@ -1543,7 +1545,7 @@ class Engine:
             # Never let end-of-session bookkeeping surface at shutdown.
             return None
 
-    def _recover_tool_calls(self, content: str) -> list:
+    def _recover_tool_calls(self, content: str, bare: bool = False) -> list:
         """Recover tool calls the model wrote as TEXT instead of using the
         function-calling channel. qwen intermittently narrates a call with an
         EMPTY tool_calls list — silently losing the action (a stated fact never
@@ -1566,6 +1568,13 @@ class Engine:
         We parse all four and run them for real. Only invoked when the model
         made NO real tool call, and only for REGISTERED tool names, so ordinary
         prose can't trigger a spurious action. Returns tool_calls-shaped dicts.
+
+        `bare` scopes Shape D to the MAIN turn loop only (its spec, the
+        CFG-007 mode). The other recovery consumers — the memory pass and the
+        calc-vote helper — keep bare=False: they run inside their own loops,
+        where a bare-name recovery would RESUME the loop on mere narration,
+        and recovery matches the FULL registry rather than the restricted
+        toolset those loops actually offer the model.
         """
         if not content:
             return []
@@ -1615,7 +1624,7 @@ class Engine:
 
         # Shape D: intent-verb + bare tool name in prose ("Running
         # read_own_config to check..."). Guarded four ways — see docstring.
-        if not out:
+        if bare and not out:
             for m in self._SHAPE_D_INTENT.finditer(content):
                 name = m.group(1).lower()
                 tool = self.registry._tools.get(name)

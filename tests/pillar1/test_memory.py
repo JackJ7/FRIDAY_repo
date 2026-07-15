@@ -280,26 +280,37 @@ def test_recover_bare_name_prose(sandbox):
     eng = sandbox.service.engine
 
     # The exact CFG-007 narration shape — recovered with empty args.
-    rec = eng._recover_tool_calls("Running read_own_config to check the settings...")
+    rec = eng._recover_tool_calls(
+        "Running read_own_config to check the settings...", bare=True)
     assert rec == [{"function": {"name": "read_own_config", "arguments": {}}}]
     # Common variants: backticked name, 'let me check', 'I'll use'.
-    assert eng._recover_tool_calls("Let me check `read_own_config` first.")[0][
+    assert eng._recover_tool_calls("Let me check `read_own_config` first.",
+                                   bare=True)[0][
         "function"]["name"] == "read_own_config"
-    assert eng._recover_tool_calls("I'll use read_own_config for that.")[0][
+    assert eng._recover_tool_calls("I'll use read_own_config for that.",
+                                   bare=True)[0][
         "function"]["name"] == "read_own_config"
 
+    # Guard 0 — Shape D is scoped to the MAIN turn (bare=True): the default
+    # used by the memory pass and calc-vote helper never bare-recovers, so
+    # narration inside those loops can't resume them or reach tools outside
+    # their offered set.
+    assert eng._recover_tool_calls(
+        "Running read_own_config to check the settings...") == []
     # Guard 1 — a bare MENTION without an intent verb never fires.
     assert eng._recover_tool_calls(
-        "read_own_config shows every key and tier.") == []
+        "read_own_config shows every key and tier.", bare=True) == []
     # Guard 2 — required-parameter tools are never invented-args'd.
-    assert eng._recover_tool_calls("Running read_email now...") == []
+    assert eng._recover_tool_calls("Running read_email now...", bare=True) == []
     # Guard 3 — action-kind tools never auto-fire from prose.
-    assert eng._recover_tool_calls("Running change_own_config now...") == []
+    assert eng._recover_tool_calls("Running change_own_config now...",
+                                   bare=True) == []
     # Guard 4 — paren forms belong to shapes A/C, not D.
-    assert eng._recover_tool_calls("Running read_own_config() now") \
-        == eng._recover_tool_calls("read_own_config()")
+    assert eng._recover_tool_calls("Running read_own_config() now", bare=True) \
+        == eng._recover_tool_calls("read_own_config()", bare=True)
     # Unknown names stay inert even with a perfect intent verb.
-    assert eng._recover_tool_calls("Running warp_drive to check...") == []
+    assert eng._recover_tool_calls("Running warp_drive to check...",
+                                   bare=True) == []
 
     # End to end: the recovered call actually executes.
     result, _ = eng._run_tool(rec[0]["function"]["name"],
