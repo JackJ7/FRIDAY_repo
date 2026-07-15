@@ -148,6 +148,50 @@ def test_write_through(sandbox):
     assert "durability check" in sandbox.git_log(), "write returned before git commit"
 
 
+@pytest.mark.case("MEM-013", "brain auto-commit can never land in an ENCLOSING git repo (worktree incident guard)")
+def test_autocommit_never_touches_enclosing_repo(tmp_path):
+    """2026-07-15 incident: a Brain constructed on a NONEXISTENT root (a git
+    worktree checkout, where ignored runtime dirs aren't copied in) had its
+    `git init` fail silently (`git -C <missing dir> init`); a later brain
+    write's `add -A` then bound to the ENCLOSING source repo and swept the
+    session's uncommitted code edits into a bogus commit under the
+    brain-write message. Recreates exactly that shape: outer repo with a
+    dirty edit, brain root inside it that does not exist yet."""
+    def git(cwd, *a):
+        return subprocess.run(["git", "-C", str(cwd), *a],
+                              capture_output=True, text=True)
+
+    outer = tmp_path / "outer"
+    outer.mkdir()
+    git(outer, "init")
+    git(outer, "config", "user.name", "T")
+    git(outer, "config", "user.email", "t@local")
+    (outer / "source.py").write_text("x = 1\n", encoding="utf-8")
+    git(outer, "add", "-A")
+    git(outer, "commit", "-m", "outer baseline")
+    (outer / "source.py").write_text("x = 2\n", encoding="utf-8")  # dirty
+
+    class _StubLog:
+        def log(self, *a, **k):
+            pass
+
+    class _StubGate:
+        log = _StubLog()
+
+    from core.memory.brain import Brain
+    brain_root = outer / "brain"  # the incident precondition: missing dir
+    brain = Brain(brain_root, _StubGate(), autocommit=True)
+    brain.system_write("character/operating_rules.md", "# rules\n",
+                       summary="migration probe")
+
+    # The enclosing repo saw NOTHING: tip unchanged, dirty edit still dirty.
+    assert git(outer, "log", "-1", "--format=%s").stdout.strip() == "outer baseline"
+    assert "source.py" in git(outer, "status", "--porcelain").stdout
+    # And the brain became its OWN repo with the write committed to it.
+    assert (brain_root / ".git").exists()
+    assert "migration probe" in git(brain_root, "log", "-1", "--format=%s").stdout
+
+
 @pytest.mark.case("MEM-010", "one fact, one place: memory pass never leaves conflicting field values")
 @pytest.mark.model
 @pytest.mark.skill("memory_persistence")
