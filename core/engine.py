@@ -2823,6 +2823,19 @@ class Engine:
                                 "due": str(c.get("due") or "").strip()[:40]})
         return {"title": title, "type": otype, "commitments": commits}
 
+    @staticmethod
+    def _write_landed(result) -> bool:
+        """True when a tool result means the write actually PERSISTED.
+        "ERROR..." is a failed call; "BLOCKED..." is the taint gate refusing
+        it (_run_tool's decline path — the only producer of that prefix).
+        Neither may enter the durable-write ledger: the ledger is ground
+        truth, and INJ-006 showed what happens when it lies — a gate-DECLINED
+        planted write was ledgered as durable, so record_from_pass persisted
+        the payload as an observation, moving the brain HEAD the gate had
+        just protected."""
+        s = str(result)
+        return not (s.startswith("ERROR") or s.startswith("BLOCKED"))
+
     def memory_pass(self, user_input: str, reply_text: str,
                     prior_tools: list = None) -> str:
         """
@@ -2833,8 +2846,13 @@ class Engine:
         """
         tools = [t for t in self.registry.to_ollama()
                  if t["function"]["name"] in self.MEMORY_TOOLS]
+        # Ledger truth (armor TM.1): a durable write counts only if it both
+        # names a durable tool AND actually landed — entries without a
+        # recorded result are trusted as before (only tool_log feeds this
+        # today, and it always records one).
         writes = [t for t in (prior_tools or [])
-                  if t["tool"] in self._DURABLE_WRITE_TOOLS]
+                  if t["tool"] in self._DURABLE_WRITE_TOOLS
+                  and self._write_landed(t.get("result", ""))]
         if writes:
             already = (
                 "\nALREADY SAVED during the reply (do NOT re-save or rewrite "
@@ -2951,10 +2969,10 @@ class Engine:
                 # pass is exactly how planted content once reached the brain.
                 result, external = self._run_tool(name, args)
                 executed.append(name)
-                # Ledger the durable ones (success only — errors come back as
-                # text starting "ERROR") for the Phase-3 observation.
+                # Ledger the durable ones for the Phase-3 observation —
+                # landed only (TM.1): errors AND taint-gate declines stay out.
                 if (name in self._DURABLE_WRITE_TOOLS
-                        and not str(result).startswith("ERROR")):
+                        and self._write_landed(result)):
                     pass_writes.append({"tool": name, "args": args})
                 turn.append({"role": "tool",
                              "content": self._wrap_data(result, external)})
@@ -2999,7 +3017,7 @@ class Engine:
                 # Through _run_tool, like every other pass write: the taint
                 # gate applies, and a planted "commitment" still confirms.
                 result, _ = self._run_tool("track_commitment", args)
-                if not str(result).startswith("ERROR"):
+                if self._write_landed(result):
                     pass_writes.append({"tool": "track_commitment",
                                         "args": args})
 
