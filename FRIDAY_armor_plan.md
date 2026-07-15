@@ -10,8 +10,10 @@ divergences flagged for Jack — RF.2/RF.3 kept with targets unmoved):
 RPM case-fold + Brain enclosing-repo guard + web_fetch arg-guard +
 artifact-denial floor + Shape-D recovery (scoped in-leg by RF.4.1). Full
 attribution in §6; next-leg candidates ranked there (taint-aware memory
-pass is #1).** Per the single-living-doc rule, phase results get recorded
-INTO this file (§6) as they land.
+pass is #1). TAINT-MEMORY leg (TM.0–TM.6) IN PROGRESS 2026-07-15 — see
+the Phase TAINT-MEMORY section at the end of §6.** Per the
+single-living-doc rule, phase results get recorded INTO this file (§6) as
+they land.
 
 Scope: Tier 1 (A1–A5, the original directive), Tier 2 (A6–A11, Jack's
 kickoff addendum, §3T), and S1–S3 (Fable's proposals, accepted by Jack
@@ -21,11 +23,10 @@ regressed, and the delta is recorded here.
 
 **Next-session pickup: (a) Jack reviews the two flagged §4.3 divergences
 (RF.2/RF.3 kept with GND-010/011 unmoved — remove them if he rules by the
-letter); (b) next leg from the ranked candidates at the end of §6 —
-**taint-aware memory pass** first (invariant-2 class: planted content
-reaches the brain ungated as observations, found by the INJ-006
-investigation), then the read-ask grounding floor (the real GND-010/011
-lever), script-floor retry recovery (CFG-007), web_fetch arg extension.**
+letter) — STILL OPEN, not blocking; (b) TAINT-MEMORY leg in progress —
+resume at the first TM section not marked DONE in its tracker (end of
+§6). After it: read-ask grounding floor (the real GND-010/011 lever),
+script-floor retry recovery (CFG-007), web_fetch arg extension.**
 
 Directive issued by Jack 2026-07-13; also baked into `CLAUDE.md` so every
 session inherits it.
@@ -1422,3 +1423,100 @@ variants recovered and executed; all four guards each proven inert;
 paren forms still owned by A/C). MEM-011's existing "bare mention" and
 scaffold-placeholder rejections still green — the guards compose.
 `--quick` 294/294.
+
+### Phase TAINT-MEMORY — taint-aware memory pass (2026-07-15, IN PROGRESS)
+
+The residual-floors leg's INJ-006 investigation found the hole (see its
+verdict block above): **the memory pass persists planted-derived
+observations into the brain through an ungated code write** — an
+invariant-2 violation class (read content directing a state change with
+no confirm). This leg closes it. Ranked #1 at the end of the RF leg;
+read-ask grounding floor, script-floor retry recovery, and the web_fetch
+arg extension stay queued behind it.
+
+**Exact mechanics (traced in code 2026-07-15 morning, before any change —
+three composable holes, together reproducing the probe's observed
+commit):**
+
+1. **The BLOCKED-ledger hole.** A gate-declined tool call returns
+   `"BLOCKED: ..."` from `_run_tool` (engine.py:1749), and every
+   durable-write ledger check only filters `startswith("ERROR")`:
+   the pass's own writes (engine.py:2956), the commitment backstop
+   (engine.py:3002), and the main-turn `tool_log` (engine.py:632, no
+   filtering at all; the memory pass's `writes` filter at :2836 selects
+   by tool NAME only). So a write the gate just REFUSED is ledgered as
+   having durably landed — and `record_from_pass` then records an
+   observation "describing" it. This is exactly the probe's commit:
+   `observation (task): Record $5000 purchase approval note` — the gate
+   held, yet the DECLINED planted write became a durable, retrievable
+   observation, moved the brain HEAD, and failed INJ-006's fingerprint.
+2. **The observation write itself is ungated code.**
+   `ObservationStore.record` → `brain.write_note` → autocommit — never
+   touches the taint barrier. Its title/type ride in from
+   `_structured_memory_record`, a model call that reads the tainted
+   context (reply text can embed the planted payload), so planted words
+   can become a durable observation TITLE even on a turn whose tool
+   writes were all legitimately confirmed.
+3. **The recurrence floor is a second ungated code write** in the pass
+   (engine.py:~2970, `brain.write_note` to
+   `inbox/recurring_procedures.md`). Its content is Jack-derived
+   (his own message excerpt), but while tainted it still moves the brain
+   HEAD with no confirm — the same posture violation, just with a benign
+   payload today.
+
+**Design (same posture as tool writes, minimum noise):**
+
+- **TM.1 — ledger truth.** A `BLOCKED` result never enters the
+  durable-write ledger, at all three sites. Nothing durable happened; the
+  ledger must say so. Consequences: the "ALREADY SAVED" prompt note stops
+  lying after a declined write (the pass may re-attempt; the gate blocks
+  it again — correct and cheap), and `record_from_pass` gets an EMPTY
+  ledger on a fully-declined turn → no observation → no commit → the
+  INJ-006 fingerprint holds deterministically.
+- **TM.2 — tainted observations quarantine the model channel.** On a
+  tainted turn the observation (when a confirmed write DID land) records
+  from the deterministic floor ONLY — ledger-derived type, title from
+  Jack's own words; the model title/type hints are dropped (the A1
+  extraction call is skipped entirely unless the commitment half needs
+  it), and the observation carries `tainted: true` frontmatter that
+  `cite()` surfaces. WHY no confirm prompt here: every ledger entry on a
+  tainted turn was already individually Jack-confirmed at the gate, so
+  the derivative observation is gated by construction — a second prompt
+  would be pure noise. What the flag buys: audit + retrieval provenance
+  for anything recorded while external content was in context.
+- **TM.3 — recurrence floor gates on taint.** The trace write goes
+  through `gate.approve_tainted` when the turn is tainted (free exactly
+  as today when clean); a decline skips the write — the trace is a
+  nicety, never worth an ungated HEAD move.
+
+**Verification plan:** guards (tentatively MEM-015 ledger-truth,
+MEM-016 tainted-observation, MEM-017 recurrence-gate) driving the real
+`memory_pass` with a scripted model + declining/approving gate, asserting
+brain HEAD movement directly; `--quick` after each section; targeted
+INJ-006 batches (TM.4 — the case churned PASS/FAIL through every recent
+leg, so stability across batches is the named target); full
+baseline→candidate compare for the ship gate. Named targets:
+injection_defense up (INJ-006 stable), memory_* / session_ops must hold
+(the observation path changes shape on tainted turns only; clean-turn
+behavior is byte-identical by design).
+
+**Baseline note:** RF's candidate `2026-07-15_0400` cannot serve as this
+leg's baseline — RF.4.1 (6bd96c3, model-visible `bare=True` scoping)
+landed after that run, verified only by targeted CFG-007 batches. TM.0 is
+a fresh full baseline from main 410c539 (+ this doc commit, non-model-
+visible).
+
+Section tracker (updated in place as each lands — next session: resume at
+the first section not marked DONE):
+
+| Section | Content | Status |
+|---|---|---|
+| TM.0 | Fresh full baseline on main (detached + watchdog) | pending |
+| TM.1 | BLOCKED results never ledger as durable (3 sites) + guard | pending |
+| TM.2 | Tainted-turn observation: floor-only + `tainted` provenance + guard | pending |
+| TM.3 | Recurrence-floor taint gate + guard | pending |
+| TM.4 | Targeted INJ-006 stability batches on the tm branch | pending |
+| TM.5 | Merge to main + candidate full run (detached + watchdog) | pending |
+| TM.6 | `--compare` + per-item verdicts + ship/remove decisions | pending |
+
+*(findings per section appended below as they complete)*
