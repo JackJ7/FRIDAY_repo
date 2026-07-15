@@ -1,13 +1,13 @@
 # FRIDAY armor plan — build the suit, not the person
 
-**Status: EXECUTING — §4 harness BUILT, A0 + A6+A7+S1 + A1 legs COMPLETE.
-A1 (2026-07-14, run 0039): SHIP GATE MET after one in-leg removal — F2
-ANSWER floor SHIPPED (quant_math 0.043→0.870), F1 gate fix SHIPPED
-(injection +0.108), F4 salience wiring GATE-FAILED and REVERTED
-(armor-caused email 0.5→0.0, root-caused to a check_email re-poll loop),
-A6 voting measured NO-SIGNAL by ablation and SHIPPED DISABLED. Full
-attribution in §6.** Per the single-living-doc rule, phase results get
-recorded INTO this file (§6) as they land.
+**Status: EXECUTING — §4 harness BUILT, A0 + A6+A7+S1 + A1 + FLOORS legs
+COMPLETE. FLOORS (2026-07-15, candidate 1339 + clean recheck 2244): SHIP
+GATE MET — date-denial floor SHIPPED (calendar 0.45→1.00), S1.1 stream
+vetting SHIPPED (email +0.20, CFG-007 trade accepted), empty-reply floor
+SHIPPED with in-leg EMP-004 carve-out (b3d5aee, verified by recheck 2244).
+Full attribution in §6. NOW IN FLIGHT: the RESIDUAL-FLOORS leg (RF.0–RF.6,
+§6 bottom).** Per the single-living-doc rule, phase results get recorded
+INTO this file (§6) as they land.
 
 Scope: Tier 1 (A1–A5, the original directive), Tier 2 (A6–A11, Jack's
 kickoff addendum, §3T), and S1–S3 (Fable's proposals, accepted by Jack
@@ -15,12 +15,12 @@ kickoff addendum, §3T), and S1–S3 (Fable's proposals, accepted by Jack
 ships only when the scorecard shows the targeted skill moved, nothing else
 regressed, and the delta is recorded here.
 
-**Next-session pickup: the FLOORS leg — date-floor denial patch (GT-B has
-now hit the hole on three runs; GT-C1 same), S1.1 hop vetting, and the
-empty-reply floor (all three speced in §6, Phase A1 section) as one scoped
-leg with one full-run compare. Its baseline must be a fresh POST-F-ENV1
-full run (deep cases now run deepseek-r1:14b — 0039 is the last pre-F-ENV1
-stamp; see the comparability note in §6).**
+**Next-session pickup: the RESIDUAL-FLOORS leg (started 2026-07-15, §6
+bottom — resume at the first RF section not marked DONE): RPM case-fold in
+`normalize_unit`, GND-010 web_fetch local-path arg-guard, GND-011
+artifact-denial floor, CFG-007 Shape-D recovery (zero-required-arg tools
+only). All four root-caused in §6; one fresh baseline + one candidate
+full-run compare, remove-on-fail per item.**
 
 Directive issued by Jack 2026-07-13; also baked into `CLAUDE.md` so every
 session inherits it.
@@ -1122,3 +1122,28 @@ stream vetting + empty-reply floor (with EMP-004 carve-out).**
     built, restrict it to zero-required-argument tools (read_own_config
     qualifies) or an equally explicit safe pattern; never generalize it
     to every registered tool.
+
+### Phase RESIDUAL-FLOORS — RPM case-fold + GND-010 arg-guard + GND-011
+artifact-denial + CFG-007 Shape-D (2026-07-15, IN PROGRESS)
+
+All four items were root-caused during the FLOORS leg (sections above);
+this leg implements them as one scoped compare. Same §4.3 gate:
+targeted skills up (quant_math GOLD-gear-02, thinking_skills GND-010/011,
+project_ops CFG-007), nothing else down unattributed, remove-on-fail
+per item. Build happens on a branch in a worktree while the baseline
+flies; `--quick` (code-only) after every section per the concurrency rule.
+
+Section tracker (updated in place as each lands — next session: resume at
+the first section not marked DONE):
+
+| Section | Content | Status |
+|---|---|---|
+| RF.0 | Fresh full baseline on main b6647f5 (detached + watchdog) | **IN FLIGHT** |
+| RF.1 | `normalize_unit` case-fold for known unit spellings (core/canon.py) + guard | pending |
+| RF.2 | GND-010: web_fetch local-path/non-http arg-guard (pre-exec reroute or corrective hint) + guard | pending |
+| RF.3 | GND-011: artifact-denial floor (denial-near-referent + one session artifact → re-ground + regenerate; date-denial shape) + guard | pending |
+| RF.4 | CFG-007: Shape-D tool-call recovery, RESTRICTED to zero-required-argument tools + guard | pending |
+| RF.5 | Merge to main + candidate full run (detached + watchdog) | pending |
+| RF.6 | `--compare` + per-item verdicts recorded here + ship/remove decisions | pending |
+
+*(findings per section appended below as they complete)*
