@@ -1596,3 +1596,172 @@ remaining ungated brain-write path: tool writes gate at `_run_tool`, the
 observation ledger only holds gate-approved writes, the trace floor
 gates, and the pass's declined turns produce zero brain commits.
 `--quick` **299/299** (294 + 5 TM guards).
+
+### Phase CONSOLIDATE — multi-turn merge state + identifier grounding
+### (QUEUED 2026-07-15, opened from a live F-graded transcript)
+
+**Trigger.** A live consolidation conversation (2026-07-15, graded F by
+Jack): asked to merge the duplicate "Claude Code Upgrade(s)" projects,
+FRIDAY burned eight turns on fabricated project names, lost the standing
+instruction three times, asked redundant questions, and **never called
+`merge_projects` once** — despite being one deterministically-resolvable
+call away for the entire conversation. Every code-level component held:
+`list_projects`/`resolve_project`/`merge_projects` validate their inputs
+(`_resolve_exact` would have refused every fabricated name), the
+consolidate_projects playbook prescribes the exact right flow, and the
+final turn's pasted titles resolve exactly (`_norm` keeps
+"claudecodeupgrade" ≠ "claudecodeupgrades"). Every failure was in the
+free-text orchestration layer ABOVE the tools — plus one case of armor
+friendly fire (mechanics 4 below).
+
+**Traced mechanics (from the transcript against current code, 2026-07-15
+— re-verify line refs at leg start, TM merge will shift them):**
+
+1. **Narration-terminated internal read.** Turn 1's reply ended "Let me
+   list your projects now." — turn over, no list surfaced. The CFG-007 /
+   Shape-D family again, this time on an INTERNAL tool in live chat.
+   RF.4.1 scoped bare-recovery to the main turn; whether it failed to
+   fire here or the tool ran un-voiced needs a probe (CN.4).
+2. **No durable task state.** Jack stated the consolidation intent three
+   times ("consolidate all projects related to claude code", "merge all
+   of the similar projects into one", the exact pasted pair) and FRIDAY
+   re-asked "what would you like" twice and generic-clarified once
+   ("Could you specify which project's folder..."). The ONLY cross-turn
+   intent carrier is the offer ledger (engine.py:443, :1300) and it
+   cannot carry this: one-turn life, arms only on FRIDAY's OWN offers
+   (`_offer_in_reply`), fires only on BARE affirmatives
+   (`_is_bare_affirmative`, ≤40 chars, zero residue). "Yes please, merge
+   all of the similar projects into one" and "Ok, please update the
+   project folder" both leave residue → no directive — and neither was
+   FRIDAY's offer anyway. Jack's standing instruction has NO ledger, so
+   every turn re-derives intent from raw history and the 14B drops it.
+3. **Fabricated identifiers in free text.** The proposal named
+   'claude-code-updates' (survivor) plus 'claude-code-fixes' and
+   'claude-code-enhancements' — none exist. A later turn invented the
+   slug 'claudecodeupgrade' — which is exactly
+   `_norm("Claude Code Upgrade")`: the model surfaced a normalized
+   COMPARISON form as if it were a distinct on-disk project, then asked
+   Jack to disambiguate between a project and its own normalization.
+   Also confabulated annotations ("(misspelled differently)") on real
+   entries. The tools would have refused all of it — but the
+   conversational surface lied, Jack approved a merge of nonexistent
+   projects, and two turns burned recovering. NOTHING validates
+   reply-named project identifiers against `resolver.projects()`; and
+   had `_offer_in_reply` armed on that proposal, the accepted-offer
+   directive would have QUOTED the fabricated names back as an
+   instruction (the ledger stores raw model prose, ungrounded).
+4. **Armor friendly fire — `hint_for`'s "many" branch is intent-blind.**
+   On the final turn Jack pasted BOTH exact titles + folders. Both
+   projects containment-match at 1.0 → `resolve_one` → "many" → the
+   injected hint commands "ASK Jack which one he means before acting (do
+   not guess)" (project_resolver.py:251). On a MERGE turn, multiple
+   strong matches are the operand set, not ambiguity — the hint
+   instructed the exact observed failure. The playbook's step 1 ("that
+   free text is already resolved for you in context") points the model
+   at a hint that was actively wrong for this verb.
+5. **Orchestration left to the model.** Filter-by-name → propose
+   survivor → confirm → `merge_projects` is arithmetic (CLAUDE.md:
+   "don't make the model do what code can do"); today the only thing
+   holding that sequence across turns is a prose playbook, and the 14B
+   cannot keep it. Calendar-first (coherence Phase 2) is the precedent:
+   the deterministic part of the flow belongs in code.
+
+**Design (four floors, minimum noise — clean single-project turns and
+the golden suite byte-identical by design):**
+
+- **CN.1 — merge-intent operand hint.** A deterministic intent test
+  (verb vocabulary: merge / consolidate / combine / make ... one /
+  de-dup; shared with CN.2) switches `hint_for`'s "many" branch: on a
+  merge-intent turn, multiple strong matches inject an OPERAND directive
+  — "these N projects all match and are the merge candidates: <exact
+  titles + slugs + folders>. Propose ONE survivor from THIS list
+  verbatim and call merge_projects on Jack's confirm. Do not create, do
+  not ask which." Non-merge turns keep today's ask-which behavior
+  unchanged.
+- **CN.2 — pending-consolidation ledger (durable task state).** Not a
+  general planner — one verb, same posture as the offer ledger but fixed
+  where it failed: armed by JACK's message (the intent test), carrying
+  STRUCTURED state (`{filter text, resolved candidate slugs, proposed
+  survivor, turn armed}`), persisting across turns until executed /
+  cancelled / superseded (bounded expiry, e.g. 6 turns or a new
+  resolved-project topic). While pending, a deterministic status line
+  rides the referent block each turn: candidates by real slug, survivor
+  confirmed-or-not, and the exact `merge_projects(target=...,
+  duplicates=[...])` call to make on Jack's go. Affirmative-PREFIXED
+  messages ("Ok, please ...", "Yes please, merge ...") resolve against
+  the pending task in code — the residue rule stays for unrelated
+  offers, but a pending task + leading affirmative + no NEW resolvable
+  referent = proceed directive, not a re-ask. Survivor default picked in
+  code (note+folder present, most recent activity), model only relays
+  the confirm question. ESCALATION (held back unless CN.5 batches show
+  the 14B still fumbles the exact-args call): engine executes
+  `merge_projects` itself on the confirmed survivor, calendar-first
+  posture — the gate still confirms the file-move batch either way, so
+  invariant 3 holds in both shapes.
+- **CN.3 — project-identifier grounding floor (fabrication barrier).**
+  Citation-enforcement sibling, post-generation, deliberately NARROW
+  (trigger only when project context is live: pending CN.2 task, or
+  list_projects/resolve_project ran this turn, or the entity hint
+  fired). Scan the reply for project-identifier-shaped tokens (quoted
+  names / slug-like tokens adjacent to project verbs: survivor, fold,
+  merge, keep, project); normalize each via `_norm` and check membership
+  against `resolver.projects()` surfaces. A reply that proposes action
+  on a NONEXISTENT identifier is held (streaming-preview guard already
+  gives us the hold), and retried once with a corrective directive
+  naming the real set; a second miss falls back to surfacing the
+  deterministic `list_projects` output verbatim plus an honest "I
+  mis-named these" line. Ordering: this floor runs BEFORE the offer
+  ledger arms, so a fabricated proposal can never become an accepted
+  offer's quoted text.
+- **CN.4 — narration-terminated internal-read probe (probe first, fix
+  only if real).** Reproduce turn 1's shape live ("consolidate X" →
+  reply ends "Let me list..."): determine whether RF.4.1's main-turn
+  bare-recovery fails to fire on internal-tool narration or fires and
+  returns empty (echoes the CFG-007 recovery-return finding, obs 1930).
+  Fix rides whatever the probe shows; scoped to end-of-reply
+  first-person-future narration of INTERNAL reads only.
+
+**Verification plan:** capture the live transcript as multi-turn golden
+cases FIRST and watch them fail on baseline — **GT-C9** (the full
+eight-turn shape: fuzzy filter "anything with <word> in the name" over
+3+ planted near-duplicate projects, qualified-affirmative follow-ups,
+generic "ok, please update the project folder" continuation; passes only
+when `merge_projects` actually runs and no identifier outside the
+planted set is ever named) and **GT-C10** (exact pair pasted with
+folders → merge proceeds with at most the survivor-confirm question,
+zero which-slug re-asks). THROWAWAY project names only (CLAUDE.md rule —
+the live transcript's real names must NOT enter test prompts; GT-C5's
+planted trio is the pattern). Guards **MRG-001** (operand hint: merge
+intent + two strong matches → operand directive injected, ask-which
+suppressed; non-merge turn unchanged), **MRG-002** (pending ledger:
+arm/persist/execute across a qualified affirmative; expiry; no arm on
+bare questions), **MRG-003** (grounding floor: fabricated-slug reply
+held + retried + falls back to real listing; clean reply with real slugs
+untouched; ledger never arms on a held reply), **MRG-004** (per CN.4
+probe outcome). Named targets: GT-C9/GT-C10 pass, GT-C3/C4/C5/C6 and the
+memory_* / session_ops / injection families HOLD (CN.1–CN.3 fire only on
+merge-intent or project-context turns; everything else is byte-identical
+by design). Full baseline→candidate compare for the ship gate, per §4.3.
+
+**Sequencing + baseline.** QUEUED behind TAINT-MEMORY — TM.4–TM.6 are
+open and TM.0 is in flight, and every CN change is model-visible (frozen
+code rule: nothing lands until the TM leg closes). TM.5's candidate run
+can serve as this leg's baseline IF no model-visible change lands
+between TM.5 and CN start; otherwise open with a fresh CN.0 full run.
+Ranking: proposed as **next leg after TM**, ahead of the previously
+ranked read-ask grounding floor — this is live-user friction (an
+F-graded conversation, the armor plan's whole point), and CN.2/CN.3
+overlap the read-ask family (question-instead-of-action) so that leg
+shrinks behind it. Jack to confirm the ranking before CN.0 launches.
+
+Section tracker (updated in place as each lands):
+
+| Section | Content | Status |
+|---|---|---|
+| CN.0 | Baseline (reuse TM.5 candidate if clean; else fresh run) + GT-C9/GT-C10 capture failing on baseline | queued |
+| CN.1 | Merge-intent operand hint (hint_for "many" branch, intent-aware) + MRG-001 | queued |
+| CN.2 | Pending-consolidation ledger (durable, structured, affirmative-prefix resolution) + MRG-002 | queued |
+| CN.3 | Project-identifier grounding floor (post-gen, held+retry, pre-ledger) + MRG-003 | queued |
+| CN.4 | Narration-terminated internal-read probe → scoped fix + MRG-004 | queued |
+| CN.5 | Merge + candidate full run (detached + watchdog) | queued |
+| CN.6 | `--compare` + per-item verdicts + ship/remove decisions | queued |
