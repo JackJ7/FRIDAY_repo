@@ -1873,7 +1873,40 @@ Ranking: proposed as **next leg after TM**, ahead of the previously
 ranked read-ask grounding floor — this is live-user friction (an
 F-graded conversation, the armor plan's whole point), and CN.2/CN.3
 overlap the read-ask family (question-instead-of-action) so that leg
-shrinks behind it. Jack to confirm the ranking before CN.0 launches.
+shrinks behind it. **Ranking CONFIRMED by Jack (2026-07-15, ~11:25):
+CONSOLIDATE is the next leg after TM closes; read-ask stays queued
+behind it.** CN.0 launches once TM.6 is recorded and the session is
+idle (frozen-code rule holds until then; nothing model-visible may land
+between TM.5's 77c4491 and CN start or the 1118 baseline-reuse is
+void).
+
+**CN prep (2026-07-15 ~11:30, done while TM.5's candidate was in
+flight — nothing model-visible touched, frozen-code rule intact):**
+
+- Line refs RE-VERIFIED on post-TM-merge main 77c4491: `hint_for`
+  "many" branch project_resolver.py:251-257 (`resolve_one` :213-227,
+  `_norm` :42 — untouched by TM); offer-ledger arm engine.py:452-454,
+  fire :1313, `_offer_in_reply` :2541, `_is_bare_affirmative` :2557
+  (≤40-char + zero-residue rule confirmed in code — both transcript
+  affirmatives still classify as residue, exactly as traced),
+  `_AFFIRMATIVE_WORDS` :2521, `_OFFER_ACCEPTED_DIRECTIVE` :2530
+  (stores raw model prose — confirms CN.3's must-run-BEFORE-the-ledger
+  ordering).
+- CN.2's status line quotes a real signature: `merge_projects(target:
+  str, duplicates: list)` — core/tools/projects.py:291, registered
+  :437, kind "action"; deterministic tool tests already exist
+  (tests/pillar1/test_merge_projects.py) — CN changes no tool code.
+- GT-C9/GT-C10 harness pattern located: model on GT-C5
+  (tests/pillar1/test_notes10.py:362-396 — `_seed_note` planted trio +
+  `Turn`/`replay` + `no_new_project` LOCKED + TARGET behaviorals). Use
+  a FRESH throwaway family (e.g. fluxbeam / flux_beam_tool /
+  flux_beam_v2) — not GT-C5's orbit-sync trio (keep the cases
+  independent), never real project names (CLAUDE.md rule). GT-C9 =
+  the eight-turn fuzzy-filter shape ("anything with flux in the
+  name"), LOCKED only when `merge_projects` actually runs and no
+  identifier outside the planted set is ever named; GT-C10 = exact
+  pair + folders pasted → at most the survivor-confirm question, zero
+  which-slug re-asks.
 
 Section tracker (updated in place as each lands):
 
