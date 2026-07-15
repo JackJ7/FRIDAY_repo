@@ -1138,8 +1138,8 @@ the first section not marked DONE):
 
 | Section | Content | Status |
 |---|---|---|
-| RF.0 | Fresh full baseline on main b6647f5 (detached + watchdog) | **IN FLIGHT** |
-| RF.1 | `normalize_unit` case-fold for known unit spellings (core/canon.py) + guard | pending |
+| RF.0 | Fresh full baseline on main 7954e90 (detached + watchdog) | **IN FLIGHT** |
+| RF.1 | `normalize_unit` case-fold for known unit spellings (core/canon.py) + guard | **DONE** (+RF.1b) |
 | RF.2 | GND-010: web_fetch local-path/non-http arg-guard (pre-exec reroute or corrective hint) + guard | pending |
 | RF.3 | GND-011: artifact-denial floor (denial-near-referent + one session artifact → re-ground + regenerate; date-denial shape) + guard | pending |
 | RF.4 | CFG-007: Shape-D tool-call recovery, RESTRICTED to zero-required-argument tools + guard | pending |
@@ -1147,3 +1147,44 @@ the first section not marked DONE):
 | RF.6 | `--compare` + per-item verdicts recorded here + ship/remove decisions | pending |
 
 *(findings per section appended below as they complete)*
+
+**RF.0 — baseline launched 2026-07-15 01:29** (detached, suite PID 3932,
+watchdog PID 24588, log `results\launch_logs\baseline_rf_2026-07-15_0129.out.log`),
+from clean main **7954e90**, 375 cases. Healthy at launch + spot checks.
+
+**RF.1 — DONE (2026-07-15, rf branch 517e161; worktree ..\FRIDAY-rf).**
+`normalize_unit` (core/canon.py) now case-folds a unit spelling ONLY when
+Pint would crash on it as written: exact-table hit first, then a
+case-insensitive match against the same table gated on
+`ureg.Unit(raw)` raising. The gate means the rescue can only fix spellings
+that today score 0 by extraction crash (`RPM` → `rpm`, `PSI`, `WH`); it can
+never reinterpret a spelling Pint accepts (`mW` ≠ `MW` stays untouched), and
+ambiguous folds are poisoned at table-build time. The fold table derives
+from the one `_UNIT_TABLE` (now module-level) — one source, zero drift.
+Guard **CHK-006** locks the exact GOLD-gear-02 failure ("ANSWER: 200 RPM"
+grades 200.0) plus the never-reinterpret cases. `--quick` 287/287.
+Engine-side note: the ANSWER floor's canonicalization shares this function,
+so the fix is model-visible product code — verified by the RF.5 candidate
+run, with GOLD-gear-02 as the named target.
+
+**RF.1b — DONE (2026-07-15, rf branch 65c3b9f) — INCIDENT found and fixed
+in-leg: brain auto-commit could land in an ENCLOSING git repo.** During
+RF.1's first `--quick` in the fresh worktree (runtime dirs not yet copied
+in), APP-004 booted the real `friday_app.py`; `Brain.__init__` on the
+NONEXISTENT `brain\` had `git -C <missing dir> init` fail SILENTLY
+(output captured, never checked), and the operating-rules migration's
+auto-commit then ran `add -A` which bound to the enclosing rf worktree
+repo — sweeping the session's uncommitted RF.1 edits into a bogus commit
+under the brain-write message and Jack's global git identity. (History
+repaired by soft-reset + recommit; nothing lost.) Why never seen before:
+tmp-dir sandbox brains have no enclosing repo (git errors away silently)
+and the main tree's live brain has its own `.git` — the hole only opens in
+a worktree, which is exactly where every armor leg builds. Fix in
+`core/memory/brain.py`: `_ensure_repo` mkdirs the root before init;
+`_commit` refuses (one re-init attempt, then loud RuntimeError) unless
+`rev-parse --show-toplevel` IS the brain root. Guard **MEM-013** recreates
+the incident shape (outer repo + dirty edit + missing brain root) and
+asserts the outer repo is untouched. `--quick` 288/288. Run-ops rule for
+future legs: copy `brain\`/`data\`/`friday_documents\` into a worktree
+BEFORE its first suite invocation (APP-004 boots the real app from
+whatever tree it runs in).
