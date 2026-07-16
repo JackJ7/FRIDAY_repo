@@ -110,6 +110,14 @@ class FridayApp:
         def set_dnd(self, value):
             return self._app.service.set_dnd(bool(value))
 
+        # ----- Controls panel (jarvis plan J0) -----
+
+        def get_toggles(self):
+            return self._app.service.get_toggles()
+
+        def set_toggle(self, key, value):
+            return self._app.service.set_toggle(key, value)
+
         def confirm_commitment(self, cid):
             self._app.service.confirm_commitment(cid)
 

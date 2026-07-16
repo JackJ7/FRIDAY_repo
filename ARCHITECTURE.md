@@ -439,6 +439,24 @@ core\accountability.py  panel data ("Needs You"), staleness scan (respects
                      project status), DND + ping pacing, briefing schedule.
                      State file: data\app_state.json.
 
+core\toggles.py      ToggleRegistry (jarvis plan J0): every user-facing
+                     switch is DECLARED in code (key, bool|enum kind, label,
+                     default, owner on_change callback) and rendered by the
+                     UI's Controls panel (settings modal, Jack chip) from
+                     Service.get_toggles() — a new leg adds a switch by
+                     registering it; the panel needs zero edits. Values
+                     persist in data\toggles.json (fsync write-through, the
+                     app_state pattern) and apply at RUNTIME via the owner
+                     callback; registration never fires the callback (owners
+                     configure themselves from register()'s return value).
+                     Deliberately NOT friday_config.yaml keys: these are
+                     JACK's UI switches, not FRIDAY self-modification, so
+                     config governance is untouched; changes land in the
+                     action log as TOGGLE lines. `dnd` is the migrated first
+                     entry (persist=False — app_state.json remains its one
+                     store; the registry is the one CONTROL path, and
+                     Service.set_dnd is a compat shim through it).
+
 core\senses\         networked DATA sources (never cognition)
   gmail_sense.py     read + draft; NO send method exists by design
   calendar_sense.py  read free; create gated by approve_outbound.
