@@ -33,6 +33,17 @@ MRG-004  the narrated-listing floor (CN.4): a reply that ENDS on
          itself — Shape D can't recover prose that names no tool). Completed
          answers, mid-reply narration, turns where tools ran, and ACTION
          narration ("let me merge them") are all untouched.
+
+MRG-003d the fabrication scan rides BARE merge-intent turns (CN.4.1): with
+         NO pending task (measured GT-C9 stamp 1654 T2 — the merge landed a
+         turn earlier and the ledger retired), a merge-flavoured message
+         whose reply quotes fabricated example names is still held and
+         retried. Before the fix the scan needed a live task/directive/hint,
+         a narrower window than the LOCKED every-turn guarantee.
+MRG-006  no REAL project name rides any tool schema (CN.4.1): the 1654 T2
+         fabrication ('Doc Ock') was lifted VERBATIM from a schema example —
+         schema text reaches every model context, live and sandbox alike, so
+         a real name there is both a fabrication seed and test contamination.
 """
 
 import pytest
@@ -383,6 +394,48 @@ def test_mrg003c_which_ask_backstop(sandbox):
         assert slug in last
     assert eng.consolidation is not None          # still pending, no survivor
     assert eng.consolidation["survivor"] is None
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("MRG-003d", "fabrication scan rides a bare merge-intent "
+                              "turn with NO pending task (the stamp-1654 T2 "
+                              "shape): fabricated example names are held and "
+                              "the clean retry is accepted")
+def test_mrg003d_merge_intent_scan_without_task(sandbox):
+    for slug in FLUX_SLUGS:
+        _plant_note(sandbox, slug)
+    eng = sandbox.service.engine
+    eng.vote_enabled = False
+    # The measured draft shape verbatim: a generic clarify whose EXAMPLE block
+    # quotes names that exist nowhere on disk (one was the then-extant tool
+    # schema's own example).
+    draft = ("To proceed I need the survivor and the projects to merge. "
+             "For example:\n- Survivor Project: 'Doc Ock'\n"
+             "- Projects to Merge: ['Project 1', 'Project 2']")
+    retry = ("Which of 'Fluxbeam', 'Flux Beam Tool' and 'Flux Beam V2' "
+             "should survive the merge?")
+    eng.model = _ScriptModel([draft, retry])
+    # This message carries merge intent but resolves ZERO candidates (measured
+    # on GT-C9 T2), so no task arms — the scan must ride the intent alone.
+    reply = eng.respond("Yes please, merge all of the similar projects into one.")
+    assert eng.consolidation is None
+    assert reply.content == retry, reply.content
+    assert "Doc Ock" not in reply.content
+    assert "Project 1" not in reply.content
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("MRG-006", "no real project name rides any tool schema — "
+                             "schema text reaches every model context, and "
+                             "the 1654 T2 fabrication was a schema example "
+                             "quoted back verbatim")
+def test_mrg006_no_real_names_in_tool_schemas(sandbox):
+    import json
+    blob = json.dumps(
+        sandbox.service.engine.registry.to_ollama()).lower()
+    for real in ("doc ock", "doc_ock", "docock", "crush depth",
+                 "crush_depth", "perry", "clark"):
+        assert real not in blob, f"real project name in a tool schema: {real}"
 
 
 @pytest.mark.upgrade

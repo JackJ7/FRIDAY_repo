@@ -64,6 +64,13 @@ class Engine:
         # superseded / expired. None, or {filter, candidates, survivor,
         # turns_left}. See _consolidation_update.
         self.consolidation = None
+        # Did THIS turn's user message carry merge intent? (CN.4.1) — set every
+        # turn by _consolidation_update. The CN.3 fabrication scan must ride
+        # every merge-flavoured turn, not just pending-task turns: measured on
+        # GT-C9 stamp 1654 T2, the merge had already landed (task retired) and
+        # the follow-up "merge all of the similar projects into one" drew a
+        # clarify quoting fabricated example names with the scan dormant.
+        self._merge_intent_turn = False
         # Session compaction summary (Notes-10 Phase 2, §4): a running ≤150-word
         # digest of turns evicted by the history trim, injected at the head of
         # context so the session never loses what scrolled off. None until the
@@ -528,8 +535,11 @@ class Engine:
             # CN.3: a project-context reply may be replaced by the identifier
             # floor (fabricated name, or a naked which-ask on a pending
             # consolidation) — Jack must never watch the retracted draft.
+            # CN.4.1: the scan also rides bare merge-intent turns now, so
+            # their streams hold too.
             or self.consolidation is not None
-            or bool(consolidation_directive))
+            or bool(consolidation_directive)
+            or self._merge_intent_turn)
         live_token = None if hold_stream else on_token
 
         base = [{"role": "system", "content": self._system_prompt(extra=ref_block)}]
@@ -952,11 +962,19 @@ class Engine:
         # legitimately owes Jack, phrased right by construction.
         identifier_floor_fired = False
         _resolver = getattr(self, "project_resolver", None)
+        # CN.4.1 widened the window with _merge_intent_turn: a merge-flavoured
+        # message AFTER the task retired (GT-C9 stamp 1654 T2 — merge landed at
+        # T1, "merge all of the similar projects into one" then drew a clarify
+        # quoting 'Doc Ock'/'Project 1'/'Project 2', lifted straight from the
+        # then-extant tool-schema example) left the scan dormant while the
+        # LOCKED no-foreign-identifier guarantee covers EVERY turn. The scan
+        # must ride every turn Jack talks merges, pending task or not.
         project_context_live = (
             _resolver is not None
             and (self.consolidation is not None
                  or bool(consolidation_directive)
-                 or bool(self._entity_hint)))
+                 or bool(self._entity_hint)
+                 or self._merge_intent_turn))
         if (reply is not None and project_context_live
                 and not artifact_denial_fired and not phantom_fired):
             task = self.consolidation
@@ -2840,6 +2858,9 @@ class Engine:
         anyway; the offer-accepted directive earned the same slot the same
         way (see _OFFER_ACCEPTED_DIRECTIVE)."""
         from core.project_resolver import _norm, merge_intent
+        # Recorded BEFORE the resolver guard so the flag is turn-accurate even
+        # in a bare sandbox; the CN.3 floor separately requires a resolver.
+        self._merge_intent_turn = bool(merge_intent(user_input))
         resolver = getattr(self, "project_resolver", None)
         if resolver is None:
             return ""

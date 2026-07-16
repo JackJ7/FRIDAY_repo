@@ -125,7 +125,7 @@ write_brain.
   side-interest, paused, or a value you coin yourself when it fits better —
   means the project is retrievable knowledge only: use its content freely as
   context anywhere, but never push Jack to work on it.
-- When Jack tells you a project's standing changed ("PERRY is done, it's
+- When Jack tells you a project's standing changed ("X is done, it's
   reference now"), update the note's Status field immediately — that line is
   the authoritative record, not the conversation.
 

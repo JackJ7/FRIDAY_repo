@@ -74,7 +74,10 @@ def register_brain_tools(registry, brain, retriever, top_k: int):
     )
     registry.register(
         "read_brain",
-        "Read one full brain note by its relative path, e.g. projects/perry.md",
+        # Example paths use a placeholder slug, never a real project name:
+        # schema text rides every model context, and GT-C9 measured the 14B
+        # quoting a schema example as if it were a real project (CN.4.1).
+        "Read one full brain note by its relative path, e.g. projects/<slug>.md",
         {
             "type": "object",
             "properties": {"path": {"type": "string"}},
@@ -112,7 +115,7 @@ def register_brain_tools(registry, brain, retriever, top_k: int):
         {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Note path, e.g. projects/perry.md"},
+                "path": {"type": "string", "description": "Note path, e.g. projects/<slug>.md"},
                 "field": {"type": "string", "description": "Field name, e.g. Status"},
                 "value": {"type": "string"},
             },
