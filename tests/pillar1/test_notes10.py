@@ -24,10 +24,18 @@ own checks to LOCKED once its code barrier lands:
          progress". (Phase 8 §1 research-status floor -> LOCKED.)
   GT-C8  a note-recorded action must be framed as a record, not recited as a
          fresh first-person action. (Phase 8 §2 provenance guard — soft/TARGET.)
+  GT-C9  eight-turn fuzzy consolidation ("anything with <word> in the name")
+         must EXECUTE the merge and never name a nonexistent project.
+         (Armor CONSOLIDATE leg, from a live F-graded transcript.)
+  GT-C10 exact duplicate pair pasted -> merge proceeds with at most the
+         survivor-confirm question, zero which-slug re-asks. (Same leg.)
 
-Because every check is TARGET, record_and_assert never hard-fails these — the
-scorecard in each case's report evidence IS the Phase-0 baseline. Fill §3 of
-the plan from the target_outstanding lists these produce.
+Because every Phase-0 check started TARGET, record_and_assert never hard-failed
+the originals — the scorecard in each case's report evidence IS that baseline.
+GT-C9/GT-C10 break that pattern ON PURPOSE: their execution/fabrication checks
+are LOCKED from capture, so the cases FAIL on the pre-CONSOLIDATE baseline and
+convert when CN.1–CN.4 land — they are the leg's conversion metric (armor plan
+§4.3: the golden must fail before the armor and pass after, or the armor goes).
 """
 
 import re
@@ -519,3 +527,258 @@ def test_gt_c8_provenance_framing(sandbox, detail):
         sandbox, "(session start)", greet, greet, [],
         [_no_first_person_claim(TARGET), english_only(TARGET)])]
     record_and_assert(results, detail)
+
+
+# ===========================================================================
+# GT-C9 / GT-C10 — consolidation orchestration (armor CONSOLIDATE leg)
+# ===========================================================================
+# Captured from a live F-graded conversation (2026-07-15): asked to merge two
+# duplicate projects, FRIDAY burned eight turns fabricating project names,
+# dropping the standing instruction, and re-asking — and never called
+# merge_projects once, though every code component below her held. These two
+# goldens freeze that shape with THROWAWAY names. Their execution and
+# fabrication checks are LOCKED FROM CAPTURE (see module docstring): they fail
+# on the baseline by design and convert as CN.1–CN.4 land.
+
+FLUX_TRIO = [("fluxbeam", "Fluxbeam"),
+             ("flux_beam_tool", "Flux Beam Tool"),
+             ("flux_beam_v2", "Flux Beam V2")]
+
+# The identifiers a reply is ALLOWED to name (titles + slugs; partial
+# references like 'flux' or 'Flux Beam' clear the substring rule below).
+FLUX_SURFACES = [t for _, t in FLUX_TRIO] + [s for s, _ in FLUX_TRIO]
+
+# The standard sandbox fixtures plus the planted trio — anything else
+# appearing under projects/ is a spawned project (the GT-C5 failure class).
+FLUX_KNOWN = {"alpha_rig", "beta_probe", "gamma_arm", "delta_sled",
+              "fluxbeam", "flux_beam_tool", "flux_beam_v2"}
+
+
+def not_mentions(substrings, name: str, status: str) -> Check:
+    """Reply must NOT contain any of `substrings` — the re-ask/dodge shapes
+    the live transcript burned turns on (inverse of mentions_any)."""
+    lows = [s.lower() for s in substrings]
+    def _fn(ctx):
+        hit = next((s for s in lows if s in ctx.reply_low), None)
+        return (hit is None), (f"re-ask shape present: '{hit}'" if hit
+                               else "no re-ask shape in reply")
+    return Check(name, status, _fn)
+
+
+def no_foreign_identifier(allowed_names, status: str) -> Check:
+    """No QUOTED project identifier outside the planted set is ever named.
+
+    The live failure's fingerprint: the reply proposed 'claude-code-updates'
+    and friends — quoted, identifier-shaped, and matching NOTHING on disk —
+    and Jack approved a merge of projects that did not exist. Quoted spans are
+    the capture surface (models quote names when proposing); unquoted prose
+    fabrications are CN.3's engine-floor job, guarded deterministically by
+    MRG-003, not here. A candidate is allowed when its normalization is a
+    SUBSTRING of an allowed name's normalization ('flux', 'Flux Beam' clear;
+    a fabricated sibling like 'flux-beam-utils' does not). Word-boundary
+    lookarounds keep possessive apostrophes (Fluxbeam's) from opening a span;
+    spans with a path separator or more than four words are prose, skipped.
+    Tool/argument vocabulary is excluded: capture batch 2 showed the model
+    narrating a JSON-shaped merge plan in prose, and the plan's own quoted
+    KEYS ('action', 'merge_projects', 'source_notes'...) are not project
+    identifiers — flagging them would grade tool-call phrasing, not
+    fabrication."""
+    from core.project_resolver import _norm  # the resolver's own semantics
+    allowed_norms = {_norm(n) for n in allowed_names}
+    excluded = {"action", "merge_projects", "list_projects",
+                "resolve_project", "create_project", "add_files_to_project",
+                "write_brain", "read_brain", "search_brain", "read_file",
+                "source_notes", "target_note", "target", "duplicates",
+                "survivor", "name", "path", "content", "mode", "summary",
+                "slug", "title", "status", "folder", "note", "merged into"}
+    quoted = re.compile(
+        r"(?<![A-Za-z0-9])['\"‘“]"
+        r"([A-Za-z][A-Za-z0-9 _\-]{2,40})"
+        r"['\"’”](?![A-Za-z])")
+    def _fn(ctx):
+        foreign = []
+        for m in quoted.finditer(ctx.reply):
+            cand = m.group(1).strip()
+            if len(cand.split()) > 4:
+                continue                      # sentence-length quote, not a name
+            if cand.lower() in excluded:
+                continue                      # tool/arg vocabulary, not a name
+            trimmed = re.sub(r"^the\s+|\s+project$", "", cand,
+                             flags=re.IGNORECASE)
+            # Status-value quoting: the merge writes "- **Status:** merged
+            # into <slug>" and the model truthfully quotes the whole value
+            # ('merged into fluxbeam', GT-C9 2026-07-15_1623) — judge only
+            # the <slug> part, so a fabricated target still trips.
+            trimmed = re.sub(r"^merged into\s+", "", trimmed,
+                             flags=re.IGNORECASE)
+            n = _norm(trimmed)
+            if not n or any(n in a for a in allowed_norms):
+                continue
+            foreign.append(cand)
+        return (not foreign), (f"foreign identifier(s) quoted: {foreign}"
+                               if foreign else "every quoted name is planted")
+    return Check("no-foreign-identifier", status, _fn)
+
+
+def no_which_slug_reask(status: str) -> Check:
+    """Zero which-slug re-asks — but the survivor-confirm question is ALLOWED
+    (the pass condition is 'at most the survivor-confirm'): a which-ask that
+    carries survivor/keep/merge-into framing is the one question the flow
+    legitimately owes Jack."""
+    which_ask = re.compile(r"\bwhich (one|project|of these)\b|\bdo you mean\b",
+                           re.IGNORECASE)
+    survivor = re.compile(r"\bsurviv\w*\b|\bkeep\b|\bmerge\w* into\b|\btarget\b",
+                          re.IGNORECASE)
+    def _fn(ctx):
+        m = which_ask.search(ctx.reply)
+        if not m:
+            return True, "no which-ask at all"
+        if survivor.search(ctx.reply):
+            return True, (f"which-ask is survivor-shaped ('{m.group(0)}' with "
+                          "survivor framing) — the one allowed question")
+        return False, f"which-slug re-ask with no survivor framing: '{m.group(0)}'"
+    return Check("no-which-slug-reask", status, _fn)
+
+
+def not_narration_terminated(status: str) -> Check:
+    """The reply must not END on unfulfilled first-person-future narration
+    ("Let me list your projects now.") — the live transcript's turn 1: turn
+    over, nothing surfaced. TARGET at capture; CN.4's probe decides whether
+    the fix is a recovery gap or an un-voiced tool run."""
+    narration_end = re.compile(
+        r"(let me|i[’']ll|i will|i am going to|going to)\b[^.!?]{0,80}"
+        r"\b(list|merge|check|look|pull|fetch|get|run|consolidat)\w*"
+        r"[^.!?]{0,40}[.!…]?\s*$", re.IGNORECASE)
+    def _fn(ctx):
+        tail = ctx.reply.strip()[-160:]
+        m = narration_end.search(tail)
+        return (m is None), (f"reply ENDS on narration: ...{tail[-80:]!r}"
+                             if m else "reply does not end on unfulfilled narration")
+    return Check("not-narration-terminated", status, _fn)
+
+
+def operand_hint_rode(status: str) -> Check:
+    """LOCKED structural guard (CN.1): the ENGINE injected the merge-operand
+    directive this turn — deterministic resolver+wiring truth, independent of
+    whether the model then obeys it. Splits code-vs-model attribution: if this
+    passes while the reply still re-asks, CN.1's code held and the failure is
+    an obedience gap (a CN.2 directive-placement concern), not a resolver one."""
+    def _fn(ctx):
+        hint = getattr(ctx.engine, "_entity_hint", "") or ""
+        ok = "merge CANDIDATES" in hint
+        return ok, ("operand directive rode the referent block" if ok
+                    else f"operand directive did NOT ride (hint={hint[:120]!r})")
+    return Check("operand-hint-rode", status, _fn)
+
+
+def merged_on_disk(dup_notes, status: str) -> Check:
+    """Disk-truth conversion metric: every non-survivor duplicate note carries
+    the '- **Status:** merged into' line that merge_projects writes. Keys on
+    the note files, never on narration or on WHO made the call — under CN.2's
+    escalation branch the ENGINE may execute the merge itself, and this check
+    must be agnostic to that."""
+    def _fn(ctx):
+        unmerged = []
+        for rel in dup_notes:
+            p = ctx.sandbox.brain.root / rel
+            txt = p.read_text(encoding="utf-8") if p.exists() else ""
+            if "merged into" not in txt.lower():
+                unmerged.append(rel)
+        return (not unmerged), ("every duplicate carries merged-into status"
+                                if not unmerged else f"NOT merged: {unmerged}")
+    return Check("merged-on-disk", status, _fn)
+
+
+def _seed_flux(sandbox, trio):
+    for slug, title in trio:
+        _seed_note(sandbox, f"projects/{slug}.md",
+                   f"# {title}\n\n- **Status:** active\n\n"
+                   "Flux beam tooling (duplicate of the others).\n")
+
+
+@pytest.mark.model
+@pytest.mark.skill("project_ops")
+@pytest.mark.upgrade
+@pytest.mark.case("GT-C9", "eight-turn fuzzy consolidation ('anything with "
+                           "flux in the name') must EXECUTE the merge and "
+                           "never name a nonexistent project")
+def test_gt_c9_fuzzy_consolidation_executes(sandbox, detail):
+    # The live transcript's full shape: fuzzy filter over near-duplicates,
+    # qualified affirmatives (residue defeats today's offer ledger by design),
+    # a generic continuation, a distraction turn — the merge must still have
+    # EXECUTED by the end, with no fabricated identifier along the way.
+    _seed_flux(sandbox, FLUX_TRIO)
+    dup_notes = ["projects/flux_beam_tool.md", "projects/flux_beam_v2.md"]
+
+    guard = [no_new_project(FLUX_KNOWN, LOCKED),           # code-LOCKED (GT-C5)
+             no_foreign_identifier(FLUX_SURFACES, LOCKED)]  # capture-LOCKED (CN.3)
+    turns = [
+        Turn("I've noticed we have a few duplicate projects for the flux "
+             "beam work. Please consolidate all the projects with flux in "
+             "the name.",
+             guard + [operand_hint_rode(LOCKED),          # CN.1 wiring truth
+                      surfaces_at_least(
+                          ["fluxbeam", "flux beam tool", "flux beam v2",
+                           "flux_beam"], 2, "surfaces-duplicates", TARGET),
+                      not_narration_terminated(TARGET),
+                      english_only(TARGET)]),
+        Turn("Yes please, merge all of the similar projects into one.",
+             guard + [not_mentions(
+                          ["what would you like", "what should i do",
+                           "could you clarify what", "what do you want"],
+                          "no-intent-reask", TARGET),
+                      # CN.4: stamp 1623's T2 died on "Let's start by listing
+                      # them." with zero tools — the narrated-listing floor
+                      # must leave this turn ending on substance.
+                      not_narration_terminated(TARGET)]),
+        Turn("Ok, please update the project folder.",
+             guard + [not_mentions(
+                          ["could you specify", "please specify",
+                           "which project's folder", "which folder do you"],
+                          "no-generic-clarify", TARGET)]),
+        Turn("How's it looking?", guard),
+        Turn("The two extras are 'Flux Beam Tool' (note "
+             "projects/flux_beam_tool.md) and 'Flux Beam V2' (note "
+             "projects/flux_beam_v2.md).",
+             guard + [no_which_slug_reask(TARGET)]),
+        Turn("Keep Fluxbeam as the survivor.", guard),
+        Turn("Yes, go ahead.", guard),
+        Turn("Is it done?",
+             guard + [merged_on_disk(dup_notes, LOCKED),   # capture-LOCKED (CN.2)
+                      english_only(TARGET)]),
+    ]
+    record_and_assert(replay(sandbox, turns), detail)
+
+
+@pytest.mark.model
+@pytest.mark.skill("project_ops")
+@pytest.mark.upgrade
+@pytest.mark.case("GT-C10", "exact duplicate pair pasted -> merge proceeds "
+                            "with at most the survivor-confirm question, "
+                            "zero which-slug re-asks")
+def test_gt_c10_exact_pair_merge(sandbox, detail):
+    # The live transcript's final-turn shape, isolated: BOTH exact titles
+    # pasted. Both containment-match at 1.0 -> resolve_one says "many" ->
+    # today's hint commands "ASK which one" — on a MERGE turn the multiple
+    # matches ARE the operand set (CN.1's fix). Only the pair is seeded, so
+    # 'both match' is exact.
+    _seed_flux(sandbox, FLUX_TRIO[1:])
+    known = FLUX_KNOWN - {"fluxbeam"}
+    pair_surfaces = ["Flux Beam Tool", "Flux Beam V2",
+                     "flux_beam_tool", "flux_beam_v2"]
+
+    guard = [no_new_project(known, LOCKED),
+             no_foreign_identifier(pair_surfaces, LOCKED)]
+    turns = [
+        Turn("Please merge these two duplicate projects into one: 'Flux "
+             "Beam Tool' (note projects/flux_beam_tool.md) and 'Flux Beam "
+             "V2' (note projects/flux_beam_v2.md). They're the same project.",
+             guard + [operand_hint_rode(LOCKED),            # CN.1 wiring truth
+                      no_which_slug_reask(LOCKED),          # capture-LOCKED (CN.1)
+                      not_narration_terminated(TARGET),
+                      english_only(TARGET)]),
+        Turn("Keep Flux Beam Tool as the survivor. Go ahead.",
+             guard + [merged_on_disk(["projects/flux_beam_v2.md"], LOCKED),
+                      english_only(TARGET)]),
+    ]
+    record_and_assert(replay(sandbox, turns), detail)

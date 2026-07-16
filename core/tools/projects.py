@@ -418,8 +418,8 @@ def register_project_tools(registry, gate, brain, projects_root: Path):
     )
     registry.register(
         "resolve_project",
-        "Resolve a free-text project name (how Jack said it, e.g. 'the doc ock "
-        "project') to its real brain note, on-disk folder, status, and file "
+        "Resolve a free-text project name (however Jack phrased it) to its "
+        "real brain note, on-disk folder, status, and file "
         "listing. Call this BEFORE reading or listing a project's files instead "
         "of guessing a path. Returns the match, or asks which when ambiguous.",
         {
@@ -465,7 +465,11 @@ def register_project_tools(registry, gate, brain, projects_root: Path):
         {
             "type": "object",
             "properties": {
-                "name": {"type": "string", "description": "Project name, e.g. 'Doc Ock'"},
+                # No example name here BY DESIGN: schema text rides every model
+                # context, and GT-C9 (stamp 1654 T2) measured the 14B lifting a
+                # schema example verbatim into a fabricated clarify. Real
+                # project names in schemas double as test contamination.
+                "name": {"type": "string", "description": "Project name"},
                 "description": {"type": "string", "description": "One-paragraph description of the project"},
                 "confirm_new": {"type": "boolean",
                                 "description": "Set true ONLY after Jack confirms this is "
@@ -483,7 +487,7 @@ def register_project_tools(registry, gate, brain, projects_root: Path):
         {
             "type": "object",
             "properties": {
-                "project": {"type": "string", "description": "Project name, e.g. 'Doc Ock'"},
+                "project": {"type": "string", "description": "Project name"},
                 "files": {"type": "array", "items": {"type": "string"},
                           "description": "Absolute paths (wildcards allowed)"},
                 "operation": {"type": "string", "enum": ["copy", "move"]},

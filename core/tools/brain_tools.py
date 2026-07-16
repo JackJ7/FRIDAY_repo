@@ -25,6 +25,23 @@ def register_brain_tools(registry, brain, retriever, top_k: int):
         return brain.read_note(path)
 
     def write_brain(path: str, content: str, mode: str = "create", summary: str = "") -> str:
+        # Phantom-project guard (armor CONSOLIDATE CN.1b). Every file under
+        # projects/ IS a project to the resolver's inventory, and create_project
+        # is the ONE door with the near-duplicate check on it. CN.0's capture
+        # caught the memory pass write_brain-ing Jack's consolidation TASK into
+        # projects/ as a brand-new "project" — which every later turn then
+        # surfaced as real. Refuse CREATING a projects/ note here (any mode:
+        # append to a missing note creates too); edits to existing project
+        # notes stay free — merge surgery and status updates need them. The
+        # ERROR prefix keeps it out of the durable-write ledger (TM.1).
+        rel = (path or "").replace("\\", "/").lstrip("/")
+        if rel.startswith("projects/") and not (brain.root / rel).exists():
+            return ("ERROR: new notes under projects/ are managed — every file "
+                    "there becomes a project in Jack's inventory. Use "
+                    "create_project for a genuinely NEW project (it checks for "
+                    "near-duplicates); for anything else (a task, a plan, a "
+                    "note about project work), save it under inbox/ or "
+                    "episodic/ instead.")
         return brain.write_note(path, content, mode=mode, summary=summary)
 
     def update_note_field(path: str, field: str, value: str) -> str:
@@ -57,7 +74,10 @@ def register_brain_tools(registry, brain, retriever, top_k: int):
     )
     registry.register(
         "read_brain",
-        "Read one full brain note by its relative path, e.g. projects/perry.md",
+        # Example paths use a placeholder slug, never a real project name:
+        # schema text rides every model context, and GT-C9 measured the 14B
+        # quoting a schema example as if it were a real project (CN.4.1).
+        "Read one full brain note by its relative path, e.g. projects/<slug>.md",
         {
             "type": "object",
             "properties": {"path": {"type": "string"}},
@@ -95,7 +115,7 @@ def register_brain_tools(registry, brain, retriever, top_k: int):
         {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Note path, e.g. projects/perry.md"},
+                "path": {"type": "string", "description": "Note path, e.g. projects/<slug>.md"},
                 "field": {"type": "string", "description": "Field name, e.g. Status"},
                 "value": {"type": "string"},
             },

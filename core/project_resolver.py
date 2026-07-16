@@ -86,6 +86,38 @@ PLAUSIBLE = 0.6
 # ask which (the JARVIS confirm).
 AMBIGUITY_GAP = 0.15
 
+# ---------- merge intent (armor CONSOLIDATE leg, CN.1/CN.2) ----------
+
+# Deterministic merge-intent vocabulary. Verb-anchored on purpose: it must fire
+# on "consolidate the flux projects" / "merge them into one" / "make it only
+# one" and stay quiet on ordinary project chat. A false fire is mild by
+# construction — the operand hint it enables still tells the model NOT to
+# create or guess, and it only engages at all when 2+ projects match.
+_MERGE_INTENT = re.compile(
+    r"\b(merge\w*|consolidat\w*|combine|combining|unify|de-?dup\w*)\b"
+    r"|\bfold\w*\s+(?:it\s+|them\s+)?(?:in|into|together)\b"
+    r"|\bmake\b[^.?!]{0,60}\b(?:only\s+)?(?:one|a\s+single)\b"
+    r"|\binto\s+(?:only\s+)?one\b",
+    re.IGNORECASE)
+
+
+def merge_intent(message: str) -> bool:
+    """True when the message asks for a project consolidation — the ONE
+    deterministic test that hint_for's operand branch (CN.1) and the engine's
+    pending-consolidation ledger (CN.2) both key on, so they can never drift.
+    Module-level (not a method): it reads no project state, only the words."""
+    return bool(_MERGE_INTENT.search(message or ""))
+
+
+# Words that carry the merge REQUEST rather than a project's identity — never
+# filter-match a project on them ("consolidate" must not catch a project named
+# consolidation-tracker; "similar"/"duplicate" describe the ask, not a name).
+_MERGE_VOCAB = {"merge", "merges", "merged", "merging", "consolidate",
+                "consolidates", "consolidated", "consolidating",
+                "consolidation", "combine", "combining", "combined", "unify",
+                "dedup", "duplicate", "duplicates", "similar", "single",
+                "please", "name", "related"}
+
 
 class ProjectResolver:
     """Reads the brain's projects/ notes (+ folders under the projects root) and
@@ -226,6 +258,33 @@ class ProjectResolver:
             return "one", strong[0]
         return "many", strong
 
+    # ---------- merge operands (armor CONSOLIDATE CN.1/CN.2) ----------
+
+    def merge_candidates(self, message: str) -> list:
+        """The operand set a merge-intent message names: every PLAUSIBLE
+        forward match PLUS the filter tier. Shared by hint_for's operand
+        branch (CN.1) and the engine's pending-consolidation ledger (CN.2) so
+        the two can never disagree about what a merge message names.
+
+        Filter tier: "anything with <word> in the name" names projects by a
+        FRAGMENT, which the forward scorer cannot see — 'flux' is a substring
+        of 'fluxbeam', so containment, token-cover, and the difflib window all
+        miss it (measured: the fuzzy-filter message resolved to ZERO
+        candidates). Inverse containment closes it: a project qualifies when a
+        distinctive message word sits inside its compact name. Merge-request
+        vocabulary and generic words never count as filters."""
+        cands = list(self.resolve(message))
+        have = {p["slug"] for p in cands}
+        toks = {t for t in _tokens(message)
+                if t not in _MERGE_VOCAB and len(t) >= 3}
+        for p in self.projects():
+            if p["slug"] in have:
+                continue
+            surface = _norm(p["slug"]) + " " + _norm(p["title"])
+            if any(t in surface for t in toks):
+                cands.append(p)
+        return cands
+
     # ---------- the engine-side hint ----------
 
     def hint_for(self, message: str) -> str:
@@ -233,7 +292,36 @@ class ProjectResolver:
         when nothing strong matches (the common case — bare questions inject
         nothing, so the golden suite and everyday chat are unchanged). A single
         strong match hands the model the real note+folder so it never guesses a
-        path; ambiguity tells it to ask which."""
+        path; ambiguity tells it to ask which — EXCEPT on a merge-intent turn,
+        where multiple matches are the operand set (below)."""
+        # Merge-intent operand branch (armor CONSOLIDATE CN.1). On a merge ask,
+        # multiple matches are the OPERANDS, not ambiguity: the live F-graded
+        # transcript showed the ask-which hint instructing the exact observed
+        # failure, and the "one" branch is equally wrong here — a fuzzy filter
+        # like "everything with flux in the name" containment-matches ONE slug
+        # at 1.0 and steered a merge-ALL into a partial merge (CN.0 batch 1
+        # measured it). Operands = every PLAUSIBLE match PLUS the filter tier
+        # (below): worst case an extra candidate rides the list, and Jack's
+        # survivor confirm drops it. Non-merge turns are byte-identical to
+        # before.
+        if merge_intent(message):
+            cands = self.merge_candidates(message)
+            if len(cands) >= 2:
+                rows = "; ".join(
+                    f"'{p['title']}' (slug {p['slug']}, folder "
+                    f"{p['folder'] or 'none'})" for p in cands)
+                others = ", ".join(p["slug"] for p in cands)
+                return (
+                    "Entity resolution (deterministic, from your project "
+                    "records): this is a MERGE/consolidation request, and "
+                    f"these {len(cands)} known projects match it — {rows}. "
+                    "They are the merge CANDIDATES, not ambiguity. Propose "
+                    "ONE of them as the survivor, by its exact title, and on "
+                    "Jack's confirm call merge_projects with target = the "
+                    f"survivor's slug and duplicates = the others (from: "
+                    f"{others}). Do NOT create a new project, do NOT ask "
+                    "which project Jack means, and never name a project "
+                    "outside this list.")
         outcome, data = self.resolve_one(message)
         if outcome == "one":
             p = data

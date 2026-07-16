@@ -15,6 +15,7 @@ import ast
 import json
 import re
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from core.canon import canon_answer, canon_calc_args, majority
 from core.invariants import INVARIANTS
@@ -55,6 +56,21 @@ class Engine:
         self.offer = None
         self._had_pending_offer = False   # was an offer live at THIS turn's start?
         self._last_offer_accepted = False  # did a bare affirmative accept it?
+        # Pending-consolidation ledger (armor CONSOLIDATE CN.2): the ONE
+        # durable cross-turn task the offer ledger cannot carry (it lives one
+        # turn, arms only on FRIDAY's own offers, and fires only on bare
+        # affirmatives). Armed by JACK's merge-intent message with the
+        # resolved operand set; persists until executed / cancelled /
+        # superseded / expired. None, or {filter, candidates, survivor,
+        # turns_left}. See _consolidation_update.
+        self.consolidation = None
+        # Did THIS turn's user message carry merge intent? (CN.4.1) — set every
+        # turn by _consolidation_update. The CN.3 fabrication scan must ride
+        # every merge-flavoured turn, not just pending-task turns: measured on
+        # GT-C9 stamp 1654 T2, the merge had already landed (task retired) and
+        # the follow-up "merge all of the similar projects into one" drew a
+        # clarify quoting fabricated example names with the scan dormant.
+        self._merge_intent_turn = False
         # Session compaction summary (Notes-10 Phase 2, §4): a running ≤150-word
         # digest of turns evicted by the history trim, injected at the head of
         # context so the session never loses what scrolled off. None until the
@@ -459,6 +475,20 @@ class Engine:
                 offer=accepted_offer["text"], affirm=user_input.strip()[:40])
             ref_block = (ref_block + "\n\n" + directive) if ref_block else directive
 
+        # Pending-consolidation ledger (armor CONSOLIDATE CN.2). The offer
+        # ledger above cannot carry a merge task — one-turn life, arms only
+        # on FRIDAY's own offers, bare affirmatives only — so the live
+        # F-graded transcript re-derived Jack's standing merge ask from raw
+        # history every turn until the 14B dropped it. This is durable
+        # one-verb task state, armed by JACK's message, updated in code each
+        # turn; its status directive rides at the very END of the block (the
+        # max-obedience slot — measured: CN.1's mid-block operand hint rode
+        # GT-C10 T1 and the model still re-asked).
+        consolidation_directive = self._consolidation_update(user_input)
+        if consolidation_directive:
+            ref_block = ((ref_block + "\n\n" + consolidation_directive)
+                         if ref_block else consolidation_directive)
+
         # Streaming-preview guard (Phase 1, finding #2). On turns where a
         # post-generation barrier below may REPLACE the whole reply, DON'T
         # stream tokens live — otherwise the user watches a fabrication (or an
@@ -501,7 +531,15 @@ class Engine:
         hold_stream = on_token is not None and (
             artifact_ask
             or followup or event_ask or date_ask or answer_ask
-            or accepted_offer is not None or answer_vote)
+            or accepted_offer is not None or answer_vote
+            # CN.3: a project-context reply may be replaced by the identifier
+            # floor (fabricated name, or a naked which-ask on a pending
+            # consolidation) — Jack must never watch the retracted draft.
+            # CN.4.1: the scan also rides bare merge-intent turns now, so
+            # their streams hold too.
+            or self.consolidation is not None
+            or bool(consolidation_directive)
+            or self._merge_intent_turn)
         live_token = None if hold_stream else on_token
 
         base = [{"role": "system", "content": self._system_prompt(extra=ref_block)}]
@@ -544,6 +582,22 @@ class Engine:
         # Messages created during this turn; persisted into history at the end.
         turn = [{"role": "user", "content": user_input}]
         tool_log = []
+        # A code-executed consolidation (CN.2.1 escalation, run during the
+        # referent-block build above) must appear in this turn's ledger like
+        # any tool call — the memory pass's "ALREADY SAVED" note and the
+        # durable-write ledger key off tool_log, and a merge they can't see
+        # would make both lie (the TM.1 lesson, from the other direction).
+        if getattr(self, "_pre_loop_tool_log", None):
+            tool_log.extend(self._pre_loop_tool_log)
+            # The faces must see the code-executed call too: on_tool is how
+            # the UI shows "FRIDAY ran X", and a merge that moves files with
+            # no visible tool event reads as FRIDAY hiding what she did
+            # (found via GT-C9 transcripts: merged-on-disk passed while every
+            # turn showed tools=[] — the harness records at this boundary).
+            if on_tool:
+                for t in self._pre_loop_tool_log:
+                    on_tool(t["tool"], t["args"])
+            self._pre_loop_tool_log = []
         # Self-consistency voting (armor A6) — this turn's records. Reset per
         # turn so the log's agreement rates are per-exchange, never stale.
         self.last_votes = []
@@ -887,6 +941,126 @@ class Engine:
                 if live_token:  # None on a held turn — single emit streams it
                     live_token("\n" + reply.content)
                 turn.append({"role": "assistant", "content": reply.content})
+
+        # Project-identifier grounding floor (armor CONSOLIDATE CN.3) — the
+        # citation-enforcement sibling for project names. The live F-graded
+        # transcript proposed merging 'claude-code-updates' and friends —
+        # quoted, identifier-shaped, matching NOTHING on disk — and Jack
+        # approved a merge of projects that did not exist; a later turn
+        # surfaced the model's own normalization ('claudecodeupgrade') as if
+        # it were a distinct project. Deliberately NARROW: fires only when
+        # project context is LIVE this turn (pending consolidation task /
+        # its directive / the entity or operand hint), and only on a reply
+        # that quotes a project-shaped identifier resolving to NOTHING. One
+        # corrective retry naming the real set; a second miss falls back to
+        # the honest deterministic list. Runs BEFORE the offer ledger arms
+        # (end of respond), so a fabricated proposal can never become an
+        # accepted offer's quoted directive. The same floor converts the
+        # measured GT-C10 residual: on a pending-task no-survivor turn, a
+        # NAKED which-ask (no survivor framing) is replaced by the
+        # code-built survivor-confirm question — the one question the flow
+        # legitimately owes Jack, phrased right by construction.
+        identifier_floor_fired = False
+        _resolver = getattr(self, "project_resolver", None)
+        # CN.4.1 widened the window with _merge_intent_turn: a merge-flavoured
+        # message AFTER the task retired (GT-C9 stamp 1654 T2 — merge landed at
+        # T1, "merge all of the similar projects into one" then drew a clarify
+        # quoting 'Doc Ock'/'Project 1'/'Project 2', lifted straight from the
+        # then-extant tool-schema example) left the scan dormant while the
+        # LOCKED no-foreign-identifier guarantee covers EVERY turn. The scan
+        # must ride every turn Jack talks merges, pending task or not.
+        project_context_live = (
+            _resolver is not None
+            and (self.consolidation is not None
+                 or bool(consolidation_directive)
+                 or bool(self._entity_hint)
+                 or self._merge_intent_turn))
+        if (reply is not None and project_context_live
+                and not artifact_denial_fired and not phantom_fired):
+            task = self.consolidation
+            # (b) first — the naked which-ask backstop is code-built, so a
+            # reply it replaces never needs the fabrication scan.
+            if (task and not task.get("survivor")
+                    and self._WHICH_SLUG_ASK.search(reply.content or "")
+                    and not self._SURVIVOR_FRAMING.search(reply.content or "")):
+                cands = task["candidates"]
+                default = task.get("default") or cands[0]
+                reply.content = (
+                    "These all match: " + ", ".join(cands) + ". I suggest "
+                    f"keeping '{default}' as the survivor and folding the "
+                    "others into it — shall I go ahead with that?")
+                reply.tool_calls = []
+                identifier_floor_fired = True
+                if live_token:
+                    live_token("\n" + reply.content)
+                turn.append({"role": "assistant", "content": reply.content})
+            else:
+                foreign = self._foreign_identifiers(reply.content or "")
+                if foreign:
+                    real = sorted(p["title"] for p in _resolver.projects())
+                    correction = (
+                        "STOP: your draft names project identifiers that do "
+                        f"not exist on disk: {', '.join(foreign)}. Jack's "
+                        "REAL projects are exactly: " + ", ".join(real) +
+                        ". Rewrite the reply using ONLY names from that list "
+                        "— never invent, abbreviate, or re-spell a project "
+                        "name.")
+                    retry = self.model.chat(
+                        base + turn
+                        + [{"role": "assistant", "content": reply.content},
+                           {"role": "system", "content": correction}],
+                        on_token=None)
+                    self.session_tokens += retry.eval_count
+                    candidate = (retry.content or "").strip()
+                    if candidate and not self._foreign_identifiers(candidate):
+                        reply.content = candidate
+                    else:
+                        # Deterministic honest floor: own the mis-naming and
+                        # hand back the real inventory verbatim.
+                        reply.content = (
+                            "I mis-named some projects there — ignore those "
+                            "names. Your actual projects are: "
+                            + ", ".join(real) + ".")
+                    reply.tool_calls = []
+                    identifier_floor_fired = True
+                    if live_token:
+                        live_token("\n" + reply.content)
+                    turn.append({"role": "assistant",
+                                 "content": reply.content})
+
+        # Narrated-listing floor (armor CONSOLIDATE CN.4). Measured shape
+        # (GT-C9 stamp 1623 T2, and the live F-transcript's turn 1): the reply
+        # ENDS on first-person-future narration of a project listing — "I
+        # first need to list all your current projects... Let's start by
+        # listing them." — with ZERO tools run, so the turn dies on a promise.
+        # RF.4.1/Shape D is structurally blind here (no tool name in the
+        # prose; recovery never invents one), so the ENGINE fulfills the
+        # narrated read itself: run list_projects deterministically and APPEND
+        # the real listing as the narration's continuation. Appending — never
+        # replacing, never a second model hop — means no watched retraction,
+        # no empty-reply risk (the F4/A1 lesson), and the narration becomes
+        # true instead of dangling. Internal zero-arg READ only; an action
+        # narration ("let me merge them") never matches the pattern.
+        narrated_list_fired = False
+        if (reply is not None and not tool_log
+                and not identifier_floor_fired and not artifact_denial_fired
+                and not phantom_fired
+                and self._NARRATED_LIST_TAIL.search(
+                    (reply.content or "").strip()[-200:])):
+            if on_tool:
+                on_tool("list_projects", {})
+            nl_result, nl_external = self._run_tool("list_projects", {})
+            tool_log.append({"tool": "list_projects", "args": {},
+                             "result": nl_result[:500]})
+            turn.append({"role": "tool",
+                         "content": self._wrap_data(nl_result, nl_external)})
+            addition = "\n\n" + nl_result
+            reply.content = (reply.content or "").rstrip() + addition
+            reply.tool_calls = []
+            turn.append({"role": "assistant", "content": reply.content})
+            if live_token:
+                live_token(addition)
+            narrated_list_fired = True
 
         # Calendar-first corrective pass (Phase 2, item 1; plan D2). Phase 1
         # measured the prompt rule failing: on a bare "what day is X?" the 14B
@@ -1314,6 +1488,16 @@ class Engine:
             self.offer = ({"text": offer_text, "referents": list(self.referents)}
                           if offer_text else None)
 
+        # Retire the pending consolidation once the merge actually LANDED
+        # (armor CONSOLIDATE CN.2) — disk truth, not narration: a merge the
+        # gate declined ("BLOCKED") or that errored stays pending, exactly
+        # like the golden's merged-on-disk check.
+        if self.consolidation and any(
+                t["tool"] == "merge_projects"
+                and self._write_landed(t.get("result", ""))
+                for t in tool_log):
+            self.consolidation = None
+
         # Persist this turn and bound the context. Per-turn system guidance (the
         # referent block) is NOT persisted — a stale copy in history would
         # contradict the fresh one. When the trim triggers, COMPACT the evicted
@@ -1391,6 +1575,10 @@ class Engine:
             # re-ground a reply that denied having an artifact the session
             # ledger holds — the embodiment-denial residual, made countable.
             "artifact_denial_floor": artifact_denial_fired,
+            "identifier_floor": identifier_floor_fired,
+            # CN.4: the engine fulfilled an end-of-reply narrated project
+            # listing the model promised but never ran.
+            "narrated_list_floor": narrated_list_fired,
             # Phase 1 (Notes-10, item 4): True when an ACTION tool fired on a
             # message with no request shape — the office-hours "proposed an
             # update nobody asked for" signature. The taint gate is the hard
@@ -2567,6 +2755,252 @@ class Engine:
         residue = self._AFFIRMATIVE_WORDS.sub("", stripped)
         residue = re.sub(r"[\s,.!?'\"-]+", "", residue)
         return residue == ""
+
+    # Pending-consolidation ledger (armor CONSOLIDATE CN.2) --------------------
+    # TTL is engagement-based: a turn that touches the task (merge intent
+    # re-fires, a candidate is named, or the message opens affirmatively)
+    # refreshes it; only turns that ignore the task tick it down. Expiry
+    # exists for ABANDONED tasks, not active ones — the live F transcript
+    # needed the task alive across eight turns of friction.
+    _CONSOLIDATION_TTL = 6
+
+    _CONSOLIDATION_CANCEL = re.compile(
+        r"\b(never ?mind|cancel (that|it|the merge)|forget (it|that)"
+        r"|don'?t bother|leave (it|them) as (is|they are))\b", re.IGNORECASE)
+
+    # A message that OPENS affirmatively engages the pending task even when
+    # residue follows ("Ok, please update the project folder") — exactly the
+    # shape the bare-affirmative offer rule rejects by design, and the shape
+    # the live transcript lost the intent on, twice.
+    _AFFIRMATIVE_PREFIX = re.compile(
+        r"^\s*(ok(ay)?|yes|yeah|yep|sure|alright|please|go ahead|do it"
+        r"|sounds good)\b", re.IGNORECASE)
+
+    _WHICH_SLUG_ASK = re.compile(
+        r"\bwhich (one|project|of these)\b|\bdo you mean\b", re.IGNORECASE)
+    _SURVIVOR_FRAMING = re.compile(
+        r"\bsurviv\w*\b|\bkeep\b|\bmerge\w* into\b|\btarget\b", re.IGNORECASE)
+    # Quoted identifier spans (CN.3): word-boundary lookarounds keep
+    # possessives (Fluxbeam's) from opening a span; the charclass has no path
+    # separator, so a quoted path never parses as a name; >4-word spans are
+    # prose. Known residual: a quoted lowercase PHRASE ('go ahead') in a
+    # project-context reply would scan as an identifier — accepted, because
+    # the floor's worst case is one retry + the honest project list, and the
+    # live fabrications ('claudecodeupgrade') are exactly lowercase
+    # single-word slugs a tighter shape test would exempt.
+    _QUOTED_IDENTIFIER = re.compile(
+        r"(?<![A-Za-z0-9])['\"‘“]"
+        r"([A-Za-z][A-Za-z0-9 _\-]{2,40})"
+        r"['\"’”](?![A-Za-z])")
+    # Tool-call/argument vocabulary the model quotes when narrating a plan —
+    # never project identifiers (the GT-C9 capture false-positive lesson).
+    _IDENTIFIER_NOISE = {
+        "action", "target", "duplicates", "survivor", "name", "path",
+        "content", "mode", "summary", "slug", "title", "status", "folder",
+        "note", "merged into", "source_notes", "target_note"}
+
+    # CN.4 — end-of-reply narration of an internal PROJECT LISTING the model
+    # never ran ("...Let's start by listing them.", tools=[]). Shape D can't
+    # recover this: the prose names NO tool, and recovery never invents one.
+    # The floor maps the one measured verb-object pair (list + projects/them)
+    # to list_projects — grown verb-by-verb where live friction shows (P6),
+    # never a general intent classifier. Must MATCH AT THE END of the reply:
+    # mid-reply narration followed by real content means the model finished.
+    _NARRATED_LIST_TAIL = re.compile(
+        r"(?:let'?s start by listing|let me list|start by listing"
+        r"|i(?:'ll| will)(?: start by)? list|i (?:first )?need to list)"
+        r"[^.!?\n]{0,80}[.!?]?\s*$", re.IGNORECASE)
+
+    def _foreign_identifiers(self, text: str) -> list:
+        """Quoted project-shaped identifiers in `text` that resolve to NO
+        project surface on disk (CN.3). Substring tolerance mirrors the
+        resolver's semantics: a candidate is real when its normalization sits
+        inside a real surface's normalization ('flux' clears via 'fluxbeam';
+        a fabricated sibling like 'flux-beam-utils' does not)."""
+        from core.project_resolver import _norm
+        resolver = getattr(self, "project_resolver", None)
+        if resolver is None:
+            return []
+        surfaces = set()
+        try:
+            for p in resolver.projects():
+                surfaces.add(_norm(p["slug"]))
+                surfaces.add(_norm(p["title"]))
+                if p.get("folder"):
+                    surfaces.add(_norm(Path(p["folder"]).name))
+        except Exception:
+            return []
+        surfaces.discard("")
+        tool_names = {t["function"]["name"].lower()
+                      for t in self.registry.to_ollama()}
+        foreign = []
+        for m in self._QUOTED_IDENTIFIER.finditer(text):
+            cand = m.group(1).strip()
+            if len(cand.split()) > 4:
+                continue
+            low = cand.lower()
+            if low in self._IDENTIFIER_NOISE or low in tool_names:
+                continue
+            trimmed = re.sub(r"^the\s+|\s+project$", "", cand,
+                             flags=re.IGNORECASE)
+            n = _norm(trimmed)
+            if not n or any(n in s for s in surfaces):
+                continue
+            foreign.append(cand)
+        return foreign
+
+    def _consolidation_update(self, user_input: str) -> str:
+        """Arm/refresh/expire the pending-consolidation task for this turn and
+        return the status directive that rides the END of the referent block
+        ("" when nothing is pending). Deterministic code owns this state; the
+        model only ever READS the directive. WHY the end slot: measured on
+        GT-C10 T1 — the CN.1 operand hint rode mid-block and the 14B re-asked
+        anyway; the offer-accepted directive earned the same slot the same
+        way (see _OFFER_ACCEPTED_DIRECTIVE)."""
+        from core.project_resolver import _norm, merge_intent
+        # Recorded BEFORE the resolver guard so the flag is turn-accurate even
+        # in a bare sandbox; the CN.3 floor separately requires a resolver.
+        self._merge_intent_turn = bool(merge_intent(user_input))
+        resolver = getattr(self, "project_resolver", None)
+        if resolver is None:
+            return ""
+
+        if self.consolidation and self._CONSOLIDATION_CANCEL.search(user_input):
+            self.consolidation = None
+            return ""
+
+        engaged = False
+        # A merge-intent message that resolves 2+ operands ARMS the task,
+        # superseding any prior one (freshest ask wins, like the offer
+        # ledger). With <2 operands it still counts as ENGAGEMENT: "merge all
+        # of the similar projects into one" re-states the wish but names
+        # nothing — the pending operand set stands (measured on GT-C9 T2:
+        # that message alone resolves to zero candidates).
+        if merge_intent(user_input):
+            engaged = True
+            try:
+                cands = resolver.merge_candidates(user_input)
+            except Exception:
+                cands = []
+            if len(cands) >= 2:
+                # Code-picked default survivor (the design's "note+folder
+                # present" rule): the model only relays the confirm question,
+                # it never has to choose — choosing is where fabrication and
+                # which-asks crept in.
+                default = next(
+                    (p["slug"] for p in cands
+                     if p.get("note_path") and p.get("folder_exists")),
+                    cands[0]["slug"])
+                self.consolidation = {
+                    "filter": " ".join(user_input.split())[:160],
+                    "candidates": [p["slug"] for p in cands],
+                    "survivor": None,
+                    "default": default,
+                    "turns_left": self._CONSOLIDATION_TTL,
+                }
+
+        task = self.consolidation
+        if not task:
+            return ""
+
+        # Survivor: the message names a candidate by its compact form; the
+        # LONGEST match wins, so "Keep Flux Beam Tool" cannot also count as
+        # naming fluxbeam (a strict-prefix candidate). Exactly ONE named
+        # candidate = Jack chose the keep; two or more = he restated the set
+        # (no elimination guessing — "the two extras are X and Y" leaves the
+        # survivor for his explicit confirm; a wrong inference here would
+        # merge the wrong way, which is not worth the saved turn).
+        msg_norm = _norm(user_input)
+        named = [s for s in task["candidates"]
+                 if len(_norm(s)) >= 4 and _norm(s) in msg_norm]
+        named = [s for s in named
+                 if not any(o != s and _norm(s) in _norm(o) for o in named)]
+        survivor_confirmed_now = False
+        if named:
+            engaged = True
+            if len(named) == 1:
+                survivor_confirmed_now = task["survivor"] != named[0]
+                task["survivor"] = named[0]
+
+        if self._AFFIRMATIVE_PREFIX.match(user_input):
+            engaged = True
+
+        if engaged:
+            task["turns_left"] = self._CONSOLIDATION_TTL
+        else:
+            task["turns_left"] -= 1
+            if task["turns_left"] <= 0:
+                self.consolidation = None
+                return ""
+
+        # ESCALATION (CN.2.1, activated by measurement): the ENGINE executes
+        # the merge, calendar-first posture. Held back at design time "unless
+        # batches show the 14B still fumbles the exact-args call" — they did,
+        # 4/4 post-CN.2, with the model NARRATING the correct call as prose +
+        # a python fence instead of a native tool call (GT-C9 T7, stamp 1548;
+        # required args put it outside Shape D's deliberately-restricted
+        # recovery). Args come from CODE-owned ledger state (Jack's confirmed
+        # survivor, resolver-validated candidates) — never model text, so
+        # nothing can be fabricated; the gate still batch-confirms any file
+        # moves inside the tool, so invariant 3 holds. Fires when the
+        # survivor is confirmed (that message IS the go) or re-affirmed.
+        survivor = task["survivor"]
+        if survivor and (survivor_confirmed_now
+                         or self._AFFIRMATIVE_PREFIX.match(user_input)):
+            dups = [s for s in task["candidates"] if s != survivor]
+            try:
+                result = str(self.registry.call(
+                    "merge_projects",
+                    {"target": survivor, "duplicates": dups}))
+            except Exception as e:   # registry normally wraps; belt-and-braces
+                result = f"ERROR: merge failed in code: {e!r}"
+            self._pre_loop_tool_log = [{"tool": "merge_projects",
+                                        "args": {"target": survivor,
+                                                 "duplicates": dups},
+                                        "result": result[:500]}]
+            if self._write_landed(result) and not result.startswith("Merged 0"):
+                self.consolidation = None
+                return (
+                    "CONSOLIDATION EXECUTED (deterministic code ran it on "
+                    f"Jack's confirmed survivor '{survivor}'; do NOT call "
+                    "merge_projects again):\n" + result[:400] + "\n"
+                    "Report this result to Jack plainly — the merge already "
+                    "happened this turn.")
+            # Declined or errored: the task stays pending; tell the model the
+            # truth so the reply can't narrate a merge that didn't happen.
+            lines = ["PENDING CONSOLIDATION TASK (deterministic status, kept "
+                     f"in code): Jack asked: \"{task['filter']}\"",
+                     "- merge candidates (all real, from his project "
+                     "records): " + ", ".join(task["candidates"]),
+                     f"- survivor confirmed: {survivor}, but the merge did "
+                     f"NOT land this turn: {result[:200]}",
+                     "- Tell Jack exactly that. Do not claim the merge "
+                     "happened."]
+            return "\n".join(lines)
+
+        lines = ["PENDING CONSOLIDATION TASK (deterministic status, kept in "
+                 f"code): Jack asked: \"{task['filter']}\"",
+                 "- merge candidates (all real, from his project records): "
+                 + ", ".join(task["candidates"])]
+        if survivor:
+            dups = [s for s in task["candidates"] if s != survivor]
+            lines.append(f"- survivor CONFIRMED by Jack: {survivor}")
+            lines.append(
+                "- ACT NOW, this turn: call merge_projects with target="
+                f"'{survivor}' and duplicates={dups}. Do not re-ask anything "
+                "— he already confirmed, and the gate will confirm any file "
+                "moves itself.")
+        else:
+            default = task.get("default")
+            lines.append(
+                "- survivor: NOT chosen yet. Propose "
+                + (f"'{default}' (code-picked default: it has a note and a "
+                   "folder on disk)" if default else
+                   "exactly ONE candidate from the list above")
+                + " as the survivor and ask Jack to confirm THAT — never ask "
+                "him to restate which projects to merge; the list above IS "
+                "the answer.")
+        return "\n".join(lines)
 
     # Citation enforcement (Phase 5, item 3.3 — promoting D7 item 5 / D8 item 3
     # from LOGGED to ENFORCED). This is the non-date sibling of the
