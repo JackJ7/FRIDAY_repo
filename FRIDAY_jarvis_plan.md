@@ -472,5 +472,50 @@ constraints).
   flip DND both from the sidebar link and the panel switch, confirm
   they agree), and stamp acceptance (b)/(d) here.
 
-*(J1 opening gets appended here when it starts — J1.1 task ledger is
-the next work item per §5.)*
+### 2026-07-16 — J1 OPENED: J1.1 durable task ledger. Status: IN PROGRESS
+
+Same session constraints as J0 (RA.4 in flight → code on `jarvis`,
+doc-only on main). J1.1 is built in LAYERS so the model-visible part is
+isolated:
+
+- **This increment (model-INVISIBLE, safe now): `core\tasks.py` — the
+  ledger itself.** Pure code + brain files; nothing reaches a prompt.
+- **Deferred increments (each gets its own §6 record):** engine
+  injection of the active task into the referent block (MODEL-VISIBLE
+  — needs an armor-style before/after compare, not just `--quick`),
+  model-facing task tools via the registry, the J1.3 job runner, and
+  the J1.5 board API. **MUST-DO recorded now:** before any model-facing
+  task tool registers, `brain.py`'s tracker-file protection extends to
+  `tasks\` (ledger-owned, like commitments.md/timelines\) — the ledger
+  class is the only writer.
+
+**J1.1 design (the tracker pattern, applied):**
+
+1. One task = one file, `brain\tasks\<slug>.md` (slug via
+   `core\project_meta.slug`). YAML frontmatter carries what code needs
+   (title, status, created/updated, blocked_on); the body renders the
+   step checklist so Jack reads/edits it in Obsidian like every other
+   tracker file. Written ONLY via `TaskLedger` → `brain.system_write`
+   (git-committed, test-archive-routed, on_write glyph for free).
+2. Step lines are the commitments.md idiom extended with a state mark:
+   `- [ ]` pending, `- [>]` in-progress, `- [x]` done, `- [!]` blocked;
+   per-step metadata after `|` (updated stamp), and EVIDENCE as
+   indented `  - evidence: ...` lines under the step — verbatim quotes,
+   the J1.5 board reads these, the model never rewrites them.
+3. CODE owns the state machine (J1.2's floor): `complete_step` REFUSES
+   empty evidence (model say-so never advances a step);
+   `block(slug, i, reason)` parks the task and records `blocked_on`
+   (the confirm-park shape); task status is DERIVED from steps on every
+   mutation (all done → done; any blocked → blocked; any started →
+   in-progress), never stored independently.
+4. Restart-survival is by construction (files re-parsed on read;
+   `list_open()` scans `tasks\`), matching J1 acceptance (c).
+5. Duplicate titles: an OPEN task with the same slug refuses creation
+   (ValueError); a closed one gets `-2`/`-3` suffixes.
+6. `summary()` renders the compact active-task lines the future
+   referent-block injection will carry (built now, injected later —
+   the injection is the model-visible increment).
+
+Tests `tests\pillar1\test_tasks.py`, case IDs `TSK-###`, non-model.
+
+*(J1.1 result + next-increment entries get appended here.)*
