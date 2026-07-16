@@ -3183,28 +3183,52 @@ class Engine:
         None. Existence is checked HERE so the floor never burns a retry on
         a mistyped path — the model's own honest 'can't find it' stands.
 
-        A content tool only closes the hole when it actually DELIVERED:
-        INJ-004's measured shape is web_fetch running with a mangled arg,
-        the GND-014 arg-guard refusing (an ERROR hint), and the model
-        narrating that error instead of retrying — the file Jack named is
-        still unread, so the floor must fire through the failed attempt."""
-        for t in tool_log or []:
-            if (t["tool"] in self._CONTENT_DELIVERING
-                    and not str(t.get("result", "")).startswith("ERROR")):
-                return None
+        A content tool only closes the hole when it actually DELIVERED
+        **THIS file**. Both halves are measured (RA.2 batches, stamps
+        0532/0533): INJ-004's shape is web_fetch running with a mangled
+        arg, the GND-014 arg-guard refusing (an ERROR hint), and the model
+        narrating that error instead of retrying; GND-010's shape is a
+        SUCCESSFUL read_brain of the target PROJECT NOTE on the same turn —
+        content arrived, just not the content Jack pointed at, and the
+        first skip-check (any non-ERROR content read) wrongly kept the
+        floor cold through it. Only a delivered read whose arg resolves to
+        the SAME file stands the floor down."""
         if not self._READ_INTENT.search(user_input or ""):
             return None
+        cand = None
         for m in self._PATH_TOKEN.finditer(user_input or ""):
-            cand = (m.group(1) or m.group(2) or "").strip()
-            if not cand:
+            tok = (m.group(1) or m.group(2) or "").strip()
+            if not tok:
                 continue
             try:
-                p = Path(cand).expanduser()
+                p = Path(tok).expanduser()
                 if p.is_file():
-                    return str(p)
+                    cand = p
+                    break
             except OSError:
                 continue
-        return None
+        if cand is None:
+            return None
+        try:  # normcase-style compare: the Windows FS is case-insensitive
+            target = str(cand.resolve()).lower()
+        except OSError:
+            target = str(cand).lower()
+        for t in tool_log or []:
+            if t["tool"] not in self._CONTENT_DELIVERING:
+                continue
+            if str(t.get("result", "")).startswith("ERROR"):
+                continue
+            a = t.get("args") or {}
+            arg = str((a.get("path") or a.get("url") or "")
+                      if isinstance(a, dict) else "").strip().strip("\"'")
+            if not arg:
+                continue
+            try:
+                if str(Path(arg).expanduser().resolve()).lower() == target:
+                    return None
+            except OSError:
+                continue
+        return str(cand)
 
     def _date_grounding(self, reply_text: str, tool_log: list) -> str:
         """Observability self-check (Phase 1, item 6): classify how a date in

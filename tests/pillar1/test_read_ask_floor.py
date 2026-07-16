@@ -137,6 +137,28 @@ def test_failed_fetch_does_not_block(sandbox):
     assert any(r["kind"] == "file" for r in eng.referents)
 
 
+@pytest.mark.case("RAF-007", "GND-010 shape: a SUCCESSFUL read of a DIFFERENT source (the project note) does not close the hole for the file Jack named")
+def test_other_read_does_not_block(sandbox):
+    src = _plant(sandbox)
+    eng = sandbox.service.engine
+    # Give the model a real brain note to read (the seeded projects exist).
+    eng.model = _ScriptModel([
+        {"content": "",
+         "tool_calls": [{"function": {"name": "read_brain",
+                                      "arguments": {
+                                          "path": "projects/alpha_rig.md"}}}]},
+        "Filed against the project - the note is up to date.",
+        GROUNDED,
+    ])
+    eng.vote_enabled = False
+    reply = eng.respond(
+        f"add {src.as_posix()} to the project and give me your analysis of it")
+    # The note read delivered content, but NOT the file Jack pointed at:
+    # the floor must still run the read and re-ground the reply.
+    assert "fuse" in reply.content and "5V" in reply.content
+    assert any(r["kind"] == "file" for r in eng.referents)
+
+
 @pytest.mark.case("RAF-005", "best-effort acceptance: an empty retry keeps the original reply, but the read/referent still landed")
 def test_empty_retry_keeps_original(sandbox):
     src = _plant(sandbox)
