@@ -437,4 +437,40 @@ registry rebuild, and fires its owner callback at runtime; (d)
 `--quick` green on the branch before merge (deferred to GPU-quiet, see
 constraints).
 
-*(J0 result entry + J1 opening get appended here as they land.)*
+**J0 RESULT (same session, ~08:10): CODE-COMPLETE on `jarvis` @ `1222c40`
+— NOT yet merged (by design, see constraints above).**
+
+- Shipped exactly the §6 design, no deviations: `core\toggles.py`
+  (ToggleRegistry), Service `get_toggles`/`set_toggle` + registry built
+  in `__init__` (dnd registered first, `persist=False`,
+  `on_change=acc.set_dnd`; `set_dnd` is now a compat shim), `app.py`
+  Api passthroughs, Controls section in the settings modal
+  (`index.html` + `app.js` dumb renderer + `app.css` switch/segment
+  styles), `ARCHITECTURE.md` stack entry.
+- **Measured**: `tests\pillar1\test_toggles.py` TGL-001..010 **10/10**
+  (non-model; TGL-009 proves dnd coherence through a real
+  Service: registry ↔ acc ↔ get_status ↔ set_dnd shim all agree).
+  Targeted smokes `test_app_service` + `test_commitments` +
+  `test_status` `-m "not model"` **15/15**. Results stamps
+  `2026-07-16_0807` / `0808` in the worktree's `results\`.
+- Worktree note (pattern reused from the ra leg): sandbox-fixture tests
+  need the real brain's seed material, which is gitignored — copy
+  `brain\character`, `brain\playbooks`, `brain\skills` from the main
+  tree into a fresh worktree before running them.
+- **Acceptance status**: (a) TGL suite green ✔; (b) dnd coherence ✔ at
+  Service level — the PANEL click-path smoke (visual) waits for a live
+  app launch, which needs the lock + a quiet GPU; (c) enum toggle
+  round-trip proven by TGL-003/004/008 (no live enum toggle registers
+  until J4's voice.mode — the machinery is proven, the first consumer
+  isn't wired yet, deliberate); (d) `--quick` on the branch DEFERRED to
+  GPU-quiet (RA.4 in flight at time of writing).
+- **Pickup protocol for whoever closes J0**: when the RA leg has
+  closed (armor plan §6 RA.6 verdict rendered), run `--quick` in
+  `..\FRIDAY-jarvis`, then merge `jarvis` → main (rebase-check first if
+  RA shipped anything in `core\service.py`/`interface\`), run `--quick`
+  once on main, do the live panel smoke (open Settings → Controls,
+  flip DND both from the sidebar link and the panel switch, confirm
+  they agree), and stamp acceptance (b)/(d) here.
+
+*(J1 opening gets appended here when it starts — J1.1 task ledger is
+the next work item per §5.)*
