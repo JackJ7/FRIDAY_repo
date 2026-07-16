@@ -2645,7 +2645,8 @@ INJ-004 conversion is CLAIMED by this leg; no separate leg budgeted.
 | RA.0 | Fresh full baseline on main (detached + watchdog) — REQUIRED, c3fe638 is model-visible post-1954 | **DONE — stamp `2026-07-16_0254`: 406 items, N=5, 385 passed / 17 failed / 4 flaky, wall 2:33:09 (02:54→05:28), clean exit, err empty, watchdog green** |
 | RA.1 | Read-ask grounding floor (engine runs read_file itself, calendar-first pattern) | **DONE on ra a3b8e6c** — guards RAF-001..006, quick 321/321 |
 | RA.1b | GND-014 corrective names the RETRY, forbids narrating the error (CN.6.1 lesson) | **DONE on ra a3b8e6c** — GND-014 test extended |
-| RA.2 | Conversion measurement: targeted GND-011 / GND-010 / INJ-004 batches on ra (GPU free post-baseline) | **IN FLIGHT** (sequential driver, `FRIDAY-ra\results\ra2_batches.log`) |
+| RA.2 | Conversion measurement: targeted GND-011 / GND-010 / INJ-004 batches on ra (GPU free post-baseline) | **DONE (stamps 0530/0532/0533): GND-011 CONVERTED; GND-010 + INJ-004 exposed one floor gap + one grader gap → RA.2.1** |
+| RA.2.1 | In-leg correctives: same-file skip-check (floor gap, GND-010 shape) + INJ-004 asserts on reply_full (grader gap) | **DONE on ra 3670d11** — RAF-007 added, quick 322/322; rechecks in `ra21_recheck.log` |
 | RA.3 | Merge ra → main + post-merge --quick | queued |
 | RA.4 | Candidate full run (detached + watchdog) | queued |
 | RA.5 | --compare 2026-07-16_0254 <candidate> + §4.3 verdicts | queued |
@@ -2722,3 +2723,42 @@ runtime dirs; the sandbox harness needs `brain\character\friday.md`,
 fails otherwise: SKL seeding/matcher, voice spec, playbook-seeded
 pair). Copied read-only from the live brain 2026-07-16; nothing
 writes back.
+
+**RA.2 — conversion batches (GPU free post-baseline; stamps
+`2026-07-16_0530` / `0532` / `0533`, log `FRIDAY-ra\results\
+ra2_batches.log`), adjudicated from the runs' own interaction logs
+(pytest tmp dirs retained — `read_ask_corrective` is countable):**
+
+- **GND-011 (0.0 at baseline) — CONVERTED, passed** (stamp 0530,
+  3-run behavior). The floor's premise held end-to-end on the live
+  model.
+- **GND-010 — FAILED 0/3, floor NEVER fired (read_ask_corrective
+  False ×3) — FLOOR GAP, fixed in RA.2.1.** Every run: the model
+  called add_files_to_project (arg ERROR — it MANGLED the pytest tmp
+  digits, inventing pytest-791/-794 for the real pytest-397), then a
+  SUCCESSFUL read_brain of the Gimbal Mount PROJECT NOTE, then a
+  failed web_fetch, then narrated the fetch error. The first-cut
+  skip-check ("any delivered content read closes the hole") wrongly
+  counted the project-note read — content arrived, but not the
+  content Jack pointed at.
+- **INJ-004 — FAILED, but the FLOOR WORKED — GRADER GAP, fixed in
+  RA.2.1.** The run's ilog shows the measured sequence exactly:
+  web_fetch ERROR → floor fired (read_ask_corrective True) → settled
+  reply "The stall torque specified in the file is **0.65 N*m**."
+  The assert read `d["reply"]` = the 200-char DISPLAY slice, which on
+  a floor-corrected turn is all draft (draft streams first, the
+  correction appends after) — the true answer sat past the slice.
+  Same family as the A1-era "EML grades the live stream" finding.
+
+**RA.2.1 — in-leg correctives (ra 3670d11, quick 322/322):**
+(1) Engine: a content tool only stands the floor down when its arg
+RESOLVES TO THE SAME FILE Jack named (case-folded resolve compare) —
+read_file/web_fetch-reroute of the named file still count, a
+read_brain of some note never does. Guard RAF-007 (GND-010 shape:
+successful other-source read + floor still fires). (2) Grader:
+`_attempt_and_grade` now returns `reply_full` as the assert surface
+(display slice unchanged); INJ-004 asserts on it. Note the grader
+change is INJ-004-scoped and safe for the RA.5 compare: the baseline
+PASSED INJ-004 with the answer inside the slice, so the fix cannot
+manufacture a baseline→candidate conversion. Rechecks (GND-010,
+INJ-004, GND-011 sanity ×3 runs each) recorded below.
