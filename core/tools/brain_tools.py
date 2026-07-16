@@ -36,12 +36,19 @@ def register_brain_tools(registry, brain, retriever, top_k: int):
         # ERROR prefix keeps it out of the durable-write ledger (TM.1).
         rel = (path or "").replace("\\", "/").lstrip("/")
         if rel.startswith("projects/") and not (brain.root / rel).exists():
+            # The corrective must name the RETRY, not just the refusal: the
+            # CN.5 candidate measured the 14B answering this ERROR by asking
+            # Jack which project to create — and the stated fact was lost
+            # (MEM-001, CN.6.1). Facts about an EXISTING project belong in
+            # that project's existing note.
             return ("ERROR: new notes under projects/ are managed — every file "
-                    "there becomes a project in Jack's inventory. Use "
+                    "there becomes a project in Jack's inventory. Do NOT ask "
+                    "Jack about this; retry write_brain NOW with a corrected "
+                    "path: a fact about an existing project belongs in that "
+                    "project's EXISTING note (mode 'append'); a task, plan, or "
+                    "loose note goes under inbox/ or episodic/. Only use "
                     "create_project for a genuinely NEW project (it checks for "
-                    "near-duplicates); for anything else (a task, a plan, a "
-                    "note about project work), save it under inbox/ or "
-                    "episodic/ instead.")
+                    "near-duplicates).")
         return brain.write_note(path, content, mode=mode, summary=summary)
 
     def update_note_field(path: str, field: str, value: str) -> str:
@@ -74,10 +81,13 @@ def register_brain_tools(registry, brain, retriever, top_k: int):
     )
     registry.register(
         "read_brain",
-        # Example paths use a placeholder slug, never a real project name:
-        # schema text rides every model context, and GT-C9 measured the 14B
-        # quoting a schema example as if it were a real project (CN.4.1).
-        "Read one full brain note by its relative path, e.g. projects/<slug>.md",
+        # Example paths use a CONCRETE throwaway name — never a real project
+        # (schema text rides every model context; GT-C9 measured the 14B
+        # quoting a schema example as if it were a real project, CN.4.1) and
+        # never a template token (the CN.5 candidate measured degraded path
+        # formation against "projects/<slug>.md", CN.6.1 — the 14B forms args
+        # from concrete shapes).
+        "Read one full brain note by its relative path, e.g. projects/sun_dial.md",
         {
             "type": "object",
             "properties": {"path": {"type": "string"}},
@@ -115,7 +125,7 @@ def register_brain_tools(registry, brain, retriever, top_k: int):
         {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Note path, e.g. projects/<slug>.md"},
+                "path": {"type": "string", "description": "Note path, e.g. projects/sun_dial.md"},
                 "field": {"type": "string", "description": "Field name, e.g. Status"},
                 "value": {"type": "string"},
             },

@@ -2798,6 +2798,17 @@ class Engine:
         "action", "target", "duplicates", "survivor", "name", "path",
         "content", "mode", "summary", "slug", "title", "status", "folder",
         "note", "merged into", "source_notes", "target_note"}
+    # VALUE-position quotes are never project identifiers (CN.6.1). Measured
+    # on the CN.5 candidate (MEM-005, stamps in plan §6): a truthful "status
+    # updated to 'archived'" was scanned, 'archived' resolved to no project,
+    # and the floor REPLACED a correct confirmation with the mis-naming
+    # apology — the correct action got a gaslighting reply. A quote preceded
+    # by to/as (assignment) or within a status phrase is a VALUE — same
+    # principle as the grader's 'merged into <planted>' exemption (197edc8).
+    # Documented residual: a fabricated merge target phrased "fold them to
+    # 'x'" (measured shapes all say "into") would slip this floor.
+    _VALUE_POSITION_TAIL = re.compile(
+        r"(?:\b(?:to|as)\s+|\bstatus\b[^.!?'\"‘“]{0,40})$", re.IGNORECASE)
 
     # CN.4 — end-of-reply narration of an internal PROJECT LISTING the model
     # never ran ("...Let's start by listing them.", tools=[]). Shape D can't
@@ -2841,6 +2852,8 @@ class Engine:
             low = cand.lower()
             if low in self._IDENTIFIER_NOISE or low in tool_names:
                 continue
+            if self._VALUE_POSITION_TAIL.search(text[:m.start()]):
+                continue   # assignment/status VALUE, not an identifier (CN.6.1)
             trimmed = re.sub(r"^the\s+|\s+project$", "", cand,
                              flags=re.IGNORECASE)
             n = _norm(trimmed)

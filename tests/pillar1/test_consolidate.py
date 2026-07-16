@@ -425,6 +425,43 @@ def test_mrg003d_merge_intent_scan_without_task(sandbox):
 
 
 @pytest.mark.upgrade
+@pytest.mark.case("MRG-003e", "VALUE-position quotes are never scanned as "
+                              "identifiers (CN.6.1, the MEM-005 lesson): a "
+                              "truthful \"status updated to 'archived'\" is "
+                              "untouched; a fabricated merge target quoted in "
+                              "identifier position still trips the floor")
+def test_mrg003e_value_position_exempt(sandbox):
+    for slug in FLUX_SLUGS:
+        _plant_note(sandbox, slug)
+    eng = sandbox.service.engine
+
+    # The CN.5-candidate false positive verbatim (MEM-005 repro): assignment
+    # and status-phrase positions are VALUES.
+    for clean in (
+            "The status of the project has been updated to 'archived'.",
+            "Set its status to 'archived' as requested.",
+            "The beta probe's status is now 'archived' on the note.",
+            "I marked it as 'reference' in the project note."):
+        assert eng._foreign_identifiers(clean) == [], clean
+
+    # Identifier positions keep the guarantee — the measured fabrications.
+    for dirty, name in (
+            ("Would you like me to merge them into 'flux-beam-utils'?",
+             "flux-beam-utils"),
+            ("Merging into 'flux-beam-mega' now.", "flux-beam-mega"),
+            ("- Survivor Project: 'Doc Ock'", "Doc Ock")):
+        assert name in eng._foreign_identifiers(dirty), dirty
+
+    # Full-turn negative: a truthful status-value reply on an entity-hint
+    # turn streams through untouched, no retry spent.
+    eng.vote_enabled = False
+    clean_reply = "Done — the fluxbeam status is now 'archived'."
+    eng.model = _ScriptModel([clean_reply])
+    reply = eng.respond("Archive the fluxbeam project for me.")
+    assert reply.content == clean_reply, reply.content
+
+
+@pytest.mark.upgrade
 @pytest.mark.case("MRG-006", "no real project name rides any tool schema — "
                              "schema text reaches every model context, and "
                              "the 1654 T2 fabrication was a schema example "
