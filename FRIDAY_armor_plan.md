@@ -2044,8 +2044,9 @@ Section tracker (updated in place as each lands):
 | CN.3 | Project-identifier grounding floor + which-ask backstop (post-gen, held+retry, pre-ledger) + MRG-003 set | **DONE — GT-C10 2/2 full boards (which-ask converted), GT-C9 locked-clean ×3 after one grader fix (197edc8), zero fabricated identifiers** |
 | CN.4 | Narration-terminated internal-read probe → scoped fix + MRG-004 | **DONE (code cn 0a64729, MRG-004/004b/004c; narrated-listing floor appends the real list_projects output)** |
 | CN.4.1 | *(added in-leg from CN.4 measurement)* fabrication scan rides bare merge-intent turns + no real project names in tool schemas + MRG-003d/MRG-006 | **DONE — GT-C9 2/2 locked-clean (1945/1947) + GT-C10 full board (1949); only residual = the known T3 generic-clarify TARGET (P4 watch item)** |
-| CN.5 | Merge + candidate full run (detached + watchdog) | **merge DONE (main 0362f47, zero conflicts, post-merge --quick 314/314) — candidate IN FLIGHT: stamp `2026-07-15_1954`, PID 15572, watchdog PID 33124, 405 items, expect done ~23:10–23:30** |
-| CN.6 | `--compare 2026-07-15_1118 2026-07-15_1954` + per-item verdicts + ship/remove decisions | queued — baseline stays the TM.5 candidate 1118 (CN.0 validation: nothing model-visible on main between 77c4491 and the merge) |
+| CN.5 | Merge + candidate full run (detached + watchdog) | **DONE — candidate `2026-07-15_1954`: 384/21 of 405, wall 3:50:16, clean exit, err empty, watchdog green (one criterion-5 false-alarm SAVE at 22:08, first live save since it shipped)** |
+| CN.6 | `--compare 2026-07-15_1118 2026-07-15_1954` + per-item verdicts + ship/remove decisions | **IN PROGRESS — targets converted (GT-C9/GT-C10 PASS in-suite, project_ops +0.108); 3 armor-caused regressions found by repro + FIXED in CN.6.1 (c3fe638); adjudication re-runs in flight** |
+| CN.6.1 | *(added in-leg from CN.6 adjudication)* value-position identifier exemption + concrete schema examples + retry-naming corrective + MRG-003e | **code DONE (main c3fe638) — guards 16/16, --quick 315/315; re-runs measuring** |
 
 **CN.0 (2026-07-15 afternoon, this session — leg opened on the monitor's
 TM-idle signal):**
@@ -2421,3 +2422,68 @@ pre-existing) and the CN-specific collateral surfaces: merge-intent
 stream-hold widening (any turn Jack talks merges now streams once at
 the end) and the schema-example neutralization (read_brain /
 create_project call shapes).
+
+**CN.5 candidate DONE: stamp `2026-07-15_1954`** — 405 items, N=5,
+**384 passed / 21 failed**, wall **3:50:16** (19:55→23:44), detached,
+clean exit, err empty. Watchdog: one criteria-1–4 alarm at 22:08 (log
+stale 33 min in the quiet PROP tail) that **criterion 5 correctly
+dismissed** ("keep_alive expiry advanced — inference is flowing") —
+the first live save since c7295ca shipped; watchdog 33124 stopped
+after run exit. Provenance: launched from clean 0362f47; mid-run main
+commits were plan-doc only — run valid.
+
+**CN.6 — compare 1118 → 1954
+(`results\2026-07-15_1954\compare_vs_2026-07-15_1118.json`):**
+
+| skill | base | cand | Δ | reading |
+|---|---|---|---|---|
+| project_ops | 0.667 | 0.775 | **+0.108 UP** | the leg's named target; GT-C9 + GT-C10 both PASS in-suite (new items) |
+| email_triage | 0.000 | 0.600 | +0.600 UP | recovery from baseline's three 420 s timeout zeros (TM.6 adjudication) |
+| calendar | 0.750 | 1.000 | +0.250 UP | recovery, same family |
+| voice | 0.667 | 0.867 | +0.200 UP | churn recovery |
+| thinking_skills | 0.631 | 0.646 | +0.015 | flat-ish |
+| injection_defense | 0.923 | 0.923 | 0.000 | TM gains HELD through CN |
+| memory_recall / session_ops / briefing / quant / playbook | — | — | 0.000 | flat |
+| memory_persistence | 0.917 | 0.667 | **−0.250 DOWN** | armor-caused, adjudicated below → CN.6.1 |
+
+Newly failing (6): MEM-001, MEM-005[beta_probe], MEM-005[gamma_arm],
+COM-001 (3/5), SKL-003 (4/5), SKL-004 (4/5). Newly passing: EML-004,
+GAP-002, GT-A (the TM.6 churn/timeout set, back as predicted).
+
+**Adjudication (repro-driven, not conjecture):**
+
+- **MEM-005 ×2 — ARMOR-CAUSED, CN.3 false positive on VALUE quotes.**
+  Live repro (sandbox, arg capture): `update_note_field` ran with
+  CORRECT args and the write LANDED — then the truthful reply "status
+  ... updated to 'archived'" was scanned, `'archived'` resolved to no
+  project surface, and the identifier floor REPLACED a correct
+  confirmation with the mis-naming fallback. Correct action,
+  gaslighting reply; scan was live via the entity hint (pre-CN.4.1
+  window — this is CN.3 core, not the widening). In the killed child
+  the same false-positive path plus arg-formation churn lost the
+  write in 2/4 params.
+- **MEM-001 — ARMOR-CAUSED, two compounding CN misses.** Evidence in
+  the report itself: the model tried write_brain to a NEW projects/
+  path for a stated fact (the right target was the EXISTING
+  projects/alpha_rig.md), CN.1b's guard refused (correctly), and the
+  model answered the ERROR by ASKING which project to create — fact
+  lost. The corrective named the refusal, not the retry. Suspected
+  contributor to path quality: CN.4.1's `projects/<slug>.md` schema
+  example replaced a concrete shape with a TEMPLATE TOKEN.
+- **COM-001 / SKL-003 / SKL-004 — knife-edge churn (3/5, 4/5, 4/5),
+  no CN signature in any failing reply** (no replacement text, no
+  merge/identifier surface in the prompts). Adjudication = targeted
+  re-runs.
+
+**CN.6.1 (code DONE main c3fe638, guards 16/16, --quick 315/315):**
+(1) `_VALUE_POSITION_TAIL` — a quote preceded by to/as (assignment)
+or a status phrase is a VALUE, never scanned (engine-side twin of the
+grader's 197edc8 'merged into <planted>' exemption; documented
+residual: "fold them to 'x'" would slip — measured shapes all say
+"into"); MRG-003e locks positives AND negatives. (2) Schema examples
+are concrete throwaway names (`projects/sun_dial.md`), never real
+names, never template tokens. (3) The CN.1b corrective now names the
+RETRY (existing-note append / inbox/) and forbids turning the refusal
+into a question. Re-runs in flight: memory_persistence family,
+COM-001+SKL-003/004 trio, GT-C9 sanity (fabrication guarantee after
+the exemption).
