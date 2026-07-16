@@ -360,4 +360,81 @@ A session picking this up cold:
 
 ## 6. Results log
 
-*(empty — the next session to open J0/J1 writes the first entry)*
+### 2026-07-16 — J0/J1 leg OPENED (J0 first, per §5). Status: J0 IN PROGRESS
+
+**Session constraints recorded at open** (they shape everything below):
+
+- Armor RA.4 candidate full run IN FLIGHT (stamp `2026-07-16_0553`, PID
+  25372, watchdog 34584, expected done ~08:30–09:30). The RA leg — and
+  all merges to main — belong to the parallel session until RA.6 closes.
+- Therefore: **main gets doc-only commits** from this leg for now
+  (frozen-code rule, §4.3); all J0/J1 code goes to worktree
+  `..\FRIDAY-jarvis`, branch `jarvis` (per `docs\PARALLEL_WORKTREES.md`).
+- **No model/GPU tests this session** — the suite owns Ollama. J0 is
+  pure UI + service plumbing (provably not model-visible: no prompt,
+  tool, or engine change), so per §4.1 its gate is `--quick` + targeted
+  smokes. The `--quick` run itself waits until the GPU/CPU is quiet or
+  the RA run lands; the new toggle unit tests are non-model and safe.
+- **Merge protocol**: `jarvis` merges to main only AFTER the RA leg
+  closes (ship-gate rendered), and after a fresh `--quick` on the merge
+  result. If RA.6 ships anything touching `core\service.py` /
+  `interface\`, rebase-check before merging.
+
+**J0 detailed design (decided this session — deviations get recorded here):**
+
+1. **`core\toggles.py` — ToggleRegistry.** A `Toggle` is registered in
+   code with: `key` (dotted, e.g. `voice.mode`), `kind` (`"bool"` |
+   `"enum"`), `label`, `description`, `default`, `choices` (enum only),
+   `on_change` (owner callback, fired on every applied change), and
+   `persist` (default True). Registry methods: `register(...)`,
+   `get(key)`, `set(key, value)` (validates → applies → persists →
+   fires callback → logs), `describe()` (list of dicts for the UI, in
+   registration order). Value validation mirrors
+   `config_governance.coerce`'s bool handling; enum values must be in
+   `choices`. Unknown key or bad value raises `ValueError` — the
+   Service returns that as a plain error string, never a crash.
+2. **Persistence = `data\toggles.json`**, write-through with fsync (the
+   `app_state.json` pattern in `core\accountability.py`). This IS the
+   "config overlay file" §2 calls for. Deliberately NOT keys in
+   `friday_config.yaml`: these are JACK's runtime switches clicked in
+   the UI (like the existing DND link), not FRIDAY self-modification,
+   so config governance TIERS is untouched (nothing new to tier — and
+   `validate_tiers` proves it: toggles.json is not config). Every
+   change is logged via the gate's action log as a `TOGGLE` line, so
+   the audit trail exists without touching `config\audit.log`'s
+   actor model.
+3. **`dnd` migrates as the first entry** with `persist=False`:
+   initial value read from `acc.dnd`, `on_change=acc.set_dnd`.
+   `data\app_state.json` REMAINS dnd's single store (one fact, one
+   place) — the registry is the single CONTROL path. `service.set_dnd`
+   stays as a one-line compat shim through `set_toggle("dnd", ...)`
+   (the sidebar DND link and pillar1 tests keep working unchanged).
+4. **Service API**: `get_toggles() -> list[dict]` /
+   `set_toggle(key, value) -> {ok, value|error}` on `FridayService`;
+   registry built in `FridayService.__init__` right after `self.acc`.
+   `interface\app.py` `Api` gets the two passthroughs.
+5. **UI**: a "Controls" section ABOVE Connections in the existing
+   settings modal (`index.html` — the Jack-chip overlay). `app.js`
+   renders it from `get_toggles()`: bool → switch, enum → segmented
+   buttons; re-render on change from the returned value (the UI is
+   DUMB — future legs add toggles with zero UI edits). `app.css` gets
+   `.toggle-*` / `.seg-*` styles in the design's existing vocabulary.
+6. **Tests** (`tests\pillar1\test_toggles.py`, case IDs `TGL-###`,
+   non-model): registration + describe order; bool/enum validation +
+   unknown-key refusal; persistence round-trip (fresh registry re-reads
+   the file); persist=False stays out of the file; on_change fires with
+   the applied value and its exception doesn't wedge the registry
+   (value still applied+persisted — the owner is told, best-effort);
+   dnd-through-registry keeps `acc.dnd`/app_state coherent (service
+   test rides in test_app_service.py's pattern if a Service-level check
+   is warranted).
+
+**J0 acceptance (defined before implementation, §4.2):** (a) TGL unit
+suite green; (b) dnd round-trips: sidebar DND link, Controls switch,
+and `get_status().dnd` all agree after flips from both surfaces;
+(c) a registered enum toggle renders as segments, persists across a
+registry rebuild, and fires its owner callback at runtime; (d)
+`--quick` green on the branch before merge (deferred to GPU-quiet, see
+constraints).
+
+*(J0 result entry + J1 opening get appended here as they land.)*
