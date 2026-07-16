@@ -756,6 +756,75 @@ class Engine:
                 live_token("\n" + reply.content)
             turn.append({"role": "assistant", "content": reply.content})
 
+        # Read-ask grounding floor (armor RA leg — the real GND-010/011
+        # lever). The RF-leg probe measured the first-order hole: on a turn-1
+        # "read <path>" the model runs ZERO tools — the file is never read,
+        # no referent lands, and every downstream barrier (phantom,
+        # anti-dodge, artifact-denial) is structurally unreachable because
+        # each needs either a review-claim or a referent on the stack, so
+        # the raw "I can't read local files" denial ships untouched.
+        # Calendar-first pattern, third instance: when
+        # the MESSAGE names a real, readable local file with read intent and
+        # nothing this turn delivered file content, the ENGINE runs read_file
+        # itself — through _run_tool, so gate, taint and referent tracking
+        # all apply — and regenerates ONCE from the live content, tool-free.
+        # Fires at most once per turn and only when the path verifiably
+        # exists on disk, so a mistyped path or a write-intent turn costs
+        # nothing. Deliberately runs BEFORE the phantom barrier: once the
+        # read lands, that barrier's "nothing was read" premise is false and
+        # it correctly stays cold.
+        read_ask_fired = False
+        ra_path = self._read_ask_path(user_input, tool_log) \
+            if reply is not None else None
+        if ra_path:
+            ra_args = {"path": ra_path}
+            if on_tool:
+                on_tool("read_file", ra_args)
+            result, external = self._run_tool("read_file", ra_args)
+            # A gate refusal or read error aborts the floor silently — it
+            # must never make a turn worse than the model's own attempt.
+            if not str(result).startswith("ERROR"):
+                read_ask_fired = True
+                tool_log.append({"tool": "read_file", "args": ra_args,
+                                 "result": result[:500]})
+                call = {"function": {"name": "read_file",
+                                     "arguments": ra_args}}
+                # Transcript stays well-formed: the draft carries the call,
+                # the result follows as a TOOL message — never pasted into a
+                # system turn, because file content is external DATA
+                # (invariant 2) and must not ride in a role the model treats
+                # as instructions.
+                if turn and turn[-1].get("role") == "assistant":
+                    turn[-1]["tool_calls"] = [call]
+                else:
+                    turn.append({"role": "assistant",
+                                 "content": reply.content,
+                                 "tool_calls": [call]})
+                turn.append({"role": "tool",
+                             "content": self._wrap_data(result, external)})
+                correction = (
+                    "STOP: Jack pointed you at a real local file this turn "
+                    f"({ra_path}) and your draft was written without reading "
+                    "it. The read_file result above is that file's ACTUAL "
+                    "content — you can read local files, and you just did. "
+                    "Rewrite the reply grounded in that content: do what "
+                    "Jack asked with what the file really says, engage its "
+                    "specifics, and never claim you lack access to local "
+                    "files or invent content it doesn't contain.")
+                retry = self.model.chat(
+                    base + turn + [{"role": "system", "content": correction}],
+                    on_token=None)
+                self.session_tokens += retry.eval_count
+                # Best-effort acceptance (calendar-first posture): the live
+                # read and the referent push are guaranteed either way; keep
+                # the original reply rather than replace it with an empty one.
+                if (retry.content or "").strip():
+                    reply.content = retry.content
+                    reply.tool_calls = []
+                    if live_token:  # None on a held turn — single emit below streams it
+                        live_token("\n" + reply.content)
+                    turn.append({"role": "assistant", "content": reply.content})
+
         # Phantom-review barrier (Task 6, structural). The base model cannot
         # be PROMPTED out of "I've reviewed the spreadsheet you provided"
         # when no spreadsheet exists — measured 5/5 fabrication with the
@@ -1575,6 +1644,12 @@ class Engine:
             # re-ground a reply that denied having an artifact the session
             # ledger holds — the embodiment-denial residual, made countable.
             "artifact_denial_floor": artifact_denial_fired,
+            # Armor RA: True when the read-ask floor had to run read_file
+            # itself because Jack named an existing local file with read
+            # intent and the turn ran no content-delivering tool — the
+            # zero-tool read-ask residual, made countable. Additive; the
+            # JSONL schema stays backward-compatible.
+            "read_ask_corrective": read_ask_fired,
             "identifier_floor": identifier_floor_fired,
             # CN.4: the engine fulfilled an end-of-reply narrated project
             # listing the model promised but never ran.
@@ -3074,6 +3149,62 @@ class Engine:
             return True
         return bool(self._DATE_MENTION.search(reply_text or "")
                     and self._EVENT_TERMS.search(reply_text or ""))
+
+    # Read-ask floor trigger vocabulary (armor RA leg). Deliberately narrow:
+    # a read-shaped verb must accompany the path, so "save this to notes.md"
+    # or a bare path mention never forces a read — a false fire would taint
+    # the turn (read-content-is-data) for nothing. The stems cover the
+    # measured GND-010/011 shapes ("read <path>", "give me your analysis of
+    # it", "thoughts on the notes").
+    _READ_INTENT = re.compile(
+        r"\b(read|open|look\s+(at|through|over)|check|review|analy\w*"
+        r"|go\s+(over|through)|summar\w*|thoughts?\s+on"
+        r"|what('?s| is| does)\s+in)\b",
+        re.IGNORECASE)
+
+    # A path-shaped token: optional drive letter, at least one separator, a
+    # dot-extension. The quoted form allows spaces; the bare form does not.
+    # Bare filenames (no separator) stay out on purpose — resolving them
+    # against the referent stack is a separate, riskier lever (plan §6
+    # next-leg candidate), and a false hit here costs a real disk read.
+    _PATH_TOKEN = re.compile(
+        r"\"((?:[A-Za-z]:)?[^\"\n]*[/\\][^\"\n]*\.[A-Za-z0-9]{1,8})\""
+        r"|((?:[A-Za-z]:)?[\w.~-]*(?:[/\\][\w.~-]+)+\.[A-Za-z0-9]{1,8})\b")
+
+    # Tools that already delivered file content this turn — when one ran the
+    # read-ask hole never opened and the floor stays cold. web_fetch counts
+    # because the GND-014 arg-guard reroutes local-path args to a disk read.
+    _CONTENT_DELIVERING = ("read_file", "web_fetch", "read_brain")
+
+    def _read_ask_path(self, user_input: str, tool_log: list):
+        """The read-ask trigger: Jack's message names an EXISTING local file
+        with read intent, and no content-delivering tool ran this turn.
+        Returns the first such path (str) when the floor should fire, else
+        None. Existence is checked HERE so the floor never burns a retry on
+        a mistyped path — the model's own honest 'can't find it' stands.
+
+        A content tool only closes the hole when it actually DELIVERED:
+        INJ-004's measured shape is web_fetch running with a mangled arg,
+        the GND-014 arg-guard refusing (an ERROR hint), and the model
+        narrating that error instead of retrying — the file Jack named is
+        still unread, so the floor must fire through the failed attempt."""
+        for t in tool_log or []:
+            if (t["tool"] in self._CONTENT_DELIVERING
+                    and not str(t.get("result", "")).startswith("ERROR")):
+                return None
+        if not self._READ_INTENT.search(user_input or ""):
+            return None
+        for m in self._PATH_TOKEN.finditer(user_input or ""):
+            cand = (m.group(1) or m.group(2) or "").strip()
+            if not cand:
+                continue
+            try:
+                p = Path(cand).expanduser()
+                if p.is_file():
+                    return str(p)
+            except OSError:
+                continue
+        return None
 
     def _date_grounding(self, reply_text: str, tool_log: list) -> str:
         """Observability self-check (Phase 1, item 6): classify how a date in
