@@ -107,7 +107,23 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      floors leg: script_hops_suppressed,
                      empty_reply_corrective, empty_reply_floor;
                      residual-floors leg: artifact_denial_floor; CONSOLIDATE
-                     leg: identifier_floor, narrated_list_floor).
+                     leg: identifier_floor, narrated_list_floor; READ-ASK
+                     leg: read_ask_corrective).
+                     The READ-ASK GROUNDING FLOOR (armor RA leg, calendar-
+                     first's third instance) sits BEFORE the phantom barrier:
+                     when Jack's message names an EXISTING local file with
+                     read intent and no tool DELIVERED that same file this
+                     turn (an ERROR result, e.g. a refused web_fetch, does
+                     not count; nor does a successful read of a DIFFERENT
+                     source), the engine runs read_file itself through
+                     _run_tool — gate, taint, and referent tracking all
+                     apply — and regenerates once from the live content.
+                     Landing the read first is what makes every downstream
+                     artifact floor reachable (they all need a referent or a
+                     review-claim). The web_fetch arg-guard's zero-hit hint
+                     names the RETRY and forbids narrating the error (RA.1b;
+                     its ERROR: prefix is load-bearing — the floor keys on
+                     it).
                      ARMOR A1 (FRIDAY_armor_plan.md §3.1): the ANSWER-CONTRACT
                      FLOOR — when the message carries a literal `ANSWER:`
                      directive and the settled reply lacks the line, it is
