@@ -518,4 +518,37 @@ isolated:
 
 Tests `tests\pillar1\test_tasks.py`, case IDs `TSK-###`, non-model.
 
-*(J1.1 result + next-increment entries get appended here.)*
+**J1.1 RESULT (same session, ~08:15): ledger increment CODE-COMPLETE on
+`jarvis` @ `197e735` — engine/tools wiring NOT started (by design).**
+
+- Shipped the §6 design with one in-flight corrective: frontmatter is
+  rendered with `yaml.safe_dump`, not f-strings — a title or confirm
+  reason carrying quotes/colons must not corrupt the header, because
+  the parser's fallback would silently drop `blocked_on`, the one field
+  a cross-session resume depends on.
+- **Measured**: `tests\pillar1\test_tasks.py` TSK-001..010 **10/10**
+  first run (non-model, stamp `2026-07-16_0814`). Covers: file shape,
+  restart round-trip through a rebuilt ledger, evidence-required
+  completion, status derivation (done/blocked/in-progress), open-slug
+  refusal + closed-slug suffixing, list_open filtering, current_step,
+  summary() active-only lines, verbatim evidence, loud unknown-target
+  failures.
+- `ARCHITECTURE.md` updated on the branch (tasks.py entry, with the
+  not-yet-wired caveats spelled out).
+- **Next increments for J1, in order** (each its own §6 record):
+  1. `brain.py` write guard for `tasks\` (must precede any task tool).
+  2. Model-facing task tools via the registry + engine injection of
+     `TaskLedger.summary()` into the referent block — MODEL-VISIBLE,
+     needs a fresh armor-style baseline/compare AFTER the RA leg
+     closes and `jarvis` merges (baseline must include the merged
+     code; plan §4.1).
+  3. J1.3 job runner (`core\jobs.py`) — idle-aware, watchdog-checking,
+     suite-run-aware pause (the §1 GPU rules); register
+     `jobs.background_enabled` toggle (J0 machinery ready for it).
+  4. J1.5 board API + UI surface.
+- J1 acceptance (a)–(c) in §3 are graded when increments 2–3 exist;
+  the ledger alone satisfies the persistence half of (c) (TSK-002).
+
+*(Next entry: whoever picks this up — read the J0 pickup protocol
+above first; merge order is jarvis → main after RA closes, THEN the
+model-visible task-tool increment starts from a fresh baseline.)*
