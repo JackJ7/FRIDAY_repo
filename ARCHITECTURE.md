@@ -457,6 +457,25 @@ core\toggles.py      ToggleRegistry (jarvis plan J0): every user-facing
                      store; the registry is the one CONTROL path, and
                      Service.set_dnd is a compat shim through it).
 
+core\tasks.py        TaskLedger (jarvis plan J1.1): a multi-step job is a
+                     FILE — brain\tasks\<slug>.md (YAML frontmatter + a step
+                     checklist with verbatim `- evidence:` lines), mutated
+                     ONLY via this class (the tracker pattern), written
+                     through brain.system_write (git-committed, test-
+                     archive-routed). CODE owns the state machine: task
+                     status DERIVES from step states on every mutation,
+                     complete_step REFUSES empty evidence (model say-so
+                     never advances a step — the J1.2 floor), block()
+                     records the confirm reason in blocked_on so a parked
+                     task resumes in a session that never saw the
+                     conversation, and restart-survival is by construction
+                     (every read re-parses the files). NOT yet wired to the
+                     engine or tools: summary() exists for the future
+                     referent-block injection, which is model-visible and
+                     ships behind a before/after compare (plan §6); before
+                     any model-facing task tool registers, brain.py's
+                     tracker-file protection must extend to tasks\.
+
 core\senses\         networked DATA sources (never cognition)
   gmail_sense.py     read + draft; NO send method exists by design
   calendar_sense.py  read free; create gated by approve_outbound.
