@@ -2042,7 +2042,8 @@ Section tracker (updated in place as each lands):
 | CN.1 | Merge-intent operand hint (hint_for "many" branch, intent-aware) + MRG-001 | **DONE** (wiring proven; obedience gap closed by CN.2.1/CN.3) |
 | CN.2 | Pending-consolidation ledger + CN.2.1 code-executed merge (escalation, measured activation) + MRG-002 set | **DONE — GT-C9 2/2 PASS, merged-on-disk 4/4 converted** |
 | CN.3 | Project-identifier grounding floor + which-ask backstop (post-gen, held+retry, pre-ledger) + MRG-003 set | **DONE — GT-C10 2/2 full boards (which-ask converted), GT-C9 locked-clean ×3 after one grader fix (197edc8), zero fabricated identifiers** |
-| CN.4 | Narration-terminated internal-read probe → scoped fix + MRG-004 | queued — reproduction already captured (1623 T2, in-flow narration termination) |
+| CN.4 | Narration-terminated internal-read probe → scoped fix + MRG-004 | **DONE (code cn 0a64729, MRG-004/004b/004c; narrated-listing floor appends the real list_projects output)** |
+| CN.4.1 | *(added in-leg from CN.4 measurement)* fabrication scan rides bare merge-intent turns + no real project names in tool schemas + MRG-003d/MRG-006 | **code DONE (cn d5f0b2a) — conversion batch in flight** |
 | CN.5 | Merge + candidate full run (detached + watchdog) | queued |
 | CN.6 | `--compare` + per-item verdicts + ship/remove decisions | queued |
 
@@ -2340,3 +2341,58 @@ under results\ while any suite process is alive — the writer re-opens
 report.json incrementally per test, and cleaning "the collect-only
 artifact" at 1631 mid-flight crashed the first confirm run
 (INTERNALERROR, run void, replaced by v4).
+
+**CN.4 code DONE (cn 0a64729) + CONVERSION MEASURED (2026-07-15
+evening; GT-C9 ×2 on cn 0a64729, stamps 1654/1657):**
+
+- **The floor:** `_NARRATED_LIST_TAIL` — a reply that ENDS on
+  first-person-future narration of a project listing with ZERO tools
+  run gets the real `list_projects` output APPENDED by the engine
+  (never replaced, never a second model hop — the F4/A1 empty-reply
+  lesson). Shape D is structurally blind here because the prose names
+  no tool and recovery never invents one. Internal zero-arg READ only;
+  action narration ("let me merge them") never matches (MRG-004c).
+  Side fix in the same commit: the CN.2.1 code-executed merge now
+  fires `on_tool`, so harness/UI tool visibility tells the truth.
+- **Measurement (2 batches): 1657 PASS full board; 1654 FAILED — and
+  the failure is a NEW hole, not the narrated-listing shape.** The
+  narrated-listing tail did not recur in either batch (converted /
+  not re-observed); what 1654 exposed instead: T1's model-run merge
+  landed and retired the ledger, then T2 ("merge all of the similar
+  projects into one") drew a generic clarify whose EXAMPLE block
+  quoted fabricated names — `'Doc Ock'`, `'Project 1'`, `'Project 2'`
+  — tripping LOCKED no-foreign-identifier. **Root cause found by
+  grep, not conjecture: 'Doc Ock' rode INTO the sandbox inside the
+  `create_project` tool schema ("e.g. 'Doc Ock'") — the 14B lifted
+  the schema's own example into its clarify.** The CN.3 scan was
+  dormant because `project_context_live` required a pending task /
+  directive / entity hint, and the ledger had (correctly) retired —
+  the engine's scan window was NARROWER than the every-turn LOCKED
+  guarantee. 1657's T2 was the same generic clarify minus the quoted
+  examples — pass/fail hinged on echo luck, so this was a real
+  knife-edge, not variance to wave off.
+
+**CN.4.1 (added in-leg, code DONE cn d5f0b2a): scan window = every
+merge-intent turn + schema hygiene.**
+
+- Engine: `_merge_intent_turn` set per-turn in `_consolidation_update`
+  (before the resolver guard, so it is turn-accurate even in a bare
+  sandbox); `project_context_live` and the CN.3 stream-hold both gain
+  it. The fabrication scan now rides every turn Jack talks merges,
+  pending task or not — matching the lock's scope (MRG-003d, the 1654
+  T2 shape verbatim: draft with fabricated examples held, clean retry
+  accepted).
+- Schema hygiene: every model-visible string that named a REAL
+  project is neutralized — `create_project`/`add_files_to_project`
+  ("e.g. 'Doc Ock'" ×2), `resolve_project` ("the doc ock project"),
+  `read_brain`/`update_note_field` ("projects/perry.md" ×2), and
+  persona.md's status example ("PERRY is done" → "X is done").
+  **MRG-006 locks it in code:** no real project name may appear in
+  `registry.to_ollama()` output, ever — a schema example is both a
+  fabrication seed (measured) and test contamination (the sandbox
+  imported a live name through the schema channel, dodging the
+  no-real-names-in-test-prompts rule by riding the OTHER direction).
+- Suite: consolidate guards 15/15 (13 prior + MRG-003d + MRG-006),
+  full quick suite 314 pass (stamp 1942).
+- Conversion batch (GT-C9 ×2 + GT-C10 ×1 on d5f0b2a) launched
+  detached — results recorded below when landed.
