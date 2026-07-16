@@ -2525,3 +2525,105 @@ the exemption).
   (GND-010/011 lever, Jack-ranked behind CONSOLIDATE), INJ-004
   (pre-existing, mechanism differs from TM's ledger hole), MEM-003
   field-matching floor (new, this leg's discovery).
+
+---
+
+**NEXT-LEG PREP (parallel-safe, 2026-07-16 ~03:15 — written while the
+ra leg's fresh baseline `2026-07-16_0255`/results-dir 0303 is IN
+FLIGHT from the parallel session; frozen-code rule observed, this
+block plus an ARCHITECTURE.md catch-up are doc-only):**
+
+**1. INJ-004 mechanism CONFIRMED — it is a READ-ASK family member,
+not an injection-defense gap.** From the 1954 candidate report
+(`results\2026-07-15_1954\report.json`): on `Read <path> - what's the
+stall torque?` the model routed the local path to `web_fetch`; the
+GND-014 arg-guard refused CORRECTLY (its message even names
+`read_file`); the model then NARRATED the error back to Jack instead
+of retrying — zero tools ran, reply = error narration, `0.65` never
+read. Two implications:
+  - (a) The in-flight ra leg (read-ask grounding floor) is the
+    INJ-004 lever — if the floor runs read_file in code on a turn-1
+    "Read <path>" ask, INJ-004 converts for free. Claim it in the ra
+    compare rather than budgeting a separate leg.
+  - (b) The GND-014 refusal message has the PRE-CN.6.1 corrective
+    shape: it names the right tool but does not name the RETRY or
+    forbid narrating the error (the exact hole CN.6.1 closed for
+    write_brain, c3fe638). Cheap ra-leg candidate: give the
+    arg-guard corrective the same treatment — "call read_file on
+    this path NOW; do not report this error to Jack."
+
+**2. MEM-003 field-matching floor — DESIGN READY (future leg; root
+cause verified in code).** `core/project_meta.py` `set_field()`
+(line ~38) exact-matches the field name (case-insensitive only), so
+`field="load cell rating"` misses the seeded `- **Load cell:** 20 kg
+rated` line and INSERTS a second, contradicting line — exactly what
+MEM-003 asserts against. Floor (deterministic, no model call): on
+exact miss, run a normalized pass over EXISTING `- **Field:**` lines
+(lowercase, separators squashed — the project_resolver `_squash`
+philosophy); match when one name's token set contains the other
+('load cell' ⊂ 'load cell rating').
+  - Exactly ONE hit → update THAT line, keeping the note's canonical
+    field name (don't let the model's paraphrase rename fields).
+  - MULTIPLE hits → refuse with a corrective that NAMES the candidate
+    fields and the retry (CN.6.1 corrective shape; doubles as a
+    which-ask instance of the P4 directive).
+  - ZERO hits → insert, as today (genuinely new fields must still
+    work — MEM-020's `note.count("**Load cell:**") == 1` and the
+    duplicate check at test_memory.py:202 both stay green).
+  Guard tests: positive (rating→Load cell), negative (new field
+  inserts), ambiguity refusal. Durability side-note, adjudicated: the
+  MEM-005 killed-child loss was arg-formation churn, not a missing
+  fsync — update_note_field writes that RAN landed. No action there.
+
+**3. P4 general pending-task ledger — PREP.** CN.2 is the merge
+verb's instance (`engine.py _consolidation_update`,
+`self.consolidation = {filter, candidates, survivor, default,
+turns_left}`). General shape: a `self.pending_task` ledger keyed by
+INTENT class, armed when a request-shaped message cannot complete
+THIS turn (blocked on a which-ask, a confirm, or a missing operand),
+refreshed on engagement, TTL-expired, directive riding the END slot
+of the referent block — the slot now measured to work twice (offer
+ledger, consolidation ledger). Target shape = the T3 generic-clarify
+residual (both GT-C9 CN.4.1 batches): when the model clarifies while
+a task is pending, the directive must force the clarify to NAME the
+pending task, never go generic. Design decision for fresh eyes: does
+pending_task SUBSUME self.offer and self.consolidation, or sit
+BESIDE them? Recommend beside-first — subsuming risks regressing two
+measured mechanisms; fold later only with measurements in hand (the
+A6-ablation precedent).
+
+**4. Hole scan (read-only, 2026-07-16):**
+  - Real-name purge HOLDS on every model-visible surface (grep
+    CLARK/PERRY/Crush Depth/Doc Ock across *.py: remaining hits are
+    code comments, tests asserting the names DON'T appear, and
+    `training/generate_exemplars.py`). Flag for Jack: the training
+    exemplar generator intentionally carries real Crush Depth
+    content — fine as a fine-tuning corpus, but those exemplars must
+    never be replayed through a sandbox/test path (the memory pass
+    would write real-project content into a test brain).
+  - `_VALUE_POSITION_TAIL` documented residual stands ("fold them to
+    'x'" phrasing would slip the exemption) — accepted; measured
+    shapes all say "into".
+  - Stale worktrees from merged legs still on disk: FRIDAY-a1,
+    -a6a7s1, -floors, -rf, -tm, -cn. Not removed (a session may
+    still reference them) — Jack: `git worktree remove <path>` when
+    convenient; branches stay.
+  - ARCHITECTURE.md was three legs stale (last touched at the floors
+    leg) — CAUGHT UP this session: residual-floors, taint-memory,
+    and CONSOLIDATE engine mechanisms + new ilog fields
+    (artifact_denial_floor, identifier_floor, narrated_list_floor)
+    now documented. Doc-only, not model-visible.
+
+**5. Pairing candidates surfaced by this prep (for ranking, not
+committed):**
+  - **P5 correction ledger** (named GAP in the §0b parity map) pairs
+    naturally with the MEM-003 floor: the floor is the WRITE half of
+    "Correction: X, not Y"; the ledger half records that a
+    correction happened so recall can never resurface the superseded
+    value (a recurrence-floor-style gate keyed on corrected facts —
+    TM.3's shape, new key).
+  - **GND-014 corrective upgrade** (item 1b) — small enough to ride
+    the ra leg if the parallel session wants it.
+  - **update_note_field ambiguity refusal** (item 2) doubles as the
+    first non-merge which-ask instance of the P4 directive — if P4
+    is ranked next, build MEM-003's floor inside it.

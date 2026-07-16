@@ -105,7 +105,9 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      offer_accepted, offer_armed, offer_dodge_corrective,
                      history_compacted; armor A1: answer_floor_corrective;
                      floors leg: script_hops_suppressed,
-                     empty_reply_corrective, empty_reply_floor).
+                     empty_reply_corrective, empty_reply_floor;
+                     residual-floors leg: artifact_denial_floor; CONSOLIDATE
+                     leg: identifier_floor, narrated_list_floor).
                      ARMOR A1 (FRIDAY_armor_plan.md §3.1): the ANSWER-CONTRACT
                      FLOOR — when the message carries a literal `ANSWER:`
                      directive and the settled reply lacks the line, it is
@@ -128,6 +130,61 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      the live stream OR the transcript (drifted hop narration
                      is scrubbed; the settled-reply script floor remains the
                      last barrier).
+                     RESIDUAL-FLOORS LEG (armor plan §6): a local path handed
+                     to web_fetch is refused in CODE with a message naming
+                     read_file/list_dir (GND-014 arg-guard — the failure was a
+                     misroute, not a model ceiling); an ARTIFACT-DENIAL FLOOR
+                     (RF.3) catches a reply that denies having an artifact the
+                     session referent ledger holds — one corrective retry,
+                     then a code-built line naming the artifact (the
+                     date-denial-floor shape); Shape-D narrated-tool-call
+                     recovery is scoped to the MAIN turn only (MEM-014 — a
+                     memory-pass reply must never be parsed as a tool call);
+                     canon.py's normalize_unit case-folds unit tokens like
+                     RPM (CHK-006); and the brain's auto-commit refuses to
+                     touch an ENCLOSING git repository when the brain dir
+                     itself isn't one (brain.py guard — a real worktree
+                     incident, MEM-013).
+                     TAINT-MEMORY LEG: the post-reply memory pass has ZERO
+                     ungated brain-write paths — LEDGER TRUTH (an action the
+                     gate BLOCKED or Jack declined is never recorded as done,
+                     MEM-015/016), tainted-observation QUARANTINE
+                     (observations derived from external content are stored
+                     from the tool result itself, model hints dropped, and
+                     carry tainted:true frontmatter, MEM-017), and the
+                     recurrence floor never surfaces tainted observations as
+                     established fact (MEM-018). This closed the historical
+                     injection churn: a planted instruction could previously
+                     LAUNDER itself into durable memory via the memory pass.
+                     CONSOLIDATE LEG (CN.1–CN.6.1): project consolidation is
+                     ENGINE-OWNED STATE. self.consolidation is a
+                     pending-consolidation ledger armed when a merge-intent
+                     message resolves 2+ operands via
+                     project_resolver.merge_candidates (operands and the
+                     default survivor are picked in CODE — choosing is where
+                     fabrication crept in); it refreshes on engagement,
+                     expires by TTL, and its status directive rides the END
+                     of the referent block (the slot the offer ledger earned
+                     the same way). Once the survivor is confirmed the ENGINE
+                     EXECUTES the merge itself (CN.2.1 — measured 4/4: the
+                     14B narrates the exact call as prose instead of making
+                     it). Guard rails around it: an IDENTIFIER GROUNDING
+                     FLOOR (_foreign_identifiers) scans merge-intent-turn
+                     replies for quoted project identifiers that resolve to
+                     no known project surface and replaces the reply with an
+                     honest which-ask — with a VALUE-POSITION exemption
+                     (a quote preceded by to/as or a status phrase is a
+                     VALUE being assigned, never scanned; CN.6.1); a
+                     NARRATED-LISTING floor runs list_projects itself when
+                     the reply ENDS by promising a listing it never ran
+                     (_NARRATED_LIST_TAIL); write_brain refuses NEW
+                     projects/ paths (CN.1b) with a corrective that names
+                     the RETRY (append to the existing note / inbox/) and
+                     forbids turning the refusal into a question; and tool
+                     schema examples use concrete THROWAWAY names, never
+                     real project names (one leaked into every context and
+                     was fabricated back verbatim) and never template
+                     tokens like <slug> (CN.4.1).
                      The compaction digest and the memory pass's record
                      extraction are format-constrained (see model.py below);
                      the memory pass also backstops commitment inference —
