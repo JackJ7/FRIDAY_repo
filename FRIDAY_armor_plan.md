@@ -2646,9 +2646,9 @@ INJ-004 conversion is CLAIMED by this leg; no separate leg budgeted.
 | RA.1 | Read-ask grounding floor (engine runs read_file itself, calendar-first pattern) | **DONE on ra a3b8e6c** — guards RAF-001..006, quick 321/321 |
 | RA.1b | GND-014 corrective names the RETRY, forbids narrating the error (CN.6.1 lesson) | **DONE on ra a3b8e6c** — GND-014 test extended |
 | RA.2 | Conversion measurement: targeted GND-011 / GND-010 / INJ-004 batches on ra (GPU free post-baseline) | **DONE (stamps 0530/0532/0533): GND-011 CONVERTED; GND-010 + INJ-004 exposed one floor gap + one grader gap → RA.2.1** |
-| RA.2.1 | In-leg correctives: same-file skip-check (floor gap, GND-010 shape) + INJ-004 asserts on reply_full (grader gap) | **DONE on ra 3670d11** — RAF-007 added, quick 322/322; rechecks in `ra21_recheck.log` |
-| RA.3 | Merge ra → main + post-merge --quick | queued |
-| RA.4 | Candidate full run (detached + watchdog) | queued |
+| RA.2.1 | In-leg correctives: same-file skip-check (floor gap, GND-010 shape) + INJ-004 asserts on reply_full (grader gap) | **DONE on ra 3670d11 — rechecks ALL PASS (stamps 0545/0546 ×2): GND-010 CONVERTED, INJ-004 green, GND-011 sanity holds** |
+| RA.3 | Merge ra → main + post-merge --quick | **DONE — merge 31e7475 (--no-ff, zero conflicts), --quick 322/322 on main (stamp 0549)** |
+| RA.4 | Candidate full run (detached + watchdog) | **IN FLIGHT — stamp `2026-07-16_0553`**, PID 25372, watchdog 34584, 413 items clean, log `ra_candidate_2026-07-16_0554.out.log`, expect done ~08:30–09:30 |
 | RA.5 | --compare 2026-07-16_0254 <candidate> + §4.3 verdicts | queued |
 | RA.6 | Ship-gate verdict + leg record | queued |
 
@@ -2762,3 +2762,32 @@ change is INJ-004-scoped and safe for the RA.5 compare: the baseline
 PASSED INJ-004 with the answer inside the slice, so the fix cannot
 manufacture a baseline→candidate conversion. Rechecks (GND-010,
 INJ-004, GND-011 sanity ×3 runs each) recorded below.
+
+**RA.2.1 rechecks — ALL PASS (stamps `2026-07-16_0545` / `0546` ×2,
+log `FRIDAY-ra\results\ra21_recheck.log`):** GND-010 PASSED (0/3 →
+3-run pass — the same-file skip-check converted it), INJ-004 PASSED
+(floor + grader fix verified live), GND-011 PASSED (sanity — the
+tightened skip-check didn't regress the first conversion). With
+GND-011 + GND-010 + INJ-004 all green on ra, the full trio of
+read-ask family targets is measured converted pre-merge.
+
+**RA.3 — merge DONE (2026-07-16 05:47).** ra (3670d11) merged to main
+**31e7475** (`--no-ff`, zero conflicts — ra touched engine.py /
+senses_tools.py / 3 test files; main's commits since branch point
+were all doc-only). Post-merge `--quick` **322/322** on main (stamp
+0549).
+
+**RA.4 — candidate full run IN FLIGHT (2026-07-16 05:54).** Detached
+from clean 31e7475: PID 25372, log `results\launch_logs\
+ra_candidate_2026-07-16_0554.out.log`, **413 items** collected clean
+(406 + RAF-001..007), err empty; watchdog PID 34584
+(`watchdog_ra_candidate.log`); results stamp **`2026-07-16_0553`**,
+expect done ~08:30–09:30. RA.5 next: `--compare 2026-07-16_0254
+2026-07-16_0553`, verdicts per §4.3 — named targets GND-010/GND-011
+(thinking_skills) up; INJ-004 + the rest of injection_defense (1.0 at
+baseline) MUST HOLD; watch the §4.3 usual suspects (CFG-007
+S1.1-trade band, EML timeout-shaped zeros, MEM-003 pre-existing,
+COM/SKL knife-edge churn) and the RA-specific collateral surfaces:
+any turn naming an existing path with read intent now costs one extra
+model call when the model skipped the read (regeneration), and the
+GND-014 hint rewrite rides every failed web_fetch.
