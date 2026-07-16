@@ -2898,13 +2898,13 @@ which-ask instance of the P4 directive — one leg, two ranked items).
 | item | what | status |
 |---|---|---|
 | PT.0 | Baseline decision: REUSE RA candidate `2026-07-16_0553` — every commit after 31e7475 (17661af, 6730bd3, 16016f1) is doc-only, so 0553 is a valid baseline per the RA.6 note | **DONE — decision recorded, no new flight needed** |
-| PT.1 | General pending-task ledger (`self.pending_task` BESIDE offer + consolidation, per the prep's beside-first recommendation) + END-slot directive | pending |
-| PT.2 | Generic-clarify floor: a contentless clarify while code holds the answer gets one corrective regeneration; deterministic fallback | pending |
-| PT.3 | MEM-003 field-matching floor: normalized token-containment pass in update_note_field; 1 hit = update canonical line, 2+ = corrective refusal naming candidates + retry, 0 = insert as today | pending |
-| PT.4 | Guards + full --quick green in worktree `..\FRIDAY-pt` (branch pt) | pending |
-| PT.5 | Targeted conversion batches: GND-011, MEM-003, GT-C9 sanity (locked tier), GT-C10 sanity | pending |
-| PT.6 | Merge pt → main + post-merge --quick | pending |
-| PT.7 | Candidate full run (detached + watchdog) | pending |
+| PT.1 | General pending-task ledger (`self.pending_task` BESIDE offer + consolidation, per the prep's beside-first recommendation) + END-slot directive | **DONE — pt b4d79a4**; blocker vocab in engagement + naming checks, _TOKEN_STOP widened so clarify-question vocabulary never counts as task naming |
+| PT.2 | Generic-clarify floor: a contentless clarify while code holds the answer gets one corrective regeneration; deterministic fallback | **DONE — pt b4d79a4**; two shapes — (a) pending-task path with code-built re-ask fallback, (b) single-artifact-referent path (GND-011 tic) with clarify-sentence strip fallback, empty-reply guarded; consolidation instance = which-ask backstop widened with _GENERIC_CLARIFY; streams held on pending-task turns |
+| PT.3 | MEM-003 field-matching floor: normalized token-containment pass in update_note_field; 1 hit = update canonical line, 2+ = corrective refusal naming candidates + retry, 0 = insert as today | **DONE — pt b4d79a4**; asymmetric containment, value param wired, sibling-field protection (FLD-005 = MEM-002 collision case) |
+| PT.4 | Guards + full --quick green in worktree `..\FRIDAY-pt` (branch pt) | **DONE 2026-07-16 ~13:05** — PTL-001..008 + FLD-001..005 13/13; full --quick 335/335 (run `2026-07-16_1258`) |
+| PT.5 | Targeted conversion batches: GND-011, MEM-003, GT-C9 sanity (locked tier), GT-C10 sanity | **DONE 2026-07-16 ~13:15 — ALL CONVERTED on pt b4d79a4**: GND-011 **1.0 (5/5)** (stamp 1305; was 0.8, trailing-clarify tic gone), MEM-003 **3/3 spaced samples** (1308 + 1311 + 1312; single-sample case, so 3 batches), GT-C9 PASS (locked tier clean), GT-C10 PASS; logs `..\FRIDAY-pt\pt_batches\pt5_*.log`; run-ops note: GT-C9 landed in the SAME results minute as MEM-003 s1 (1308, the known clobber) — MEM-003 s1 scorecard was read before GT-C9 finished, and both pytest logs hold the PASSED lines |
+| PT.6 | Merge pt → main + post-merge --quick | **DONE 2026-07-16 ~13:20** — fast-forward 07b2016→b4d79a4 (pt was one commit ahead, so the candidate commit on main IS b4d79a4, no merge commit); post-merge --quick **335/335** (stamp `2026-07-16_1314`) |
+| PT.7 | Candidate full run (detached + watchdog) | **IN FLIGHT 2026-07-16 ~13:25** — launched detached per protocol on main b4d79a4 (tree clean at launch); logs `results\launch_logs\pt_candidate.{out,err}.log`, watchdog `watchdog_pt_candidate.log`; expect ~3–4 h wall |
 | PT.8 | --compare 2026-07-16_0553 → candidate + §4.3 verdicts + ship gate | pending |
 
 **Run-ops note (2026-07-16 10:40):** the two RA watchdogs outlived
