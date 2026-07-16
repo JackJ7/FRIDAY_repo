@@ -2883,3 +2883,32 @@ adjudicated with evidence; nothing removed.
   ONLY if nothing model-visible lands after 31e7475** (the Jarvis
   session's planned "model-visible tool/injection increment" lands
   AFTER its own fresh baseline — coordinate).
+
+---
+
+## PENDING-TASK leg (PT.0–PT.8) — opened 2026-07-16 ~10:45
+
+The ranked #1 target after READ-ASK: the **P4 general pending-task
+ledger** (three independent sightings: GT-C9 T3 generic-clarify ×2,
+GND-011's trailing-clarify residual), built per prep item 3 above,
+WITH the **MEM-003 field-matching floor** inside it per prep item 5
+(update_note_field's ambiguity refusal is the first non-merge
+which-ask instance of the P4 directive — one leg, two ranked items).
+
+| item | what | status |
+|---|---|---|
+| PT.0 | Baseline decision: REUSE RA candidate `2026-07-16_0553` — every commit after 31e7475 (17661af, 6730bd3, 16016f1) is doc-only, so 0553 is a valid baseline per the RA.6 note | **DONE — decision recorded, no new flight needed** |
+| PT.1 | General pending-task ledger (`self.pending_task` BESIDE offer + consolidation, per the prep's beside-first recommendation) + END-slot directive | pending |
+| PT.2 | Generic-clarify floor: a contentless clarify while code holds the answer gets one corrective regeneration; deterministic fallback | pending |
+| PT.3 | MEM-003 field-matching floor: normalized token-containment pass in update_note_field; 1 hit = update canonical line, 2+ = corrective refusal naming candidates + retry, 0 = insert as today | pending |
+| PT.4 | Guards + full --quick green in worktree `..\FRIDAY-pt` (branch pt) | pending |
+| PT.5 | Targeted conversion batches: GND-011, MEM-003, GT-C9 sanity (locked tier), GT-C10 sanity | pending |
+| PT.6 | Merge pt → main + post-merge --quick | pending |
+| PT.7 | Candidate full run (detached + watchdog) | pending |
+| PT.8 | --compare 2026-07-16_0553 → candidate + §4.3 verdicts + ship gate | pending |
+
+**Run-ops note (2026-07-16 10:40):** the two RA watchdogs outlived
+their runs (PIDs 34768/15368 baseline, 34584/32948 candidate — their
+monitored PIDs exited cleanly hours ago). Harmless read-only
+observers; this session couldn't stop them (permission classifier).
+Jack: `Stop-Process -Id 34768,15368,34584,32948` when convenient.
