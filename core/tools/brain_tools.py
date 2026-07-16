@@ -2,7 +2,9 @@
 Brain tools: how FRIDAY searches, reads, and writes her own memory.
 """
 
-from core.project_meta import set_field
+import re
+
+from core.project_meta import match_field, set_field
 
 
 def register_brain_tools(registry, brain, retriever, top_k: int):
@@ -52,12 +54,39 @@ def register_brain_tools(registry, brain, retriever, top_k: int):
         return brain.write_note(path, content, mode=mode, summary=summary)
 
     def update_note_field(path: str, field: str, value: str) -> str:
-        """Deterministic single-field edit — code does the surgery, not the model."""
+        """Deterministic single-field edit — code does the surgery, not the model.
+
+        Field-matching floor (armor PENDING-TASK PT.3, the MEM-003 fix): the
+        model paraphrases field names — 'load cell rating' for the note's
+        'Load cell' line — and the old exact match INSERTED a second,
+        contradicting line instead of updating the one that exists. On an
+        exact miss, fuzzy-match against the note's EXISTING fields: one hit
+        updates THAT line, keeping the note's canonical field name (the
+        model's paraphrase never renames a field); several hits refuse with
+        a corrective that names the candidates and the retry (the CN.6.1
+        shape — and the P4 directive's which-ask rule: a clarify must name
+        its options, never go generic); zero hits insert, as always."""
         text = brain.read_note(path)
-        new_text = set_field(text, field, value)
+        canonical = field
+        if not re.search(rf"^\s*-\s*\*\*{re.escape(field)}:\*\*", text,
+                         re.MULTILINE | re.IGNORECASE):
+            hits = match_field(text, field, value)
+            if len(hits) == 1:
+                canonical = hits[0]
+            elif len(hits) > 1:
+                options = ", ".join(f"'{h}'" for h in hits)
+                return (f"ERROR: field '{field}' is ambiguous in {path} — it "
+                        f"matches these existing fields: {options}. If Jack's "
+                        "message says which one he means, retry "
+                        "update_note_field NOW with that exact field name. "
+                        "Only if it genuinely doesn't, ask him which of "
+                        f"{options} to update — name them exactly, never a "
+                        "generic 'could you specify'. Do not report this "
+                        "error text to Jack.")
+        new_text = set_field(text, canonical, value)
         brain.write_note(path, new_text, mode="overwrite",
-                         summary=f"Set {field}: {value} ({path})")
-        return f"Updated {field} to '{value}' in {path}."
+                         summary=f"Set {canonical}: {value} ({path})")
+        return f"Updated {canonical} to '{value}' in {path}."
 
     registry.register(
         "search_brain",

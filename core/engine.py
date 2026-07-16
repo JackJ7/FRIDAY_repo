@@ -64,6 +64,18 @@ class Engine:
         # superseded / expired. None, or {filter, candidates, survivor,
         # turns_left}. See _consolidation_update.
         self.consolidation = None
+        # General pending-task ledger (armor PENDING-TASK PT.1 — the P4 gap,
+        # measured three independent times: GT-C9 T3 generic-clarify ×2 and
+        # GND-011's trailing-clarify residual). The consolidation ledger
+        # above is the merge verb's INSTANCE of this shape; this is the
+        # general one: armed when a request-shaped message from Jack ends
+        # the turn BLOCKED on a clarify-question FRIDAY asked back (no
+        # action landed), so later turns can never lose the ask or answer
+        # it with a generic "could you specify". Kept BESIDE offer and
+        # consolidation by design (subsuming would risk regressing two
+        # measured mechanisms — the A6-ablation precedent). None, or
+        # {request, blocker, turns_left}. See _pending_task_update.
+        self.pending_task = None
         # Did THIS turn's user message carry merge intent? (CN.4.1) — set every
         # turn by _consolidation_update. The CN.3 fabrication scan must ride
         # every merge-flavoured turn, not just pending-task turns: measured on
@@ -489,6 +501,18 @@ class Engine:
             ref_block = ((ref_block + "\n\n" + consolidation_directive)
                          if ref_block else consolidation_directive)
 
+        # General pending-task ledger (armor PENDING-TASK PT.1): the status
+        # directive for a NON-merge ask a previous turn left blocked on a
+        # clarify-question. Rides after the consolidation directive at the
+        # END of the block — the max-obedience slot, now measured to work
+        # for three tenants (offer, consolidation, this). Arming happens at
+        # end-of-turn (the blocker is FRIDAY's own settled question,
+        # unknowable here); this call only refreshes/expires/cancels.
+        pending_directive = self._pending_task_update(user_input)
+        if pending_directive:
+            ref_block = ((ref_block + "\n\n" + pending_directive)
+                         if ref_block else pending_directive)
+
         # Streaming-preview guard (Phase 1, finding #2). On turns where a
         # post-generation barrier below may REPLACE the whole reply, DON'T
         # stream tokens live — otherwise the user watches a fabrication (or an
@@ -539,7 +563,12 @@ class Engine:
             # their streams hold too.
             or self.consolidation is not None
             or bool(consolidation_directive)
-            or self._merge_intent_turn)
+            or self._merge_intent_turn
+            # PT.2: a pending-task turn may have its reply replaced by the
+            # generic-clarify floor — hold the stream so Jack never watches
+            # a retracted generic re-ask.
+            or self.pending_task is not None
+            or bool(pending_directive))
         live_token = None if hold_stream else on_token
 
         base = [{"role": "system", "content": self._system_prompt(extra=ref_block)}]
@@ -1049,8 +1078,15 @@ class Engine:
             task = self.consolidation
             # (b) first — the naked which-ask backstop is code-built, so a
             # reply it replaces never needs the fabrication scan.
+            # PT.2 widened the trigger with _GENERIC_CLARIFY: the measured
+            # GT-C9 T3 miss ("could you specify" on the generic folder
+            # continuation, twice) is a contentless clarify that names no
+            # slug, so _WHICH_SLUG_ASK never saw it — but on a pending
+            # no-survivor turn it is the SAME failure, and the code-built
+            # survivor question is the same right answer.
             if (task and not task.get("survivor")
-                    and self._WHICH_SLUG_ASK.search(reply.content or "")
+                    and (self._WHICH_SLUG_ASK.search(reply.content or "")
+                         or self._GENERIC_CLARIFY.search(reply.content or ""))
                     and not self._SURVIVOR_FRAMING.search(reply.content or "")):
                 cands = task["candidates"]
                 default = task.get("default") or cands[0]
@@ -1092,6 +1128,108 @@ class Engine:
                             + ", ".join(real) + ".")
                     reply.tool_calls = []
                     identifier_floor_fired = True
+                    if live_token:
+                        live_token("\n" + reply.content)
+                    turn.append({"role": "assistant",
+                                 "content": reply.content})
+
+        # Generic-clarify floor (armor PENDING-TASK PT.2). A contentless
+        # "could you specify" while CODE already holds the answer. Two
+        # measured shapes (the consolidation instance is handled by the
+        # widened which-ask backstop above):
+        #   (a) the general pending task is live and the reply asks a
+        #       generic clarify naming NOTHING of it — the ask Jack made is
+        #       about to be lost to a question he cannot anchor;
+        #   (b) no task pending, exactly ONE artifact referent on the stack,
+        #       and an artifact-engaging turn's reply carries a generic or
+        #       which-artifact clarify — usually substance plus a trailing
+        #       "could you specify" tic (GND-011's residual 0.8; the
+        #       anti-dodge barrier keeps the ORIGINAL when its retry
+        #       re-hedges, which is exactly where the tic survived).
+        # One corrective regeneration, then a DETERMINISTIC fallback: (a) a
+        # code-built re-ask that names the pending task; (b) strip the
+        # clarify sentences, keeping the substance — guarded so the floor
+        # can never empty a reply (the F4/A1 empty-reply lesson).
+        generic_clarify_fired = False
+        if (reply is not None and not phantom_fired
+                and not artifact_denial_fired and not identifier_floor_fired):
+            content = reply.content or ""
+            ptask = self.pending_task
+            single_art = self._single_artifact_referent()
+            fire_pending = bool(
+                ptask and self._GENERIC_CLARIFY.search(content)
+                and not (self._distinct_tokens(content)
+                         & (self._distinct_tokens(ptask["request"])
+                            | self._distinct_tokens(ptask["blocker"]))))
+            fire_artifact = bool(
+                not ptask and self.consolidation is None
+                and single_art is not None
+                and (artifact_ask or followup)
+                and (self._GENERIC_CLARIFY.search(content)
+                     or self._WHICH_ARTIFACT.search(content)))
+            if fire_pending or fire_artifact:
+                if fire_pending:
+                    correction = (
+                        "STOP: your draft answers Jack with a generic "
+                        "clarifying question while a concrete task is "
+                        "pending in code. The pending task: "
+                        f"\"{ptask['request']}\" — blocked on: "
+                        f"\"{ptask['blocker']}\". Rewrite the reply: if his "
+                        "message supplies what was missing, do the task and "
+                        "report the real result; if you still need "
+                        "something, ask a question that NAMES this task and "
+                        "the exact missing piece. Never a bare 'could you "
+                        "specify'.")
+                else:
+                    correction = (
+                        "STOP: your draft asks Jack to specify or clarify, "
+                        "but the referent is obvious — the only artifact in "
+                        f"this session is {single_art['name']} "
+                        f"({single_art['kind']}, {single_art['when']}). "
+                        "Rewrite the SAME reply keeping all its substance "
+                        "and drop every clarifying question; if anything "
+                        "felt unclear, engage the artifact's actual content "
+                        "instead.")
+                # The anti-dodge barrier may already have burned a retry on
+                # this turn and kept the original (its re-hedge path) — do
+                # not spend a second regeneration on the same draft; go
+                # straight to the deterministic fallback.
+                already_retried = fire_artifact and (deictic_dodge
+                                                     or offer_dodge)
+                candidate = ""
+                if not already_retried:
+                    retry = self.model.chat(
+                        base + turn
+                        + [{"role": "assistant", "content": reply.content},
+                           {"role": "system", "content": correction}],
+                        on_token=None)
+                    self.session_tokens += retry.eval_count
+                    candidate = (retry.content or "").strip()
+                clean = bool(
+                    candidate
+                    and not self._GENERIC_CLARIFY.search(candidate)
+                    and not (fire_artifact
+                             and self._WHICH_ARTIFACT.search(candidate)))
+                if clean:
+                    reply.content = candidate
+                    generic_clarify_fired = True
+                elif fire_pending:
+                    # Honest deterministic re-ask that NAMES the task — the
+                    # one question the flow legitimately owes Jack.
+                    reply.content = (
+                        f"Back to your pending ask — \"{ptask['request']}\". "
+                        f"One thing still missing: {ptask['blocker']}")
+                    generic_clarify_fired = True
+                else:
+                    stripped = self._strip_generic_clarify(content)
+                    if stripped and len(stripped) >= 60:
+                        reply.content = stripped
+                        generic_clarify_fired = True
+                    # else: keep the original (best-effort — a pure-clarify
+                    # reply with no substance is the anti-dodge barrier's
+                    # territory, not worth an empty or mangled reply here).
+                if generic_clarify_fired:
+                    reply.tool_calls = []
                     if live_token:
                         live_token("\n" + reply.content)
                     turn.append({"role": "assistant",
@@ -1567,6 +1705,34 @@ class Engine:
                 for t in tool_log):
             self.consolidation = None
 
+        # Arm/retire the general pending-task ledger (armor PENDING-TASK
+        # PT.1) for the NEXT turn. Retire first, on disk truth like the
+        # consolidation retire above: an action that LANDED this turn
+        # completes the pending ask. Then arm: Jack's request-shaped message
+        # that ends the turn on a clarify-question FRIDAY asked back — with
+        # no landed action, no fresh offer (the offer ledger owns
+        # FRIDAY-initiated proposals; this ledger owns JACK-initiated asks)
+        # and no consolidation task (the merge verb has its own instance) —
+        # is a task this turn could not complete. Freshest ask wins,
+        # exactly like the offer ledger.
+        if reply is not None:
+            action_landed = any(
+                self.registry.kind(t["tool"]) in ("action", "action_confirmed")
+                and self._write_landed(t.get("result", ""))
+                for t in tool_log)
+            if self.pending_task and action_landed:
+                self.pending_task = None
+            if (not action_landed and self.offer is None
+                    and self.consolidation is None
+                    and self._looks_like_request(user_input)):
+                blocker = self._blocking_clarify(reply.content)
+                if blocker:
+                    self.pending_task = {
+                        "request": " ".join(user_input.split())[:160],
+                        "blocker": blocker[:160],
+                        "turns_left": self._PENDING_TASK_TTL,
+                    }
+
         # Persist this turn and bound the context. Per-turn system guidance (the
         # referent block) is NOT persisted — a stale copy in history would
         # contradict the fresh one. When the trim triggers, COMPACT the evicted
@@ -1654,6 +1820,13 @@ class Engine:
             # CN.4: the engine fulfilled an end-of-reply narrated project
             # listing the model promised but never ran.
             "narrated_list_floor": narrated_list_fired,
+            # Armor PENDING-TASK: True when the generic-clarify floor had to
+            # correct a contentless clarify while code held the answer — the
+            # P4 residual, made countable. Additive; schema stable.
+            "generic_clarify_floor": generic_clarify_fired,
+            # Armor PENDING-TASK: is a general pending task live after this
+            # turn (armed this turn or carried forward)? Additive.
+            "pending_task_armed": self.pending_task is not None,
             # Phase 1 (Notes-10, item 4): True when an ACTION tool fired on a
             # message with no request shape — the office-hours "proposed an
             # update nobody asked for" signature. The taint gate is the hard
@@ -2850,6 +3023,136 @@ class Engine:
     _AFFIRMATIVE_PREFIX = re.compile(
         r"^\s*(ok(ay)?|yes|yeah|yep|sure|alright|please|go ahead|do it"
         r"|sounds good)\b", re.IGNORECASE)
+
+    # General pending-task ledger (armor PENDING-TASK PT.1) -------------------
+    # The P4 gap from the parity map: CN.2 built the merge verb's instance;
+    # this is the general one. TTL semantics are the consolidation ledger's
+    # (engagement refreshes, only ignoring turns tick it down), and the
+    # cancel vocabulary is shared — "never mind" should drop whichever task
+    # is pending.
+    _PENDING_TASK_TTL = 6
+
+    # Generic contentless clarify vocabulary (PT.2): the union of GND-011's
+    # graded phrases and the GT-C9 T3 measured drafts — asks Jack to
+    # re-specify while naming NOTHING. A which-ask that names candidates
+    # does not match; the consolidation which-ask lives in _WHICH_SLUG_ASK.
+    _GENERIC_CLARIFY = re.compile(
+        r"\b(?:could|can|would) you (?:please )?(?:specify|clarify|elaborate)\b"
+        r"|\bplease (?:specify|clarify)\b"
+        r"|\b(?:could|can|would) you (?:please )?provide more"
+        r" (?:details?|context|information)\b"
+        r"|\bwhich one do you mean\b"
+        r"|\bwhat (?:exactly )?are you referring to\b",
+        re.IGNORECASE)
+
+    # The artifact-flavoured which-ask (GND-011's other graded shapes) —
+    # only wrong when ONE obvious artifact referent exists, so it lives
+    # apart from the always-suspect generic vocabulary above.
+    _WHICH_ARTIFACT = re.compile(
+        r"\bwhich (?:document|file|notes?)\b"
+        r"|\bwhat (?:document|file|notes?) are you referring\b",
+        re.IGNORECASE)
+
+    # Clarify-shaped final question — the arming signal: FRIDAY answered a
+    # request-shaped message with a question that blocks the task. Offer
+    # questions ("would you like me to…?") never arm — the offer ledger owns
+    # those, and arming is skipped when a fresh offer stands.
+    _CLARIFY_QUESTION = re.compile(
+        r"\b(which|what|who|where|clarify|specify|confirm|more details?"
+        r"|do you (want|mean)|are you referring)\b", re.IGNORECASE)
+
+    # Words too common to identify a task — kept out of the engagement /
+    # names-the-task token overlap so "the project folder" doesn't count as
+    # naming a pending ask about a project. The second group is the
+    # clarify-question vocabulary itself: the arming blocker is a clarify
+    # question ("Which motor spec do you mean…?"), so a generic re-clarify
+    # ("Could you clarify what you mean?") shares its QUESTION words with
+    # the blocker and defeated the names-the-task check through "mean"
+    # alone (PTL-004). Question words never identify a task.
+    _TOKEN_STOP = frozenset((
+        "please", "project", "projects", "folder", "with", "that", "this",
+        "into", "them", "then", "have", "what", "about", "your", "could",
+        "would", "should", "update", "there", "these", "those", "just",
+        "like", "want", "need", "make", "from", "when", "will",
+        "which", "mean", "clarify", "specify", "confirm", "referring",
+        "elaborate"))
+
+    def _distinct_tokens(self, text: str) -> set:
+        """The identifying words of a message/task — length ≥ 4, minus the
+        generic vocabulary above. Used for engagement refresh and for the
+        'does this clarify NAME the pending task?' check."""
+        return {w for w in re.findall(r"[a-z0-9]+", (text or "").lower())
+                if len(w) >= 4 and w not in self._TOKEN_STOP}
+
+    def _blocking_clarify(self, text: str):
+        """The reply's FINAL sentence when it is a clarify-shaped question —
+        the blocker that arms the pending-task ledger. None otherwise (a
+        reply that ends declaratively completed or declined the ask; a
+        mid-reply rhetorical question doesn't block anything)."""
+        t = (text or "").strip()
+        if not t.endswith("?"):
+            return None
+        start = max(t.rfind(".", 0, len(t) - 1), t.rfind("!", 0, len(t) - 1),
+                    t.rfind("?", 0, len(t) - 1), t.rfind("\n")) + 1
+        q = t[start:].strip()
+        return q if q and self._CLARIFY_QUESTION.search(q) else None
+
+    def _single_artifact_referent(self):
+        """The one artifact-kind referent on the stack, or None when zero or
+        several — with several, a which-ask may be legitimate, so the
+        generic-clarify floor only fires when the referent is OBVIOUS."""
+        arts = [r for r in self.referents
+                if r["kind"] in self._ARTIFACT_REFERENT_KINDS]
+        return arts[0] if len(arts) == 1 else None
+
+    def _strip_generic_clarify(self, text: str) -> str:
+        """Deterministic fallback of the generic-clarify floor: drop the
+        clarify sentences, keep the substance. The caller guards length so
+        this can never empty a reply."""
+        parts = re.split(r"(?<=[.?!])\s+", text or "")
+        kept = [p for p in parts
+                if not (self._GENERIC_CLARIFY.search(p)
+                        or self._WHICH_ARTIFACT.search(p))]
+        return " ".join(kept).strip()
+
+    def _pending_task_update(self, user_input: str) -> str:
+        """Refresh/expire/cancel the general pending task for this turn and
+        return its status directive ("" when nothing pending). Same contract
+        as _consolidation_update: deterministic code owns the state, the
+        model only READS the directive. Arming happens at end-of-turn in
+        respond() — the blocker is FRIDAY's own settled question, which
+        doesn't exist yet when this runs."""
+        task = self.pending_task
+        if not task:
+            return ""
+        if self._CONSOLIDATION_CANCEL.search(user_input):
+            self.pending_task = None
+            return ""
+        # Engagement vocabulary is the request's AND the blocker's: Jack's
+        # answer to the clarify-question naturally uses the QUESTION's words
+        # ("The torque one" answers "torque figure or model number?"), not
+        # the original ask's — found by PTL-002 before it could be measured
+        # as a live TTL leak.
+        task_tokens = (self._distinct_tokens(task["request"])
+                       | self._distinct_tokens(task["blocker"]))
+        engaged = (bool(self._AFFIRMATIVE_PREFIX.match(user_input))
+                   or bool(self._distinct_tokens(user_input) & task_tokens))
+        if engaged:
+            task["turns_left"] = self._PENDING_TASK_TTL
+        else:
+            task["turns_left"] -= 1
+            if task["turns_left"] <= 0:
+                self.pending_task = None
+                return ""
+        return (
+            "PENDING TASK (deterministic status, kept in code): Jack asked: "
+            f"\"{task['request']}\" — your reply left it blocked on: "
+            f"\"{task['blocker']}\"\n"
+            "- If his message above supplies what was missing, DO the task "
+            "now, this turn (use your tools; do not re-ask).\n"
+            "- If you genuinely still need something, your question must "
+            "NAME this task and the missing piece — never a generic 'could "
+            "you specify' / 'please clarify'.")
 
     _WHICH_SLUG_ASK = re.compile(
         r"\bwhich (one|project|of these)\b|\bdo you mean\b", re.IGNORECASE)
