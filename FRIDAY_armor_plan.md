@@ -2627,3 +2627,80 @@ committed):**
   - **update_note_field ambiguity refusal** (item 2) doubles as the
     first non-merge which-ask instance of the P4 directive — if P4
     is ranked next, build MEM-003's floor inside it.
+
+---
+
+## READ-ASK leg (RA.0–RA.6) — opened 2026-07-16 ~02:55
+
+The Jack-ranked next target after CONSOLIDATE: the **read-ask
+grounding floor**, the real lever under BOTH standing GND residuals
+(RF-leg probe: on a turn-1 "read <path>" the model runs ZERO tools,
+so no referent lands and every downstream barrier is structurally
+unreachable) — and, per prep item 1 above, under **INJ-004** as well
+(web_fetch misroute + GND-014 refusal narrated as the answer).
+INJ-004 conversion is CLAIMED by this leg; no separate leg budgeted.
+
+| item | what | status |
+|---|---|---|
+| RA.0 | Fresh full baseline on main (detached + watchdog) — REQUIRED, c3fe638 is model-visible post-1954 | **IN FLIGHT — stamp `2026-07-16_0254`**, PID 28904, 206/406 at 03:32, expect done ~05:45–06:15 |
+| RA.1 | Read-ask grounding floor (engine runs read_file itself, calendar-first pattern) | **DONE on ra a3b8e6c** — guards RAF-001..006, quick 321/321 |
+| RA.1b | GND-014 corrective names the RETRY, forbids narrating the error (CN.6.1 lesson) | **DONE on ra a3b8e6c** — GND-014 test extended |
+| RA.2 | Conversion measurement: targeted GND-011 / GND-010 / INJ-004 batches on ra (GPU free post-baseline) | queued |
+| RA.3 | Merge ra → main + post-merge --quick | queued |
+| RA.4 | Candidate full run (detached + watchdog) | queued |
+| RA.5 | --compare 2026-07-16_0254 <candidate> + §4.3 verdicts | queued |
+| RA.6 | Ship-gate verdict + leg record | queued |
+
+**RA.0 — baseline launch (2026-07-16 02:55).** Detached per protocol:
+PID 28904, log `results\launch_logs\ra_baseline_2026-07-16_0255.out.log`,
+406 items collected clean (405 + CN.6.1's MRG-003e), err empty;
+watchdog PID 34768 (`watchdog_ra_baseline.log`). Results stamp
+**`2026-07-16_0254`**. NOTE / correction to prep-block line above:
+the prep block guessed "results-dir 0303" — WRONG; `2026-07-16_0303`
+is a stray EMPTY report dir from a mis-cwd'd 0-test pytest collection
+(safe to delete), and `0320`/`0328` in the RA worktree's own results/
+are quick-suite stamps. The compare in RA.5 must use **0254**.
+
+**RA.1 — the floor (ra worktree `..\FRIDAY-ra`, branch ra, commit
+a3b8e6c).** Calendar-first pattern, third instance, placed BEFORE the
+phantom barrier (once the engine's read lands, phantom's "nothing was
+read" premise is false and every downstream floor becomes reachable):
+
+- Trigger `_read_ask_path`: Jack's message names an EXISTING local
+  file (path token = optional drive + separator + dot-extension;
+  quoted form allows spaces; bare FILENAMES without separators stay
+  out — that riskier resolver is a future candidate) + a read-intent
+  stem (`read/open/look at/check/review/analy*/summar*/thoughts on/
+  go over`) + no content-delivering tool ran this turn. Existence is
+  checked in the trigger, so a mistyped path or write-intent turn
+  never burns a retry.
+- **A content tool only closes the hole when it DELIVERED** (result
+  not ERROR-prefixed): INJ-004's measured shape is web_fetch running
+  with a mangled arg, GND-014 refusing, and the model narrating the
+  error — the file is still unread, the floor must fire through it.
+- Floor body: engine runs read_file via `_run_tool` (gate, taint,
+  referent tracking all apply — the read is REAL, invariant 2 rides
+  along), wires the transcript calendar-first-style (draft carries
+  the call, result follows as a TOOL message), regenerates ONCE
+  tool-free, best-effort acceptance. A gate refusal / read error
+  aborts silently — the floor can never make a turn worse.
+- New ilog field `read_ask_corrective` (additive, schema stable).
+- Guards RAF-001..006: engine-runs-the-read (taint + file referent
+  asserted), model-already-read untouched, no-read-intent untouched,
+  missing-path untouched, empty-retry keeps original (read/referent
+  still land), failed-web_fetch does not block (INJ-004 shape).
+
+**RA.1b — GND-014 corrective upgrade (same commit).** The zero-hit
+hint now reads "ERROR: ... RETRY NOW: call read_file with his path
+EXACTLY as he gave it ... Do not report this error to Jack — make the
+retry call instead." ERROR: prefix kept deliberately — the floor keys
+on it. GND-014's test now locks prefix + retry-naming + the
+no-narration directive.
+
+**Worktree note (run-ops):** fresh worktrees lack ALL gitignored
+runtime dirs; the sandbox harness needs `brain\character\friday.md`,
+`brain\character\friday_voice.md`, `brain\skills\*.md`,
+`brain\playbooks\*.md` copied in before ANY suite runs (5 spurious
+fails otherwise: SKL seeding/matcher, voice spec, playbook-seeded
+pair). Copied read-only from the live brain 2026-07-16; nothing
+writes back.
