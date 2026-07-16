@@ -2043,7 +2043,7 @@ Section tracker (updated in place as each lands):
 | CN.2 | Pending-consolidation ledger + CN.2.1 code-executed merge (escalation, measured activation) + MRG-002 set | **DONE — GT-C9 2/2 PASS, merged-on-disk 4/4 converted** |
 | CN.3 | Project-identifier grounding floor + which-ask backstop (post-gen, held+retry, pre-ledger) + MRG-003 set | **DONE — GT-C10 2/2 full boards (which-ask converted), GT-C9 locked-clean ×3 after one grader fix (197edc8), zero fabricated identifiers** |
 | CN.4 | Narration-terminated internal-read probe → scoped fix + MRG-004 | **DONE (code cn 0a64729, MRG-004/004b/004c; narrated-listing floor appends the real list_projects output)** |
-| CN.4.1 | *(added in-leg from CN.4 measurement)* fabrication scan rides bare merge-intent turns + no real project names in tool schemas + MRG-003d/MRG-006 | **code DONE (cn d5f0b2a) — conversion batch in flight** |
+| CN.4.1 | *(added in-leg from CN.4 measurement)* fabrication scan rides bare merge-intent turns + no real project names in tool schemas + MRG-003d/MRG-006 | **DONE — GT-C9 2/2 locked-clean (1945/1947) + GT-C10 full board (1949); only residual = the known T3 generic-clarify TARGET (P4 watch item)** |
 | CN.5 | Merge + candidate full run (detached + watchdog) | queued |
 | CN.6 | `--compare` + per-item verdicts + ship/remove decisions | queued |
 
@@ -2394,5 +2394,12 @@ merge-intent turn + schema hygiene.**
   no-real-names-in-test-prompts rule by riding the OTHER direction).
 - Suite: consolidate guards 15/15 (13 prior + MRG-003d + MRG-006),
   full quick suite 314 pass (stamp 1942).
-- Conversion batch (GT-C9 ×2 + GT-C10 ×1 on d5f0b2a) launched
-  detached — results recorded below when landed.
+- **CN.4.1 CONVERSION MEASURED (2026-07-15 evening, GT-C9 ×2 +
+  GT-C10 ×1 on cn d5f0b2a): all three PASSED.** GT-C9 stamps
+  1945/1947 — locked tier clean 18/18 both, no fabricated identifier
+  in either batch; the only residual is the already-recorded T3
+  no-generic-clarify TARGET miss in both ("could you specify" /
+  "please specify" on the generic folder continuation — P4
+  pending-task-ledger gap, CN.5 watch item, not a CN regression).
+  GT-C10 stamp 1949 — full board, which-ask conversion holding.
+  CN.4/CN.4.1 close; leg proceeds to CN.5.
