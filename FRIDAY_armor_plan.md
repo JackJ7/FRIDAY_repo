@@ -2044,8 +2044,8 @@ Section tracker (updated in place as each lands):
 | CN.3 | Project-identifier grounding floor + which-ask backstop (post-gen, held+retry, pre-ledger) + MRG-003 set | **DONE — GT-C10 2/2 full boards (which-ask converted), GT-C9 locked-clean ×3 after one grader fix (197edc8), zero fabricated identifiers** |
 | CN.4 | Narration-terminated internal-read probe → scoped fix + MRG-004 | **DONE (code cn 0a64729, MRG-004/004b/004c; narrated-listing floor appends the real list_projects output)** |
 | CN.4.1 | *(added in-leg from CN.4 measurement)* fabrication scan rides bare merge-intent turns + no real project names in tool schemas + MRG-003d/MRG-006 | **DONE — GT-C9 2/2 locked-clean (1945/1947) + GT-C10 full board (1949); only residual = the known T3 generic-clarify TARGET (P4 watch item)** |
-| CN.5 | Merge + candidate full run (detached + watchdog) | queued |
-| CN.6 | `--compare` + per-item verdicts + ship/remove decisions | queued |
+| CN.5 | Merge + candidate full run (detached + watchdog) | **merge DONE (main 0362f47, zero conflicts, post-merge --quick 314/314) — candidate IN FLIGHT: stamp `2026-07-15_1954`, PID 15572, watchdog PID 33124, 405 items, expect done ~23:10–23:30** |
+| CN.6 | `--compare 2026-07-15_1118 2026-07-15_1954` + per-item verdicts + ship/remove decisions | queued — baseline stays the TM.5 candidate 1118 (CN.0 validation: nothing model-visible on main between 77c4491 and the merge) |
 
 **CN.0 (2026-07-15 afternoon, this session — leg opened on the monitor's
 TM-idle signal):**
@@ -2403,3 +2403,21 @@ merge-intent turn + schema hygiene.**
   pending-task-ledger gap, CN.5 watch item, not a CN regression).
   GT-C10 stamp 1949 — full board, which-ask conversion holding.
   CN.4/CN.4.1 close; leg proceeds to CN.5.
+
+**CN.5 — merge DONE, candidate IN FLIGHT (2026-07-15 19:55).** `cn`
+(d5f0b2a) merged to main **0362f47** (`--no-ff`, zero conflicts — cn
+touched engine.py / project_resolver.py / tools / persona / tests;
+main's commits since the 9a0c5d7 merge-base were plan-doc + watchdog
+script only). Post-merge `--quick` **314/314** (stamp 1950). Candidate
+full run DETACHED from clean 0362f47: PID 15572, log
+`results\launch_logs\cn_candidate_2026-07-15_1955.out.log`, **405
+items** collected clean; watchdog PID 33124
+(`watchdog_cn_candidate.log`); results stamp **`2026-07-15_1954`**,
+expect done ~23:10–23:30 (TM candidate wall was 3:14). CN.6 next:
+`--compare 2026-07-15_1118 2026-07-15_1954`, verdicts per §4.3 —
+named target project_ops/GT-C9/GT-C10 up; watch the §4.3 usual
+suspects (CFG-007 S1.1-trade band, EML timeout-shaped zeros, INJ-004
+pre-existing) and the CN-specific collateral surfaces: merge-intent
+stream-hold widening (any turn Jack talks merges now streams once at
+the end) and the schema-example neutralization (read_brain /
+create_project call shapes).
