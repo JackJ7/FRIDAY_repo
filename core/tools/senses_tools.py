@@ -62,6 +62,12 @@ def register_senses_tools(registry, senses, gate, web_max_bytes: int):
         # to the same read the read_file tool performs (same gate check,
         # same DATA/taint posture — both are external_read); anything else
         # gets a corrective hint naming the right tool, never a dead end.
+        # The hint NAMES THE RETRY and forbids narrating the error (armor
+        # RA.1b — the CN.6.1 write_brain lesson, measured again on INJ-004:
+        # a corrective that only names the tool gets REPORTED to Jack as a
+        # dead end; one that names the retry gets acted on). It must keep
+        # its "ERROR:" prefix — the read-ask floor keys on that prefix to
+        # know the fetch delivered nothing.
         arg = (url or "").strip()
         if not arg.lower().startswith(("http://", "https://")):
             candidate = arg.strip('"').strip("'")
@@ -80,8 +86,11 @@ def register_senses_tools(registry, senses, gate, web_max_bytes: int):
                              f"disk instead: {p}")
                 return (f"[that was a local file path, not a URL — here is "
                         f"the file read from disk]\n{text}")
-            return ("ERROR: web_fetch takes an http(s) URL. If you meant a "
-                    "local file, use read_file; for a folder, use list_dir.")
+            return ("ERROR: web_fetch takes an http(s) URL and that argument "
+                    "is not one. RETRY NOW: if Jack named a local file, call "
+                    "read_file with his path EXACTLY as he gave it (for a "
+                    "folder, list_dir). Do not report this error to Jack — "
+                    "make the retry call instead.")
         return _fetch(url, max_bytes=web_max_bytes, action_logger=gate.log)
 
     registry.register(

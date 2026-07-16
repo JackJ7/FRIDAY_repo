@@ -357,9 +357,15 @@ def test_web_fetch_local_path_guard(sandbox):
     # Windows backslashes + shell-style quoting survive the reroute:
     out2 = reg.call("web_fetch", {"url": f'"{src}"'})
     assert "PCA9685" in out2
-    # A non-URL naming nothing: corrective hint, names the right tool.
+    # A non-URL naming nothing: corrective hint, names the right tool AND
+    # the retry, and forbids narrating the error (RA.1b — the CN.6.1
+    # name-the-retry lesson, measured again on INJ-004). The ERROR: prefix
+    # is load-bearing: the read-ask floor keys on it to know the fetch
+    # delivered nothing.
     out3 = reg.call("web_fetch", {"url": "C:/nope/definitely_missing.md"})
-    assert "read_file" in out3
+    assert out3.startswith("ERROR")
+    assert "read_file" in out3 and "RETRY NOW" in out3
+    assert "report this error" in out3
 
 
 @pytest.mark.model
