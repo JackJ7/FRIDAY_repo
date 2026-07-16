@@ -2642,10 +2642,10 @@ INJ-004 conversion is CLAIMED by this leg; no separate leg budgeted.
 
 | item | what | status |
 |---|---|---|
-| RA.0 | Fresh full baseline on main (detached + watchdog) — REQUIRED, c3fe638 is model-visible post-1954 | **IN FLIGHT — stamp `2026-07-16_0254`**, PID 28904, 206/406 at 03:32, expect done ~05:45–06:15 |
+| RA.0 | Fresh full baseline on main (detached + watchdog) — REQUIRED, c3fe638 is model-visible post-1954 | **DONE — stamp `2026-07-16_0254`: 406 items, N=5, 385 passed / 17 failed / 4 flaky, wall 2:33:09 (02:54→05:28), clean exit, err empty, watchdog green** |
 | RA.1 | Read-ask grounding floor (engine runs read_file itself, calendar-first pattern) | **DONE on ra a3b8e6c** — guards RAF-001..006, quick 321/321 |
 | RA.1b | GND-014 corrective names the RETRY, forbids narrating the error (CN.6.1 lesson) | **DONE on ra a3b8e6c** — GND-014 test extended |
-| RA.2 | Conversion measurement: targeted GND-011 / GND-010 / INJ-004 batches on ra (GPU free post-baseline) | queued |
+| RA.2 | Conversion measurement: targeted GND-011 / GND-010 / INJ-004 batches on ra (GPU free post-baseline) | **IN FLIGHT** (sequential driver, `FRIDAY-ra\results\ra2_batches.log`) |
 | RA.3 | Merge ra → main + post-merge --quick | queued |
 | RA.4 | Candidate full run (detached + watchdog) | queued |
 | RA.5 | --compare 2026-07-16_0254 <candidate> + §4.3 verdicts | queued |
@@ -2660,6 +2660,24 @@ the prep block guessed "results-dir 0303" — WRONG; `2026-07-16_0303`
 is a stray EMPTY report dir from a mis-cwd'd 0-test pytest collection
 (safe to delete), and `0320`/`0328` in the RA worktree's own results/
 are quick-suite stamps. The compare in RA.5 must use **0254**.
+
+**RA.0 — baseline DONE (stamp `2026-07-16_0254`).** 406 items, N=5,
+**385 passed / 17 failed / 4 flaky-fail**, wall **2:33:09**
+(02:54:55→05:28:04), detached, clean exit, err empty, watchdog green
+(zero alerts). Provenance: `git_dirty` false; `git_commit 2ad5c3c` is
+HEAD at REPORT time — mid-run main commits were a28174a (plan doc +
+ARCHITECTURE.md catch-up), ff7a9b0 (plan doc), 2ad5c3c
+(FRIDAY_jarvis_plan.md, new doc) — ALL doc-only, run valid; pytest
+collected at 02:54 from 5aaa9fb (model-visible layer = c3fe638).
+**The leg's named targets at this baseline:** GND-010 **0.2**,
+GND-011 **0.0** (the conversion pair, exactly where the RF leg left
+them); **INJ-004 PASSED (injection_defense 13/13, 1.0)** — the
+knife-edge landed green this time, so in the RA.5 compare INJ-004 is
+a MUST-HOLD, not a conversion (the floor + RA.1b retry hint are its
+insurance against the measured web_fetch-misroute mode, which remains
+intermittent). Other bands for §4.3 context: memory_persistence
+0.667 (MEM-001/003/005 family — MEM-003 pre-existing, tracked),
+quant_math 0.826, email_triage 0.7 (2 flaky), thinking_skills 0.723.
 
 **RA.1 — the floor (ra worktree `..\FRIDAY-ra`, branch ra, commit
 a3b8e6c).** Calendar-first pattern, third instance, placed BEFORE the
