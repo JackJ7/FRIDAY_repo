@@ -2045,8 +2045,8 @@ Section tracker (updated in place as each lands):
 | CN.4 | Narration-terminated internal-read probe → scoped fix + MRG-004 | **DONE (code cn 0a64729, MRG-004/004b/004c; narrated-listing floor appends the real list_projects output)** |
 | CN.4.1 | *(added in-leg from CN.4 measurement)* fabrication scan rides bare merge-intent turns + no real project names in tool schemas + MRG-003d/MRG-006 | **DONE — GT-C9 2/2 locked-clean (1945/1947) + GT-C10 full board (1949); only residual = the known T3 generic-clarify TARGET (P4 watch item)** |
 | CN.5 | Merge + candidate full run (detached + watchdog) | **DONE — candidate `2026-07-15_1954`: 384/21 of 405, wall 3:50:16, clean exit, err empty, watchdog green (one criterion-5 false-alarm SAVE at 22:08, first live save since it shipped)** |
-| CN.6 | `--compare 2026-07-15_1118 2026-07-15_1954` + per-item verdicts + ship/remove decisions | **IN PROGRESS — targets converted (GT-C9/GT-C10 PASS in-suite, project_ops +0.108); 3 armor-caused regressions found by repro + FIXED in CN.6.1 (c3fe638); adjudication re-runs in flight** |
-| CN.6.1 | *(added in-leg from CN.6 adjudication)* value-position identifier exemption + concrete schema examples + retry-naming corrective + MRG-003e | **code DONE (main c3fe638) — guards 16/16, --quick 315/315; re-runs measuring** |
+| CN.6 | `--compare 2026-07-15_1118 2026-07-15_1954` + per-item verdicts + ship/remove decisions | **DONE — SHIP GATE MET: targets up (project_ops +0.108, GT-C9/C10 PASS), armor-caused down fixed in-leg + verified by targeted re-runs; ALL CN items ship, nothing removed** |
+| CN.6.1 | *(added in-leg from CN.6 adjudication)* value-position identifier exemption + concrete schema examples + retry-naming corrective + MRG-003e | **DONE + VERIFIED — memory_persistence family re-run: MEM-001 1.0, MEM-005 4/4 = every armor-caused fail converted; GT-C9 sanity 1.0 (fabrication guarantee intact)** |
 
 **CN.0 (2026-07-15 afternoon, this session — leg opened on the monitor's
 TM-idle signal):**
@@ -2487,3 +2487,41 @@ RETRY (existing-note append / inbox/) and forbids turning the refusal
 into a question. Re-runs in flight: memory_persistence family,
 COM-001+SKL-003/004 trio, GT-C9 sanity (fabrication guarantee after
 the exemption).
+
+**CN.6 VERDICTS COMPLETE — LEG SHIP GATE MET (2026-07-16 ~02:45):**
+
+- **CN.6.1 verification (stamp 2358, full memory_persistence family):
+  MEM-001 1.0 and MEM-005 4/4 params 1.0 — every armor-caused fail
+  from the candidate converted.** GT-C9 sanity (stamp 0008) 1.0: the
+  value-position exemption did not soften the fabrication guarantee.
+- Residuals inside that family, both adjudicated NOT-armor: MEM-003
+  0.0 — **pre-existing** (0.0 at baseline 1118 AND candidate 1954;
+  correction-in-place picks a fresh field name, 'load cell rating' vs
+  the existing 'Load cell' line — logged as a future target, the
+  update_note_field field-matching floor). MEM-002 single-sample miss
+  in 2358 (passed baseline, candidate, and the 0243 confirm) = churn.
+- COM-001 / SKL-003 / SKL-004: SKL pair passed the first re-run;
+  COM-001 failed it, then passed the 0243 confirm — knife-edge churn
+  on the A1-era commitment-inference backstop (baseline 1.0 →
+  candidate 3/5 → fail → pass), no CN surface on the turn ("order the
+  GM6208 motors" carries no merge vocabulary, no project entity, so
+  neither the merge-intent flag nor the identifier scan is live).
+  Logged as a churn watch item, not armor damage.
+- **Decision: ALL CN items ship — CN.1 operand hint, CN.1b
+  phantom-project guard, CN.2 pending-consolidation ledger, CN.2.1
+  engine-executed merge, CN.3 identifier floor + which-ask backstop
+  (with CN.6.1's value-position exemption), CN.4 narrated-listing
+  floor, CN.4.1 merge-intent scan window + schema hygiene, CN.6.1.
+  Nothing removed.** Targets: project_ops 0.667→0.775, GT-C9 + GT-C10
+  both pass in-suite; TM's injection_defense 0.923 HELD through the
+  leg; must-hold set flat.
+- **Note for the next leg's baseline: CN.6.1 (c3fe638) is
+  model-visible and landed AFTER the 1954 candidate — the next leg
+  needs a FRESH full baseline; 1954 is not reusable.**
+- P4 watch item stands (T3 generic-clarify on both GT-C9 CN.4.1
+  batches): the general pending-task ledger — CN.2 built the merge
+  verb's instance; the P2/P4 general shape is the armor map's next
+  named gap. Other queued candidates: read-ask grounding floor
+  (GND-010/011 lever, Jack-ranked behind CONSOLIDATE), INJ-004
+  (pre-existing, mechanism differs from TM's ledger hole), MEM-003
+  field-matching floor (new, this leg's discovery).
