@@ -3075,3 +3075,95 @@ watchdog quiet, stopped post-flight) vs baseline `2026-07-16_1318`:**
    projects-dir fact-write redirect (cheap deterministic remap:
    a refused projects\ fact write retries into memories\); PLB-004
    capture (carried).
+
+---
+
+## RETRIEVED-NOTE leg (RN.0–RN.6) — opened 2026-07-17 ~06:10
+
+The ranked #1 target after NARRATED-JSON: **the retrieved-note recall
+floor** (STA-004 — memory_recall's last standing residual, persistent
+2× consecutive on top of the RA-leg pre-worktree A/B proof).
+
+**Failure (root-caused in the RA leg, re-confirmed NJ.6).** STA-004
+asks a recall question — "what pressure rating is the beta probe
+housing?" — about `beta_probe`, a **reference**-status project whose
+note (`- **Pressure rating:** 30 bar housing`) IS retrieved into
+context. The model nevertheless detours to `resolve_project("beta
+probe housing")`, reads the "no folder on disk" result, and answers
+with a **create-project OFFER** instead of the fact. The offer
+DISPLACES the injected note. Two code-level steering signals feed the
+detour, both found this leg:
+- `resolve_project` tool (`core/tools/projects.py`): a folderless
+  project's result literally says *"Folder: none on disk yet (use
+  create_project to make one…)"* — it recommends the create the model
+  then offers, even for a reference project that has no folder BY
+  DESIGN.
+- `hint_for` "one" branch (`core/project_resolver.py`): the injected
+  entity hint ends *"If the folder isn't on disk, say that plainly"* —
+  correct for an ACTIVE project mid-work, wrong for a reference
+  knowledge-source where the missing folder is not a gap.
+
+**Design (defense in depth — soft steer removed + hard floor behind
+it, the CLAUDE.md discipline):**
+- **RN.1 (soft layer):** for a **reference**-status project, both the
+  `resolve_project` tool result and the `hint_for` "one" branch stop
+  recommending `create_project` and stop framing the absent folder as
+  a problem — reframe: *a reference project is a knowledge source with
+  no working folder by design; answer from its note.* Non-reference
+  folderless projects (a genuine create candidate) keep the existing
+  create suggestion.
+- **RN.2 (code floor — the enforcement that must hold):** a
+  post-generation barrier modelled on the citation barrier. Fires when
+  ALL hold: the message is a QUESTION (recall-shaped, not a create/add
+  request), a resolved **reference** project's note is in context this
+  turn, and the settled reply is a create-offer / folder-absence
+  deflection. Correction: regenerate ONCE, tool-free (the note is
+  already in `base`), forcing an answer from the note and forbidding a
+  create-offer; if the note is somehow NOT in context, the engine
+  reads it first via `_run_tool` so the fact is grounded (never
+  fabricate). Best-effort acceptance (keep the draft if the retry is
+  empty or still offers to create). New ilog field
+  `retrieved_note_floor`.
+
+| Step | What | Status |
+|------|------|--------|
+| RN.0 | Baseline decision + open leg | **DONE — baseline = NJ candidate `2026-07-17_0004` REUSED** (only commits after fa70897 are doc-only; Jarvis J1 still unmerged on its own worktree — verified `git log fa70897..HEAD` touches only the plan doc, `git worktree list` shows jarvis at 197e735 off-main). Branch `rn` off `main` (1f16b97). **Coordination flag: if the Jarvis session merges J1 to main while the RN candidate run is in flight, that poisons it (code-freeze rule) — must confirm J1 stays unmerged before RN.5 launch.** |
+| RN.1 | Reference-project reframe + note-body surfacing in `resolve_project` tool + `hint_for` | **DONE — rn** (`core/tools/projects.py`: reference-status branch stops recommending `create_project` AND now **includes the note body** in the tool result — RN.4 found the detour to `resolve_project` was getting only metadata, not the knowledge; `core/project_resolver.py`: `hint_for` "one" branch reference short-circuit; a NON-reference folderless project keeps the create suggestion — RNF-002 guards the no-regression edge) |
+| RN.2 | Retrieved-note recall floor (engine post-gen barrier) + ilog `retrieved_note_floor` | **DONE — rn** post-gen barrier after the quote barrier (`core/engine.py`): fires on a recall QUESTION + resolved reference project (not a create/add request) whose reply carries **NONE of the note's distinctive fact tokens** (`_note_fact_tokens`: note-body tokens minus question-echo minus structural/status vocab — see RN.4 for why a phrasing regex was the wrong trigger); regenerates once tool-free with the **note body embedded in the STOP**; reads the note first if not in context; best-effort acceptance (retry must now carry a fact token). `_resolved_reference` captured at the entity-hint site + added to `hold_stream`; ilog `retrieved_note_floor` |
+| RN.3 | Guards (new `tests/pillar1/test_retrieved_note.py`) + `--quick` green | **DONE — rn**: RNF-001..010 + RNF-005b/c/d (13 guards) — the four measured dodge shapes (create-offer, metadata-deflection, denial, tool-error) each floored; full `--quick` **359/359** (346 prior + 13 new), stamp `2026-07-17_0644`, 0 regressions |
+| RN.4 | Targeted conversion batch (STA-004 ×N) + root-cause investigation | **DONE — rn** (details below): live STA-004 **22/22** across two batches (floor fired 5× on residual model failures); non-reference create path unregressed (RNF-002) |
+
+**RN.4 — root-cause investigation (the coin-flip that wasn't a create-offer).**
+The first live batch after RN.1–RN.3 came back **3/5**, no better than the RA-era
+coin-flip, and the floor never fired. A diagnostic dumping the reply + ilog per
+run (scratchpad `rn_diag.py`) showed why: RN.1 *worked* — the model stopped
+offering to create a folder — but the failure **mutated** through a family of
+shapes, none of them a create-offer:
+- **metadata deflection** — "reference status, does not have an associated
+  working folder… please provide more details" (the model narrated
+  `resolve_project`'s meta, which carried no note body, and punted);
+- **bare denial** — "I don't have direct access… could you remind me where we
+  might find this detail?" (no tools, ignored the retrieved note);
+- **tool-error narration** — the model called `read_brain` with a bad `summary`
+  kwarg, it errored, and it narrated the error and asked for the path.
+
+Two root causes, two fixes:
+1. **`resolve_project` surfaced metadata, not knowledge.** A reference project
+   IS its note; the detour that reached for the tool got status+folder, not the
+   fact. RN.1 now includes the note body in the reference-project result
+   (Lever 1). Alone it lifted conversion to ~17/18, but the residual family
+   proved a soft fix can't hold.
+2. **The floor's trigger was a phrasing regex (create-offer), so it missed
+   every new dodge shape — whack-a-mole.** Re-architected around the one
+   invariant all failures share: **answer-absence**. The reply carries none of
+   the note's distinctive fact tokens (numbers/content words the question
+   didn't already echo, minus structural/status vocab), while every correct
+   answer carries at least one ("30 bar"). Over-fire-safe by construction — the
+   floor fires only on fact-token absence and accepts only on fact-token
+   presence, so it can never turn a passing reply into a failure. Post-fix:
+   **22/22 live**, floor firing on exactly the runs the model dodged.
+Lesson (recorded): for a "did the model actually answer?" floor, detect
+answer-absence via note-content overlap, not the dodge's wording — the model
+has unbounded ways to not-answer.
+| RN.5 | Merge `rn` → main + post-merge `--quick` + candidate full run (detached + watchdog) | *pending* |
+| RN.6 | `--compare 2026-07-17_0004 <candidate>` + §4.3 verdicts + ship gate | *pending* |
