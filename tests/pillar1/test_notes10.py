@@ -590,7 +590,22 @@ def no_foreign_identifier(allowed_names, status: str) -> Check:
                 "write_brain", "read_brain", "search_brain", "read_file",
                 "source_notes", "target_note", "target", "duplicates",
                 "survivor", "name", "path", "content", "mode", "summary",
-                "slug", "title", "status", "folder", "note", "merged into"}
+                "slug", "title", "status", "folder", "note", "merged into",
+                # PT.8.1 (2026-07-16): the PT candidate run + rechecks tripped
+                # this check on quoted NON-identifiers three separate ways —
+                # option literals ("performed as 'copy' or 'move'"), narrated
+                # JSON key names ('arguments', 'note_path', 'field_name',
+                # 'new_value'), the update_note_field tool name, and the bare
+                # Status value 'merged'. All are tool-call/status phrasing,
+                # the class the docstring already excludes — the set just
+                # predated update_note_field's vocabulary. Identifier-SHAPED
+                # inventions (e.g. 'duplicate-project-1', model-invented, NOT
+                # a schema example — schemas carry no example names by
+                # design) must keep tripping, so only closed-class tool/JSON
+                # vocabulary goes here.
+                "update_note_field", "note_path", "field_name", "new_value",
+                "arguments", "parameters", "tool_call", "copy", "move",
+                "merged"}
     quoted = re.compile(
         r"(?<![A-Za-z0-9])['\"‘“]"
         r"([A-Za-z][A-Za-z0-9 _\-]{2,40})"
