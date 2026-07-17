@@ -590,3 +590,77 @@ def test_mrg004c_action_narration_quiet(sandbox):
     for slug in FLUX_SLUGS:
         assert "merged into" not in sandbox.brain.read_note(
             f"projects/{slug}.md").lower()
+
+
+# ---------------------------------------------------------------------------
+# Coverage-checked retire (armor NARRATED-JSON NJ.1). GT-C9 mode B (archived
+# report results\2026-07-16_1750): at T1 the 14B ran its OWN merge in the
+# REVERSED direction (survivor folded into a duplicate), the result landed,
+# and the retire-on-landed path dropped the ledger with both scripted
+# duplicates untouched. Every downstream protection keys on a live task —
+# directive, CN.3 trigger b, the CN.2.1 escalation at the survivor confirm —
+# so all of them went dark and the 14B free-fell into fabrication (T6),
+# narrated tool JSON (T7) and a phantom completion claim (T8). The retire
+# must demand DISK COVERAGE: at most one candidate (the survivor) without a
+# 'merged into' status.
+
+def _model_merge(target, duplicates):
+    return {"content": "", "tool_calls": [
+        {"function": {"name": "merge_projects",
+                      "arguments": {"target": target,
+                                    "duplicates": duplicates}}}]}
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("CNR-001", "a landed model-run merge that COVERS the "
+                             "candidate set still retires the task (the "
+                             "stamp-1654 correct-merge shape keeps working)")
+def test_cnr001_full_merge_retires(sandbox):
+    eng = _armed_engine(sandbox, [
+        _model_merge("fluxbeam", ["flux_beam_tool", "flux_beam_v2"]),
+        "Merged them all into Fluxbeam."])
+    assert eng.consolidation is None
+    for slug in ("flux_beam_tool", "flux_beam_v2"):
+        assert "merged into" in sandbox.brain.read_note(
+            f"projects/{slug}.md").lower()
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("CNR-002", "a REVERSED model-run merge (survivor folded "
+                             "into a duplicate — GT-C9 mode B T1) keeps the "
+                             "task pending; the survivor confirm then "
+                             "escalates, converges the merge on disk, and "
+                             "revives the survivor's own status")
+def test_cnr002_reversed_merge_keeps_task(sandbox):
+    eng = _armed_engine(sandbox, [
+        _model_merge("flux_beam_tool", ["fluxbeam"]),   # the mode-B inversion
+        "Consolidated the flux projects.",
+        "Right, Fluxbeam stays."])
+    # The landed-but-wrong merge must NOT retire the ledger any more.
+    assert eng.consolidation is not None, "reversed merge retired the task"
+    # Jack confirms the survivor -> CN.2.1 executes with code-owned args.
+    eng.respond("Keep Fluxbeam as the survivor.")
+    assert eng.consolidation is None
+    for slug in ("flux_beam_tool", "flux_beam_v2"):
+        assert "merged into" in sandbox.brain.read_note(
+            f"projects/{slug}.md").lower(), slug
+    # NJ.1b: the survivor was lying ('merged into Flux Beam Tool' from the
+    # reversed merge) — merging INTO it makes it live again.
+    flux = sandbox.brain.read_note("projects/fluxbeam.md")
+    assert "merged into" not in flux.lower(), flux
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("CNR-003", "a PARTIAL model-run merge (one duplicate left "
+                             "out) keeps the task pending; the survivor "
+                             "confirm converges the leftover")
+def test_cnr003_partial_merge_keeps_task(sandbox):
+    eng = _armed_engine(sandbox, [
+        _model_merge("fluxbeam", ["flux_beam_tool"]),   # v2 left behind
+        "Merged the tool project in.",
+        "Understood."])
+    assert eng.consolidation is not None, "partial merge retired the task"
+    eng.respond("Keep Fluxbeam as the survivor.")
+    assert eng.consolidation is None
+    assert "merged into" in sandbox.brain.read_note(
+        "projects/flux_beam_v2.md").lower()

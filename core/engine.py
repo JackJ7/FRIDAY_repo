@@ -1269,6 +1269,56 @@ class Engine:
                 live_token(addition)
             narrated_list_fired = True
 
+        # Narrated-tool-JSON floor (armor NARRATED-JSON NJ.2) — MRG-004's
+        # sibling for theme 1's envelope failure: the settled reply WRITES a
+        # concrete tool call (a ```json fence or a python-style keyword call,
+        # correct tool, correct args) but never emits it as a native call, so
+        # the turn ends with zero tools run (GT-C9 mode B T7: two
+        # update_note_field JSON objects narrated back-to-back; stamp 1548:
+        # merge_projects narrated with exact args). Shape D stays out by
+        # design — required args put these outside its no-fabrication
+        # recovery — so the ENGINE executes the narrated call itself: the
+        # model authored every argument, code fixes ONLY the envelope.
+        # Narrow by construction: zero tools this turn, a registry tool with
+        # schema-valid args (required present, keys remapped only via the
+        # PT.3-style one-hit containment, ambiguity drops the call), and
+        # execute intent (a cue before the first fence, or the reply dying
+        # on/inside the fence). Exposition — an example fence followed by
+        # prose, no cue — never fires: documentation is not intent. Results
+        # are APPENDED (never replaced, never a second model hop, the F4/A1
+        # lesson) and every call goes through _run_tool, so gate, taint and
+        # referent tracking hold exactly as for a native call.
+        narrated_json_fired = False
+        if (reply is not None and not tool_log
+                and not narrated_list_fired and not identifier_floor_fired
+                and not artifact_denial_fired and not phantom_fired
+                and "```" in (reply.content or "")):
+            text = reply.content or ""
+            njf_calls, njf_terminal = self._narrated_tool_calls(text)
+            fence_at = text.find("```")
+            cue = self._NARRATED_EXEC_CUE.search(
+                text[max(0, fence_at - 200):fence_at])
+            if njf_calls and (njf_terminal or cue):
+                additions = []
+                for c in njf_calls[:3]:
+                    if on_tool:
+                        on_tool(c["tool"], c["args"])
+                    nj_result, nj_external = self._run_tool(
+                        c["tool"], c["args"])
+                    tool_log.append({"tool": c["tool"], "args": c["args"],
+                                     "result": nj_result[:500]})
+                    turn.append({"role": "tool",
+                                 "content": self._wrap_data(nj_result,
+                                                            nj_external)})
+                    additions.append(str(nj_result).strip()[:400])
+                addition = "\n\n" + "\n\n".join(additions)
+                reply.content = text.rstrip() + addition
+                reply.tool_calls = []
+                turn.append({"role": "assistant", "content": reply.content})
+                if live_token:
+                    live_token(addition)
+                narrated_json_fired = True
+
         # Calendar-first corrective pass (Phase 2, item 1; plan D2). Phase 1
         # measured the prompt rule failing: on a bare "what day is X?" the 14B
         # answers from the injected accountability summary with ZERO
@@ -1698,11 +1748,19 @@ class Engine:
         # Retire the pending consolidation once the merge actually LANDED
         # (armor CONSOLIDATE CN.2) — disk truth, not narration: a merge the
         # gate declined ("BLOCKED") or that errored stays pending, exactly
-        # like the golden's merged-on-disk check.
+        # like the golden's merged-on-disk check. Landed is NOT enough on its
+        # own (armor NJ.1): GT-C9 mode B (results\2026-07-16_1750) measured
+        # the 14B merging the SURVIVOR into a duplicate at T1 — "Merged 1
+        # project(s)" landed, the ledger retired, and every downstream
+        # protection that keys on a live task (directive, CN.3 trigger b,
+        # the CN.2.1 escalation at the survivor confirm) went dark while
+        # both scripted duplicates sat unmerged. The retire now also
+        # demands COVERAGE: disk must show the candidate set consolidated.
         if self.consolidation and any(
                 t["tool"] == "merge_projects"
                 and self._write_landed(t.get("result", ""))
-                for t in tool_log):
+                for t in tool_log) \
+                and self._consolidation_covered(self.consolidation):
             self.consolidation = None
 
         # Arm/retire the general pending-task ledger (armor PENDING-TASK
@@ -1820,6 +1878,14 @@ class Engine:
             # CN.4: the engine fulfilled an end-of-reply narrated project
             # listing the model promised but never ran.
             "narrated_list_floor": narrated_list_fired,
+            # Armor NJ.2: the engine executed a tool call the reply narrated
+            # (fence + schema-valid args) instead of emitting — the theme-1
+            # envelope residual, made countable. Additive; schema stable.
+            "narrated_json_floor": narrated_json_fired,
+            # Armor NJ.1: is the consolidation task still live after this
+            # turn? Adjudication needs the ledger state per turn — mode B
+            # was reconstructed without it; never again. Additive.
+            "consolidation_pending": self.consolidation is not None,
             # Armor PENDING-TASK: True when the generic-clarify floor had to
             # correct a contentless clarify while code held the answer — the
             # P4 residual, made countable. Additive; schema stable.
@@ -3175,7 +3241,16 @@ class Engine:
     _IDENTIFIER_NOISE = {
         "action", "target", "duplicates", "survivor", "name", "path",
         "content", "mode", "summary", "slug", "title", "status", "folder",
-        "note", "merged into", "source_notes", "target_note"}
+        "note", "merged into", "source_notes", "target_note",
+        # Closed-class tool/JSON envelope vocabulary (NJ.2b, mirroring the
+        # PT.8.1 grader fix): a reply that narrates a tool call quotes its
+        # OWN envelope — JSON keys, not project names — and the scan must
+        # not turn that into a fabrication verdict (the engine-side twin of
+        # the quote-scan gap that failed GT-C9's series-2 recheck).
+        # Identifier-SHAPED inventions ('duplicate-project-1') still trip.
+        "arguments", "parameters", "args", "params", "tool", "tool_call",
+        "function", "input", "field", "value", "new_value", "field_name",
+        "note_path", "merged"}
     # VALUE-position quotes are never project identifiers (CN.6.1). Measured
     # on the CN.5 candidate (MEM-005, stamps in plan §6): a truthful "status
     # updated to 'archived'" was scanned, 'archived' resolved to no project,
@@ -3199,6 +3274,115 @@ class Engine:
         r"(?:let'?s start by listing|let me list|start by listing"
         r"|i(?:'ll| will)(?: start by)? list|i (?:first )?need to list)"
         r"[^.!?\n]{0,80}[.!?]?\s*$", re.IGNORECASE)
+
+    # NJ.2 — a fenced block (json/python/none-tagged); an UNTERMINATED fence
+    # (the reply died mid-JSON, measured in mode B T7) still captures to \Z.
+    _TOOL_FENCE = re.compile(
+        r"```[A-Za-z]*[ \t]*\r?\n(.*?)(?:```|\Z)", re.DOTALL)
+    # Execute-intent cue, judged on the prose immediately BEFORE the first
+    # fence. Verb-anchored to the measured shapes ("Let me proceed with this
+    # consolidation now.", "Calling merge_projects with ...") — a bare
+    # "proceed"/"could consolidate" never matches, so offers and exposition
+    # stay exposition.
+    _NARRATED_EXEC_CUE = re.compile(
+        r"\b(?:let me|i(?:'|’)ll|i will)\s+(?:now\s+)?"
+        r"(?:proceed|call|run|execute|apply|merge|update|consolidate)\b"
+        r"|\b(?:calling|running|executing|invoking)\b"
+        r"|\bproceeding with\b", re.IGNORECASE)
+    # Envelope keys a narrated call wraps its pieces in — tried in order for
+    # the tool name and for the argument object.
+    _NARRATED_NAME_KEYS = ("tool", "name", "action", "tool_call", "function")
+    _NARRATED_ARG_KEYS = ("arguments", "parameters", "args", "params", "input")
+
+    def _normalize_narrated_call(self, obj: dict, schemas: dict):
+        """One narrated JSON object -> {"tool", "args"} against the registry
+        schema, or None. No fabrication, ever: values pass through untouched;
+        a key the schema doesn't know remaps ONLY via the PT.3-style
+        asymmetric containment (exactly one schema key token-contained in the
+        narrated key — 'note_path' names 'path'); ambiguity or a missing
+        required argument drops the whole call."""
+        name, inner = None, obj
+        fn = obj.get("function")
+        if isinstance(fn, dict) and fn.get("name") in schemas:
+            name, inner = fn["name"], fn
+        else:
+            for key in self._NARRATED_NAME_KEYS:
+                v = obj.get(key)
+                if isinstance(v, str) and v in schemas:
+                    name = v
+                    break
+        if not name:
+            return None
+        args = None
+        for key in self._NARRATED_ARG_KEYS:
+            v = inner.get(key)
+            if isinstance(v, str):
+                try:
+                    v = json.loads(v)
+                except Exception:
+                    v = None
+            if isinstance(v, dict):
+                args = v
+                break
+        if args is None:   # flat shape: {"action": "x", "path": ..., ...}
+            skip = set(self._NARRATED_NAME_KEYS) | set(self._NARRATED_ARG_KEYS)
+            args = {k: v for k, v in obj.items() if k not in skip}
+        schema = schemas[name] or {}
+        props = schema.get("properties") or {}
+        mapped = {}
+        for k, v in args.items():
+            if k in props:
+                mapped[k] = v
+                continue
+            ktoks = set(re.split(r"[^a-z0-9]+", str(k).lower())) - {""}
+            hits = [p for p in props if p.lower() in ktoks]
+            if len(hits) != 1 or hits[0] in mapped:
+                return None
+            mapped[hits[0]] = v
+        if any(r not in mapped for r in (schema.get("required") or [])):
+            return None
+        return {"tool": name, "args": mapped}
+
+    def _narrated_tool_calls(self, text: str):
+        """Every concrete tool call `text` NARRATES inside fenced blocks
+        (NJ.2), plus whether the reply is fence-terminal (ends on/inside a
+        fence — the turn died on the JSON, which IS execute intent). Two
+        measured envelopes: a JSON object (or array of them), and a
+        python-style keyword call — keyword-only, positional args are never
+        guessed into a schema."""
+        import ast
+        schemas = {t["function"]["name"]: (t["function"].get("parameters")
+                                           or {})
+                   for t in self.registry.to_ollama()}
+        calls = []
+        for block in self._TOOL_FENCE.findall(text)[:6]:
+            block = block.strip()
+            parsed = []
+            try:
+                data = json.loads(block)
+                parsed = data if isinstance(data, list) else [data]
+            except Exception:
+                m = re.search(r"\b([a-z_][a-z0-9_]*)\s*\((.*)\)", block,
+                              re.DOTALL)
+                if m and m.group(1) in schemas:
+                    try:
+                        node = ast.parse(f"f({m.group(2)})", mode="eval").body
+                        if not node.args:
+                            parsed = [{"tool": m.group(1), "arguments": {
+                                kw.arg: ast.literal_eval(kw.value)
+                                for kw in node.keywords if kw.arg}}]
+                    except Exception:
+                        parsed = []
+            for obj in parsed:
+                if not isinstance(obj, dict):
+                    continue
+                call = self._normalize_narrated_call(obj, schemas)
+                if call and call not in calls:
+                    calls.append(call)
+        stripped = text.rstrip()
+        terminal = (stripped.endswith("```")
+                    or stripped.count("```") % 2 == 1)
+        return calls, terminal
 
     def _foreign_identifiers(self, text: str) -> list:
         """Quoted project-shaped identifiers in `text` that resolve to NO
@@ -3239,6 +3423,29 @@ class Engine:
                 continue
             foreign.append(cand)
         return foreign
+
+    def _consolidation_covered(self, task) -> bool:
+        """Disk truth behind the CN.2 retire (armor NJ.1): the task counts as
+        DONE only when at most one candidate — the survivor — still lacks a
+        'merged into' status. A reversed merge (survivor folded into a
+        duplicate, GT-C9 mode B) or a partial one leaves 2+ candidates
+        unfolded, so the task stays pending and the CN.2.1 escalation can
+        still converge it with code-owned args at the survivor confirm.
+        Candidates that vanished from the inventory count as folded; a
+        resolver failure retires as before — a wedged-open task must never
+        be the failure mode of a status read."""
+        resolver = getattr(self, "project_resolver", None)
+        if resolver is None:
+            return True
+        try:
+            status = {p["slug"]: str(p.get("status") or "")
+                      for p in resolver.projects()}
+        except Exception:
+            return True
+        unfolded = [c for c in task.get("candidates", [])
+                    if not status.get(c, "merged into (gone)")
+                    .lower().startswith("merged into")]
+        return len(unfolded) <= 1
 
     def _consolidation_update(self, user_input: str) -> str:
         """Arm/refresh/expire the pending-consolidation task for this turn and

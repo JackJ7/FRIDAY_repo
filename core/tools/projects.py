@@ -357,6 +357,19 @@ def register_project_tools(registry, gate, brain, projects_root: Path):
                 f"# {t['title']}\n\n- **Status:** active\n",
                 mode="create", summary=f"Create survivor note for {t['title']}")
 
+        # A survivor that was itself folded into a duplicate earlier still
+        # carries 'merged into X' (armor NJ.1b — GT-C9 mode B measured the
+        # 14B merging the survivor the WRONG WAY first). Merging INTO it
+        # makes it the live record again, so the stale status would be a
+        # lying note presented as the record; revive it.
+        ttext = brain.read_note(target_note)
+        m = re.search(r"(?im)^-\s*\*\*Status:\*\*\s*(.+)$", ttext)
+        if m and m.group(1).strip().lower().startswith("merged into"):
+            brain.write_note(
+                target_note, set_field(ttext, "Status", "active"),
+                mode="overwrite",
+                summary=f"Revive {t['title']} as merge survivor")
+
         merged_notes, restatused, orphans = [], [], []
         for d in dups:
             if d["note_path"]:
