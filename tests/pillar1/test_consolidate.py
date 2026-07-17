@@ -592,6 +592,30 @@ def test_mrg004c_action_narration_quiet(sandbox):
             f"projects/{slug}.md").lower()
 
 
+@pytest.mark.upgrade
+@pytest.mark.case("MRG-003f", "entity-hint turns hold the stream (NJ.4.1): "
+                              "a draft the identifier floor replaces never "
+                              "reaches the token stream — measured on "
+                              "nj4_gtc9_v2 T6, where the record was fixed "
+                              "but the streamed draft failed the LOCKED "
+                              "stream-graded check")
+def test_mrg003f_entity_hint_stream_hold(sandbox):
+    for slug in FLUX_SLUGS:
+        _plant_note(sandbox, slug)
+    eng = sandbox.service.engine
+    eng.vote_enabled = False
+    draft = "Fluxbeam pairs well with 'project-99' for this."
+    clean = "Fluxbeam is active and healthy."
+    eng.model = _ScriptModel([draft, clean])
+    tokens = []
+    reply = eng.respond("What's the status of Fluxbeam?",
+                        on_token=tokens.append)
+    stream = "".join(tokens)
+    assert "project-99" not in stream, stream       # draft never streamed
+    assert clean in stream, stream                  # the vetted emit did
+    assert reply.content == clean
+
+
 # ---------------------------------------------------------------------------
 # Coverage-checked retire (armor NARRATED-JSON NJ.1). GT-C9 mode B (archived
 # report results\2026-07-16_1750): at T1 the 14B ran its OWN merge in the

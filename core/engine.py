@@ -564,6 +564,14 @@ class Engine:
             or self.consolidation is not None
             or bool(consolidation_directive)
             or self._merge_intent_turn
+            # NJ.4.1: the ENTITY-HINT arm was the one project_context_live
+            # quarter whose stream did not hold — measured (nj4_gtc9_v2 T6):
+            # "Keep Fluxbeam as the survivor." on a retired task is a bare
+            # entity-hint turn, the scan fired and fixed the RECORD, but the
+            # 'project1' draft had already streamed, so Jack watched the
+            # retraction and the stream-graded LOCKED check failed anyway.
+            # Every arm that can replace the reply must also hold the stream.
+            or bool(self._entity_hint)
             # PT.2: a pending-task turn may have its reply replaced by the
             # generic-clarify floor — hold the stream so Jack never watches
             # a retracted generic re-ask.
