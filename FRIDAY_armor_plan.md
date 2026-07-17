@@ -3004,4 +3004,74 @@ eight turns). Reconstruction:
 | NJ.4 | Targeted conversion batches: GT-C9 ×3 minute-spaced (mode B is stochastic ~1/3 — the reversed T1 merge is model churn; NJ.1 must convert it), GT-C10 ×1 sanity, CFG-007 ×1 sanity (prose narration stays Shape-D territory, floor must not touch it) | **DONE 2026-07-16 ~23:45** — GT-C9 P/F/P (v1 1.0 / v2 see NJ.4.1 / v3 1.0), GT-C10 PASS, CFG-007 FAIL = documented knife-edge churn (3/5, both misses `used_tool:false` skipping read_own_config — 5th leg appearance, ilog shows ZERO NJ flags, not armor-caused); sandboxes+ilogs all preserved under `results\nj4_sandboxes\` |
 | NJ.4.1 | *(added in-leg from v2 adjudication)* **Entity-hint stream hold** — v2's only fail was T6 quoting 'project1' on the STREAM while the ilog shows `identifier_floor=true`: the CN.3 scan FIRED and fixed the record, but `_entity_hint` was the one `project_context_live` arm missing from the hold_stream list, so the draft streamed and the stream-graded LOCKED check failed a turn the engine had already corrected (v2's T1 model merge was correct-full — NJ.1 rightly retired; T6 was a bare entity-hint turn). Every arm that can replace a reply now holds the stream | **DONE — nj 0e2ef9e**; guard MRG-003f (draft never reaches the token stream), --quick **346/346**; GT-C9 post-fix sanity **v4 PASS + v5 PASS (2/2)**. Batch ilog note: in all three v1–v3 runs T1's model-run merge was CORRECT-FULL (coverage check rightly retired at T1) — the reversed-merge mode B did not recur live, so its conversion rests on CNR-002's engine-level guarantee, exactly the LOCKED philosophy; `narrated_json_floor` fired on no batch turn (zero collateral) |
 | NJ.5 | Merge nj → main + post-merge --quick + candidate full run (detached + watchdog) | **merge DONE 2026-07-17 ~00:00** — fast-forward 7040d92→fa70897 (nj was strictly ahead, so the candidate commit on main IS fa70897); post-merge --quick **346/346** (stamp `2026-07-17_0000`); **candidate full run IN FLIGHT from ~00:03** (437 items = 426 + 11 NJ guards; suite PID 33504, watchdog PID 2664; logs `launch_logs\nj_candidate.*.log`, watchdog `watchdog_nj_candidate.log`) |
-| NJ.6 | --compare 1318 → candidate + §4.3 verdicts + ship gate | pending |
+| NJ.6 | --compare 1318 → candidate + §4.3 verdicts + ship gate | **DONE 2026-07-17 ~04:20 — SHIP GATE MET** (details below) |
+
+**NJ.6 — candidate `2026-07-17_0004` (421/437, 3h28m, clean exit;
+watchdog quiet, stopped post-flight) vs baseline `2026-07-16_1318`:**
+
+- **UP:** calendar +0.250 (0.75→1.00), project_ops +0.150 (0.70→0.85,
+  **GT-C9 CONVERTED — the leg target**), quant_math +0.043
+  (0.870→0.913), voice +0.067. Newly passing: GND-012, GOLD-gear-03,
+  GT-A, GT-C9, PROP-012, SKL-004. TM/PT perfect boards HELD
+  (injection_defense 1.000, session_ops 1.000, briefing 1.000).
+- **Down-deltas — ALL adjudicated NOT armor-caused.** Decisive
+  evidence: the ilog logs every floor flag per turn, and
+  `narrated_json_floor` / `consolidation_pending` / `identifier_floor`
+  are False on EVERY turn of EVERY failing transcript, in both the
+  candidate run and the adjudication recheck (`2026-07-17_0358`,
+  12 items, N=5, ~14 min). Sandboxes for both runs preserved under
+  `results\nj6_sandboxes\` (pytest-459..461 candidate, 462..464
+  recheck) before pytest could recycle them.
+  - **Re-passed on recheck (churn confirmed):** GAP-002 (T1 reply
+    fabricated NOTHING — it failed the disclaimer branch by
+    deflecting to a read_brain offer), MEM-001 (model aimed
+    `write_brain` at `projects\`; the pre-NJ registration guard
+    rightly refused; churn in target choice), SKL-005, GOLD-gear-01
+    (0.5/15 instead of 0.5×15; in the SAME recheck gear-03 flipped
+    back to failing — the gear goldens trade places run-to-run;
+    quant_math is UP overall).
+  - **Persistent but proven non-NJ:**
+    - EML-004 0.8→0.2/0.2 + EML-005 0.6→0.4/0.6 (email_triage
+      0.7→0.3): outcome class unchanged (FLAKY-FAIL at baseline
+      too — only pass fractions moved); no 420s timeouts (78s/101s);
+      `entity_resolved` False on every email turn so the NJ.4.1 hold
+      never engaged; none of NJ's four deltas has a code path into an
+      email turn. EML-005 recovered to baseline on recheck; EML-004's
+      conservative-importance band is a REAL drop → next-leg
+      candidate.
+    - STA-004 (memory_recall −0.25 is this case alone): identical
+      resolve_project-detour deflection both runs — the documented
+      PRE-EXISTING mode proven by the RA-leg pre-worktree A/B;
+      elevates the retrieved-note recall floor.
+    - GND-013: grader wants the impossible-verb gap reported; model
+      asks an account-clarify question instead. All corrective flags
+      in its transcript (`read_ask_corrective`,
+      `empty_reply_corrective`, `pending_task_armed`) are
+      pre-baseline armor also present under the passing baseline.
+      GND-012 flipped F→P in the same family. Knife-edge; watch.
+    - SKL-003: SKL band churn (SKL-004 flipped up simultaneously);
+      `entity_resolved` does fire on "delta sled" turns so NJ.4.1
+      holds the stream, but with `identifier_floor` False the
+      deferred stream is byte-identical to the record the grader
+      reads — no grader-visible delta.
+- **Ship gate: MET.** All NJ items ship. Candidate stamp
+  `2026-07-17_0004` is the new baseline IF nothing model-visible
+  lands after fa70897 (NJ.6 landed docs only).
+
+**Next-leg ranking (post-NJ.6):**
+1. **Retrieved-note recall floor** — STA-004 now persistent (2×
+   consecutive) on top of the RA-leg A/B proof; design shape: when
+   resolve_project returns a reference project whose note was
+   already injected/retrieved, the engine answers from the note
+   before any create-folder detour can displace it.
+2. **EML-004 conservative-importance floor** — band 0.8→0.2
+   persistent; EML-007's deterministic pre-screen exists, so the
+   lever is wiring its verdict into the conversational reply path
+   (S1.1's sibling).
+3. **COM-008 commitment fuzzy matcher** (test_model_close still
+   failing, pre-existing).
+4. **PT.1 T3-arming gap** (carried).
+5. Watch: GND-013 partial-completion report floor; MEM-001
+   projects-dir fact-write redirect (cheap deterministic remap:
+   a refused projects\ fact write retries into memories\); PLB-004
+   capture (carried).
