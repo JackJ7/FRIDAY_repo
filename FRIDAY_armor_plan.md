@@ -3165,5 +3165,15 @@ Two root causes, two fixes:
 Lesson (recorded): for a "did the model actually answer?" floor, detect
 answer-absence via note-content overlap, not the dodge's wording — the model
 has unbounded ways to not-answer.
-| RN.5 | Merge `rn` → main + post-merge `--quick` + candidate full run (detached + watchdog) | *pending* |
-| RN.6 | `--compare 2026-07-17_0004 <candidate>` + §4.3 verdicts + ship gate | *pending* |
+| RN.5 | Merge `rn` → main + post-merge `--quick` + candidate full run (detached + watchdog) | **merge DONE 2026-07-17 ~06:53** — `--no-ff` `7b626af` (rn was strictly ahead of `1f16b97`, zero conflicts); post-merge `--quick` **359/359** (stamp `2026-07-17_0644` tree). **Candidate full run IN FLIGHT from ~06:58** — `py -3 run_suite.py`, **450 items** collected clean (437 NJ baseline + 13 RN guards); run_suite PID 27020, pytest PID 31240; log `results\launch_logs\rn_candidate_2026-07-17_0658.out.log`; watchdog `results\launch_logs\watchdog_rn_candidate.log` (healthy at 07:00: qwen2.5:14b resident, pid alive). Expect ~3.5h (done ~10:30). **Coordination: verified at launch — Jarvis J1 unmerged (worktree 197e735 off-main), no model-visible commits on main after fa70897 except this leg; if the parallel session merges J1 or launches its own eval mid-flight, that poisons this run (code-freeze / one-GPU rules).** |
+| RN.6 | `--compare 2026-07-17_0004 <candidate>` + §4.3 verdicts + ship gate | *pending — awaits candidate completion* |
+
+**RN.5 launch note (run-ops):** two stale Jul-14 python PIDs (6644, 26944,
+idle, uv-cache) resurfaced in `ps -W` — the ones NJ.6 flagged as
+kill-when-convenient; left alone during the flight (not the run, not holding
+port 47533). The RN.6 target after this run: named target STA-004
+(memory_recall) UP; watch the §4.3 usual suspects (EML-004 band, CFG-007
+S1.1 trade, COM/SKL/GND family churn) plus the RN-specific collateral —
+any reference-project recall turn now costs one extra model call when the
+floor fires (regeneration), and `resolve_project` on a reference project
+returns the note body (larger tool result).
