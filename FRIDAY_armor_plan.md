@@ -2949,3 +2949,58 @@ their runs (PIDs 34768/15368 baseline, 34584/32948 candidate — their
 monitored PIDs exited cleanly hours ago). Harmless read-only
 observers; this session couldn't stop them (permission classifier).
 Jack: `Stop-Process -Id 34768,15368,34584,32948` when convenient.
+
+---
+
+## NARRATED-JSON leg (NJ.0–NJ.6) — opened 2026-07-16 ~23:15
+
+The ranked #1 target after PENDING-TASK: **narrated-tool-JSON floor +
+CN.2.1 determinism capture** (GT-C9's one true remaining failure —
+the model narrates tool-call JSON in prose instead of executing, and
+in the same transcript the CN.2.1 code-executed merge never fired).
+
+**NJ.0 — CN.2.1 determinism capture: ROOT CAUSE FOUND STATICALLY, no
+GPU flight needed.** The mode-B recheck's full per-turn evidence
+survived in `results\2026-07-16_1750\report.json` (the tmp tree was
+recycled but the harness report holds user/reply/tools/checks for all
+eight turns). Reconstruction:
+
+- T1 tools = `[merge_projects, list_projects]` — the model ran its
+  OWN merge before ever proposing a survivor. By T8, BOTH scripted
+  duplicate notes were unmerged, so that landed merge can only have
+  been the REVERSED direction: `fluxbeam` folded INTO one of the
+  duplicates (the only landed shape that marks neither
+  `flux_beam_tool.md` nor `flux_beam_v2.md`; a fabricated-args call
+  returns `ERROR: no project matches` and never lands).
+- **The retire-on-landed path (engine.py ~1702, CN.2) retires the
+  consolidation task on ANY landed `merge_projects` — no check that
+  the landed merge actually consolidated the task's candidate set.**
+  The reversed T1 merge returned `Merged 1 project(s)...`,
+  `_write_landed` said true, and the ledger died at T1.
+- Downstream, every deterministic protection went dark because they
+  all key on a live task: T2's forbidden which-projects restate (no
+  CN.2 directive rode), T5's re-resolve detour, T6's survivor confirm
+  hit `self.consolidation is None` so **CN.2.1 never had a task to
+  escalate** — the escalation's own trigger logic is correct and was
+  never reached. The unarmored 14B then fabricated
+  `'duplicate-project-1'` (T6), narrated two `update_note_field`
+  JSON calls in prose with zero tools run (T7), and claimed phantom
+  completion (T8).
+- Alternatives eliminated statically: T5 has no merge vocabulary so
+  it cannot re-arm/supersede (`_MERGE_INTENT` checked); TTL=6 with
+  T2/T3/T5 all engaging cannot expire by T6; `_CONSOLIDATION_CANCEL`
+  matches nothing in T2–T6 ("Keep Fluxbeam…" is not cancel shape);
+  and if the task HAD been alive at T6, the escalation's code-owned
+  args (all real, no folders to gate) land unconditionally in the
+  sandbox — T8 would have passed. T8 failed ⇒ the ledger was dead ⇒
+  retire-on-landed is the only surviving path. QED.
+
+| item | what | status |
+|---|---|---|
+| NJ.0 | Baseline decision + CN.2.1 determinism capture | **DONE — baseline = PT candidate `2026-07-16_1318` REUSED** (commits after b4d79a4 are doc-only + PT.8.1 grader-only); root cause above, from archived report.json, zero flights |
+| NJ.1 | Coverage-checked consolidation retire: retire on a landed model-run merge ONLY when disk shows the task's candidate set actually consolidated (≤1 candidate note without 'merged into' status); partial/reversed merges keep the task pending so directive + CN.2.1 stay armed. Side fix: `merge_projects` resets a SURVIVOR's own stale 'merged into …' status to active (the reversed-merge repair path would otherwise leave the survivor's note lying) | pending |
+| NJ.2 | Narrated-tool-JSON floor (MRG-004's sibling, theme-1 envelope fix): a settled reply with ZERO tools run that narrates a concrete tool call — fenced JSON object or python-style call naming a REGISTRY tool with schema-valid, model-authored args, plus an execute-intent cue (or fence-terminal reply) — gets the call(s) EXECUTED by the engine through `_run_tool` (gate/taint/referents all apply), results appended CN.4-style (append, never replace, no second hop). No arg fabrication: the model wrote the args; code fixes only the envelope. Example/hypothetical fences (no execute cue) never fire; cap 3 calls/turn; dedupe identical calls | pending |
+| NJ.3 | Guards (NJF-001.. new file `tests/pillar1/test_narrated_json.py`, CNR-001.. in test_consolidate.py) + ilog fields `narrated_json_floor`/`consolidation_retired` + full --quick green on branch `nj` | pending |
+| NJ.4 | Targeted conversion batches: GT-C9 ×3 minute-spaced (mode B is stochastic ~1/3 — the reversed T1 merge is model churn; NJ.1 must convert it), GT-C10 ×1 sanity, CFG-007 ×1 sanity (prose narration stays Shape-D territory, floor must not touch it) | pending |
+| NJ.5 | Merge nj → main + post-merge --quick + candidate full run (detached + watchdog) | pending |
+| NJ.6 | --compare 1318 → candidate + §4.3 verdicts + ship gate | pending |
