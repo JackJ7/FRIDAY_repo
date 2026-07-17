@@ -1537,35 +1537,48 @@ class Engine:
         # Retrieved-note recall floor (armor RETRIEVED-NOTE RN.2). The sibling
         # of the citation barrier for the OPPOSITE failure: there the model
         # cited a store nothing surfaced; here the store DID surface the answer
-        # — a REFERENCE project's note is in context — but the model detoured to
-        # a create-folder OFFER that DISPLACED the recall answer (STA-004: the
-        # 30-bar fact was retrieved, yet the reply offered to make a folder).
-        # Deterministic trigger: a recall-shaped QUESTION (not a create/add
-        # request) resolved to a reference project whose note is in context, and
-        # the settled reply offers to create a folder/project. Correction
-        # mirrors the citation barrier — regenerate ONCE tool-free (the note is
-        # already in `base`) demanding an answer from the note; if the note is
-        # somehow NOT in context, read it first through _run_tool so the fact is
-        # grounded (never fabricate). Best-effort acceptance: keep the draft if
-        # the retry is empty or still offers to create.
+        # — a REFERENCE project's note is in context — but the model failed to
+        # answer FROM it (STA-004). The failure has many surfaces (create-offer,
+        # "no working folder" deflection, read_brain tool-error narration, bare
+        # "I don't have access" denial), so the trigger is the one invariant
+        # they share: a recall QUESTION (not a create/add request) resolved to a
+        # reference project whose note is in context, and the reply carries NONE
+        # of that note's distinctive fact tokens. Correction mirrors the
+        # citation barrier: regenerate ONCE, tool-free, with the note body
+        # embedded in the STOP so the fact is unmissable; if the note is somehow
+        # NOT in context, read it first through _run_tool (never fabricate).
+        # Best-effort acceptance: keep the draft unless the retry now carries a
+        # fact token.
         retrieved_note_fired = False
         ref_proj = getattr(self, "_resolved_reference", None)
         if (reply is not None and not phantom_fired and ref_proj
                 and self._is_recall_question(user_input)
-                and not self._CREATE_REQUEST.search(user_input or "")
-                and self._CREATE_OFFER.search(reply.content or "")):
+                and not self._CREATE_REQUEST.search(user_input or "")):
             note_path = ref_proj.get("note_path")
-            note_in_context = bool(note_path) and any(
-                r.path == note_path for r in (retrieved or []))
-            # The note isn't in the retrieved snippets — read it now so the
-            # forced answer is grounded in real bytes, not memory (the quote
-            # barrier's re-read shape: draft carries the call, result follows).
-            if note_path and not note_in_context:
+            # The note body: prefer the snippet already in context; else read it
+            # (honesty — answer only from a note we truly have). A read here is
+            # wired into `turn` only if we actually fire, below.
+            note_body = next((r.snippet for r in (retrieved or [])
+                              if r.path == note_path), "")
+            pending_read = None
+            if note_path and not note_body:
                 rr_args = {"path": note_path}
-                if on_tool:
-                    on_tool("read_brain", rr_args)
                 rr_result, rr_external = self._run_tool("read_brain", rr_args)
                 if not str(rr_result).startswith("ERROR"):
+                    note_body = rr_result
+                    pending_read = (rr_args, rr_result, rr_external)
+            fact_tokens = self._note_fact_tokens(note_body, user_input)
+            answered = any(t in (reply.content or "").lower()
+                           for t in fact_tokens)
+            if fact_tokens and not answered:
+                # We are firing. If we had to read the note, wire the call +
+                # result into the transcript now so the regeneration sees it and
+                # the transcript stays well-formed (the quote barrier's re-read
+                # shape: the draft carries the call, the result follows).
+                if pending_read is not None:
+                    rr_args, rr_result, rr_external = pending_read
+                    if on_tool:
+                        on_tool("read_brain", rr_args)
                     tool_log.append({"tool": "read_brain", "args": rr_args,
                                      "result": rr_result[:500]})
                     call = {"function": {"name": "read_brain",
@@ -1579,27 +1592,25 @@ class Engine:
                                      "tool_calls": [call]})
                     turn.append({"role": "tool",
                                  "content": self._wrap_data(rr_result, rr_external)})
-                    note_in_context = True
-            if note_in_context:
                 correction = (
                     f"STOP: '{ref_proj['title']}' is a REFERENCE project — a "
                     "knowledge source with no working folder by design — and its "
-                    "note is already in front of you. Jack asked a question whose "
-                    "answer is IN that note. Answer it directly and specifically "
-                    "from the note. Do NOT offer to create a folder or project, "
-                    "and do not treat the missing folder as a problem: that is "
-                    "not what he asked.")
+                    "note is right here:\n\n" + (note_body or "").strip()[:1500]
+                    + "\n\nJack asked a question whose answer is IN that note. "
+                    "Answer it directly and specifically from the note above. Do "
+                    "NOT offer to create a folder, do NOT say there is no folder, "
+                    "do NOT ask him where to find it, and do NOT say you lack "
+                    "access — the note is right above.")
                 retry = self.model.chat(
                     base + turn
                     + [{"role": "assistant", "content": reply.content},
                        {"role": "system", "content": correction}],
                     on_token=None)
                 self.session_tokens += retry.eval_count
-                # Accept only if the retry stopped offering to create (with the
-                # note in context a tool-free retry can now answer); otherwise
-                # keep the original rather than risk a worse reply.
-                if (retry.content or "").strip() \
-                        and not self._CREATE_OFFER.search(retry.content):
+                # Accept only if the retry now carries the note's answer (a fact
+                # token); otherwise keep the draft rather than risk a worse reply.
+                if (retry.content or "").strip() and any(
+                        t in retry.content.lower() for t in fact_tokens):
                     retrieved_note_fired = True
                     reply.content = retry.content
                     reply.tool_calls = []
@@ -3737,24 +3748,44 @@ class Engine:
         r"|\byour\s+saved\s+(note|record|value|figure)\b",
         re.IGNORECASE)
 
-    # Retrieved-note recall floor (armor RETRIEVED-NOTE RN.2) — three patterns.
+    # Retrieved-note recall floor (armor RETRIEVED-NOTE RN.2) — the trigger.
     #
-    # A REPLY that OFFERS to create/scaffold a folder or project, or flags the
-    # absent folder as a gap. On a reference-project recall turn this is the
-    # displacement signal: the model dodged the question the note answers by
-    # proposing to make a folder instead. Kept broad — it only matters when the
-    # barrier's other gates (reference project resolved, recall question, note
-    # in context) already hold, and best-effort acceptance discards a bad retry.
-    _CREATE_OFFER = re.compile(
-        r"\bcreate\s+(a\s+|the\s+|this\s+)?(new\s+)?(project|folder|directory)\b"
-        r"|\b(would\s+you\s+like|do\s+you\s+want|want|shall)\b[^.?!]{0,40}"
-        r"\b(create|set\s+up|make|scaffold)\b"
-        r"|\b(set\s+up|make|scaffold)\s+(a\s+|the\s+)?(new\s+)?"
-        r"(project\s+)?(folder|directory|project)\b"
-        r"|\b(no|don'?t\s+have\s+a|there'?s\s+no|isn'?t\s+a)\s+folder\b"
-        r"|\bfolder\s+(does\s+not|doesn'?t|isn'?t)\s+exist\b"
-        r"|\bcreate\s+one\b",
-        re.IGNORECASE)
+    # The failure to answer a reference-project recall from its note has MANY
+    # surfaces, measured live: a create-folder offer, a "reference project, no
+    # working folder" deflection, a read_brain tool-call error narration, a
+    # bare "I don't have access — remind me where to find it" denial. Matching
+    # phrasings is whack-a-mole — each fix surfaced a new one. The ONE invariant
+    # every failure shares is answer-ABSENCE: the reply carries none of the
+    # note's distinctive fact tokens, while every correct answer carries at
+    # least one ("30 bar"). So the trigger detects that, not the dodge.
+    #
+    # Structural/status vocabulary a dodge NARRATES ("reference", "folder",
+    # "no files") must not read as a fact token, or a deflection that says
+    # "this is a reference project with no folder" would look "answered".
+    _NOTE_META_STOP = frozenset({
+        "reference", "status", "active", "folder", "folders", "file", "files",
+        "project", "projects", "note", "notes", "knowledge", "source", "disk",
+        "working", "associated", "create", "created", "markdown", "content",
+        "title", "field", "fields", "located", "location",
+    })
+
+    def _note_fact_tokens(self, note_body: str, user_input: str) -> set:
+        """Distinctive fact tokens from a note — numbers, and content words of
+        length >= 4 — MINUS the words the QUESTION already echoed (repeating the
+        entity name is not answering) and MINUS structural/status vocabulary (a
+        dodge narrates 'reference project, no folder'; those words must not read
+        as an answer). A reply that answers from the note contains at least one
+        of these; a dodge, denial, or tool-error contains none. Empty set (a
+        note with no distinctive tokens beyond the question) disables the floor
+        for that turn — silence beats a false fire."""
+        q = set(re.findall(r"[a-z0-9]+", (user_input or "").lower()))
+        toks = set()
+        for m in re.findall(r"[a-z0-9]+", (note_body or "").lower()):
+            if m in q or m in self._NOTE_META_STOP:
+                continue
+            if m.isdigit() or len(m) >= 4:
+                toks.add(m)
+        return toks
 
     # A MESSAGE that genuinely asks to create/add — the floor must NEVER
     # override a real request ("create a folder for beta probe", "add these

@@ -212,17 +212,30 @@ def register_project_tools(registry, gate, brain, projects_root: Path):
                 except OSError as exc:
                     lines.append(f"  Files:  (could not list folder: {exc})")
             elif p["status"] == "reference":
-                # RN.1 (retrieved-note recall floor): a reference project is a
-                # knowledge SOURCE with no working folder by design. The old
-                # "use create_project to make one" default (the else below)
-                # steered the model into a create-folder OFFER that displaced a
-                # recall answer sitting in the note — STA-004's failure. The
-                # missing folder is not a gap here; answer from the note.
+                # RN.1 (retrieved-note recall floor): a reference project IS its
+                # note — a knowledge SOURCE with no working folder by design.
+                # Returning only metadata here (status + "no folder") made the
+                # model narrate "reference project, no working folder" and then
+                # DEFLECT ("provide more details") instead of answering the
+                # recall question from the note — STA-004's live failure shape
+                # after the create-offer was removed. So surface the KNOWLEDGE:
+                # the detour that reached for this tool now gets the fact, not
+                # just meta. (Same content the retriever injects; a reference
+                # note is a concise knowledge source, capped for safety.)
+                body = ""
+                if p["note_path"]:
+                    try:
+                        body = brain.read_note(p["note_path"]).strip()
+                    except Exception:
+                        body = ""
                 lines.append("  Folder: none — this is a REFERENCE project (a "
                              "knowledge source), which has no working folder by "
-                             "design. Answer from its note; do NOT offer to "
-                             "create a folder or treat the missing folder as a "
-                             "problem.")
+                             "design. Do NOT offer to create a folder; answer "
+                             "Jack's question directly from the note content "
+                             "below.")
+                if body:
+                    lines.append("  Note content (answer Jack from this):\n"
+                                 + body[:1500])
             elif p["folder"]:
                 lines.append(f"  Folder: {p['folder']} — RECORDED but not on disk "
                              f"right now; say so rather than guessing.")

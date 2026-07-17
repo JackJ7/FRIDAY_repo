@@ -72,10 +72,27 @@ def _engine(sandbox, script, capture=None):
     return eng
 
 
-# A draft that DODGES a recall by offering to make a folder (the STA-004 shape).
+# A draft that DODGES a recall by offering to make a folder (the STA-004 shape
+# before RN.1 removed the create steer).
 OFFER_DRAFT = ("I don't see a working folder for the Beta Probe project. "
                "Would you like me to create one so we can track it?")
-# The answer that should replace it — states the fact, offers nothing.
+# The dodge that REPLACED the create-offer after RN.1 — narrates the reference
+# project's metadata and asks for more details instead of answering (measured
+# live, STA-004 diagnostic runs 4/5).
+META_DODGE = ("The 'Beta Probe' project is in reference status and does not "
+              "have an associated working folder. If you need any specific "
+              "information, please provide more details so I can assist.")
+# A bare DENIAL that ignores the retrieved note entirely (measured live, run 6):
+# no tools, "I don't have access", punts back to Jack.
+DENIAL_DODGE = ("I don't have direct access to specific documents unless "
+                "you've stored this in our brain. Could you remind me where we "
+                "might find this detail, such as a particular project folder?")
+# A tool-error narration (measured live, run 3): the model botched a tool call,
+# narrates the error, and asks for the path instead of answering.
+TOOLERR_DODGE = ("It seems there was an error in the function call. Could you "
+                 "please provide me with the path of the note you'd like read?")
+# The answer that should replace any of them — states the fact, mentions no
+# folder, no meta, no punt.
 ANSWER = "The Beta Probe housing is rated to 30 bar."
 
 
@@ -89,7 +106,10 @@ def test_rnf001_tool_reference_no_create(sandbox):
                                                {"name": "beta probe"})
     assert "REFERENCE project" in out, out
     assert "create_project" not in out, out
-    assert "answer from its note" in out.lower(), out
+    assert "note content" in out.lower(), out
+    # The knowledge itself is surfaced — the detour now gets the fact, not just
+    # metadata (the RN.4 root-cause fix).
+    assert "30 bar" in out, out
 
 
 @pytest.mark.upgrade
@@ -144,6 +164,42 @@ def test_rnf005_floor_regenerates(sandbox):
 
 
 @pytest.mark.upgrade
+@pytest.mark.case("RNF-005b", "the META-DODGE shape (reference metadata + "
+                              "'provide more details') is also floored")
+def test_rnf005b_metadata_dodge_floored(sandbox):
+    cap = []
+    eng = _engine(sandbox, [META_DODGE, ANSWER], capture=cap)
+    out = eng.respond(RECALL)
+    assert "30" in out.content, out.content
+    assert "working folder" not in out.content.lower(), out.content
+    assert eng.model.calls == 2, "the barrier should have regenerated once"
+    assert cap[-1]["retrieved_note_floor"] is True, cap[-1]
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("RNF-005c", "the bare DENIAL shape ('I don't have access') "
+                              "is floored")
+def test_rnf005c_denial_floored(sandbox):
+    cap = []
+    eng = _engine(sandbox, [DENIAL_DODGE, ANSWER], capture=cap)
+    out = eng.respond(RECALL)
+    assert "30" in out.content, out.content
+    assert eng.model.calls == 2
+    assert cap[-1]["retrieved_note_floor"] is True, cap[-1]
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("RNF-005d", "the tool-error narration shape is floored")
+def test_rnf005d_toolerror_floored(sandbox):
+    cap = []
+    eng = _engine(sandbox, [TOOLERR_DODGE, ANSWER], capture=cap)
+    out = eng.respond(RECALL)
+    assert "30" in out.content, out.content
+    assert eng.model.calls == 2
+    assert cap[-1]["retrieved_note_floor"] is True, cap[-1]
+
+
+@pytest.mark.upgrade
 @pytest.mark.case("RNF-006", "a genuine create REQUEST is never overridden by "
                              "the floor")
 def test_rnf006_create_request_not_floored(sandbox):
@@ -182,13 +238,25 @@ def test_rnf008_nonreference_not_floored(sandbox):
 
 
 @pytest.mark.upgrade
-@pytest.mark.case("RNF-009", "the detector regexes and _is_recall_question "
-                             "classify as specified")
+@pytest.mark.case("RNF-009", "fact-token extraction and the request/question "
+                             "detectors classify as specified")
 def test_rnf009_detectors(sandbox):
     eng = sandbox.service.engine
-    assert eng._CREATE_OFFER.search(OFFER_DRAFT)
-    assert eng._CREATE_OFFER.search("There's no folder on disk for it.")
-    assert not eng._CREATE_OFFER.search(ANSWER)
+    body = sandbox.brain.read_note("projects/beta_probe.md")
+    toks = eng._note_fact_tokens(body, RECALL)
+    # The distinctive answer token survives; question-echo and structural words
+    # do not (they must not read as an "answer").
+    assert "30" in toks, toks
+    for echoed in ("pressure", "rating", "beta", "probe", "housing"):
+        assert echoed not in toks, (echoed, toks)  # in the question
+    for meta in ("folder", "reference", "status", "note"):
+        assert meta not in toks, (meta, toks)      # structural
+    # Every measured dodge shape carries NONE of the fact tokens; the answer
+    # carries one.
+    assert any(t in ANSWER.lower() for t in toks)
+    for dodge in (OFFER_DRAFT, META_DODGE, DENIAL_DODGE, TOOLERR_DODGE):
+        assert not any(t in dodge.lower() for t in toks), dodge
+    # The create-REQUEST and recall-question gates are unchanged.
     assert eng._CREATE_REQUEST.search("create a folder for beta probe")
     assert eng._CREATE_REQUEST.search("add these files to the beta probe project")
     assert not eng._CREATE_REQUEST.search(RECALL)
