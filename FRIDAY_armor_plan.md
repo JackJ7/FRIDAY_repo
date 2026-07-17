@@ -3166,7 +3166,27 @@ Lesson (recorded): for a "did the model actually answer?" floor, detect
 answer-absence via note-content overlap, not the dodge's wording — the model
 has unbounded ways to not-answer.
 | RN.5 | Merge `rn` → main + post-merge `--quick` + candidate full run (detached + watchdog) | **merge DONE 2026-07-17 ~06:53** — `--no-ff` `7b626af` (rn was strictly ahead of `1f16b97`, zero conflicts); post-merge `--quick` **359/359** (stamp `2026-07-17_0644` tree). **Candidate full run IN FLIGHT from ~06:58** — `py -3 run_suite.py`, **450 items** collected clean (437 NJ baseline + 13 RN guards); run_suite PID 27020, pytest PID 31240; log `results\launch_logs\rn_candidate_2026-07-17_0658.out.log`; watchdog `results\launch_logs\watchdog_rn_candidate.log` (healthy at 07:00: qwen2.5:14b resident, pid alive). Expect ~3.5h (done ~10:30). **Coordination: verified at launch — Jarvis J1 unmerged (worktree 197e735 off-main), no model-visible commits on main after fa70897 except this leg; if the parallel session merges J1 or launches its own eval mid-flight, that poisons this run (code-freeze / one-GPU rules).** |
-| RN.6 | `--compare 2026-07-17_0004 <candidate>` + §4.3 verdicts + ship gate | *pending — awaits candidate completion* |
+| RN.6 | `--compare 2026-07-17_0004 <candidate>` + §4.3 verdicts + ship gate | *pending — awaits candidate completion; candidate stamp = **`2026-07-17_0827`** (the relaunch), NOT 0658* |
+
+**RN.5 INCIDENT + RELAUNCH (2026-07-17 ~08:27).** The 06:58 candidate run
+**died at item 421/450 (~08:23)** — run_suite PID 27020, pytest PID 31240,
+and the watchdog all vanished simultaneously, at exactly the moment the
+owning Claude session was closed by accident. Watchdog was green through
+08:22:58 (GPU 99%, model resident, pid alive); zero errors in either log;
+`report.json` stopped mid-item. Same signature as the Finding-1 session-reap
+kills — meaning the 06:58 launch was **session-attached, not actually
+detached** (a protocol slip in the launch, not a new hazard class). Partial
+stamp `2026-07-17_0658` is UNUSABLE for the compare (29 items short) — do
+not delete yet (incident evidence), never feed it to `--compare`.
+**Relaunch, detached per protocol (`Start-Process`, own lifetime):**
+run_suite PID **35676**, pytest PID **6192**, 450 items collected clean,
+results stamp **`2026-07-17_0827`**, log
+`results\launch_logs\rn_candidate2_2026-07-17_0827.out.log`; watchdog PID
+**26840**, `watchdog_rn_candidate2.log`, first tick ok. Pre-relaunch checks
+re-verified: main clean at bf75854 (all commits past fa70897 = RN leg +
+docs, code-freeze intact), Jarvis J1 still unmerged (197e735), Ollama
+healthy (14b resident, expiry advancing, not wedged), port 47533 free.
+Expected done ~12:00.
 
 **RN.5 launch note (run-ops):** two stale Jul-14 python PIDs (6644, 26944,
 idle, uv-cache) resurfaced in `ps -W` — the ones NJ.6 flagged as
