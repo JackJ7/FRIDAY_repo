@@ -108,7 +108,8 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      empty_reply_corrective, empty_reply_floor;
                      residual-floors leg: artifact_denial_floor; CONSOLIDATE
                      leg: identifier_floor, narrated_list_floor; READ-ASK
-                     leg: read_ask_corrective).
+                     leg: read_ask_corrective; NARRATED-JSON leg:
+                     narrated_json_floor, consolidation_pending).
                      The READ-ASK GROUNDING FLOOR (armor RA leg, calendar-
                      first's third instance) sits BEFORE the phantom barrier:
                      when Jack's message names an EXISTING local file with
@@ -201,6 +202,33 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      real project names (one leaked into every context and
                      was fabricated back verbatim) and never template
                      tokens like <slug> (CN.4.1).
+                     NARRATED-JSON LEG (NJ.1–NJ.2b): the consolidation
+                     retire demands DISK COVERAGE, not just a landed merge —
+                     the ledger retires only when at most one candidate (the
+                     survivor) still lacks a 'merged into' status
+                     (_consolidation_covered; GT-C9 mode B measured the 14B
+                     merging the SURVIVOR into a duplicate, and the landed
+                     wrong-way merge silently killed the task every
+                     downstream protection keyed on). merge_projects revives
+                     a survivor whose own note says 'merged into …' (NJ.1b —
+                     merging INTO it makes it the live record again). The
+                     NARRATED-TOOL-JSON FLOOR (NJ.2, theme 1's envelope fix)
+                     executes a tool call the settled reply WROTE but never
+                     emitted: zero tools ran, a fenced JSON object or
+                     python-style keyword call names a registry tool with
+                     schema-valid model-authored args, and there is execute
+                     intent (cue before the first fence, or the reply dies
+                     on/inside the fence). Calls run through _run_tool
+                     (gate/taint/referents), results are APPENDED CN.4-style;
+                     unknown arg keys remap only via PT.3-style one-hit
+                     containment (note_path→path) — ambiguity or a missing
+                     required arg drops the call, values pass through
+                     untouched, nothing is ever fabricated. Example fences
+                     (no cue, prose after) never fire. The identifier-noise
+                     set also carries the closed-class tool/JSON envelope
+                     vocabulary (NJ.2b, PT.8.1's engine-side twin) so a
+                     narrated call's own JSON keys never read as fabricated
+                     project names.
                      The compaction digest and the memory pass's record
                      extraction are format-constrained (see model.py below);
                      the memory pass also backstops commitment inference —
