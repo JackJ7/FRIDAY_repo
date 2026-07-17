@@ -3166,7 +3166,79 @@ Lesson (recorded): for a "did the model actually answer?" floor, detect
 answer-absence via note-content overlap, not the dodge's wording — the model
 has unbounded ways to not-answer.
 | RN.5 | Merge `rn` → main + post-merge `--quick` + candidate full run (detached + watchdog) | **merge DONE 2026-07-17 ~06:53** — `--no-ff` `7b626af` (rn was strictly ahead of `1f16b97`, zero conflicts); post-merge `--quick` **359/359** (stamp `2026-07-17_0644` tree). **Candidate full run IN FLIGHT from ~06:58** — `py -3 run_suite.py`, **450 items** collected clean (437 NJ baseline + 13 RN guards); run_suite PID 27020, pytest PID 31240; log `results\launch_logs\rn_candidate_2026-07-17_0658.out.log`; watchdog `results\launch_logs\watchdog_rn_candidate.log` (healthy at 07:00: qwen2.5:14b resident, pid alive). Expect ~3.5h (done ~10:30). **Coordination: verified at launch — Jarvis J1 unmerged (worktree 197e735 off-main), no model-visible commits on main after fa70897 except this leg; if the parallel session merges J1 or launches its own eval mid-flight, that poisons this run (code-freeze / one-GPU rules).** |
-| RN.6 | `--compare 2026-07-17_0004 <candidate>` + §4.3 verdicts + ship gate | *pending — awaits candidate completion; candidate stamp = **`2026-07-17_0827`** (the relaunch), NOT 0658* |
+| RN.6 | `--compare 2026-07-17_0004 <candidate>` + §4.3 verdicts + ship gate | **DONE — SHIP GATE MET 2026-07-17 ~11:45** (details below); candidate = **`2026-07-17_0827`** (the relaunch), NOT 0658 |
+
+**RN.6 — compare + verdicts (candidate `2026-07-17_0827`, 434/16 of 450,
+wall 2:40:47, clean exit, err empty, watchdog green — one PROP-tail
+criteria-1-4 alarm at 10:57 correctly self-cleared by the criterion-5
+keep_alive re-sample at 11:05, exactly the false-alarm the discriminator
+was built for).**
+
+Targets — ALL CONVERTED / HELD:
+- **STA-004 PASSED, memory_recall 0.650 → 0.950 (+0.300)** — the leg's
+  named target. Reply carried the note fact ("30 bar") via RN.1's soft
+  reframe alone; the RN.2 floor fired in exactly ONE transcript suite-wide
+  (`test_question_writes_nothing`, same beta-probe recall — fired on a
+  dodge, turn PASSED) and in ZERO failing transcripts. Floor is
+  over-fire-safe in practice, as designed.
+- **email_triage 0.300 → 0.600 (+0.300)** — EML-004 recovered from the
+  NJ-flagged hard drop back to FLAKY-band; EML-005 also flaky-band. The
+  importance-floor lever (wire EML-007 pre-screen into the reply path)
+  remains the ranked fix.
+- thinking_skills +0.015; watch items **GND-013 and SKL-006 newly
+  passing**; injection_defense + memory_persistence HELD at 1.000; TM/CN/
+  PT/NJ gains all held.
+
+Down-delta — quant_math 0.913 → 0.826 (−0.087), fully adjudicated
+NON-ARMOR (zero `retrieved_note_floor` flags in every failing transcript;
+ilogs archived to `results\2026-07-17_0827\sandbox_ilogs\`):
+- **CHK-002 — GRADER GAP, re-passed on recheck.** The model answered the
+  hobby-servo torque in **`oz-in`** and `core/canon.py::normalize_unit`
+  has no oz-in family → pint parses "oz-in" as subtraction → TypeError
+  crash before grading (reproduced synthetically: `'13 oz-in'` →
+  `ParserHelper - ParserHelper` TypeError; `kg-cm`/`in-lb`/`N-m` families
+  all map fine). Same class as the RPM case-fold (CHK-006). Fix is a
+  one-line `_UNIT_TABLE` addition + guard — but canon is PRODUCT code
+  (checker uses it), so landing it now would poison 0827 as next
+  baseline. **Deferred to next leg (RPM precedent), ranked below.**
+- **GAP-001 — churn, re-passed 5/5 on recheck.** 4/5 flaky in candidate;
+  the one failing run's ilog shows `identifier_floor: True` — a CN.3
+  false-positive whose correction reply displaced the gap-naming answer.
+  Pre-existing CN class (3rd sighting incl. CN.6's MEM-001). WATCH: CN.3
+  false-positive rate on project-adjacent design questions.
+- **PROP-012 — churn, re-passed.** Hypothesis FlakyFailure (one ×3600
+  slip, non-reproducible on the shrink re-run).
+- **GOLD-gear-03 — PRE-EXISTING knife-edge, NOT newly-failing in truth:**
+  FAILED in 0553 (RA), FAILED in 1318 (PT), passed 0004 (NJ), FAILED
+  0827 — the baseline's pass was the outlier. Recheck band today **0/5**
+  with four DIFFERENT wrong answers (13 = efficiency dropped; 16.25 =
+  ÷0.8; 0.026 and 0.0406 = ratio DIVIDED). The model churns on gearbox
+  torque direction (multiply vs divide by ratio, where η goes) — a 14B
+  reasoning ceiling on a deterministically-checkable computation ⇒
+  **future armor candidate: gear-direction cross-check floor** (a
+  reduction ratio R:1 with efficiency η fixes output = input×R×η; the
+  checker can verify direction/factor deterministically, same pattern as
+  the plausibility checks).
+
+**SHIP GATE MET — ALL RN items ship** (RN.1 reframe + note-body
+surfacing, RN.2 answer-absence floor, RN.3 13 guards, RN.4 fixes).
+
+**Next-baseline rule:** `2026-07-17_0827` is the next leg's baseline ONLY
+if nothing model-visible lands after `7b626af` (post-merge commits so far
+are doc-only). **Jarvis J1 merge is still queued and model-visible —
+whichever lands first, coordinate; if J1 merges, next leg takes a fresh
+baseline.**
+
+**Next-leg ranking (2026-07-17):**
+1. **EML importance floor** — wire the deterministic EML-007 pre-screen
+   into the reply path (EML-004 + EML-005 both flaky-band; email 0.6).
+2. **COM-008 model-close** — commitments' only residual, persistent.
+3. **canon oz-in family + gear-direction cross-check floor** — batch the
+   two quant items (one-line table fix + CHK guard; new checker floor for
+   gear-03's 0/5 direction churn).
+4. **PT.1 T3-arming gap** (carryover).
+Watch: CN.3 identifier_floor false-positives (3rd sighting), GND-013/
+PLB-004/MEM-001-redirect (carryover watch list).
 
 **RN.5 INCIDENT + RELAUNCH (2026-07-17 ~08:27).** The 06:58 candidate run
 **died at item 421/450 (~08:23)** — run_suite PID 27020, pytest PID 31240,
