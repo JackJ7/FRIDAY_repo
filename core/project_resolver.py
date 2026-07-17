@@ -325,10 +325,27 @@ class ProjectResolver:
         outcome, data = self.resolve_one(message)
         if outcome == "one":
             p = data
+            note = p["note_path"] or "(no note yet)"
+            # RN.1 (retrieved-note recall floor): a reference project is a
+            # knowledge source with no working folder by design. The generic
+            # "if the folder isn't on disk, say so plainly" tail (below) reads
+            # as a gap to report on a reference project, and — paired with the
+            # resolve_project tool's old create suggestion — steered the model
+            # into a create-folder OFFER that displaced a recall answer sitting
+            # in the note (STA-004). On a reference project, answer from the
+            # note; the missing folder is not a problem.
+            if p["status"] == "reference" and not p["folder_exists"]:
+                return (
+                    "Entity resolution (deterministic, from your project "
+                    f"records): the '{p['title']}' project -> note {note}, "
+                    "status reference. This is a REFERENCE project — a knowledge "
+                    "source with no working folder by design. Answer directly "
+                    "from its note; do NOT offer to create a folder or treat the "
+                    "missing folder as a problem, and do not ask which project "
+                    "Jack means (already resolved).")
             folder = (p["folder"] if p["folder_exists"]
                       else (f"{p['folder']} (recorded, but not on disk — say so)"
                             if p["folder"] else "(no folder on disk yet)"))
-            note = p["note_path"] or "(no note yet)"
             return (
                 "Entity resolution (deterministic, from your project records): "
                 f"the '{p['title']}' project -> note {note}, folder {folder}, "

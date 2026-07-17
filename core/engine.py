@@ -468,6 +468,21 @@ class Engine:
                 ref_block = (ref_block + "\n\n" + self._entity_hint
                              if ref_block else self._entity_hint)
 
+        # RN.2 capture (retrieved-note recall floor): remember when this turn
+        # resolves to a REFERENCE project — a knowledge source whose answer
+        # sits in its note, not in any folder. The post-generation barrier
+        # below uses this to catch a create-folder OFFER that displaced the
+        # recall answer (STA-004). Best-effort, like the hint itself; absent
+        # resolver = None = no behaviour change.
+        self._resolved_reference = None
+        if resolver is not None:
+            try:
+                _outcome, _data = resolver.resolve_one(user_input)
+                if _outcome == "one" and _data.get("status") == "reference":
+                    self._resolved_reference = _data
+            except Exception:
+                self._resolved_reference = None  # resolution is best-effort
+
         # Offer ledger (Notes-10 Phase 2, §1). A bare affirmative to a standing
         # offer means "do it" — resolve it in CODE so a "Yes please" can't be
         # answered with a re-ask (transcript B). The ledger has a one-turn life:
@@ -576,7 +591,13 @@ class Engine:
             # generic-clarify floor — hold the stream so Jack never watches
             # a retracted generic re-ask.
             or self.pending_task is not None
-            or bool(pending_directive))
+            or bool(pending_directive)
+            # RN.2: a reference-project recall turn may have its create-folder
+            # OFFER draft replaced by the retrieved-note recall floor — hold
+            # the stream so the offer never flickers before the answer.
+            # (Usually already held via _entity_hint, which the reference
+            # reframe sets; kept explicit so the two can't drift.)
+            or self._resolved_reference is not None)
         live_token = None if hold_stream else on_token
 
         base = [{"role": "system", "content": self._system_prompt(extra=ref_block)}]
@@ -1513,6 +1534,79 @@ class Engine:
                 live_token("\n" + reply.content)
             turn.append({"role": "assistant", "content": reply.content})
 
+        # Retrieved-note recall floor (armor RETRIEVED-NOTE RN.2). The sibling
+        # of the citation barrier for the OPPOSITE failure: there the model
+        # cited a store nothing surfaced; here the store DID surface the answer
+        # — a REFERENCE project's note is in context — but the model detoured to
+        # a create-folder OFFER that DISPLACED the recall answer (STA-004: the
+        # 30-bar fact was retrieved, yet the reply offered to make a folder).
+        # Deterministic trigger: a recall-shaped QUESTION (not a create/add
+        # request) resolved to a reference project whose note is in context, and
+        # the settled reply offers to create a folder/project. Correction
+        # mirrors the citation barrier — regenerate ONCE tool-free (the note is
+        # already in `base`) demanding an answer from the note; if the note is
+        # somehow NOT in context, read it first through _run_tool so the fact is
+        # grounded (never fabricate). Best-effort acceptance: keep the draft if
+        # the retry is empty or still offers to create.
+        retrieved_note_fired = False
+        ref_proj = getattr(self, "_resolved_reference", None)
+        if (reply is not None and not phantom_fired and ref_proj
+                and self._is_recall_question(user_input)
+                and not self._CREATE_REQUEST.search(user_input or "")
+                and self._CREATE_OFFER.search(reply.content or "")):
+            note_path = ref_proj.get("note_path")
+            note_in_context = bool(note_path) and any(
+                r.path == note_path for r in (retrieved or []))
+            # The note isn't in the retrieved snippets — read it now so the
+            # forced answer is grounded in real bytes, not memory (the quote
+            # barrier's re-read shape: draft carries the call, result follows).
+            if note_path and not note_in_context:
+                rr_args = {"path": note_path}
+                if on_tool:
+                    on_tool("read_brain", rr_args)
+                rr_result, rr_external = self._run_tool("read_brain", rr_args)
+                if not str(rr_result).startswith("ERROR"):
+                    tool_log.append({"tool": "read_brain", "args": rr_args,
+                                     "result": rr_result[:500]})
+                    call = {"function": {"name": "read_brain",
+                                         "arguments": rr_args}}
+                    if turn and turn[-1].get("role") == "assistant":
+                        turn[-1]["tool_calls"] = (turn[-1].get("tool_calls")
+                                                  or []) + [call]
+                    else:
+                        turn.append({"role": "assistant",
+                                     "content": reply.content,
+                                     "tool_calls": [call]})
+                    turn.append({"role": "tool",
+                                 "content": self._wrap_data(rr_result, rr_external)})
+                    note_in_context = True
+            if note_in_context:
+                correction = (
+                    f"STOP: '{ref_proj['title']}' is a REFERENCE project — a "
+                    "knowledge source with no working folder by design — and its "
+                    "note is already in front of you. Jack asked a question whose "
+                    "answer is IN that note. Answer it directly and specifically "
+                    "from the note. Do NOT offer to create a folder or project, "
+                    "and do not treat the missing folder as a problem: that is "
+                    "not what he asked.")
+                retry = self.model.chat(
+                    base + turn
+                    + [{"role": "assistant", "content": reply.content},
+                       {"role": "system", "content": correction}],
+                    on_token=None)
+                self.session_tokens += retry.eval_count
+                # Accept only if the retry stopped offering to create (with the
+                # note in context a tool-free retry can now answer); otherwise
+                # keep the original rather than risk a worse reply.
+                if (retry.content or "").strip() \
+                        and not self._CREATE_OFFER.search(retry.content):
+                    retrieved_note_fired = True
+                    reply.content = retry.content
+                    reply.tool_calls = []
+                    if live_token:  # None on a held turn — single emit streams it
+                        live_token("\n" + reply.content)
+                    turn.append({"role": "assistant", "content": reply.content})
+
         # Date-answer floor (Phase 1, item 1). Pure determinism: the clock is
         # authoritative for "today", so a reply that states a today-cued full
         # date contradicting it is simply wrong (the "March 15, 2023" hallucination
@@ -1901,6 +1995,11 @@ class Engine:
             # Armor PENDING-TASK: is a general pending task live after this
             # turn (armed this turn or carried forward)? Additive.
             "pending_task_armed": self.pending_task is not None,
+            # Armor RETRIEVED-NOTE RN.2: the engine regenerated a reply that
+            # had offered to create a folder for a REFERENCE project instead of
+            # answering the recall question from the note in context (STA-004).
+            # Additive; schema stable.
+            "retrieved_note_floor": retrieved_note_fired,
             # Phase 1 (Notes-10, item 4): True when an ACTION tool fired on a
             # message with no request shape — the office-hours "proposed an
             # update nobody asked for" signature. The taint gate is the hard
@@ -3637,6 +3736,49 @@ class Engine:
         r"|\bi\s+recorded\s+(earlier|before|that|this)\b"
         r"|\byour\s+saved\s+(note|record|value|figure)\b",
         re.IGNORECASE)
+
+    # Retrieved-note recall floor (armor RETRIEVED-NOTE RN.2) — three patterns.
+    #
+    # A REPLY that OFFERS to create/scaffold a folder or project, or flags the
+    # absent folder as a gap. On a reference-project recall turn this is the
+    # displacement signal: the model dodged the question the note answers by
+    # proposing to make a folder instead. Kept broad — it only matters when the
+    # barrier's other gates (reference project resolved, recall question, note
+    # in context) already hold, and best-effort acceptance discards a bad retry.
+    _CREATE_OFFER = re.compile(
+        r"\bcreate\s+(a\s+|the\s+|this\s+)?(new\s+)?(project|folder|directory)\b"
+        r"|\b(would\s+you\s+like|do\s+you\s+want|want|shall)\b[^.?!]{0,40}"
+        r"\b(create|set\s+up|make|scaffold)\b"
+        r"|\b(set\s+up|make|scaffold)\s+(a\s+|the\s+)?(new\s+)?"
+        r"(project\s+)?(folder|directory|project)\b"
+        r"|\b(no|don'?t\s+have\s+a|there'?s\s+no|isn'?t\s+a)\s+folder\b"
+        r"|\bfolder\s+(does\s+not|doesn'?t|isn'?t)\s+exist\b"
+        r"|\bcreate\s+one\b",
+        re.IGNORECASE)
+
+    # A MESSAGE that genuinely asks to create/add — the floor must NEVER
+    # override a real request ("create a folder for beta probe", "add these
+    # files to the beta probe project"). If this matches, the create-offer in
+    # the reply is obedience, not displacement.
+    _CREATE_REQUEST = re.compile(
+        r"\b(create|make|set\s+up|start|scaffold|build)\s+"
+        r"(a\s+|the\s+|me\s+a\s+)?(new\s+)?(project|folder|directory)\b"
+        r"|\badd\b[^?]{0,60}\bto\s+(the\s+)?[\w\s]{0,30}?\bproject\b",
+        re.IGNORECASE)
+
+    def _is_recall_question(self, text: str) -> bool:
+        """A recall-shaped ASK: a question (ends with '?' or opens with a
+        wh-word / yes-no lead-in). The retrieved-note recall floor only fires
+        on a question — an imperative like 'create a folder for beta probe' is
+        a real request, not a recall the floor should override."""
+        t = (text or "").strip()
+        if not t:
+            return False
+        if "?" in t:
+            return True
+        return bool(re.match(
+            r"(?i)^\s*(what|which|who|whose|where|when|why|how|is|are|was|were|"
+            r"do|does|did|can|could|tell\s+me|remind\s+me|give\s+me)\b", t))
 
     # A tool result this turn is a legitimate grounding source for a stored
     # claim. Read/recall tools surface the store; a durable WRITE this turn

@@ -211,6 +211,18 @@ def register_project_tools(registry, gate, brain, projects_root: Path):
                                                  else "(folder is empty)"))
                 except OSError as exc:
                     lines.append(f"  Files:  (could not list folder: {exc})")
+            elif p["status"] == "reference":
+                # RN.1 (retrieved-note recall floor): a reference project is a
+                # knowledge SOURCE with no working folder by design. The old
+                # "use create_project to make one" default (the else below)
+                # steered the model into a create-folder OFFER that displaced a
+                # recall answer sitting in the note — STA-004's failure. The
+                # missing folder is not a gap here; answer from the note.
+                lines.append("  Folder: none — this is a REFERENCE project (a "
+                             "knowledge source), which has no working folder by "
+                             "design. Answer from its note; do NOT offer to "
+                             "create a folder or treat the missing folder as a "
+                             "problem.")
             elif p["folder"]:
                 lines.append(f"  Folder: {p['folder']} — RECORDED but not on disk "
                              f"right now; say so rather than guessing.")

@@ -3075,3 +3075,62 @@ watchdog quiet, stopped post-flight) vs baseline `2026-07-16_1318`:**
    projects-dir fact-write redirect (cheap deterministic remap:
    a refused projects\ fact write retries into memories\); PLB-004
    capture (carried).
+
+---
+
+## RETRIEVED-NOTE leg (RN.0–RN.6) — opened 2026-07-17 ~06:10
+
+The ranked #1 target after NARRATED-JSON: **the retrieved-note recall
+floor** (STA-004 — memory_recall's last standing residual, persistent
+2× consecutive on top of the RA-leg pre-worktree A/B proof).
+
+**Failure (root-caused in the RA leg, re-confirmed NJ.6).** STA-004
+asks a recall question — "what pressure rating is the beta probe
+housing?" — about `beta_probe`, a **reference**-status project whose
+note (`- **Pressure rating:** 30 bar housing`) IS retrieved into
+context. The model nevertheless detours to `resolve_project("beta
+probe housing")`, reads the "no folder on disk" result, and answers
+with a **create-project OFFER** instead of the fact. The offer
+DISPLACES the injected note. Two code-level steering signals feed the
+detour, both found this leg:
+- `resolve_project` tool (`core/tools/projects.py`): a folderless
+  project's result literally says *"Folder: none on disk yet (use
+  create_project to make one…)"* — it recommends the create the model
+  then offers, even for a reference project that has no folder BY
+  DESIGN.
+- `hint_for` "one" branch (`core/project_resolver.py`): the injected
+  entity hint ends *"If the folder isn't on disk, say that plainly"* —
+  correct for an ACTIVE project mid-work, wrong for a reference
+  knowledge-source where the missing folder is not a gap.
+
+**Design (defense in depth — soft steer removed + hard floor behind
+it, the CLAUDE.md discipline):**
+- **RN.1 (soft layer):** for a **reference**-status project, both the
+  `resolve_project` tool result and the `hint_for` "one" branch stop
+  recommending `create_project` and stop framing the absent folder as
+  a problem — reframe: *a reference project is a knowledge source with
+  no working folder by design; answer from its note.* Non-reference
+  folderless projects (a genuine create candidate) keep the existing
+  create suggestion.
+- **RN.2 (code floor — the enforcement that must hold):** a
+  post-generation barrier modelled on the citation barrier. Fires when
+  ALL hold: the message is a QUESTION (recall-shaped, not a create/add
+  request), a resolved **reference** project's note is in context this
+  turn, and the settled reply is a create-offer / folder-absence
+  deflection. Correction: regenerate ONCE, tool-free (the note is
+  already in `base`), forcing an answer from the note and forbidding a
+  create-offer; if the note is somehow NOT in context, the engine
+  reads it first via `_run_tool` so the fact is grounded (never
+  fabricate). Best-effort acceptance (keep the draft if the retry is
+  empty or still offers to create). New ilog field
+  `retrieved_note_floor`.
+
+| Step | What | Status |
+|------|------|--------|
+| RN.0 | Baseline decision + open leg | **DONE — baseline = NJ candidate `2026-07-17_0004` REUSED** (only commits after fa70897 are doc-only; Jarvis J1 still unmerged on its own worktree — verified `git log fa70897..HEAD` touches only the plan doc, `git worktree list` shows jarvis at 197e735 off-main). Branch `rn` off `main` (1f16b97). **Coordination flag: if the Jarvis session merges J1 to main while the RN candidate run is in flight, that poisons it (code-freeze rule) — must confirm J1 stays unmerged before RN.5 launch.** |
+| RN.1 | Reference-project reframe in `resolve_project` tool + `hint_for` | **DONE — rn** (tool `else`→`elif status=="reference"` reframe in `core/tools/projects.py`; `hint_for` "one" branch reference short-circuit in `core/project_resolver.py`; a NON-reference folderless project keeps the create suggestion — RNF-002/004 guard the no-regression edge) |
+| RN.2 | Retrieved-note recall floor (engine post-gen barrier) + ilog `retrieved_note_floor` | **DONE — rn** post-gen barrier after the quote barrier (`core/engine.py`): fires on a recall QUESTION + resolved reference project + create-offer reply, regenerates tool-free (reads the note first if not in context), best-effort acceptance; `_resolved_reference` captured at the entity-hint site + added to `hold_stream`; `_CREATE_OFFER`/`_CREATE_REQUEST`/`_is_recall_question` detectors; ilog `retrieved_note_floor` |
+| RN.3 | Guards (new `tests/pillar1/test_retrieved_note.py`) + `--quick` green | **DONE — rn**: RNF-001..010 (10 guards) pass; full `--quick` **356/356** (346 prior + 10 new), stamp `2026-07-17_0616`, 0 regressions |
+| RN.4 | Targeted conversion batch (STA-004 ×N, + a non-reference folderless sanity so RN.1 doesn't suppress a legit create) | *pending — live 14B* |
+| RN.5 | Merge `rn` → main + post-merge `--quick` + candidate full run (detached + watchdog) | *pending* |
+| RN.6 | `--compare 2026-07-17_0004 <candidate>` + §4.3 verdicts + ship gate | *pending* |
