@@ -3699,11 +3699,11 @@ unmoved); QB.3 via `gear_check_floor` flags; QB.4 via
 | QB.0 | Baseline decision (EM candidate) + open leg (worktree `..\FRIDAY-qb`, branch `qb`) | DONE — branched off main post-EM-merge (`a291a28`) |
 | QB.1 | Commitment-close fuzzy matcher (`find_fuzzy` + tool corrective) + COM-009..012 | DONE — 10/10 pass (incl. pre-existing COM cases) |
 | QB.2 | canon `_UNIT_TABLE` oz-in family + CHK-007 self-test | DONE — CHK-007 passes, verified `Q(13,'force_ounce*inch').to('N*m')` = 0.0918 |
-| QB.3 | Gear-direction cross-check floor + ilog `gear_check_floor` + GRC-001..008 + gear batch ×5 | CODE + GUARDS DONE (8/8 pass); **live gear batch ×5 NOT YET RUN** (deferred — see QB.6 note) |
-| QB.4 | PT.1 T3-arming: capture ×3 → minimal widening + PTL-009/010 + GT-C9 ×3 | **FIX LANDED (Fable, 2026-07-18, qb `2ced461`)** — decision (a) below; PTL-009/010 green; GT-C9 ×3 conversion batch still owed pre-merge |
-| QB.5 | Full `--quick` green in worktree | DONE — 402/402 with QB.1-4 landed (400 + PTL-009/010) |
-| QB.6 | Merge → main `--quick` → detached candidate run + watchdog | PENDING — gear batch ×5 + GT-C9 ×3 first, then merge (carries EM.2.1 too, see EM.6 verdict) |
-| QB.7 | Compare + §4.3 verdicts + ship gate — **Fable adjudicates** | PENDING QB.6 |
+| QB.3 | Gear-direction cross-check floor + ilog `gear_check_floor` + GRC-001..008 + gear batch ×5 | DONE — gear batch ×5 (0745–0756): **gear-01/02/03 ALL 1.0 × 5 repeats** (gear-03 was 0/5 at RN.6); bar met with margin |
+| QB.4 | PT.1 T3-arming: capture ×3 → minimal widening + PTL-009/010 + GT-C9 ×3 | DONE — fix `2ced461` (decision (a) below); GT-C9 ×3 (0757–0804): 2/3 pass, and `pending_task_armed=True` from T2 onward in ALL runs incl. the failing one — **arming criterion met**; r1's fail is the PRE-EXISTING model-invented-slug/narration class (T4 "I've created a new consolidated project file", T8 two dups unmerged — the PT-leg close's known residual, NOT the arming gap) |
+| QB.5 | Full `--quick` green in worktree | DONE — 403/403 with QB.1-4 + EM.2.1 landed (400 + PTL-009/010 + EMF-009) |
+| QB.6 | Merge → main `--quick` → detached candidate run + watchdog | **IN FLIGHT** — EM.4.1 batches passed (EML-005 **1.0 both** on the case fraction, floor fired 4/5 runs each; EML-004 0.8/0.4 band with flag False ×10 = untouched direction; zero F4 signature); merge `7773c75`, post-merge `--quick` 403/403, candidate stamp **`2026-07-18_0816`** detached + watchdog (launch lesson: run_suite needs `--` before pytest passthrough args; `--basetemp` now pinned so full-run ilogs can't rotate away) |
+| QB.7 | Compare + §4.3 verdicts + ship gate — **Fable adjudicates** | PENDING — `--compare 2026-07-18_0045 2026-07-18_0816` when the flight lands |
 
 **QB.4 capture findings (Sonnet 5, 2026-07-18).** Built a throwaway
 diagnostic driver (replayed GT-C9's first 3 turns live via
