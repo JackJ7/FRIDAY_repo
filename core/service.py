@@ -27,6 +27,7 @@ from core.accountability import Accountability
 from core.bootstrap import ROOT, build_engine, data_dir, load_config
 from core.model import ModelError
 from core.project_meta import project_status
+from core.toggles import ToggleRegistry
 from core.version import __version__
 
 # What each tool means for the live activity line in the status console.
@@ -84,6 +85,21 @@ class FridayService:
         if getattr(self.engine, "research", None) is not None:
             self.engine.research.on_event = lambda tag, text: self._emit(
                 "on_ping", f"[research:{tag}] {text}")
+
+        # Toggle registry (jarvis plan J0): every user-facing switch any leg
+        # ships is declared here (or by its owner module at wiring time) and
+        # the UI's Controls panel renders whatever describe() returns.
+        self.toggles = ToggleRegistry(
+            self._data_dir / "toggles.json",
+            log=lambda text: self.engine.brain.gate.log.log("TOGGLE", text))
+        # dnd migrates in as the first entry: Accountability's app_state.json
+        # stays its one store (persist=False), the registry becomes the one
+        # CONTROL path — sidebar link, Controls switch, and tests all converge.
+        self.toggles.register(
+            "dnd", "bool", "Do Not Disturb",
+            "Silence pings and toasts. The Needs You panel still updates.",
+            default=self.acc.dnd, on_change=self.acc.set_dnd, persist=False)
+
         self._stop = threading.Event()
         self._activity = "idle"
         self._last_poll = 0.0
@@ -219,7 +235,24 @@ class FridayService:
         return data
 
     def set_dnd(self, value: bool) -> bool:
-        return self.acc.set_dnd(value)
+        # Compat shim (sidebar DND link, older tests): dnd is a registry
+        # toggle now — one control path, so the Controls panel never disagrees.
+        self.toggles.set("dnd", bool(value))
+        return self.acc.dnd
+
+    # ---------- toggles (jarvis plan J0 — the Controls panel) ----------
+
+    def get_toggles(self) -> list:
+        """Everything the Controls panel renders, registration order."""
+        return self.toggles.describe()
+
+    def set_toggle(self, key: str, value) -> dict:
+        """Jack clicked a switch. Errors report as data — the panel shows
+        them; nothing here may take the UI down."""
+        try:
+            return {"ok": True, "value": self.toggles.set(key, value)}
+        except ValueError as e:
+            return {"ok": False, "error": str(e)}
 
     # Panel clicks — Jack's click IS the explicit confirmation (§6), so these
     # mutate directly (git-committed by the tracker either way).
