@@ -3475,7 +3475,9 @@ flight** on the candidate surface (results\em_recheck_2026-07-18\, per-case
 ilogs pulled immediately — driver runs one pytest per case with its own
 --basetemp, the EM.5-lesson protocol now proven). Recheck: GT-A 1.0,
 GT-C9 1.0, GND-013 1.0 (ilog: email flags False every run — stream-hold
-contact harmless), MEM-005[beta_probe] 1.0 — all CHURN per §4.3. EML-004
+contact harmless), MEM-005[beta_probe] 1.0, PROP-011 1.0 (38-min
+hypothesis run), REPO-005 1.0, SKL-004 1.0 — **all 7 newly-failing cases
+re-passed; CHURN per §4.3, unanimously.** EML-004
 recheck **0.8** (candidate 0.2, baseline 0.4 — a 0.2–0.8 flake band,
 churn; floor flag False every run as designed). Zero F4 signature
 anywhere: no >2 check_email turns, no empty settled replies,
