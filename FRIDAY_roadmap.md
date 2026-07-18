@@ -122,11 +122,42 @@ handed to Sonnet 5.** Full design + adjudication rules in armor plan §6,
 requires the EML re-attempt to get its own compare), then **QB leg** =
 M1.2 + M1.3 + M1.4 batched (four disjoint surfaces, per-item ilog/guard
 attribution). Baseline: EM uses `2026-07-17_0827`; QB uses EM's
-candidate. Implementation protocol per leg item tables (EM.0–EM.6,
-QB.0–QB.7, all PENDING); Sonnet STOPS at EM.6/QB.7 — compare
-adjudication and ship gates are Fable's. M1 closes when both ship gates
-are adjudicated and this cell is flipped to CLOSED with the leg records
-linked.
+candidate.
+
+**IMPLEMENTATION UPDATE 2026-07-18 (Sonnet 5).** EM leg EM.0–EM.5 DONE:
+EM.1/EM.2 code + EM.3 guards (EMF-001..008, all pass) merged to main
+(`a291a28`, fast-forward); EM.4's two live batches showed EML-005 (the
+actual burial case) never buried the fact in 10/10 runs across both
+batches with zero F4-signature (no check_email re-poll, no empty-reply
+false-fires); EM.5's detached candidate run **`2026-07-18_0045`** is
+DONE (460/478 in 2:44:37, clean exit, watchdog confirmed no wedge) and
+ready for **EM.6 (Fable/Jack compare vs `2026-07-17_0827` — NOT run by
+Sonnet, per protocol)**. Caveat: the per-turn ilogs for this specific
+candidate run rotated out of the pytest tmp cache before they could be
+pulled (too many later tests ran first) — pull sandbox_ilogs immediately
+after future flights, not after.
+
+QB leg: QB.0–QB.3 DONE on branch `qb` (commit `892c552`, NOT merged) —
+COM-008 fuzzy matcher + COM-009..012, canon oz-in family + CHK-007,
+gear-direction floor + GRC-001..008, all guards pass, `--quick` green
+(400 passed). **QB.4 CAPTURE COMPLETE (3x live GT-C9 replay, dumps in
+`..\FRIDAY-qb\qb_batches\`, gitignored) but the FIX IS BLOCKED pending
+Fable sign-off**: all three captures show `self.offer` already `None`
+at T3, meaning the plan's hypothesized mechanism (offer-arming vetoing
+pending-task arming) is NOT what's happening — the pre-authorized narrow
+fix (suppress offer-arming for a blocking-clarify-worded reply) would
+not touch this failure at all. The actual, 3/3-reproduced cause: T3's
+replies put the real clarifying question FIRST, then trail off into a
+second declarative/weaker-question sentence, and `_blocking_clarify()`
+(engine.py, one call site) only inspects the reply's FINAL sentence and
+requires it to end in `?` — so it never recognizes these as blocking.
+Fixing that is a different (if small-blast-radius) change than what the
+plan pre-authorized, so per its own gate ("anything wider needs Fable
+sign-off") no code change was made. **QB.5/QB.6/QB.7 wait on Fable's
+call: fix `_blocking_clarify`'s scope and re-capture, or ship QB.1-3
+alone and re-rank QB.4 to a later leg.** M1 closes when both legs' ship
+gates are adjudicated and this cell is flipped to CLOSED with the leg
+records linked.
 
 ### M2 — Parity gap closure  ⛓ per leg  (Track A — the north-star finishers)
 
@@ -321,3 +352,21 @@ deltas, regression-prone prompt changes), never typing mistakes.
   two compares. Notable design constraints honored: A1's F4 revert
   (tag-only email wiring, own compare), RN.4's answer-absence trigger
   lesson, CHK-002's canon fix deferred-to-leg-start rule.
+- 2026-07-18: **M1 IMPLEMENTED through EM.5 / QB.3 (Sonnet 5)**. EM leg
+  merged to main (`a291a28`) and its detached candidate run
+  `2026-07-18_0045` completed clean (460/478, 2:44:37, no wedge) —
+  ready for Fable/Jack's EM.6 compare vs `2026-07-17_0827`. QB leg's
+  first three items (COM-008 fuzzy close, canon oz-in family,
+  gear-direction floor) landed on branch `qb` (`892c552`, NOT merged),
+  `--quick` green (400 passed). QB.4 (PT.1 T3-arming) stopped at the
+  capture step: 3x live replay disproved the design's hypothesized
+  mechanism (offer-arming veto — `self.offer` was already `None` at T3
+  in all three runs) and found a different, narrower root cause in
+  `_blocking_clarify()`'s final-sentence-only detection; fixing it
+  diverges from the pre-authorized conjunct-suppression fix, so per the
+  plan's own "anything wider needs Fable sign-off" rule, implementation
+  stopped there. Full detail + the capture dumps' location in armor plan
+  §6's M1 batch section (updated in place) and in
+  `..\FRIDAY-qb\qb_batches\` (gitignored). Next: Fable adjudicates EM.6,
+  decides QB.4's fix approach (or re-ranks it out of this leg), then
+  Sonnet resumes QB.5–QB.7.

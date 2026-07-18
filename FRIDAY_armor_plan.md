@@ -3453,13 +3453,13 @@ re-poll loops anywhere = F4-class armor damage → revert per §4.3.
 
 | item | what | status |
 |---|---|---|
-| EM.0 | Baseline decision + open leg (worktree `..\FRIDAY-em`, branch `em`; verify nothing model-visible after `bf5dddc`, J1 unmerged) | PENDING |
-| EM.1 | Tag-only check_email wiring (F4.1 — marker line, no verdict/instruction) | PENDING |
-| EM.2 | Email-importance floor (email_ask + hold_stream + coverage-test barrier + one regen + deterministic fallback) + ilog `email_importance_floor` | PENDING |
-| EM.3 | EMF-001..008 guards + `--quick` green | PENDING |
-| EM.4 | Targeted batches ×2 (`--skill email_triage`) + F4-signature check | PENDING |
-| EM.5 | Merge → main `--quick` → detached candidate run + watchdog | PENDING |
-| EM.6 | Compare vs `0827` + §4.3 verdicts + ship gate — **Fable adjudicates** | PENDING |
+| EM.0 | Baseline decision + open leg (worktree `..\FRIDAY-em`, branch `em`; verify nothing model-visible after `bf5dddc`, J1 unmerged) | DONE — confirmed bf5dddc..920e1fa doc-only |
+| EM.1 | Tag-only check_email wiring (F4.1 — marker line, no verdict/instruction) | DONE |
+| EM.2 | Email-importance floor (email_ask + hold_stream + coverage-test barrier + one regen + deterministic fallback) + ilog `email_importance_floor` | DONE |
+| EM.3 | EMF-001..008 guards + `--quick` green | DONE — 8/8 guards pass, --quick 387/387 |
+| EM.4 | Targeted batches ×2 (`--skill email_triage`) + F4-signature check | DONE — EML-005 mentions_it=True 10/10 across both batches (0.5, then 0.8 elevate-strictness), EML-004 flaky 0.6/0.4 (pre-existing, unaffected by design); zero F4-signature in either batch's ilogs (max 1-2 check_email calls, no re-poll, empty_reply_floor/email_importance_floor False on every email turn) |
+| EM.5 | Merge → main `--quick` → detached candidate run + watchdog | DONE — fast-forward merge `a291a28`, post-merge --quick 387/387, candidate `2026-07-18_0045` 460/478 in 2:44:37, clean exit, watchdog confirmed no wedge (PIDs 36504/2468). CAVEAT: this run's per-turn ilogs rotated out of the pytest tmp cache before being pulled (too many later tests ran first) — cannot retroactively confirm F4-signature on the FULL run; EML-005 read 3/5 in report.json. Pull sandbox_ilogs immediately after future flights. |
+| EM.6 | Compare vs `0827` + §4.3 verdicts + ship gate — **Fable adjudicates** | PENDING — candidate stamp `2026-07-18_0045` ready |
 
 ---
 
@@ -3645,14 +3645,40 @@ unmoved); QB.3 via `gear_check_floor` flags; QB.4 via
 
 | item | what | status |
 |---|---|---|
-| QB.0 | Baseline decision (EM candidate) + open leg (worktree `..\FRIDAY-qb`, branch `qb`) | PENDING |
-| QB.1 | Commitment-close fuzzy matcher (`find_fuzzy` + tool corrective) + COM-009..012 | PENDING |
-| QB.2 | canon `_UNIT_TABLE` oz-in family + CHK-007 self-test | PENDING |
-| QB.3 | Gear-direction cross-check floor + ilog `gear_check_floor` + GRC-001..008 + gear batch ×5 | PENDING |
-| QB.4 | PT.1 T3-arming: capture ×3 → minimal widening + PTL-009/010 + GT-C9 ×3 | PENDING |
-| QB.5 | Full `--quick` green in worktree | PENDING |
-| QB.6 | Merge → main `--quick` → detached candidate run + watchdog | PENDING |
-| QB.7 | Compare + §4.3 verdicts + ship gate — **Fable adjudicates** | PENDING |
+| QB.0 | Baseline decision (EM candidate) + open leg (worktree `..\FRIDAY-qb`, branch `qb`) | DONE — branched off main post-EM-merge (`a291a28`) |
+| QB.1 | Commitment-close fuzzy matcher (`find_fuzzy` + tool corrective) + COM-009..012 | DONE — 10/10 pass (incl. pre-existing COM cases) |
+| QB.2 | canon `_UNIT_TABLE` oz-in family + CHK-007 self-test | DONE — CHK-007 passes, verified `Q(13,'force_ounce*inch').to('N*m')` = 0.0918 |
+| QB.3 | Gear-direction cross-check floor + ilog `gear_check_floor` + GRC-001..008 + gear batch ×5 | CODE + GUARDS DONE (8/8 pass); **live gear batch ×5 NOT YET RUN** (deferred — see QB.6 note) |
+| QB.4 | PT.1 T3-arming: capture ×3 → minimal widening + PTL-009/010 + GT-C9 ×3 | **CAPTURE DONE (3x), FIX BLOCKED — pre-authorized mechanism disconfirmed, needs Fable sign-off on a wider fix (see below)** |
+| QB.5 | Full `--quick` green in worktree | PARTIAL — 400/400 green with QB.1-3 landed; QB.4's PTL-009/010 guards don't exist yet |
+| QB.6 | Merge → main `--quick` → detached candidate run + watchdog | BLOCKED on QB.4 |
+| QB.7 | Compare + §4.3 verdicts + ship gate — **Fable adjudicates** | BLOCKED on QB.4 |
+
+**QB.4 capture findings (Sonnet 5, 2026-07-18).** Built a throwaway
+diagnostic driver (replayed GT-C9's first 3 turns live via
+`helpers.transcript`, deleted after use; dumps kept in
+`..\FRIDAY-qb\qb_batches\capture_run{1,2,3}.log`, gitignored) and ran it
+3x. Every run shows `self.offer` already `None` by T3 — the plan's
+static suspect (offer-arming at engine.py ~1858 running before the
+pending-task arm check at ~1896, vetoing it via `self.offer is None`)
+is **not the mechanism**: there is no live offer to suppress. The
+actual, 3/3-reproduced shape: T3's reply ("Ok, please update the
+project folder.") always answers with the real clarifying question
+FIRST ("Could you specify which project's folder...?"), then trails
+into a second sentence — sometimes another, vaguer question with none
+of `_CLARIFY_QUESTION`'s vocabulary, sometimes a declarative that
+doesn't end in `?` at all. `_blocking_clarify()` (engine.py, single call
+site at the PT-arm check) only extracts and tests the reply's FINAL
+sentence, so it returns `None` on all three shapes and the ledger never
+arms. A fix here (broaden the sentence extraction, or scan all trailing
+sentences for the vocabulary) has a small blast radius in practice
+(one call site) but is a DIFFERENT change than the pre-authorized
+"suppress offer-arming for a blocking-clarify-worded reply" conjunct —
+per this section's own rule ("anything wider needs Fable sign-off"),
+Sonnet stopped here rather than freelance the redesign. **Decision
+needed from Fable:** (a) authorize broadening `_blocking_clarify`'s
+detection (and specify the exact shape), or (b) re-rank QB.4 out of
+this leg and ship QB.1–QB.3 alone (QB.5/6/7 re-scoped to three items).
 
 **M1 exit (roadmap Status flip to CLOSED requires):** both legs' ship
 gates adjudicated; every M1 residual either converted or written up as a
