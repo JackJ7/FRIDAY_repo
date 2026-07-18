@@ -1657,17 +1657,29 @@ class Engine:
                 fact_tokens = (self._distinct_tokens(tag_text)
                                - self._distinct_tokens(user_input))
                 if fact_tokens:
+                    # EM.2.1 (EM.6 recheck finding): the shipped test only
+                    # caught NEGATION burial ("nothing important…" before
+                    # the mention), but the 14B's measured burial shape is
+                    # POSITIONAL — the tagged mail listed mid-way through a
+                    # flat newsletter dump with no negation anywhere, so
+                    # the floor read False on every failing EML-005 run.
+                    # Position is the phrasing-proof signal (EML-005's
+                    # grader converged there after three phrase-list
+                    # revisions): when Jack asks about important mail, the
+                    # mail that clears his bar must OPEN the reply, not sit
+                    # inside a list. One coverage test, shared by draft and
+                    # retry so the accept bar can't drift looser.
+                    def _fails_coverage(text_low):
+                        if not any(t in text_low for t in fact_tokens):
+                            return True
+                        fp = min(text_low.find(t) for t in fact_tokens
+                                 if t in text_low)
+                        b = self._EMAIL_BURIAL.search(text_low)
+                        return (bool(b and b.start() < fp)
+                                or fp > self._EMAIL_LEAD_WINDOW)
+
                     low = (reply.content or "").lower()
-                    carries_token = any(t in low for t in fact_tokens)
-                    burial = self._EMAIL_BURIAL.search(low)
-                    if not carries_token:
-                        fails_coverage = True
-                    else:
-                        first_pos = min(low.find(t) for t in fact_tokens
-                                        if t in low)
-                        fails_coverage = bool(burial
-                                              and burial.start() < first_pos)
-                    if fails_coverage:
+                    if _fails_coverage(low):
                         subject = _entry_field(tagged_entries[0], "subject")
                         frm = _entry_field(tagged_entries[0], "from")
                         correction = (
@@ -1684,12 +1696,8 @@ class Engine:
                             on_token=None)
                         self.session_tokens += retry.eval_count
                         retry_low = (retry.content or "").lower()
-                        retry_carries = any(t in retry_low for t in fact_tokens)
-                        retry_burial = self._EMAIL_BURIAL.search(retry_low)
-                        retry_ok = retry_carries and not (
-                            retry_burial and retry_burial.start()
-                            < min(retry_low.find(t) for t in fact_tokens
-                                  if t in retry_low))
+                        retry_ok = bool(retry_low.strip()) \
+                            and not _fails_coverage(retry_low)
                         email_floor_fired = True
                         if retry_ok:
                             reply.content = retry.content
@@ -3278,6 +3286,11 @@ class Engine:
     _EMAIL_BURIAL = re.compile(
         r"\bnothing (important|urgent|that matters|worth)\b"
         r"|\bno (important|urgent) (e-?)?mails?\b", re.IGNORECASE)
+    # EM.2.1 positional-burial window: on an important-mail ask, the tagged
+    # mail must appear within this many characters of the reply's start —
+    # past it, the reply is a flat list burying the item even with zero
+    # negation vocabulary (the shape EM.6's recheck measured 4/5 runs).
+    _EMAIL_LEAD_WINDOW = 130
 
     # ---- ANSWER-contract floor (armor A1 / F2) --------------------------------
     # The trigger is the literal upper-case `ANSWER:` token in Jack's MESSAGE —
