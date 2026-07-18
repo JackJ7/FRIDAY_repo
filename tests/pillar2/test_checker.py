@@ -112,3 +112,21 @@ def test_unit_case_fold_rescue():
     # Exact table hits still win before any fold runs:
     assert normalize_unit("Wh") == "watt_hour"
     assert normalize_unit("rpm") == "rpm"
+
+
+@pytest.mark.case("CHK-007", "grader self-test: oz-in servo torque family "
+                             "(armor QB.2) — Pint parsed the bare hyphen as "
+                             "subtraction (ParserHelper - ParserHelper "
+                             "TypeError) before this table entry existed, "
+                             "crashing GOLD-gear-03's 'ANSWER: 13 oz-in'")
+def test_oz_in_unit_family():
+    from helpers.extract import answer_in
+    assert normalize_unit("oz-in") == "force_ounce*inch"
+    assert abs(answer_in("ANSWER: 13 oz-in", "N*m") - 0.0918) < 0.001
+    # The case-fold rescue covers the all-caps spelling, same as RPM.
+    assert normalize_unit("OZ-IN") == "force_ounce*inch"
+    assert abs(answer_in("ANSWER: 13 OZ-IN", "N*m") - 0.0918) < 0.001
+    # Sibling spellings from the same family.
+    assert normalize_unit("oz*in") == "force_ounce*inch"
+    assert normalize_unit("ounce-inch") == "force_ounce*inch"
+    assert normalize_unit("in-oz") == "force_ounce*inch"

@@ -57,6 +57,17 @@ _LINE = re.compile(r"^- \[( |x)\] (.+)$")
 class CommitmentTracker:
     FILE = "commitments.md"
 
+    # Words too common to identify a commitment — the PT.3 stop-list idea,
+    # sized for short to-do phrasing ("Order the GM6208 motors").
+    _MATCH_STOP = frozenset((
+        "the", "a", "an", "to", "my", "our", "that", "this", "one", "out",
+        "it", "them", "up", "please", "and", "for"))
+
+    @classmethod
+    def _match_tokens(cls, text: str) -> set:
+        return {w for w in re.findall(r"[a-z0-9]+", (text or "").lower())
+                if w not in cls._MATCH_STOP}
+
     def __init__(self, brain):
         self.brain = brain
         self._lock = threading.Lock()  # panel clicks and chat tools can overlap
@@ -173,6 +184,25 @@ class CommitmentTracker:
             if c.section != "done" and (c.id == needle or needle in c.text.lower()):
                 return c
         return None
+
+    def find_fuzzy(self, needle: str):
+        """(match, candidates) for chat-driven close (armor QB.1, COM-008).
+        Exact id / substring first (unchanged behavior wins); then
+        normalized token containment, PT.3's asymmetric shape: ALL of the
+        needle's identifying tokens appear in exactly one open/pending
+        item's tokens -> that item. 2+ hits -> (None, hits) so the tool can
+        refuse by NAMING candidates; 0 -> (None, [])."""
+        c = self.find(needle)
+        if c:
+            return c, []
+        want = self._match_tokens(needle)
+        if not want:
+            return None, []
+        live = [c for c in self._parse() if c.section != "done"]
+        hits = [c for c in live if want <= self._match_tokens(c.text)]
+        if len(hits) == 1:
+            return hits[0], []
+        return None, hits
 
     # ---------- read views ----------
 

@@ -58,6 +58,16 @@ _UNIT_TABLE = {
     "kgcm": "force_kilogram*centimeter", "kg·cm": "force_kilogram*centimeter",
     "kgf*cm": "force_kilogram*centimeter", "kgf-cm": "force_kilogram*centimeter",
     "kgf·cm": "force_kilogram*centimeter", "kgfcm": "force_kilogram*centimeter",
+    # Servo-torque shorthand (armor QB.2, CHK-002): Pint parses bare 'oz-in'
+    # as a subtraction (ParserHelper - ParserHelper TypeError) because the
+    # hyphen reads as a minus sign — these spellings crash before this table
+    # existed. force_ounce*inch is the force-ounce torque unit servo specs
+    # mean (the kg·cm / in-lb precedent above).
+    "oz-in": "force_ounce*inch", "oz*in": "force_ounce*inch",
+    "ozin": "force_ounce*inch", "oz-ins": "force_ounce*inch",
+    "oz-inch": "force_ounce*inch", "oz-inches": "force_ounce*inch",
+    "ounce-inch": "force_ounce*inch", "ounce-inches": "force_ounce*inch",
+    "in-oz": "force_ounce*inch", "in*oz": "force_ounce*inch",
 }
 
 # Lowercased spelling -> Pint spelling, for normalize_unit's crash rescue.

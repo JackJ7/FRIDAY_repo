@@ -32,6 +32,11 @@ itself.
   EMF-008  an email-ask turn holds the stream: the model's own per-round
            token emission is suppressed and the VETTED reply streams once,
            at the end (the NJ.4.1 draft-never-streams pattern).
+  EMF-009  positional burial (EM.2.1, the EM.6 recheck-measured miss): the
+           tagged mail listed mid-way through a flat newsletter dump with
+           ZERO negation vocabulary fires the floor; a retry that re-buries
+           positionally is rejected into the deterministic fallback (the
+           draft/retry coverage bar is one shared test and cannot drift).
 """
 
 import pytest
@@ -214,6 +219,56 @@ def test_emf007_fallback_on_bad_retry(sandbox):
     assert "enrollment hold" in out.content.lower(), out.content
     assert "advisor@uci.edu" in out.content, out.content
     assert cap[-1]["email_importance_floor"] is True, cap[-1]
+
+
+# The 14B's measured EML-005 failing shape (EM.6 recheck ilogs, 4/5 runs):
+# a flat numbered list leading with the newsletters, the tagged mail buried
+# past the lead window, and NO negation vocabulary anywhere — the shipped
+# EM.2 floor read this as covered and stayed silent.
+_FLAT_LIST_DRAFT = (
+    "I've checked your recent emails. Here's the summary:\n\n"
+    "1. **Your Daily Digest** from digest@medium.com — top stories for you "
+    "today.\n"
+    "2. **50% OFF everything!** from deals@store.com — limited time "
+    "promotion.\n"
+    "3. **Your enrollment hold - action needed by Friday** from "
+    "advisor@uci.edu — there is a hold on your account.\n"
+    "4. **5 people liked your post** from noreply@social.com.")
+
+
+@pytest.mark.case("EMF-009", "positional burial with zero negation fires the "
+                             "floor; a positionally re-burying retry falls "
+                             "back deterministically")
+def test_emf009_positional_burial(sandbox):
+    # Good retry -> accepted.
+    plant_email(sandbox, NEWSLETTERS + [IMPORTANT])
+    cap = []
+    good_retry = ("The enrollment hold from your advisor is the one that "
+                  "matters — clear it by Friday. The rest is routine.")
+    eng = _engine(sandbox, [
+        _check_email_round(),
+        _FLAT_LIST_DRAFT,
+        good_retry,
+    ], capture=cap)
+    out = eng.respond(ASK)
+    assert out.content == good_retry, out.content
+    assert eng.model.calls == 3, "flat-list burial must trigger one retry"
+    assert cap[-1]["email_importance_floor"] is True, cap[-1]
+
+    # Retry that re-buries positionally -> rejected, fallback appended
+    # (the shared draft/retry bar: what fires on the draft can't be
+    # accepted from the retry).
+    cap2 = []
+    eng = _engine(sandbox, [
+        _check_email_round(),
+        _FLAT_LIST_DRAFT,
+        _FLAT_LIST_DRAFT,
+    ], capture=cap2)
+    out = eng.respond(ASK)
+    assert "clears your importance bar" in out.content.lower(), out.content
+    assert "advisor@uci.edu" in out.content, out.content
+    assert out.content.strip(), "reply must never be emptied"
+    assert cap2[-1]["email_importance_floor"] is True, cap2[-1]
 
 
 @pytest.mark.case("EMF-008", "an email-ask turn holds the stream: per-round "

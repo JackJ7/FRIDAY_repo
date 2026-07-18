@@ -51,8 +51,17 @@ def register_commitment_tools(registry, tracker, gate):
             f", due {c.due}" if c.due else "")
 
     def close_commitment(which: str) -> str:
-        c = tracker.find(which)
+        c, candidates = tracker.find_fuzzy(which)
         if c is None:
+            if candidates:
+                # Ambiguous fuzzy match: name the candidates and tell the
+                # model to retry NOW with one's id (armor QB.1, the RA.1b
+                # lesson — a bare error gets narrated to Jack as a dead end).
+                listed = "; ".join(f"[{cd.id}] {cd.text}" for cd in candidates)
+                return (f"ERROR: '{which}' matches {len(candidates)} tracked "
+                        f"commitments: {listed}. RETRY NOW: call "
+                        "close_commitment again with the id of the one Jack "
+                        "means.")
             return (f"ERROR: no open/pending commitment matches '{which}'. "
                     f"Use list_commitments to see what's tracked.")
         # Commitments live in the brain (her domain, git-versioned): closing
