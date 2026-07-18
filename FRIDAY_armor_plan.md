@@ -3703,7 +3703,44 @@ unmoved); QB.3 via `gear_check_floor` flags; QB.4 via
 | QB.4 | PT.1 T3-arming: capture ×3 → minimal widening + PTL-009/010 + GT-C9 ×3 | DONE — fix `2ced461` (decision (a) below); GT-C9 ×3 (0757–0804): 2/3 pass, and `pending_task_armed=True` from T2 onward in ALL runs incl. the failing one — **arming criterion met**; r1's fail is the PRE-EXISTING model-invented-slug/narration class (T4 "I've created a new consolidated project file", T8 two dups unmerged — the PT-leg close's known residual, NOT the arming gap) |
 | QB.5 | Full `--quick` green in worktree | DONE — 403/403 with QB.1-4 + EM.2.1 landed (400 + PTL-009/010 + EMF-009) |
 | QB.6 | Merge → main `--quick` → detached candidate run + watchdog | **IN FLIGHT** — EM.4.1 batches passed (EML-005 **1.0 both** on the case fraction, floor fired 4/5 runs each; EML-004 0.8/0.4 band with flag False ×10 = untouched direction; zero F4 signature); merge `7773c75`, post-merge `--quick` 403/403, candidate stamp **`2026-07-18_0816`** detached + watchdog (launch lesson: run_suite needs `--` before pytest passthrough args; `--basetemp` now pinned so full-run ilogs can't rotate away) |
-| QB.7 | Compare + §4.3 verdicts + ship gate — **Fable adjudicates** | PENDING — `--compare 2026-07-18_0045 2026-07-18_0816` when the flight lands |
+| QB.7 | Compare + §4.3 verdicts + ship gate — **Fable adjudicates** | **SHIP GATE MET 2026-07-18 ~12:00 (Fable)** — verdict below |
+
+**QB.7 verdict (Fable 5, 2026-07-18 midday).** Candidate
+**`2026-07-18_0816`**: 494 items (478 + 16 new guards), 481/4/9, 3h24m
+(08:16→11:40), clean exit, watchdog quiet, sandbox ilogs archived to
+`results\2026-07-18_0816\sandbox_ilogs\` (147 files, pulled immediately
+from the pinned `--basetemp` — the full-flight ilog problem is solved).
+Compare vs `2026-07-18_0045`: project_ops **+0.275** (COM-008 ✓ + GT-C9
+✓), email_triage **+0.200** (EML-005 **1.0**, EM.2.1's target), quant
+**+0.043** (GOLD-gear-03 ✓, CHK-002 held), calendar +0.250 (GT-A churn
+return), thinking +0.031 (SKL-004 converted alongside), voice +0.067;
+injection_defense **1.000 HELD**, briefing/session 1.000 held,
+memory_persistence 0.833 flat (MEM-005 param-family flake in both runs:
+beta_probe there, delta_sled here). **Flag attribution:**
+`gear_check_floor` fired exactly 2× suite-wide (the gear-03 golden turn +
+its own guard — surgical); `email_importance_floor` fired only on EML-005
+turns (2×; the other 3 runs led correctly unaided); `pending_task_armed`
+state appears across 45 turn-entries with ZERO correlated down-deltas
+(SKL-004, GND-013, REPO-005, PROP-011 all UP/recovered in its presence).
+**Down-deltas, all non-armor:** CHK-001 (model applied V/R for a power
+ask — no ratio/reduction vocabulary, gear floor statically can't touch
+it), STA-004 (single-shot detour dodge, ALL flags False in its
+transcript), MEM-005[delta_sled] (kill-timing family) — **each re-passed
+a same-day re-run**; GAP-001 0.8 knife-edge (4th sighting, stays on
+watch); GRW-005 band miss with zero armor flags across its 5 runs.
+**ALL QB + EM.2.1 items SHIP.**
+
+**M1 EXIT (roadmap Status flipped CLOSED 2026-07-18):** every M1 residual
+converted or documented-with-band (EML-004 0.2–0.8 band by design;
+GT-C9 invented-slug/narration class ~1-in-3 = ranked next-leg candidate;
+STA-004 detour class on watch; MEM-005 kill-timing family; GAP-001
+knife-edge). **Next baseline = `2026-07-18_0816`** — valid until the next
+model-visible merge; Jarvis J1.2+ may take the next merge slot (fresh
+baseline after it lands). Next-leg candidates, ranked: 1. GT-C9
+narration/invented-slug floor (CN.2.1 escalation miss — the last GT-C9
+class standing), 2. M2.1 P5 correction ledger (roadmap frontier),
+3. STA-004 detour recurrence if the watch trips, 4. GRW-005/PLB-004
+playbook-initiative band.
 
 **QB.4 capture findings (Sonnet 5, 2026-07-18).** Built a throwaway
 diagnostic driver (replayed GT-C9's first 3 turns live via

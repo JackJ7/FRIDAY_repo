@@ -115,8 +115,8 @@ Batching two small items into one leg is fine (one candidate run
 instead of two) — record the batching decision in armor §6.
 Model: **Fable 5** for design/adjudication, **Sonnet 5** may implement
 from the written §6 design, **Haiku 4.5** babysits runs.
-**Status: DESIGNED 2026-07-17 evening (Fable 5) — implementation-ready,
-handed to Sonnet 5.** Full design + adjudication rules in armor plan §6,
+**Status: CLOSED 2026-07-18 (Fable 5) — see the M1 CLOSED block below;
+next baseline `2026-07-18_0816`.** Full design + adjudication rules in armor plan §6,
 "M1 batch" section (end of file). Batching decision recorded there:
 **two legs, not four** — **EM leg** = M1.1 alone (the F4-revert history
 requires the EML re-attempt to get its own compare), then **QB leg** =
@@ -153,11 +153,39 @@ second declarative/weaker-question sentence, and `_blocking_clarify()`
 requires it to end in `?` — so it never recognizes these as blocking.
 Fixing that is a different (if small-blast-radius) change than what the
 plan pre-authorized, so per its own gate ("anything wider needs Fable
-sign-off") no code change was made. **QB.5/QB.6/QB.7 wait on Fable's
-call: fix `_blocking_clarify`'s scope and re-capture, or ship QB.1-3
-alone and re-rank QB.4 to a later leg.** M1 closes when both legs' ship
-gates are adjudicated and this cell is flipped to CLOSED with the leg
-records linked.
+sign-off") no code change was made.
+
+**M1 CLOSED 2026-07-18 ~12:15 (Fable 5 adjudication; full leg records in
+armor plan §6 "M1 batch" — EM.6 verdict block + QB.4 decision block +
+QB.0–QB.7 status rows).** Summary:
+- **EM.6**: EM.1/EM.2 shipped (F4-clean — zero re-poll/empty signature
+  across every measured surface) but the `0045` compare showed the floor
+  was a NO-OP on the measured POSITIONAL burial shape; EM.4 had measured
+  the wrong sub-metric (new process rule: conversion bars must be the
+  case's own pass fraction). All 7 newly-failing `0045` cases re-passed a
+  9-case recheck flight — churn, unanimous. In-leg correction **EM.2.1**
+  (positional-burial disjunct, `_EMAIL_LEAD_WINDOW` 130, EMF-009) rode
+  the QB candidate.
+- **QB.4 (Fable option (a))**: `_blocking_clarify` final-sentence
+  preferred + first-clarify-question fallback (`2ced461`), PTL-009/010.
+- **QB.7 SHIP GATE MET** on candidate **`2026-07-18_0816`** (494 items,
+  481/4/9, 3h24m, clean; compare vs `2026-07-18_0045`): **all five
+  targets converted with flag attribution** — COM-008 ✓ (project_ops
+  +0.275 with GT-C9 ✓), GOLD-gear-03 ✓ (`gear_check_floor` fired exactly
+  2× suite-wide: the gear golden + its own guard), EML-005 **1.0**
+  (`email_importance_floor` fired only on EML-005 turns; email +0.200),
+  GT-C9 `pending_task_armed` at T3 in every batch run; injection 1.000
+  and session/briefing perfect boards HELD. Down-deltas all adjudicated
+  non-armor: CHK-001, STA-004, MEM-005[delta_sled] each re-passed a
+  same-day re-run (churn); GAP-001 0.8 knife-edge (watch, 4th sighting);
+  GRW-005 band with zero armor flags in its transcript.
+- **Documented residuals carried forward (D1 language)**: EML-004 stays
+  band-graded 0.2–0.8 (no floor by design — elevating-noise direction);
+  GT-C9's invented-slug/narration class (1-in-3, pre-existing, next-leg
+  candidate); STA-004 single-shot detour class (flag-proven non-armor,
+  watch); MEM-005 hard-kill param-family flake; GAP-001 knife-edge.
+- **Next baseline = `2026-07-18_0816`** — valid until the next
+  model-visible merge (Jarvis J1.2+ still queued behind Track A).
 
 ### M2 — Parity gap closure  ⛓ per leg  (Track A — the north-star finishers)
 
@@ -370,3 +398,19 @@ deltas, regression-prone prompt changes), never typing mistakes.
   `..\FRIDAY-qb\qb_batches\` (gitignored). Next: Fable adjudicates EM.6,
   decides QB.4's fix approach (or re-ranks it out of this leg), then
   Sonnet resumes QB.5–QB.7.
+- 2026-07-18 midday: **M1 CLOSED (Fable 5)**. EM.6 adjudicated (EM.1/2
+  ship F4-clean; floor was a no-op on the measured positional burial —
+  EM.4 had verified a sub-metric, not the case fraction; in-leg EM.2.1
+  correction + EMF-009), QB.4 adjudicated option (a) (`_blocking_clarify`
+  clarify-first fallback, `2ced461`, PTL-009/010), conversion batches all
+  passed (EML-005 1.0×2 flag-attributed, gear trio 1.0×5, GT-C9 armed
+  3/3), QB.6 merged `7773c75` (QB.1-4 + EM.2.1), candidate
+  **`2026-07-18_0816`** clean (494 items, 481/4/9, 3h24m), QB.7 ship
+  gate MET — all five M1 targets converted, perfect boards held,
+  down-deltas churn-proven by same-day re-runs. Residuals documented in
+  the M1 block above. **Next baseline `2026-07-18_0816`; M2 (parity
+  P5/P2/P3) is now the Track A frontier; Jarvis J1.2+ can take the next
+  model-visible merge slot (fresh baseline after it lands).** Run-ops
+  lessons banked: per-case recheck driver with pinned `--basetemp` +
+  immediate ilog pull (now proven on a full flight too); `run_suite.py`
+  needs `--` before pytest passthrough args.
