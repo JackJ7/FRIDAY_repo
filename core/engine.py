@@ -556,6 +556,10 @@ class Engine:
         # whose regeneration branch REPLACES the reply — hold its stream so a
         # contract-less draft never flickers before the corrected one.
         answer_ask = bool(self._ANSWER_DIRECTIVE.search(user_input))
+        # An email-ask turn (armor EM.2) can trip the email-importance floor,
+        # which may replace the reply — trigger and hold key on the SAME flag
+        # so they can't drift (the artifact_ask pattern).
+        email_ask = bool(self._EMAIL_ASK.search(user_input))
         # An accepted-offer turn can trip the anti-dodge barrier (§2) which may
         # replace the reply, so hold its stream too — no re-ask should flicker
         # before the corrected answer.
@@ -570,6 +574,7 @@ class Engine:
         hold_stream = on_token is not None and (
             artifact_ask
             or followup or event_ask or date_ask or answer_ask
+            or email_ask
             or accepted_offer is not None or answer_vote
             # CN.3: a project-context reply may be replaced by the identifier
             # floor (fabricated name, or a naked which-ask on a pending
@@ -1618,6 +1623,93 @@ class Engine:
                         live_token("\n" + reply.content)
                     turn.append({"role": "assistant", "content": reply.content})
 
+        # Email-importance floor (armor EM leg, roadmap M1.1). EML-005's
+        # failure: check_email surfaces a mail that clears Jack's
+        # deterministic importance bar (EM.1's marker, wired from
+        # core/senses/importance.py), but the model buries or omits it in
+        # its own summary of "what's important". A1's F4 taught us NOT to
+        # put a verdict/instruction line into the tool result (that drove a
+        # check_email re-poll loop to the cap and an EMPTY settle) — so this
+        # floor only inspects the SETTLED reply against the tag, the same
+        # shape as the retrieved-note recall floor above. EML-004 (a
+        # correctly "nothing important" newsletters-only inbox) never has a
+        # tagged entry, so it never fires here — that residual stays
+        # band-graded by design (detecting "should have been non-
+        # conservative" is the whack-a-mole class RN.4 warned against).
+        email_floor_fired = False
+        if (reply is not None and not phantom_fired and email_ask
+                and (reply.content or "").strip()):
+            tagged_entries = []
+            for t in tool_log:
+                if t.get("tool") != "check_email":
+                    continue
+                for entry in (t.get("result") or "").split("\n\n"):
+                    if "importance: CLEARS JACK'S BAR" in entry:
+                        tagged_entries.append(entry)
+            if tagged_entries:
+                def _entry_field(entry, label):
+                    m = re.search(rf"^\s*{label}:\s*(.+)$", entry, re.MULTILINE)
+                    return m.group(1) if m else ""
+                tag_text = " ".join(
+                    _entry_field(e, "subject") + " " + _entry_field(e, "from")
+                    for e in tagged_entries)
+                fact_tokens = (self._distinct_tokens(tag_text)
+                               - self._distinct_tokens(user_input))
+                if fact_tokens:
+                    low = (reply.content or "").lower()
+                    carries_token = any(t in low for t in fact_tokens)
+                    burial = self._EMAIL_BURIAL.search(low)
+                    if not carries_token:
+                        fails_coverage = True
+                    else:
+                        first_pos = min(low.find(t) for t in fact_tokens
+                                        if t in low)
+                        fails_coverage = bool(burial
+                                              and burial.start() < first_pos)
+                    if fails_coverage:
+                        subject = _entry_field(tagged_entries[0], "subject")
+                        frm = _entry_field(tagged_entries[0], "from")
+                        correction = (
+                            "STOP: the unread inbox contains mail that CLEARS "
+                            f"Jack's deterministic importance bar: \"{subject}\" "
+                            f"from {frm}. Your draft buries or omits it. "
+                            "Rewrite the reply so it plainly flags this email "
+                            "as the one that matters and why; keep the rest "
+                            "brief.")
+                        retry = self.model.chat(
+                            base + turn
+                            + [{"role": "assistant", "content": reply.content},
+                               {"role": "system", "content": correction}],
+                            on_token=None)
+                        self.session_tokens += retry.eval_count
+                        retry_low = (retry.content or "").lower()
+                        retry_carries = any(t in retry_low for t in fact_tokens)
+                        retry_burial = self._EMAIL_BURIAL.search(retry_low)
+                        retry_ok = retry_carries and not (
+                            retry_burial and retry_burial.start()
+                            < min(retry_low.find(t) for t in fact_tokens
+                                  if t in retry_low))
+                        email_floor_fired = True
+                        if retry_ok:
+                            reply.content = retry.content
+                        else:
+                            # Deterministic fallback: append, never fabricate —
+                            # one line per tagged entry, built from the tool
+                            # output verbatim (the date-floor pattern).
+                            lines = "\n".join(
+                                "One unread email clears your importance bar "
+                                f"(deterministic pre-screen): "
+                                f"\"{_entry_field(e, 'subject')}\" — from "
+                                f"{_entry_field(e, 'from')}. It needs your "
+                                "attention."
+                                for e in tagged_entries)
+                            reply.content = (reply.content or "").rstrip() \
+                                + "\n\n" + lines
+                        reply.tool_calls = []
+                        if live_token:  # None on a held turn — single emit streams it
+                            live_token("\n" + reply.content)
+                        turn.append({"role": "assistant", "content": reply.content})
+
         # Date-answer floor (Phase 1, item 1). Pure determinism: the clock is
         # authoritative for "today", so a reply that states a today-cued full
         # date contradicting it is simply wrong (the "March 15, 2023" hallucination
@@ -2061,6 +2153,10 @@ class Engine:
             # tool-less retry came back empty too.
             "empty_reply_corrective": empty_reply_fired,
             "empty_reply_floor": empty_reply_floor,
+            # Armor EM leg: True when the email-importance floor caught a
+            # settled reply burying/omitting a deterministically tagged
+            # important mail (EML-005's signature), now countable.
+            "email_importance_floor": email_floor_fired,
         })
         return reply
 
@@ -3049,6 +3145,16 @@ class Engine:
         r"what'?s the date|what is the date|what date is it|what day is it"
         r"|what'?s today'?s date|today'?s date\??$|what'?s the day today"
         r"|what day is today|current date", re.IGNORECASE)
+
+    # The email-importance floor's trigger (armor EM.2) — a turn asking about
+    # mail, broadly, so the floor can check whether a deterministically
+    # tagged (EM.1) important message got buried in the reply.
+    _EMAIL_ASK = re.compile(r"\b(e-?mails?|mail|inbox)\b", re.IGNORECASE)
+    # Flat-list burial: the reply names the tagged mail somewhere but then
+    # sums up the inbox as unimportant overall (EML-005's exact shape).
+    _EMAIL_BURIAL = re.compile(
+        r"\bnothing (important|urgent|that matters|worth)\b"
+        r"|\bno (important|urgent) (e-?)?mails?\b", re.IGNORECASE)
 
     # ---- ANSWER-contract floor (armor A1 / F2) --------------------------------
     # The trigger is the literal upper-case `ANSWER:` token in Jack's MESSAGE —

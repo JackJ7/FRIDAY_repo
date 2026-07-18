@@ -7,6 +7,7 @@ a calendar event is OUTBOUND and always confirms via gate.approve_outbound.
 Sending email is not merely gated — it does not exist.
 """
 
+from core.senses import importance
 from core.senses.web_lookup import fetch_url as _fetch
 
 
@@ -21,8 +22,16 @@ def register_senses_tools(registry, senses, gate, web_max_bytes: int):
                 hits.append(f"({g.account}: not connected)")
                 continue
             for m in g.unread(max_results=8):
-                hits.append(f"[{m['account']}] id:{m['id']}\n  from: {m['from']}\n"
-                            f"  subject: {m['subject']}\n  {m['snippet']}")
+                entry = (f"[{m['account']}] id:{m['id']}\n  from: {m['from']}\n"
+                         f"  subject: {m['subject']}\n  {m['snippet']}")
+                # Tag-only (armor F4.1): a data-shaped marker, never a verdict
+                # or "say so" instruction — A1's F4 verdict line taught the
+                # 14B to re-poll check_email to the cap and settle empty. The
+                # marker is also the email-importance floor's machine-
+                # readable signal (engine.py parses it back).
+                if importance.is_important(m):
+                    entry += "\n  importance: CLEARS JACK'S BAR (deterministic pre-screen)"
+                hits.append(entry)
         return "\n\n".join(hits) if hits else "No unread inbox mail."
 
     def read_email(account: str, message_id: str) -> str:
