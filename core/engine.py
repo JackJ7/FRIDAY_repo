@@ -3518,17 +3518,32 @@ class Engine:
                 if len(w) >= 4 and w not in self._TOKEN_STOP}
 
     def _blocking_clarify(self, text: str):
-        """The reply's FINAL sentence when it is a clarify-shaped question —
-        the blocker that arms the pending-task ledger. None otherwise (a
-        reply that ends declaratively completed or declined the ask; a
-        mid-reply rhetorical question doesn't block anything)."""
-        t = (text or "").strip()
-        if not t.endswith("?"):
+        """A clarify-shaped question in the reply that leaves the turn
+        blocked — the arming signal for the pending-task ledger. The FINAL
+        sentence is preferred (the original detection: a reply that ENDS on
+        the question is unambiguously blocked). QB.4's capture runs (3/3
+        reproduced on GT-C9 T3) showed the 14B fronts the true clarify and
+        then TRAILS into elaboration — a vaguer second question with none
+        of the clarify vocabulary, or an "if X, let me know" declarative
+        that doesn't end in '?' at all — so a final-sentence-only check
+        returned None on every observed failing shape and the ledger never
+        armed. Fallback: the FIRST clarify-shaped question sentence
+        anywhere in the reply. A mid-reply rhetorical question stays
+        harmless because arming is still bounded by the caller's conjuncts
+        (request-shaped ask, no landed action, no fresh offer, no
+        consolidation task)."""
+        sentences = [s.strip()
+                     for s in re.split(r"(?<=[.?!])\s+|\n+", (text or ""))
+                     if s.strip()]
+        if not sentences:
             return None
-        start = max(t.rfind(".", 0, len(t) - 1), t.rfind("!", 0, len(t) - 1),
-                    t.rfind("?", 0, len(t) - 1), t.rfind("\n")) + 1
-        q = t[start:].strip()
-        return q if q and self._CLARIFY_QUESTION.search(q) else None
+
+        def _is_clarify(s: str) -> bool:
+            return s.endswith("?") and bool(self._CLARIFY_QUESTION.search(s))
+
+        if _is_clarify(sentences[-1]):
+            return sentences[-1]
+        return next((s for s in sentences if _is_clarify(s)), None)
 
     def _single_artifact_referent(self):
         """The one artifact-kind referent on the stack, or None when zero or

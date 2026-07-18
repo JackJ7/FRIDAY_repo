@@ -32,6 +32,15 @@ PTL-008  which-ask backstop widening (PT.2): on a pending no-survivor
          specify...") is replaced by the code-built survivor question — no
          extra model call.
 
+PTL-009  clarify-first detection (QB.4): the 14B's measured GT-C9 T3 shape —
+         the true clarify question FIRST, then trailing elaboration (a
+         vocab-less second question, or an 'if X, let me know' declarative
+         that doesn't end in '?') — still arms the ledger with the FIRST
+         clarify sentence as the blocker; a final-sentence clarify keeps
+         winning unchanged.
+PTL-010  offer-ledger no-regression edge (QB.4): a true offer after a
+         statement still arms the OFFER ledger, never pending_task.
+
 FLD-001  field-matching floor (PT.3): a paraphrased field name ('load cell
          rating') UPDATES the note's existing 'Load cell' line in place —
          canonical name kept, no second line.
@@ -201,6 +210,65 @@ def test_ptl003_retire_on_landed_action(sandbox):
     eng.respond("The torque figure — 2.4 N*m.")
     assert eng.pending_task is not None, \
         "an ERROR'd action must NOT retire the task"
+
+
+# Verbatim T3 replies from the QB.4 capture runs (qb_batches/capture_run{1,2}
+# .log) — the guards lock the MEASURED failing shapes, not invented ones.
+_QB4_ASK = "Ok, please update the project folder."
+_QB4_CLARIFY_THEN_DECLARATIVE = (
+    "Could you specify which project's folder needs to be updated or provide "
+    "more details about what you would like to change in the project folder? "
+    "If it involves adding files, moving them, or updating any documentation "
+    "within the folder, let me know so I can proceed accordingly.")
+_QB4_CLARIFY_THEN_VAGUE_QUESTION = (
+    "Could you specify which project's folder needs to be updated or what "
+    "changes need to be made to an existing project folder? If a new project "
+    "is being created, could you provide me with the name and description of "
+    "the project as well?")
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("PTL-009", "clarify-first replies (QB.4's captured GT-C9 T3 "
+                             "shapes) arm the ledger; a final-sentence clarify "
+                             "keeps winning")
+def test_ptl009_clarify_first_arms(sandbox):
+    # Capture run 2's shape: true clarify first, declarative 'let me know'
+    # tail — the old final-sentence check returned None here (no trailing
+    # '?' at all) and the ledger never armed.
+    eng = _engine(sandbox, [_QB4_CLARIFY_THEN_DECLARATIVE])
+    eng.respond(_QB4_ASK)
+    task = eng.pending_task
+    assert task, "clarify-first + declarative tail must arm the ledger"
+    assert task["blocker"].startswith("Could you specify which project's"), \
+        f"blocker must be the TRUE clarify sentence, got: {task['blocker']}"
+
+    # Capture run 1's shape: true clarify first, then a vaguer question with
+    # none of the clarify vocabulary.
+    eng = _engine(sandbox, [_QB4_CLARIFY_THEN_VAGUE_QUESTION])
+    eng.pending_task = None
+    eng.respond(_QB4_ASK)
+    task = eng.pending_task
+    assert task, "clarify-first + vocab-less second question must arm"
+    assert task["blocker"].startswith("Could you specify which project's")
+
+    # Unchanged behavior wins: when the FINAL sentence is the clarify, it is
+    # still the blocker (not an earlier sentence).
+    eng = _engine(sandbox, ["I checked the note. " + CLARIFY])
+    eng.pending_task = None
+    eng.respond(ASK)
+    task = eng.pending_task
+    assert task and task["blocker"].startswith("Which motor spec")
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("PTL-010", "a true offer after a statement still arms the "
+                             "OFFER ledger, never pending_task")
+def test_ptl010_offer_ledger_untouched(sandbox):
+    eng = _engine(sandbox, ["Would you like me to review the pdf?"])
+    eng.respond("I finished reading the beta probe pdf yesterday.")
+    assert eng.pending_task is None, \
+        "a statement turn must never arm the pending-task ledger"
+    assert eng.offer is not None, "the offer ledger must still arm"
 
 
 # ---- PT.2: the generic-clarify floor --------------------------------------
