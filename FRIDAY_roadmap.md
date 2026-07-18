@@ -52,12 +52,15 @@ stable runs" is the finish line; further polish is post-1.0 (§M8).
   T3-arming; parity GAPs P5 (correction ledger), P2 (dangling-intent
   floor), P3 (identifier generalization). Watch: CN.3 false-positives,
   GND-013/PLB-004/MEM-001-redirect.
-- **Jarvis:** plan approved; J0 (toggles+Controls UI) and J1.1 (task
-  ledger) CODE-COMPLETE on branch `jarvis` (worktree, unmerged). J1
-  increments 2–4, J2, J3, J4 unbuilt. J5 designed-not-built.
-- **Baseline rule in force:** `2026-07-17_0827` is the next baseline
-  ONLY if nothing model-visible lands after `7b626af`.
-- **Nothing in flight** at time of writing; main clean at `0829118`.
+- **Jarvis:** J0 (toggles+Controls UI) and J1.1 (task ledger) MERGED to
+  main (`bf5dddc`, 2026-07-17 ~18:15, M0 closed) — confirmed
+  non-model-visible, live panel smoke passed. J1 increments 2–4, J2,
+  J3, J4 unbuilt. J5 designed-not-built.
+- **Baseline rule in force:** `2026-07-17_0827` stays the active
+  baseline (M0 confirmed nothing model-visible landed after `7b626af`)
+  — valid until M1.1 or M3.2 lands something model-visible.
+- **Nothing in flight** at time of writing; main clean at `bf5dddc`.
+  M1 (armor residual batch) is next.
 
 ---
 
@@ -80,7 +83,20 @@ A leg opens. Also: kill the stale Jul-14 idle PIDs (6644/26944).
 **Why first:** every later milestone needs a trustworthy baseline
 anchor, and both tracks are blocked on knowing which one it is.
 Model: **Sonnet 5** (protocol is fully written).
-**Status: OPEN.**
+**Status: CLOSED 2026-07-17 ~18:15 (`bf5dddc`).** `--quick` on
+`jarvis` (342/342) → merged to main (RA and RN had both already closed
+by pickup time, so the real merge target was `0829118`, not the
+`31e7475` the leg-open entry assumed) → `--quick` on main (379/379) →
+live panel smoke done by driving the real windowed app (screenshots +
+simulated clicks, no Playwright attach available for a native
+pywebview window): Controls-panel DND switch and sidebar DND link
+round-trip in both directions. Model-visibility diff confirmed J0/J1.1
+touch zero prompt/tool/engine surface — **baseline `2026-07-17_0827`
+stays valid, no fresh full run needed.** The named stale PIDs
+(6644/26944) turned out to be Windows PID reuse onto unrelated
+`chroma-mcp` processes, not leftover FRIDAY — not killed; no FRIDAY
+process was actually running. Full detail: jarvis plan §6, J0 pickup
+entry.
 
 ### M1 — Armor residual batch  ⛓ per leg  (Track A)
 
@@ -275,3 +291,14 @@ deltas, regression-prone prompt changes), never typing mistakes.
 
 - 2026-07-17: Roadmap created. Position: post-RN (armor, 11 legs
   closed), J0/J1.1 unmerged on `jarvis`. M0 is the frontier.
+- 2026-07-17 ~18:15: **M0 CLOSED** (`bf5dddc`). jarvis → main merge,
+  `--quick` clean pre- and post-merge (342/342, 379/379), live panel
+  smoke passed (driven windowed-app screenshots + simulated clicks —
+  no project skill existed for this, a future leg could write one via
+  `/run-skill-generator` if native-window driving recurs), confirmed
+  non-model-visible so baseline `0827` carries forward unchanged. Two
+  corrections to the leg-open assumptions: the actual merge base was
+  `0829118` (RA+RN had both already closed, not just RA), and the
+  named stale PIDs were Windows PID reuse onto unrelated `chroma-mcp`
+  processes, not real leftover FRIDAY instances. M1 (armor residual
+  batch) is now the frontier.

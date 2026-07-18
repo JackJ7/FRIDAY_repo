@@ -472,6 +472,76 @@ constraints).
   flip DND both from the sidebar link and the panel switch, confirm
   they agree), and stamp acceptance (b)/(d) here.
 
+**J0/J1.1 CLOSED 2026-07-17 ~18:15, via roadmap M0 (`FRIDAY_roadmap.md`
+§3):** by the time this was picked up, both RA (RA.6) and RN (RN.1-RN.6)
+armor legs had closed on main, so the merge target was `0829118`, not
+`31e7475`.
+
+- **Model-visibility check** (roadmap M0's explicit gate): `git diff
+  main...jarvis --stat` before merging touched only `ARCHITECTURE.md`,
+  `core/service.py`, `core/tasks.py`, `core/toggles.py`, `interface/`,
+  and the two new test files — zero touches to `core/engine.py`,
+  `prompts/`, or the tool registry. `core/service.py`'s diff is the
+  toggle registry wiring + a `set_dnd` compat shim, nothing reaching a
+  prompt. **Verdict: non-model-visible confirmed** — baseline
+  `2026-07-17_0827` (armor plan §6 RN.6) stays valid; M1 does NOT need
+  a fresh full run before opening.
+- **Stale-PID check**: roadmap named PIDs 6644/26944 as Jul-14 leftover
+  FRIDAY processes to kill. They are not — Windows had recycled both
+  PIDs onto unrelated `chroma-mcp` processes (claude-mem's memory
+  backend, `--data-dir C:/Users/jacko/.claude-mem/chroma`) by the time
+  this leg ran. **Not killed.** No FRIDAY python process was running at
+  all (port 47533 was free) — nothing stale actually needed cleanup.
+  Lesson for future legs: a PID recorded in a doc is only valid at
+  write time; always re-verify the command line before killing.
+- **`--quick` in `..\FRIDAY-jarvis`**: 342/342 (91 deselected), clean,
+  stamp `2026-07-17_1759`. Brain seed (`character/playbooks/skills`)
+  was already present in the worktree from J0's original session.
+- **Merge**: `jarvis` → `main` at `bf5dddc` (`--no-ff`, ort strategy),
+  auto-merged cleanly — only `ARCHITECTURE.md` needed a trivial
+  auto-merge (both sides appended entries), no conflict markers.
+- **`--quick` on main post-merge**: 379/379 (91 deselected), clean,
+  stamp `2026-07-17_1804` (first attempt at `1802` was killed by a
+  5-minute tool timeout at 29/379, all passing to that point — re-ran
+  to completion, not a real failure).
+- **Live panel smoke — acceptance (b) and (d), rendered**: launched
+  `friday_app.py` windowed (not the usual `pythonw` windowless mode, so
+  the window could be screenshotted), drove it via Win32 mouse-event
+  simulation + window-rect screenshots (no project skill existed for
+  this yet — a real native pywebview/WebView2 window, not a browser
+  page Playwright can attach to). Sequence, each step screenshotted and
+  visually confirmed:
+  1. Jack chip → Settings opens; **Controls** section renders with a
+     "Do Not Disturb" switch (OFF) — J0's `describe()`-driven dumb
+     render confirmed live, not just in TGL-009's Service-level test.
+  2. Clicked the panel switch → turns teal/ON.
+  3. Closed Settings → sidebar `DND` row reads **on** (was `off`
+     before the click) — panel-to-sidebar agreement confirmed.
+  4. Clicked the sidebar `DND` link → reads **off** again.
+  5. Reopened Settings → panel switch shows **OFF** — sidebar-to-panel
+     agreement confirmed, completing the round trip both directions.
+  App was launched by this session (port 47533 was free beforehand)
+  and cleanly terminated after the smoke (`Stop-Process`; FRIDAY hides
+  to tray rather than exiting on the window X, so a plain close isn't
+  enough to free the port).
+- **Acceptance now fully stamped**: (a) TGL suite green ✔ (10/10, both
+  worktree and post-merge runs); (b) dnd coherence ✔ at Service level
+  AND now the live panel/sidebar round trip ✔; (c) enum toggle
+  machinery ✔ (still no live enum consumer — unchanged, deliberate);
+  (d) `--quick` green pre-merge (worktree) and post-merge (main) ✔.
+  **J0 fully CLOSED.**
+- J1.1 has no separate live-UI acceptance criterion (task board is a
+  later increment, J1.5) — its TSK suite passed identically pre/post
+  merge (10/10), so it closes on the same merge with no extra smoke.
+
+**Next increments for J1 (unchanged from the ordering above): (1)
+`brain.py` write guard for `tasks\`, (2) model-facing task tools +
+engine referent-block injection of `TaskLedger.summary()`
+(MODEL-VISIBLE — needs a fresh armor-style baseline/compare, taken
+AFTER this merge per M0/M3.2's Track-A-slot rule), (3) `core\jobs.py`
+runner, (4) J1.5 board.** Per roadmap M3, step (1) can start any time
+(non-model, worktree-parallel); step (2) waits for a free Track A slot.
+
 ### 2026-07-16 — J1 OPENED: J1.1 durable task ledger. Status: IN PROGRESS
 
 Same session constraints as J0 (RA.4 in flight → code on `jarvis`,
