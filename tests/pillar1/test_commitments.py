@@ -96,3 +96,64 @@ def test_model_close(sandbox, detail):
     detail["tools"] = sandbox.rec.tool_names()
     assert not tr.open_items() or all(not x.text.lower().startswith("order")
                                       for x in tr.open_items())
+
+
+@pytest.mark.case("COM-009", "close_commitment fuzzy-matches a leading-article "
+                             "fragment (armor QB.1, the exact PT.8 repro): "
+                             "'order GM6208 motors' closes 'Order the GM6208 "
+                             "motors' via the registry tool")
+def test_com009_fuzzy_close_repro(sandbox):
+    tr = sandbox.service.engine.tracker
+    tr._save([], "reset")
+    tr.add("Order the GM6208 motors", inferred=False)
+    out = sandbox.service.engine.registry.call(
+        "close_commitment", {"which": "order GM6208 motors"})
+    assert "Closed:" in out, out
+    assert not tr.open_items(), tr.open_items()
+
+
+@pytest.mark.case("COM-010", "two commitments sharing identifying tokens + a "
+                             "fragment that fuzzy-matches BOTH (but is not a "
+                             "literal substring of either, so find()'s "
+                             "shortcut can't resolve it first) -> ERROR "
+                             "naming both ids, nothing closed")
+def test_com010_ambiguous_fuzzy_names_candidates(sandbox):
+    tr = sandbox.service.engine.tracker
+    tr._save([], "reset")
+    tr.add("Order the GM6208 motors", inferred=False)
+    tr.add("Order more GM6208 spare motors", inferred=False)
+    # Reordered relative to either item's word order, so `needle in text`
+    # (find()'s exact-substring path) misses both — only the token-set
+    # fuzzy match can resolve (or, here, correctly refuse to resolve) it.
+    out = sandbox.service.engine.registry.call(
+        "close_commitment", {"which": "motors GM6208"})
+    assert "ERROR" in out, out
+    assert "RETRY NOW" in out, out
+    assert len(tr.open_items()) == 2, tr.open_items()
+
+
+@pytest.mark.case("COM-011", "zero-match fuzzy fragment keeps today's ERROR "
+                             "text unchanged")
+def test_com011_zero_match_unchanged(sandbox):
+    tr = sandbox.service.engine.tracker
+    tr._save([], "reset")
+    tr.add("Order the GM6208 motors", inferred=False)
+    out = sandbox.service.engine.registry.call(
+        "close_commitment", {"which": "nonexistent widget"})
+    assert out == ("ERROR: no open/pending commitment matches "
+                   "'nonexistent widget'. Use list_commitments to see what's "
+                   "tracked."), out
+    assert len(tr.open_items()) == 1
+
+
+@pytest.mark.case("COM-012", "exact-substring match still wins over fuzzy "
+                             "(no regression when the id/substring already "
+                             "matches)")
+def test_com012_exact_substring_still_wins(sandbox):
+    tr = sandbox.service.engine.tracker
+    tr._save([], "reset")
+    c = tr.add("Order the GM6208 motors", inferred=False)
+    out = sandbox.service.engine.registry.call(
+        "close_commitment", {"which": c.id})
+    assert "Closed:" in out, out
+    assert not tr.open_items()

@@ -17,7 +17,8 @@ import re
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from core.canon import canon_answer, canon_calc_args, majority
+from core.canon import (NoAnswer, Q, answer, canon_answer, canon_calc_args,
+                        majority, normalize_unit)
 from core.invariants import INVARIANTS
 from core.model import ModelReply
 from core.reasoning import scaffold_text
@@ -1874,6 +1875,123 @@ class Engine:
                         live_token("\n" + reply.content)
                     turn.append({"role": "assistant", "content": reply.content})
 
+        # Gear-direction cross-check floor (armor QB.3, GOLD-gear-03). A
+        # recheck band saw FOUR different wrong answers on the same reduction
+        # problem — the 14B churns on direction (xR vs /R) and efficiency
+        # placement. A reduction R:1 with efficiency eta fixes output torque
+        # = input * R * eta and output speed = input / R deterministically
+        # from Jack's OWN stated numbers, so it is checkable without asking
+        # the model to do arithmetic twice (CLAUDE.md: don't make the model
+        # do what code can do). This does NOT violate the ANSWER floor's
+        # "never rewrite a produced line" rule above: that rule bars
+        # UNVERIFIED rewriting; this floor only acts when an independent
+        # deterministic computation of the same quantity disagrees. Fires
+        # only when every piece of the problem is unambiguous — anything
+        # else (two ratios, an unparseable efficiency, both a torque AND a
+        # speed ask) stays silent rather than risk a wrong forced answer.
+        gear_check_fired = False
+        if reply is not None and not phantom_fired:
+            ratios = self._GEAR_RATIO.findall(user_input or "")
+            has_reduction = bool(self._GEAR_REDUCTION_VOCAB.search(user_input or ""))
+            has_stepup = bool(self._GEAR_STEPUP_VOCAB.search(user_input or ""))
+            if len(ratios) == 1 and has_reduction and not has_stepup:
+                R = float(ratios[0])
+                eff_match = self._GEAR_EFFICIENCY.search(user_input or "")
+                mentions_eff = bool(self._GEAR_EFFICIEN_WORD.search(user_input or ""))
+                eta = None
+                if eff_match:
+                    eta = float(eff_match.group(1)) / 100.0
+                elif not mentions_eff:
+                    eta = 1.0
+                # eta stays None when "efficien" appears but its percentage
+                # didn't parse — silent rather than guess.
+                torque_hits = self._GEAR_TORQUE_IN.findall(user_input or "")
+                speed_hits = self._GEAR_SPEED_IN.findall(user_input or "")
+                asks_torque = bool(
+                    self._GEAR_ASKS_TORQUE.search(user_input or "")
+                    and self._GEAR_ASKS_OUTPUT.search(user_input or ""))
+                asks_speed = bool(
+                    self._GEAR_ASKS_SPEED.search(user_input or "")
+                    and self._GEAR_ASKS_OUTPUT.search(user_input or ""))
+                expected = unit = detail = None
+                if (eta is not None and len(torque_hits) == 1 and asks_torque
+                        and not (len(speed_hits) == 1 and asks_speed)):
+                    tau = float(torque_hits[0])
+                    expected, unit = tau * R * eta, "N*m"
+                    detail = f"{tau:.6g} N*m × {R:.6g} × {eta:.6g}"
+                elif (eta is not None and len(speed_hits) == 1 and asks_speed
+                      and not (len(torque_hits) == 1 and asks_torque)):
+                    rpm_in = float(speed_hits[0])
+                    expected, unit = rpm_in / R, "rpm"
+                    detail = f"{rpm_in:.6g} rpm ÷ {R:.6g}"
+                if expected:
+                    try:
+                        val, u = answer(reply.content or "")
+                        if not u:
+                            raise NoAnswer("no unit")
+                        got = Q(val, normalize_unit(u)).to(
+                            normalize_unit(unit)).magnitude
+                        mismatched = abs(got - expected) / abs(expected) > 0.02
+                    except Exception:
+                        # No ANSWER line, or a dimensional mismatch: the
+                        # honest failure stands — not this floor's territory.
+                        mismatched = False
+                    if mismatched:
+                        gear_check_fired = True
+                        if unit == "N*m":
+                            correction = (
+                                f"STOP: check the gearbox arithmetic. A "
+                                f"{R:.6g}:1 REDUCTION multiplies torque by "
+                                f"{R:.6g} and by efficiency {eta:.6g}: "
+                                f"expected output ≈ {expected:.6g} {unit} "
+                                f"from Jack's own numbers ({detail}). "
+                                "Recompute and rewrite the reply with a "
+                                "correct final ANSWER line.")
+                        else:
+                            correction = (
+                                f"STOP: check the gearbox arithmetic. A "
+                                f"{R:.6g}:1 REDUCTION divides speed by "
+                                f"{R:.6g}: expected output ≈ "
+                                f"{expected:.6g} {unit} from Jack's own "
+                                f"numbers ({detail}). Recompute and rewrite "
+                                "the reply with a correct final ANSWER line.")
+                        retry = self.model.chat(
+                            base + turn
+                            + [{"role": "assistant", "content": reply.content},
+                               {"role": "system", "content": correction}],
+                            on_token=None)
+                        self.session_tokens += retry.eval_count
+                        retry_ok = False
+                        if (retry.content or "").strip():
+                            try:
+                                rval, ru = answer(retry.content)
+                                rgot = Q(rval, normalize_unit(ru)).to(
+                                    normalize_unit(unit)).magnitude
+                                retry_ok = (abs(rgot - expected) / abs(expected)
+                                           <= 0.02)
+                            except Exception:
+                                retry_ok = False
+                        if retry_ok:
+                            reply.content = retry.content
+                        else:
+                            # Deterministic final: REPLACE only the ANSWER
+                            # line (never the prose before it) with the value
+                            # computed from Jack's own stated numbers — the
+                            # calc-builder's grounding standard.
+                            m_last = None
+                            for m_last in self._ANSWER_PRESENT.finditer(
+                                    reply.content or ""):
+                                pass
+                            base_text = (
+                                reply.content[:m_last.start()].rstrip()
+                                if m_last else (reply.content or "").rstrip())
+                            reply.content = (base_text + "\n\n"
+                                             + f"ANSWER: {expected:.6g} {unit}")
+                        reply.tool_calls = []
+                        if live_token:  # None on a held turn — single emit below
+                            live_token("\n" + reply.content)
+                        turn.append({"role": "assistant", "content": reply.content})
+
         # Output-script floor (armor S1, CFG-007). LAST barrier on purpose: it
         # vets the FINAL text whatever earlier barriers replaced or appended.
         # Deterministic detector (a script-range scan can't be argued with),
@@ -2157,6 +2275,11 @@ class Engine:
             # settled reply burying/omitting a deterministically tagged
             # important mail (EML-005's signature), now countable.
             "email_importance_floor": email_floor_fired,
+            # Armor QB.3: True when the gear-direction cross-check floor
+            # caught a produced ANSWER value disagreeing with a deterministic
+            # computation from Jack's own stated reduction/efficiency numbers
+            # (GOLD-gear-03's direction-churn signature), now countable.
+            "gear_check_floor": gear_check_fired,
         })
         return reply
 
@@ -3166,6 +3289,26 @@ class Engine:
     # after it would be the floor rewriting a produced answer — forbidden.
     _ANSWER_DIRECTIVE = re.compile(r"ANSWER:")
     _ANSWER_PRESENT = re.compile(r"ANSWER\s*:", re.IGNORECASE)
+
+    # ---- gear-direction cross-check floor (armor QB.3) -----------------------
+    # A reduction R:1 (with efficiency eta) unambiguously fixes output torque
+    # = input * R * eta and output speed = input / R — deterministically
+    # checkable from Jack's own stated numbers (GOLD-gear-03's 0/5 direction
+    # churn). Every piece below must be unambiguous or the floor stays silent.
+    _GEAR_RATIO = re.compile(r"\b(\d+(?:\.\d+)?)\s*:\s*1\b")
+    _GEAR_REDUCTION_VOCAB = re.compile(
+        r"\b(reduction|gear\s?box|gear\s?ratio|reducer)\b", re.IGNORECASE)
+    _GEAR_STEPUP_VOCAB = re.compile(
+        r"\b(overdrive|step-?up|multipl\w*)\b", re.IGNORECASE)
+    _GEAR_EFFICIENCY = re.compile(
+        r"\b(\d+(?:\.\d+)?)\s*%\s*efficien", re.IGNORECASE)
+    _GEAR_EFFICIEN_WORD = re.compile(r"efficien", re.IGNORECASE)
+    _GEAR_TORQUE_IN = re.compile(
+        r"\b(\d+(?:\.\d+)?)\s*(?:N[*·⋅.\-]?m|Nm)\b", re.IGNORECASE)
+    _GEAR_SPEED_IN = re.compile(r"\b(\d+(?:\.\d+)?)\s*rpm\b", re.IGNORECASE)
+    _GEAR_ASKS_TORQUE = re.compile(r"\btorque\b", re.IGNORECASE)
+    _GEAR_ASKS_SPEED = re.compile(r"\b(speed|rpm)\b", re.IGNORECASE)
+    _GEAR_ASKS_OUTPUT = re.compile(r"\boutput\b", re.IGNORECASE)
 
     @staticmethod
     def _last_calc_answer(tool_log: list) -> str:
