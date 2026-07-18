@@ -3459,7 +3459,56 @@ re-poll loops anywhere = F4-class armor damage → revert per §4.3.
 | EM.3 | EMF-001..008 guards + `--quick` green | DONE — 8/8 guards pass, --quick 387/387 |
 | EM.4 | Targeted batches ×2 (`--skill email_triage`) + F4-signature check | DONE — EML-005 mentions_it=True 10/10 across both batches (0.5, then 0.8 elevate-strictness), EML-004 flaky 0.6/0.4 (pre-existing, unaffected by design); zero F4-signature in either batch's ilogs (max 1-2 check_email calls, no re-poll, empty_reply_floor/email_importance_floor False on every email turn) |
 | EM.5 | Merge → main `--quick` → detached candidate run + watchdog | DONE — fast-forward merge `a291a28`, post-merge --quick 387/387, candidate `2026-07-18_0045` 460/478 in 2:44:37, clean exit, watchdog confirmed no wedge (PIDs 36504/2468). CAVEAT: this run's per-turn ilogs rotated out of the pytest tmp cache before being pulled (too many later tests ran first) — cannot retroactively confirm F4-signature on the FULL run; EML-005 read 3/5 in report.json. Pull sandbox_ilogs immediately after future flights. |
-| EM.6 | Compare vs `0827` + §4.3 verdicts + ship gate — **Fable adjudicates** | PENDING — candidate stamp `2026-07-18_0045` ready |
+| EM.6 | Compare vs `0827` + §4.3 verdicts + ship gate — **Fable adjudicates** | **ADJUDICATED 2026-07-18 morning (Fable) — EM.1/EM.2 SHIP (harmless, F4-clean) but the target did NOT convert; floor was a NO-OP on the measured burial shape → in-leg correction EM.2.1 landed on qb `0df18d9`, verified by EM.4.1 batches + the QB candidate. Full verdict below.** |
+
+**EM.6 verdict (Fable 5, 2026-07-18 morning).** Compare
+`0045 vs 0827`: email_triage 0.600→**0.400** (the leg's own target DOWN),
+7 newly-failing (GND-013, GT-A, GT-C9, MEM-005[beta_probe], PROP-011,
+REPO-005, SKL-004), 5 newly-passing (CHK-002, GAP-001, PROP-012, PRV-005,
+SKL-003), collection matched. Because EM.5's full-run ilogs were lost, the
+adjudication used two substitutes: (1) **static surface proof** — the floor
+and its stream-hold key on ONE regex over the user input (`_EMAIL_ASK`),
+and the failing cases' user turns contain no email vocabulary except
+GND-013's ("email the summary to Kevin"), so EM provably never touched
+GT-A/GT-C9/MEM-005/PROP-011/REPO-005/SKL-004; (2) a **9-case recheck
+flight** on the candidate surface (results\em_recheck_2026-07-18\, per-case
+ilogs pulled immediately — driver runs one pytest per case with its own
+--basetemp, the EM.5-lesson protocol now proven). Recheck: GT-A 1.0,
+GT-C9 1.0, GND-013 1.0 (ilog: email flags False every run — stream-hold
+contact harmless), MEM-005[beta_probe] 1.0 — all CHURN per §4.3. EML-004
+recheck **0.8** (candidate 0.2, baseline 0.4 — a 0.2–0.8 flake band,
+churn; floor flag False every run as designed). Zero F4 signature
+anywhere: no >2 check_email turns, no empty settled replies,
+empty_reply_floor False throughout (recheck ilogs + EM.4's 20 targeted
+runs; the full run's own ilogs are the acknowledged evidence gap).
+
+**The real finding — EM.2 was a NO-OP on the measured failure.** EML-005
+recheck 0.4 with `email_importance_floor: False` on ALL runs: every reply
+MENTIONS the enrollment hold, but 4/5 bury it POSITIONALLY inside a flat
+newsletter list with zero negation vocabulary — the shipped coverage test
+only caught negation burial. Root cause of the miss: **EM.4's conversion
+bar measured the wrong sub-metric** (`mentions_it` 10/10) while the
+EML-005 grader requires `mentions_it AND (elevates OR contrast OR lead)`;
+flat lists pass the first and fail the rest. Process rule going forward:
+**a conversion bar must be the CASE's own pass fraction, never a
+sub-metric of it.** Correction EM.2.1 (qb `0df18d9`, rides the QB
+candidate): positional-burial disjunct — first tagged token past
+`_EMAIL_LEAD_WINDOW` (130 chars, the grader's phrasing-proof lead window)
+fails coverage; one shared `_fails_coverage` for draft AND retry so the
+accept bar can't drift; the deterministic fallback line already passes the
+grader's `elevates` check (verified against the grader source). Guard
+EMF-009 locks the measured flat-list shape verbatim + the re-burying-retry
+fallback path. EM.2.1 verification = EM.4.1 batches (EML-005 case fraction
+≥0.8 both batches) + the QB candidate's email board.
+
+**Ship decisions:** EM.1 (tag-only marker) and EM.2 (floor + stream hold)
+SHIP — F4-clean, harmless, and the marker/floor plumbing is what EM.2.1
+stands on. EML-004 stays the accepted band-graded residual (recheck 0.8 =
+top of band; no floor contact by design). email_triage's candidate delta
+is adjudicated CHURN + UNCONVERTED-TARGET, not armor damage. **Next
+baseline: `2026-07-18_0045` stands as QB.7's baseline** (the plan's QB.0
+rule — EM's candidate; EM.2.1's effect will read as email_triage delta in
+the QB compare with `email_importance_floor` flag attribution).
 
 ---
 
@@ -3649,10 +3698,10 @@ unmoved); QB.3 via `gear_check_floor` flags; QB.4 via
 | QB.1 | Commitment-close fuzzy matcher (`find_fuzzy` + tool corrective) + COM-009..012 | DONE — 10/10 pass (incl. pre-existing COM cases) |
 | QB.2 | canon `_UNIT_TABLE` oz-in family + CHK-007 self-test | DONE — CHK-007 passes, verified `Q(13,'force_ounce*inch').to('N*m')` = 0.0918 |
 | QB.3 | Gear-direction cross-check floor + ilog `gear_check_floor` + GRC-001..008 + gear batch ×5 | CODE + GUARDS DONE (8/8 pass); **live gear batch ×5 NOT YET RUN** (deferred — see QB.6 note) |
-| QB.4 | PT.1 T3-arming: capture ×3 → minimal widening + PTL-009/010 + GT-C9 ×3 | **CAPTURE DONE (3x), FIX BLOCKED — pre-authorized mechanism disconfirmed, needs Fable sign-off on a wider fix (see below)** |
-| QB.5 | Full `--quick` green in worktree | PARTIAL — 400/400 green with QB.1-3 landed; QB.4's PTL-009/010 guards don't exist yet |
-| QB.6 | Merge → main `--quick` → detached candidate run + watchdog | BLOCKED on QB.4 |
-| QB.7 | Compare + §4.3 verdicts + ship gate — **Fable adjudicates** | BLOCKED on QB.4 |
+| QB.4 | PT.1 T3-arming: capture ×3 → minimal widening + PTL-009/010 + GT-C9 ×3 | **FIX LANDED (Fable, 2026-07-18, qb `2ced461`)** — decision (a) below; PTL-009/010 green; GT-C9 ×3 conversion batch still owed pre-merge |
+| QB.5 | Full `--quick` green in worktree | DONE — 402/402 with QB.1-4 landed (400 + PTL-009/010) |
+| QB.6 | Merge → main `--quick` → detached candidate run + watchdog | PENDING — gear batch ×5 + GT-C9 ×3 first, then merge (carries EM.2.1 too, see EM.6 verdict) |
+| QB.7 | Compare + §4.3 verdicts + ship gate — **Fable adjudicates** | PENDING QB.6 |
 
 **QB.4 capture findings (Sonnet 5, 2026-07-18).** Built a throwaway
 diagnostic driver (replayed GT-C9's first 3 turns live via
@@ -3679,6 +3728,27 @@ Sonnet stopped here rather than freelance the redesign. **Decision
 needed from Fable:** (a) authorize broadening `_blocking_clarify`'s
 detection (and specify the exact shape), or (b) re-rank QB.4 out of
 this leg and ship QB.1–QB.3 alone (QB.5/6/7 re-scoped to three items).
+
+**QB.4 adjudication (Fable 5, 2026-07-18 morning): option (a), landed as qb
+`2ced461`.** The capture evidence is accepted as disconfirming the
+pre-authorized offer-suppression conjunct — `self.offer` was already None
+in 3/3 runs, so there is nothing at the offer-arm site to change and it
+stays untouched. Authorized shape, exactly as landed: `_blocking_clarify`
+keeps the final-sentence check as the PREFERRED match (unchanged behavior
+wins — every reply that armed before still arms with the same blocker),
+and when the final sentence is not a clarify-question it falls back to the
+FIRST clarify-vocabulary question sentence anywhere in the reply. The
+global `endswith("?")` gate is gone — it is what returned None on capture
+runs 2/3, whose replies end on an "if X, let me know" declarative.
+Sentence split: `(?<=[.?!])\s+|\n+`. Mid-reply rhetorical questions stay
+harmless because arming keeps ALL the caller's conjuncts (request-shaped
+ask, no landed action, no fresh offer, no consolidation task). Guards:
+PTL-009 locks BOTH captured T3 shapes verbatim from
+`qb_batches/capture_run{1,2}.log` (clarify + declarative tail; clarify +
+vocab-less second question) and the final-sentence-wins regression edge;
+PTL-010 locks the offer-ledger no-regression edge (statement + true offer
+→ offer arms, pending_task never). Suite: 15/15 pending-task guards,
+`--quick` 402/402.
 
 **M1 exit (roadmap Status flip to CLOSED requires):** both legs' ship
 gates adjudicated; every M1 residual either converted or written up as a
