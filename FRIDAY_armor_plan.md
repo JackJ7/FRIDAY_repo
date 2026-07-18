@@ -27,14 +27,17 @@ kickoff addendum, §3T), and S1–S3 (Fable's proposals, accepted by Jack
 ships only when the scorecard shows the targeted skill moved, nothing else
 regressed, and the delta is recorded here.
 
-**Next-session pickup: (a) Jack reviews the two flagged §4.3 divergences
-(RF.2/RF.3 kept with GND-010/011 unmoved — remove them if he rules by the
-letter) — STILL OPEN, not blocking; (b) CONSOLIDATE leg (CN.0–CN.6,
-Jack-confirmed ranking, prep block in §6) — owned by the parallel
-session that queued it. After CN: read-ask grounding floor (the real
-GND-010/011 lever), INJ-004 investigation (the injection residual TM
-didn't convert), script-floor retry recovery (CFG-007), web_fetch arg
-extension.**
+**Next-session pickup (updated 2026-07-17 evening): roadmap M1 — the EM
+leg (EML importance floor) then the QB leg (COM-008 fuzzy close + canon
+oz-in + gear-direction cross-check floor + PT.1 T3-arming), both DESIGNED
+implementation-ready by Fable 5 in the "M1 batch" section at the END of
+§6. Sonnet 5 implements from that written design and STOPS at each leg's
+compare step; Fable adjudicates §4.3 verdicts and ship gates. Baseline
+`2026-07-17_0827` (M0's merge `bf5dddc` verified non-model-visible);
+Jarvis J1.2+ model-visible increments stay queued behind Track A —
+coordinate before any merge/launch. (Historical note: the older pickup
+items here are resolved — RF.2/RF.3's GND-010/011 targets converted in
+the READ-ASK leg; CN/TM/PT/NJ/RN legs all closed, records in §6.)**
 
 Directive issued by Jack 2026-07-13; also baked into `CLAUDE.md` so every
 session inherits it. **North star added by Jack 2026-07-15 (§0b):
@@ -3269,3 +3272,390 @@ S1.1 trade, COM/SKL/GND family churn) plus the RN-specific collateral —
 any reference-project recall turn now costs one extra model call when the
 floor fires (regeneration), and `resolve_project` on a reference project
 returns the note body (larger tool result).
+
+---
+
+## M1 batch — design + adjudication rules (roadmap M1 → legs EM, QB) — designed 2026-07-17 evening (Fable 5)
+
+**What this section is.** The roadmap's M1 (armor residual batch: EML
+importance floor, COM-008, quant batch, PT.1 T3-arming) designed to
+implementation-ready per the roadmap §5 split: **Fable 5 designed and owns
+adjudication; Sonnet 5 implements from this written design; Haiku 4.5
+babysits runs.** Every code sketch below was written against verified
+anchors on main at `bf5dddc` (post-M0) — re-verify line numbers before
+editing, they drift. Sonnet: implement items in order, tick Status cells
+in place, and **STOP at each leg's final compare step** — §4.3 verdicts and
+the ship gate are Fable/Jack judgment calls, not implementation.
+
+**Batching decision (recorded here per roadmap §3/M1).** Two legs, two
+candidate runs, four roadmap items:
+
+- **EM leg = M1.1 alone.** The EML importance floor re-enters F4
+  territory — A1's F4 was REVERTED as armor-caused (verdict line →
+  check_email re-poll loop → EMPTY settled reply, email 0.5→0.0; the F4
+  root-cause block earlier in this §6), and the A1 verdict explicitly
+  requires any F4.1 re-attempt to get **its own compare**. It gets one.
+- **QB leg = M1.2 + M1.3 + M1.4 batched.** Four small items on four
+  disjoint surfaces (`core/commitments.py` + its tool; `core/canon.py`;
+  the engine ANSWER path; the engine end-of-turn arming block), each with
+  its own ilog flag or deterministic guard family, so per-item attribution
+  in the compare stays clean — the RF-leg precedent (5 items, one run).
+- **Order: EM first** (Jack's confirmed #1), QB second off EM's candidate.
+
+**Baseline & coordination (both legs).** EM.0 baseline = `2026-07-17_0827`
+(M0 verified nothing model-visible after `7b626af`; merge `bf5dddc` is
+UI/ledger only). QB.0 baseline = EM's candidate (or `0827` unchanged if EM
+fully reverts in-leg). Standing flags: **Jarvis J1.2+ (model-visible task
+tools) stays queued behind Track A** — check `git worktree list` + recent
+main commits before every merge and before every full-run launch
+(code-freeze rule); one GPU — no parallel eval/dev model traffic during a
+flight; launch detached per the RN.5-incident protocol (`Start-Process`,
+own lifetime — harness-attached children die with the session) + start
+`scripts\ollama_watchdog.py` alongside, per the RN.5 relaunch entry above.
+
+---
+
+### EM leg (EM.0–EM.6) — EML importance floor (roadmap M1.1)
+
+**Failure record.** EML-004 (conservative verdict on a newsletters-only
+inbox) and EML-005 (a planted enrollment-hold email must be SURFACED as
+important, not buried) sit in a flaky band; email_triage 0.600 at RN.6.
+The deterministic classifier already exists and is LOCKED-green
+(`core/senses/importance.py`, EML-007 guard at
+`tests/pillar1/test_email.py:136`) and already rides the BRIEFING surface
+(`core/senses/__init__.py::text_summary`, ~line 84). What's missing is the
+CHAT reply path: on an "any important emails?" turn the model reads raw
+`check_email` output and re-decides importance itself — sometimes burying
+the real deadline (the measured harm: EML-005's enrollment-hold case).
+
+**Binding history — why the obvious fix is forbidden.** A1's F4 put a
+pre-screen VERDICT LINE (instruction-shaped, "say so") into the
+`check_email` result; the 14B responded by re-polling check_email to the
+tool cap and settling EMPTY (email 0.5→0.0, reverted in-leg; full record
+in the A1 section above). The A1 verdict pre-authorized exactly one
+re-attempt shape: **F4.1 = tag-only wiring (no verdict line, no
+instruction text), paired with the empty-reply floor** — which has since
+shipped (FLOORS leg) and backstops the old failure's endpoint. EM is that
+re-attempt, with a reply-path floor added behind it (defense in depth, the
+RN.1/RN.2 pattern).
+
+**EM.1 — tag-only wiring (soft layer, F4.1).**
+File: `core/tools/senses_tools.py::check_email` (lines ~15–26).
+Import `from core.senses import importance` and tag each mail entry that
+clears the bar — a DATA line, not a directive:
+
+```python
+for m in g.unread(max_results=8):
+    entry = (f"[{m['account']}] id:{m['id']}\n  from: {m['from']}\n"
+             f"  subject: {m['subject']}\n  {m['snippet']}")
+    # Tag-only (armor F4.1): a data-shaped marker, never a verdict or
+    # "say so" instruction — A1's F4 verdict line taught the 14B to
+    # re-poll check_email to the cap and settle empty. The marker is
+    # also the floor's machine-readable signal (EM.2 parses it back).
+    if importance.is_important(m):
+        entry += "\n  importance: CLEARS JACK'S BAR (deterministic pre-screen)"
+    hits.append(entry)
+```
+
+When nothing clears the bar the result is byte-identical to today's —
+EML-004 turns see zero change from EM.1.
+
+**EM.2 — email-importance floor (hard layer, RN.2's shape).**
+File: `core/engine.py`.
+- Pre-turn signal (next to `answer_ask`, engine.py ~558):
+  `email_ask = bool(self._EMAIL_ASK.search(user_input))` with
+  `_EMAIL_ASK = re.compile(r"\b(e-?mails?|mail|inbox)\b", re.IGNORECASE)`.
+  Add `or email_ask` to the `hold_stream` disjunction (~570–600) — the
+  floor can replace/append, so the stream holds (NJ.4.1 rule). Trigger and
+  hold key on the SAME flag so they can't drift (artifact_ask pattern).
+- Post-generation barrier, placed after the retrieved-note recall floor
+  block and before the date floor. Fires only when ALL hold:
+  1. `email_ask`;
+  2. a `check_email` entry in `tool_log` whose result contains the EM.1
+     marker (`"importance: CLEARS JACK'S BAR"`) — parse the tagged
+     entries back out of the result string (entries are `\n\n`-joined;
+     take each tagged entry's `subject:` and `from:` lines). The marker
+     is the single source of truth shared with EM.1;
+  3. settled reply non-empty (the empty-reply floor owns emptiness);
+  4. the reply FAILS the coverage test: for the union of tagged entries'
+     distinctive tokens (`self._distinct_tokens(subject + " " + from)`
+     minus `self._distinct_tokens(user_input)` — question-echo excluded,
+     the RN.4 answer-absence lesson), EITHER the reply carries none of
+     them, OR a burial negation
+     (`re.search(r"\bnothing (important|urgent|that matters|worth)\b"
+     r"|\bno (important|urgent) (e-?)?mails?\b", low)`) matches BEFORE
+     the first tagged token appears (flat-list burial). Empty token set
+     after subtraction → never fire (over-fire safety).
+- Correction: ONE regeneration, STOP-shaped, naming the tagged mail:
+  *"STOP: the unread inbox contains mail that CLEARS Jack's deterministic
+  importance bar: \"<subject>\" from <from>. Your draft buries or omits
+  it. Rewrite the reply so it plainly flags this email as the one that
+  matters and why; keep the rest brief."* Accept the retry only if it now
+  passes the coverage test (carries a tagged token, no burial-negation
+  before it). Otherwise keep the draft and APPEND the deterministic
+  fallback, one line per tagged entry, code-authored from tool output
+  verbatim (the date-floor pattern — grounded, never fabricated):
+  `One unread email clears your importance bar (deterministic
+  pre-screen): "<subject>" — from <from>. It needs your attention.`
+- Never fires when no entry is tagged: EML-004's direction (elevating
+  noise) gets NO hard floor — detecting "non-conservative phrasing" is
+  the whack-a-mole class RN.4 warned against, and a false fire there
+  would replace correct replies. **Recorded as the leg's accepted
+  residual: EML-004 stays band-graded; re-rank only if the EM.6 compare
+  shows it regressing below its 0.8 band.**
+- ilog: add `"email_importance_floor": email_floor_fired` to the
+  observability dict (additive only — JSONL schema stays stable).
+
+**EM.3 — guards + quick gate.** New `tests/pillar1/test_email_floor.py`
+(EMF-001..008, all deterministic — scripted model where a reply is needed,
+the `_ScriptModel` pattern from test_consolidate.py):
+- EMF-001 check_email tags the IMPORTANT fixture and not the newsletters
+  (plant via `plant_email`, call the registry tool directly).
+- EMF-002 newsletters-only result is byte-identical to the untagged
+  format (locks the F4 lesson: no verdict line, no instruction text —
+  assert the strings "important" (in a verdict/directive sense), "say"
+  never appear outside the per-mail marker, and no marker at all here).
+- EMF-003 tagged mail + scripted "Nothing important today." → floor
+  fires, final reply carries a subject token; ilog flag true.
+- EMF-004 flat-list burial (scripted reply names the hold, then "overall
+  nothing important") → floor fires.
+- EMF-005 scripted correct reply ("the enrollment hold matters, rest is
+  noise") → floor silent, reply byte-unchanged, flag false.
+- EMF-006 no tagged mail + scripted "nothing important" → floor never
+  fires (EML-004 direction untouched).
+- EMF-007 retry still buries → deterministic fallback line appended,
+  reply never emptied.
+- EMF-008 `email_ask` turns hold the stream (MRG-003f's draft-never-
+  streams pattern).
+Then full `--quick` green in the worktree (baseline 379 + 8 new).
+
+**EM.4 — targeted conversion batches (branch, pre-merge).**
+`py -3 run_suite.py --skill email_triage` ×2, minute-spaced (EML-004 +
+EML-005, N runs each). Conversion bar: EML-005 ≥ 0.8 both batches,
+EML-004 at/above its 0.8 band. ALSO check the F4 signature explicitly in
+both batch ilogs: no email turn with >2 `check_email` calls, zero
+`empty_reply` floor firings on email turns — either one appearing =
+STOP, do not merge, escalate to Fable (this is the A1 failure resurfacing).
+
+**EM.5 — merge + candidate run.** Worktree `..\FRIDAY-em`, branch `em`
+(`git worktree add ..\FRIDAY-em em`). `--quick` in worktree → merge
+`em`→main → `--quick` on main → detached full run + watchdog per the
+RN.5-relaunch protocol; expect ~458 items (450 + EMF guards), ~3.5h.
+
+**EM.6 — compare + ship gate (FABLE/JACK ONLY — Sonnet stops before
+this).** `py -3 run_suite.py --compare 2026-07-17_0827 <EM candidate>`.
+Expected board: email_triage UP (target ≥0.8); all TM/CN/PT/NJ/RN perfect
+boards HELD; usual churn suspects (CFG-007, GND-012/013, SKL band,
+PROP/gear pair-flaps) adjudicated per §4.3 with ilog-flag proof
+(`email_importance_floor` False in every failing non-email transcript =
+non-armor). Special attention: any EMPTY settled replies or check_email
+re-poll loops anywhere = F4-class armor damage → revert per §4.3.
+
+| item | what | status |
+|---|---|---|
+| EM.0 | Baseline decision + open leg (worktree `..\FRIDAY-em`, branch `em`; verify nothing model-visible after `bf5dddc`, J1 unmerged) | PENDING |
+| EM.1 | Tag-only check_email wiring (F4.1 — marker line, no verdict/instruction) | PENDING |
+| EM.2 | Email-importance floor (email_ask + hold_stream + coverage-test barrier + one regen + deterministic fallback) + ilog `email_importance_floor` | PENDING |
+| EM.3 | EMF-001..008 guards + `--quick` green | PENDING |
+| EM.4 | Targeted batches ×2 (`--skill email_triage`) + F4-signature check | PENDING |
+| EM.5 | Merge → main `--quick` → detached candidate run + watchdog | PENDING |
+| EM.6 | Compare vs `0827` + §4.3 verdicts + ship gate — **Fable adjudicates** | PENDING |
+
+---
+
+### QB leg (QB.0–QB.7) — COM-008 + quant batch + PT.1 T3-arming (roadmap M1.2/M1.3/M1.4)
+
+**QB.0 — baseline decision + open leg.** Baseline = EM's candidate stamp
+(or `0827` if EM reverted everything). Worktree `..\FRIDAY-qb`, branch
+`qb`. Same coordination checks as EM.0.
+
+**QB.1 — commitment-close fuzzy matcher (M1.2, COM-008).**
+Failure (PT.8 record above): the model DID call
+`close_commitment("order GM6208 motors")`; `CommitmentTracker.find`
+(`core/commitments.py:169`) is id-or-substring only, so the stored
+"Order the GM6208 motors" (leading "the") missed, the tool returned its
+dead-end ERROR, and the item stayed open. PT.3's exact fuzzy-match class.
+Fix — add to `CommitmentTracker` (keep `find` as-is; panel/id paths
+untouched):
+
+```python
+# Words too common to identify a commitment — the PT.3 stop-list idea,
+# sized for short to-do phrasing ("Order the GM6208 motors").
+_MATCH_STOP = frozenset((
+    "the", "a", "an", "to", "my", "our", "that", "this", "one", "out",
+    "it", "them", "up", "please", "and", "for"))
+
+@classmethod
+def _match_tokens(cls, text: str) -> set:
+    return {w for w in re.findall(r"[a-z0-9]+", (text or "").lower())
+            if w not in cls._MATCH_STOP}
+
+def find_fuzzy(self, needle: str):
+    """(match, candidates) for chat-driven close (armor QB.1, COM-008).
+    Exact id / substring first (unchanged behavior wins); then
+    normalized token containment, PT.3's asymmetric shape: ALL of the
+    needle's identifying tokens appear in exactly one open/pending
+    item's tokens -> that item. 2+ hits -> (None, hits) so the tool can
+    refuse by NAMING candidates; 0 -> (None, [])."""
+    c = self.find(needle)
+    if c:
+        return c, []
+    want = self._match_tokens(needle)
+    if not want:
+        return None, []
+    live = [c for c in self._parse() if c.section != "done"]
+    hits = [c for c in live if want <= self._match_tokens(c.text)]
+    if len(hits) == 1:
+        return hits[0], []
+    return None, hits
+```
+
+`core/tools/commitment_tools.py::close_commitment` (~line 53) switches to
+`find_fuzzy`; the ambiguous branch returns a corrective that NAMES the
+retry (RA.1b lesson — a bare error gets narrated to Jack as a dead end):
+`ERROR: '<which>' matches {n} tracked commitments: [id] text; [id] text.
+RETRY NOW: call close_commitment again with the id of the one Jack means.`
+Zero-match keeps today's ERROR text. Guards (test_commitments.py):
+COM-009 the GM6208 case verbatim via `registry.call` (closed, Open list
+empty); COM-010 two "Order …" items + fragment matching both → ERROR
+naming both ids, NOTHING closed; COM-011 zero-match ERROR unchanged;
+COM-012 exact-substring still wins over fuzzy (regression edge).
+
+**QB.2 — canon oz-in family (M1.3a, CHK-002 grader gap — deferred from
+RN.6 by the RPM precedent).** `core/canon.py::_UNIT_TABLE` (~line 37).
+Verified this session: Pint parses `force_ounce*inch`;
+`Q(13,'force_ounce*inch').to('N*m')` = 0.0918 N·m. The `·/⋅/×`
+pre-translation in `normalize_unit` means dot spellings arrive as `oz*in`
+— the table needs the `*` and `-` forms:
+
+```python
+"oz-in": "force_ounce*inch", "oz*in": "force_ounce*inch",
+"ozin": "force_ounce*inch", "oz-ins": "force_ounce*inch",
+"oz-inch": "force_ounce*inch", "oz-inches": "force_ounce*inch",
+"ounce-inch": "force_ounce*inch", "ounce-inches": "force_ounce*inch",
+"in-oz": "force_ounce*inch", "in*oz": "force_ounce*inch",
+```
+
+Guard CHK-007 in `tests/pillar2/test_checker.py` (grader self-test, no
+model): `normalize_unit("oz-in") == "force_ounce*inch"`;
+`abs(answer_in("ANSWER: 13 oz-in", "N*m") - 0.0918) < 0.001`; the
+case-fold rescue covers `OZ-IN`; and a comment recording the original
+crash (`pint` parsed the bare hyphen as subtraction → `ParserHelper -
+ParserHelper` TypeError before grading).
+
+**QB.3 — gear-direction cross-check floor (M1.3b, GOLD-gear-03).**
+Failure (RN.6 adjudication above): 0/5 recheck band with FOUR different
+wrong answers on `0.65 N*m through a 20:1 gearbox at 80% efficiency` —
+the 14B churns on direction (×R vs ÷R) and η placement. A reduction
+R:1 with efficiency η fixes output torque = input × R × η and output
+speed = input / R — deterministically checkable from Jack's own numbers
+(the CHK-003 two-way-cross-check philosophy moved engine-side; CLAUDE.md:
+don't make the model do what code can do).
+File: `core/engine.py`, new post-gen block IMMEDIATELY AFTER the
+ANSWER-contract floor (~1783, after its `turn.append`) and before the
+script floor (S1 stays last). This does NOT violate the ANSWER floor's
+"never rewrite a produced line" rule — that rule bars *unverified*
+rewriting; this floor only acts when an independent deterministic
+computation of the same quantity disagrees.
+- Parse the USER message (fire only when every piece is unambiguous):
+  ratio `\b(\d+(?:\.\d+)?)\s*:\s*1\b` (exactly one match); reduction
+  vocabulary `\b(reduction|gear\s?box|gear\s?ratio|reducer)\b` present;
+  step-up vocabulary (`overdrive|step-?up|multipl`) ABSENT; efficiency
+  `\b(\d+(?:\.\d+)?)\s*%\s*efficien` → η (η=1.0 only when "efficien"
+  never appears; "efficien" present but unparsable → do not fire);
+  torque path: exactly one `\b(\d+(?:\.\d+)?)\s*(N[*·⋅.\-]?m|Nm)\b`
+  input + the question asks output torque → expected = τ·R·η in the
+  input's unit; speed path: exactly one `\b(\d+(?:\.\d+)?)\s*rpm\b` +
+  asks output speed → expected = rpm/R. Anything else → silent.
+- Extract the reply's ANSWER via `core.canon` (`answer_in(reply,
+  expected_unit)`; `NoAnswer`/conversion failure → silent, the honest
+  failure stands). Relative error > 0.02 (the golden tolerance) → ONE
+  corrective regen: *"STOP: check the gearbox arithmetic. A {R}:1
+  REDUCTION multiplies torque by {R} and by efficiency {η}: expected
+  output ≈ {expected:.6g} {unit} from Jack's own numbers ({τ} × {R} ×
+  {η}). Recompute and rewrite the reply with a correct final ANSWER
+  line."* Accept the retry only if its ANSWER now matches within
+  tolerance; otherwise keep the draft's prose and REPLACE its ANSWER
+  line with the code-built `ANSWER: {expected:.6g} {unit}` (deterministic
+  final — the value is computed from Jack's stated numbers, exactly the
+  calc-builder's grounding standard).
+- Stream: `answer_ask` already holds it (engine ~572) — no new hold.
+- ilog: `"gear_check_floor": gear_check_fired` (additive).
+- Guards: new `tests/pillar1/test_gear_check.py`, GRC-001..008, scripted
+  model, no live 14B: GRC-001 ÷R draft (`0.026`) → corrected to 10.4;
+  GRC-002 η-dropped draft (`13`) → corrected; GRC-003 correct draft
+  (`10.4`) → untouched, flag false; GRC-004 step-up vocab → never fires
+  even on a wrong draft; GRC-005 two ratios in the message → never
+  fires; GRC-006 speed path (3000 rpm, 15:1, draft `45000`) → corrected
+  to 200; GRC-007 retry-accepted path (regen returns 10.4 → no
+  line-replacement); GRC-008 fallback replaces ONLY the ANSWER line,
+  prose preserved, reply never emptied.
+- Conversion batch: `py -3 -m pytest tests\pillar2\test_golden.py -k
+  "gear" -m model` ×5 minute-spaced (gear-01/02/03 together — 01/02 are
+  the no-regression edge). Bar: gear-03 ≥ 4/5, gear-01/02 hold.
+
+**QB.4 — PT.1 T3-arming gap (M1.4; CAPTURE FIRST, then the minimal
+widening).** Recorded failure (PT.8): GT-C9 T3 ("Ok, please update the
+project folder.", test_notes10.py:749) ended on FRIDAY's clarify with
+`pending_task_armed=false`, though consolidation had retired at T1.
+**Static suspect, verified anchors this session:** offer arming
+(engine.py:1853–1859) runs BEFORE the pending-task arm check (:1896),
+and `_OFFER_SHAPE` (:3112) branches 1/3 ("would you like me to …?",
+"I'll update …") overlap clarify phrasing — a blocking clarify worded
+offer-ish arms the OFFER ledger, and `self.offer is None` then vetoes PT
+arming. Do NOT code from this suspicion alone:
+- Step 1 — capture: scratchpad driver replaying GT-C9's first three
+  turns (or `py -3 -m pytest tests\pillar1\test_notes10.py -k gt_c9`
+  with a temporary per-turn dump of `offer` / `consolidation` /
+  `pending_task` / `action_landed` / `_looks_like_request(user)` /
+  `_blocking_clarify(reply)`), ×3 runs; keep the dumps in
+  `..\FRIDAY-qb\qb_batches\`. Identify which conjunct actually blocked
+  arming at T3 in each failing shape.
+- Step 2 — the minimal fix for the measured conjunct. If the suspect
+  confirms: a settled reply whose final sentence is a blocking clarify
+  (`_blocking_clarify` non-None) is a BLOCKER, not an offer — suppress
+  offer-arming for that turn (or equivalently, let the PT arm check
+  ignore an offer whose text IS the blocker sentence). One conditional,
+  placed at the offer-arm site; anything wider needs Fable sign-off.
+- Guards: PTL-009 clarify-with-offer-vocabulary arms `pending_task`
+  (scripted: request-shaped ask, reply "Which folder would you like me
+  to update?"); PTL-010 a true offer ("Would you like me to review the
+  pdf?" after a statement, no request pending) still arms the OFFER and
+  not pending_task — the no-regression edge for the offer ledger.
+- Conversion: GT-C9 ×3 minute-spaced (NJ.4 pattern) — T3's
+  no-generic-clarify check green and `pending_task_armed` true at T3 in
+  the ilogs whenever T3 ends on a clarify; full board stays green.
+
+**QB.5 — guards + `--quick` green** (COM-009..012, CHK-007, GRC-001..008,
+PTL-009/010 — 15 new; full `--quick` in `..\FRIDAY-qb`).
+
+**QB.6 — merge + candidate run.** Same protocol as EM.5 (merge qb→main,
+post-merge `--quick`, detached full run + watchdog, code-freeze checks).
+
+**QB.7 — compare + ship gate (FABLE/JACK ONLY).** `--compare <QB.0
+baseline> <QB candidate>`. Expected board: project_ops UP (COM-008
+converts; GT-C9 holds), quant_math UP (CHK-002 stops crashing,
+GOLD-gear-03 converts — note CHK-002's pass fraction may ALSO move from
+the grader fix alone; attribute that share to QB.2 not QB.3, the ilog
+`gear_check_floor` flag separates them), memory/injection perfect boards
+HELD. Per-item attribution: QB.1 via COM-008 + commitments guards; QB.2
+grader-only (zero model-visibility — verify `email`/`calendar` etc.
+unmoved); QB.3 via `gear_check_floor` flags; QB.4 via
+`pending_task_armed` at GT-C9 T3. Down-deltas per §4.3 with flag-proof.
+
+| item | what | status |
+|---|---|---|
+| QB.0 | Baseline decision (EM candidate) + open leg (worktree `..\FRIDAY-qb`, branch `qb`) | PENDING |
+| QB.1 | Commitment-close fuzzy matcher (`find_fuzzy` + tool corrective) + COM-009..012 | PENDING |
+| QB.2 | canon `_UNIT_TABLE` oz-in family + CHK-007 self-test | PENDING |
+| QB.3 | Gear-direction cross-check floor + ilog `gear_check_floor` + GRC-001..008 + gear batch ×5 | PENDING |
+| QB.4 | PT.1 T3-arming: capture ×3 → minimal widening + PTL-009/010 + GT-C9 ×3 | PENDING |
+| QB.5 | Full `--quick` green in worktree | PENDING |
+| QB.6 | Merge → main `--quick` → detached candidate run + watchdog | PENDING |
+| QB.7 | Compare + §4.3 verdicts + ship gate — **Fable adjudicates** | PENDING |
+
+**M1 exit (roadmap Status flip to CLOSED requires):** both legs' ship
+gates adjudicated; every M1 residual either converted or written up as a
+documented known-limit with its band (D1 language); next-baseline rule
+restated with the QB candidate; roadmap M1 Status cell updated in place,
+dated, with a pointer back to these two leg records.

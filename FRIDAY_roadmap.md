@@ -115,7 +115,18 @@ Batching two small items into one leg is fine (one candidate run
 instead of two) — record the batching decision in armor §6.
 Model: **Fable 5** for design/adjudication, **Sonnet 5** may implement
 from the written §6 design, **Haiku 4.5** babysits runs.
-**Status: QUEUED behind M0.**
+**Status: DESIGNED 2026-07-17 evening (Fable 5) — implementation-ready,
+handed to Sonnet 5.** Full design + adjudication rules in armor plan §6,
+"M1 batch" section (end of file). Batching decision recorded there:
+**two legs, not four** — **EM leg** = M1.1 alone (the F4-revert history
+requires the EML re-attempt to get its own compare), then **QB leg** =
+M1.2 + M1.3 + M1.4 batched (four disjoint surfaces, per-item ilog/guard
+attribution). Baseline: EM uses `2026-07-17_0827`; QB uses EM's
+candidate. Implementation protocol per leg item tables (EM.0–EM.6,
+QB.0–QB.7, all PENDING); Sonnet STOPS at EM.6/QB.7 — compare
+adjudication and ship gates are Fable's. M1 closes when both ship gates
+are adjudicated and this cell is flipped to CLOSED with the leg records
+linked.
 
 ### M2 — Parity gap closure  ⛓ per leg  (Track A — the north-star finishers)
 
@@ -302,3 +313,11 @@ deltas, regression-prone prompt changes), never typing mistakes.
   named stale PIDs were Windows PID reuse onto unrelated `chroma-mcp`
   processes, not real leftover FRIDAY instances. M1 (armor residual
   batch) is now the frontier.
+- 2026-07-17 evening: **M1 DESIGNED** (Fable 5). All four residuals
+  designed/adjudication-ruled into two implementation-ready legs (EM =
+  EML importance floor; QB = COM-008 + canon oz-in + gear-direction
+  floor + PT.1 T3-arming) in armor plan §6 "M1 batch" section. No code
+  written — implementation handed to Sonnet 5 per §5; Fable owns the
+  two compares. Notable design constraints honored: A1's F4 revert
+  (tag-only email wiring, own compare), RN.4's answer-absence trigger
+  lesson, CHK-002's canon fix deferred-to-leg-start rule.
