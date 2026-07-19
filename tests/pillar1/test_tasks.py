@@ -9,6 +9,7 @@ job runner ride on it.
 
 import pytest
 
+from core.permissions import PermissionDenied
 from core.tasks import TaskLedger
 
 
@@ -147,3 +148,19 @@ def test_unknown_targets(sandbox):
         led.complete_step("no_such_task", 0, "evidence")
     with pytest.raises(ValueError):
         led.complete_step("job_alpha", 5, "evidence")
+
+
+@pytest.mark.case("TSK-011", "write_brain to tasks/ is refused in all three modes, naming the task tools")
+def test_write_guard_blocks_tasks_dir(sandbox):
+    for mode in ("create", "append", "overwrite"):
+        with pytest.raises(PermissionDenied, match="task"):
+            sandbox.brain.write_note("tasks/anything.md", "junk", mode=mode)
+
+
+@pytest.mark.case("TSK-012", "the write guard doesn't touch the ledger's own system_write path")
+def test_write_guard_leaves_ledger_path_open(sandbox):
+    led = _ledger(sandbox)
+    t = led.create("Job alpha", ["a"])
+    assert t.slug == "job_alpha"
+    led.complete_step("job_alpha", 0, "alpha finished; verified")
+    assert led.get("job_alpha").steps[0].state == "done"

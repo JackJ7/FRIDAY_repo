@@ -51,6 +51,10 @@
         <svg viewBox="0 0 24 24"><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4M12 3v13M7 8l5-5 5 5"/></svg>
         Uploads
       </div>
+      <div class="nav-item" data-view="away">
+        <svg viewBox="0 0 24 24"><path d="M12 3v9l4 2"/><circle cx="12" cy="12" r="9"/></svg>
+        Away board <span class="count" id="nav-away-count"></span>
+      </div>
       <div class="nav-item" data-view="history">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
         History
@@ -137,6 +141,13 @@
           <div>Drop files anywhere in this window — FRIDAY reads them in place.</div>
         </div>
         <div id="uploads-list"></div>
+      </div>
+    </div>
+
+    <!-- AWAY BOARD VIEW (jarvis plan J1.5, roadmap M3.4) -->
+    <div class="view" id="view-away">
+      <div class="workpane" id="away-board">
+        <div class="n-empty">Nothing parked or finished.</div>
       </div>
     </div>
   </main>

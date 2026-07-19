@@ -22,6 +22,7 @@ from core.permissions import PermissionGate
 from core.playbooks import Playbooks
 from core.skills import Skills
 from core.senses import Senses
+from core.tasks import TaskLedger
 from core.tools.brain_tools import register_brain_tools
 from core.tools.calc_tools import register_calc_tools
 from core.tools.commitment_tools import register_commitment_tools
@@ -31,6 +32,7 @@ from core.tools.self_tools import register_rule_tool, register_self_tools
 from core.tools.skill_tools import register_skill_tools
 from core.tools.projects import register_project_tools
 from core.tools.reasoning_tools import register_deep_think
+from core.tools.task_tools import register_task_tools
 from core.timelines import TimelineTracker
 from core.tools.registry import ToolRegistry
 from core.tools.senses_tools import register_senses_tools
@@ -212,6 +214,9 @@ def build_engine(confirm, config: dict = None) -> Engine:
     timelines = TimelineTracker(brain)
     register_timeline_tools(registry, timelines)
 
+    task_ledger = TaskLedger(brain)
+    task_ctx = register_task_tools(registry, task_ledger)
+
     playbooks = Playbooks(brain)
     register_playbook_tools(registry, playbooks)
 
@@ -322,6 +327,8 @@ def build_engine(confirm, config: dict = None) -> Engine:
     engine.timelines = timelines
     engine.playbooks = playbooks
     engine.skills = skills
+    engine.task_ledger = task_ledger
+    task_ctx.engine = engine
     engine.acc_summary = tracker.summary  # service upgrades this to the full
                                           # accountability summary (adds staleness)
     # The busy-gate in engine.respond() keys on getattr(self, "research", None):

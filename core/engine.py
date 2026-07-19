@@ -127,6 +127,15 @@ class Engine:
         # present, Jack's free-text project references resolve to a real note+
         # folder in CODE before the model can guess a path.
         self.project_resolver = None
+        # Durable task ledger (jarvis plan J1, roadmap M3.2). Set by bootstrap;
+        # may stay None (a bare sandbox), so the referent-block injection below
+        # guards with getattr — the same posture as project_resolver.
+        self.task_ledger = None
+        # True while a background job step (core/jobs.py, roadmap M3.3) drives
+        # this turn — set by JobRunner around its engine.respond() call, never
+        # by chat. Logged additively so the ilog can attribute turns to the
+        # runner vs live chat.
+        self._job_turn = False
         # True while the deep-reasoning deep-mode model is engaged (future use; the
         # status console shows "deep mode" so Jack knows why it's slower).
         self.deep_active = False
@@ -359,6 +368,13 @@ class Engine:
 
         Returns the final ModelReply.
         """
+        # M3.2d: turn-scoped grounding source for complete_task_step (task_tools
+        # reads these through task_ctx.engine, never captures them at
+        # registration time — bootstrap builds tools before the Engine exists).
+        # Additive aliases; every other reader of user_input is unaffected.
+        self._turn_user_input = user_input
+        self._turn_tool_log = []
+        self._task_evidence_refused = 0
         # --- "I'm busy" gate (autoresearch). A live training run CLAIMS the
         # 12GB GPU; letting a chat reply generate concurrently would silently
         # starve one or the other of VRAM. So while a run is active, every turn
@@ -492,6 +508,25 @@ class Engine:
                     self._resolved_reference = _data
             except Exception:
                 self._resolved_reference = None  # resolution is best-effort
+
+        # Durable tasks referent block (jarvis plan J1.2, roadmap M3.2c). Status
+        # information, so it rides mid-block — the max-obedience tail stays
+        # reserved for the imperative directives below (offer/consolidation/
+        # pending/correction, measured order). Zero open tasks (the entire
+        # existing suite, and every task-free turn even with the ledger wired)
+        # means zero injected text — no behaviour change until Jack actually
+        # has a task open. Guarded getattr: a bare sandbox without the ledger
+        # is unaffected, same posture as project_resolver.
+        task_ledger = getattr(self, "task_ledger", None)
+        if task_ledger is not None and task_ledger.list_open():
+            tasks_block = (
+                "DURABLE TASKS (task ledger — code-tracked ground truth):\n"
+                f"{task_ledger.summary()}\n"
+                "Advance a step ONLY via complete_task_step with verbatim "
+                "evidence from a tool result this turn or Jack's own words. "
+                "Never state a step the ledger shows open as done.")
+            ref_block = (ref_block + "\n\n" + tasks_block
+                         if ref_block else tasks_block)
 
         # Offer ledger (Notes-10 Phase 2, §1). A bare affirmative to a standing
         # offer means "do it" — resolve it in CODE so a "Yes please" can't be
@@ -671,7 +706,10 @@ class Engine:
 
         # Messages created during this turn; persisted into history at the end.
         turn = [{"role": "user", "content": user_input}]
-        tool_log = []
+        # Same list object as self._turn_tool_log (set at turn start above) —
+        # appends below stay visible to complete_task_step's grounding check
+        # mid-turn, since tool calls execute sequentially within one turn.
+        tool_log = self._turn_tool_log
         # A code-executed consolidation (CN.2.1 escalation, run during the
         # referent-block build above) must appear in this turn's ledger like
         # any tool call — the memory pass's "ALREADY SAVED" note and the
@@ -1436,6 +1474,58 @@ class Engine:
                 if live_token:
                     live_token(addition)
                 narrated_json_fired = True
+
+        # Task-claim recovery floor (jarvis M3.2h — the GT-J1 STOP's fix).
+        # qwen2.5:14b routes "I did it — tick it off" to the commitment /
+        # project tool families (5/5 identical live runs, M3.2g verdict) and
+        # never calls complete_task_step, so the evidence gate never gets to
+        # teach the recovery. Jack's own words are ALREADY the contract's
+        # evidence channel (_grounded accepts a verbatim substring of his
+        # message), so when HIS message claims a step's work happened
+        # (unambiguous content match, no negation/conditional — see
+        # _claimed_task_step) and orders the tick, the ENGINE completes the
+        # step itself with the claim clause verbatim — through _run_tool, so
+        # gate, taint and referent tracking hold and the grounding gate
+        # passes by construction. Model self-claims never qualify (TKT-004's
+        # pin): the floor keys on user_input only. Receipt APPENDED, never
+        # replaced (the F4/A1 lesson). Keying on Jack's claim + end-of-turn
+        # ledger state covers every observed misroute, whichever wrong tool
+        # the model picked.
+        task_claim_fired = False
+        if (reply is not None and not phantom_fired
+                and not identifier_floor_fired and not artifact_denial_fired):
+            tc_claim = self._claimed_task_step(user_input)
+            if tc_claim is not None:
+                tc_slug, tc_step, tc_clause = tc_claim
+                tc_already = any(
+                    t.get("tool") == "complete_task_step"
+                    and str((t.get("args") or {}).get("slug", "")) == tc_slug
+                    and str((t.get("args") or {}).get("step", "")) == str(tc_step)
+                    and self._write_landed(t.get("result", ""))
+                    for t in tool_log)
+                if not tc_already:
+                    tc_args = {"slug": tc_slug, "step": tc_step,
+                               "evidence": tc_clause}
+                    if on_tool:
+                        on_tool("complete_task_step", tc_args)
+                    tc_result, tc_external = self._run_tool(
+                        "complete_task_step", tc_args)
+                    tool_log.append({"tool": "complete_task_step",
+                                     "args": tc_args,
+                                     "result": tc_result[:500]})
+                    turn.append({"role": "tool",
+                                 "content": self._wrap_data(tc_result,
+                                                            tc_external)})
+                    if self._write_landed(tc_result):
+                        addition = "\n\n" + str(tc_result).strip()[:400]
+                        reply.content = ((reply.content or "").rstrip()
+                                         + addition)
+                        reply.tool_calls = []
+                        turn.append({"role": "assistant",
+                                     "content": reply.content})
+                        if live_token:
+                            live_token(addition)
+                        task_claim_fired = True
 
         # False-completion floor (armor PC.4 — parity row P2's past-tense
         # sibling; the GT-C9 r1 residual: T4 "I've created a new consolidated
@@ -2575,10 +2665,24 @@ class Engine:
             # caught a done-claim with zero landed actions while a tracked
             # task was still pending (the GT-C9 r1 residual, now countable).
             "false_completion_floor": false_completion_fired,
+            # Jarvis M3.2h: True when the task-claim recovery floor completed
+            # a step from Jack's own in-turn claim after the model misrouted
+            # the tick-off (the GT-J1 T2 signature, now countable).
+            "task_claim_floor": task_claim_fired,
             # Armor IG.1 (parity P3): True when the foreign-note-path floor
             # caught the reply naming a note file code could ground nowhere
             # (the invented-path half of the GT-C9 residual, now countable).
             "foreign_path_floor": foreign_path_fired,
+            # Armor M3.2d (jarvis J1): open-task count at log time (0 when the
+            # ledger is absent or empty) and how many complete_task_step calls
+            # this turn were refused for ungrounded evidence — these two carry
+            # the whole M3.2 compare's attribution. Additive; schema stable.
+            "tasks_active": len(task_ledger.list_open()) if task_ledger else 0,
+            "task_evidence_refused": getattr(self, "_task_evidence_refused", 0),
+            # Armor M3.3 (jarvis J1): True when JobRunner drove this turn
+            # unattended rather than live chat — lets the compare attribute
+            # any flag to the runner vs a real conversation. Additive.
+            "job_turn": getattr(self, "_job_turn", False),
         })
         return reply
 
@@ -4059,6 +4163,88 @@ class Engine:
                     f"and it is blocked on \"{t['blocker']}\".")
         return "No tracked task is pending."
 
+    # Task-claim recovery floor (jarvis M3.2h). CUE-B: the message orders a
+    # ledger tick or claims the doing in first person. The work-happened
+    # clause (CUE-A) is matched separately, per clause, in
+    # _claimed_task_step — BOTH must hold before the engine moves anything.
+    _TASK_TICK_CUE = re.compile(
+        r"\b(?:tick|check|cross)\s+(?:it|that|this|them|step\s+\w+"
+        r"|the\s+[\w' -]{1,40}?)\s+off\b"
+        r"|\b(?:tick|check|cross)\s+off\b"
+        r"|\bmark\s+(?:it|that|this|step\s+\w+|the\s+[\w' -]{1,40}?)\s+"
+        r"(?:as\s+)?(?:done|complete|completed|finished|off)\b"
+        r"|\bi\s+(?:just\s+)?did\s+(?:it|that|this)\b"
+        r"|\bi'?ve\s+(?:just\s+)?(?:done|finished)\s+(?:it|that|this)\b",
+        re.IGNORECASE)
+
+    # Any of these in the claim clause kills the fire: negation ('t catches
+    # isn't/don't/hasn't...), futures, conditionals, needs. Over-blocking is
+    # the safe direction (P6): a missed fire leaves the model's normal path
+    # standing; a false fire would tick off work that never happened —
+    # exactly what the never-claim contract forbids.
+    _TASK_CLAIM_BLOCKERS = re.compile(
+        r"'t\b|\bnot\b|\bnever\b|\bcannot\b|\byet\b|\bif\b|\bonce\b"
+        r"|\bwhen\b|\buntil\b|\bunless\b|\bbefore\b|\bafter\b|\bwill\b"
+        r"|\bgoing\s+to\b|\bgonna\b|\bneeds?\s+to\b|\bstill\b|\bshould\b"
+        r"|\bmust\b|\bplan(?:ning)?\s+to\b|\bhold\b",
+        re.IGNORECASE)
+
+    # Short/function words that would inflate step-clause overlap ("the",
+    # "off") — on top of _STOP_WORDS, which was built for >=4-char scans.
+    _TASK_CLAIM_EXTRA_STOP = frozenset(
+        "the and for off are was has had did its per now new old all out "
+        "get got set job task step".split())
+
+    def _claimed_task_step(self, user_input: str):
+        """M3.2h detection: (slug, 1-based step, verbatim claim clause) when
+        Jack's OWN message both orders a tick-off / claims the doing (CUE-B)
+        and contains a clause unambiguously matching exactly ONE open
+        pending/in-progress step (blocked steps never — unblock stays an
+        explicit flow), with no negation/conditional in that clause. None on
+        any doubt: a missed fire costs nothing, a false fire ticks off work
+        that never happened. Tokens are 4-char prefix-folded so
+        drained/drain agree; coverage >=60% of the step's content tokens
+        with >=2 hits; a second qualifying step anywhere drops the fire."""
+        ledger = getattr(self, "task_ledger", None)
+        text = user_input or ""
+        if ledger is None or not self._TASK_TICK_CUE.search(text):
+            return None
+        open_tasks = ledger.list_open()
+        if not open_tasks:
+            return None
+
+        stop = self._STOP_WORDS | self._TASK_CLAIM_EXTRA_STOP
+
+        def toks(s):
+            return {w[:4] for w in re.findall(r"[a-z0-9]+", (s or "").lower())
+                    if len(w) >= 3 and w not in stop}
+
+        clauses = [c.strip() for c in
+                   re.split(r"(?<=[.?!;])\s+|\s+—\s+|\n+", text) if c.strip()]
+        candidates = []   # (coverage, task, step index, clause)
+        for t in open_tasks:
+            for i, s in enumerate(t.steps):
+                if s.state not in ("pending", "in-progress"):
+                    continue
+                st = toks(s.text)
+                if len(st) < 2:
+                    continue
+                best = None
+                for c in clauses:
+                    if self._TASK_CLAIM_BLOCKERS.search(c):
+                        continue
+                    hits = len(st & toks(c))
+                    cov = hits / len(st)
+                    if hits >= 2 and cov >= 0.6 and (
+                            best is None or cov > best[0]):
+                        best = (cov, c)
+                if best is not None:
+                    candidates.append((best[0], t, i, best[1]))
+        if len(candidates) != 1:
+            return None   # nothing matched, or 2+ did — ambiguity drops it
+        _, t, i, clause = candidates[0]
+        return t.slug, i + 1, clause
+
     _WHICH_SLUG_ASK = re.compile(
         r"\bwhich (one|project|of these)\b|\bdo you mean\b", re.IGNORECASE)
     _SURVIVOR_FRAMING = re.compile(
@@ -4266,6 +4452,19 @@ class Engine:
                     surfaces.add(_norm(Path(p["folder"]).name))
         except Exception:
             return []
+        # M3.2 identifier-floor coexistence: real open tasks are disk-grounded
+        # tool-surfaced namespace exactly like a project surface (P3's
+        # philosophy) — union their slugs/titles in so a reply naming an OPEN
+        # task near a project verb doesn't false-positive as a fabrication.
+        # Fabricated slugs still fail (they're in neither set).
+        task_ledger = getattr(self, "task_ledger", None)
+        if task_ledger is not None:
+            try:
+                for t in task_ledger.list_open():
+                    surfaces.add(_norm(t.slug))
+                    surfaces.add(_norm(t.title))
+            except Exception:
+                pass   # coexistence is best-effort, never fatal to the floor
         surfaces.discard("")
         tool_names = {t["function"]["name"].lower()
                       for t in self.registry.to_ollama()}
