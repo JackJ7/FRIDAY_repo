@@ -198,17 +198,42 @@ F-grade re-ranks these above anything):
 | M2.2 | P2 | General dangling-intent floor — reply ends first-person-future + zero tools ran → recover or re-prompt |
 | M2.3 | P3 | Generalize CN.3 identifier grounding beyond projects to any tool-surfaced namespace (files, runs, notes) — watch the CN.3 false-positive rate while in there (3rd sighting) |
 
+**M2 CLOSED 2026-07-19 ~03:15 (Fable 5 designed, implemented, and
+adjudicated end-to-end; full leg records in armor plan §6 "M2 batch" —
+PC.7 + IG.5 verdict blocks + the M2 EXIT block).** Summary:
+- **PC leg (M2.1+M2.2)**: correction ledger + floor (P5 — GT-P5b captured
+  failing 3/5 on baseline, converted 5/5), dangling-intent floor with
+  retry-with-tools recovery and pending-task carry, false-completion
+  floor (the GT-C9 invented-slug residual's direct armor — GT-C9 5/5 vs
+  ~2/3 baseline). Candidate `2026-07-18_1851`: email +0.300,
+  memory_recall +0.200, zero false ledger arms across 516 items. Two
+  real holes found and fixed by the batch evidence itself: the S1
+  late-regeneration hole (deterministic post-floor re-scan) and the
+  RAF-004 Jack-conditioned-promise false fire (sentence-start anchoring).
+- **IG leg (M2.3)**: foreign-note-path floor (notes namespace, P6
+  narrow-first) + the GAP-001 forensic payoff — a LIVE CN.3
+  false-positive specimen in the `1851` ilogs traced to the shipped scan
+  dropping its designed verb-adjacency window; restored with the
+  retry-acceptance scan kept strict. COM-008 stop-word widening rode
+  along. Candidate `2026-07-18_2346`: COM-008 ✓ + GAP-001 ✓ converted,
+  calendar +0.250, **memory_persistence AND memory_recall both 1.000**,
+  `foreign_path_floor` surgical (2 fires, own guards).
+- **D2 statement**: the full golden conversation family (GT-A/GT-B/
+  GT-C1..C10/GT-P5a/b/GT-P2a) passes in one run with m1=m2=m3=m5=0 —
+  the scorecard condition STARTS holding, exactly M2's exit; three
+  consecutive stable runs remain R2's job.
+- **Residuals (D1 language)**: EML-004 band by design; CFG-007
+  knife-edge flap; SKL voice-band family; MEM-005 kill-timing params;
+  GRW-005/PLB-004 initiative band.
+- **Next baseline = `2026-07-18_2346`** — valid until the next
+  model-visible merge; **Jarvis J1.2+ (Track B) now has the merge slot.**
+
 Exit = D2's scorecard condition starts holding.
 Model: **Fable 5** (design-heavy, regression-prone floors — this is the
 subtlest armor work left).
-**Status: PC LEG CLOSED (SHIP GATE MET) 2026-07-18 ~22:35; IG leg open
-— Fable 5.** PC (M2.1+M2.2) shipped whole: correction ledger+floor,
-dangling-intent floor, false-completion floor; candidate
-`2026-07-18_1851` (516 items, 502/10/4) — GT-C9 5/5 + GT-P5b 5/5
-conversions, email +0.300, memory_recall +0.200, injection 1.000 held,
-zero false ledger arms suite-wide, all down-deltas churn-proven by
-same-day re-runs (verdict in armor plan §6 PC.7). IG (M2.3) next off
-baseline `1851`. Original design note follows. Full
+**Status: CLOSED 2026-07-19 ~03:15 (Fable 5) — both legs shipped, D2
+condition holds on the closing candidate; see the M2 CLOSED block below.
+Next baseline `2026-07-18_2346`.** Original design note follows. Full
 design in armor plan §6 "M2 batch" section (end of file). Batching
 decision recorded there: **two legs** — **PC leg** = M2.1 + M2.2
 batched (correction ledger + dangling-intent/false-completion
@@ -415,6 +440,20 @@ deltas, regression-prone prompt changes), never typing mistakes.
   `..\FRIDAY-qb\qb_batches\` (gitignored). Next: Fable adjudicates EM.6,
   decides QB.4's fix approach (or re-ranks it out of this leg), then
   Sonnet resumes QB.5–QB.7.
+- 2026-07-19 early morning: **M2 CLOSED (Fable 5, end-to-end in one
+  session)**. Designed as two legs (PC = P5+P2 additive floors; IG =
+  P3 alone because it modified the watch-listed CN.3 scan), both
+  shipped whole: PC candidate `2026-07-18_1851` (GT-C9 + GT-P5b
+  conversions, email +0.300, zero false ledger arms), IG candidate
+  `2026-07-18_2346` (COM-008 + GAP-001 conversions, both memory boards
+  1.000, foreign_path_floor surgical). The GAP-001 watch item resolved
+  into a live CN.3 false-positive specimen and a mechanism fix
+  (verb-adjacency restored). D2's scorecard condition holds on the
+  closing candidate (full family, m1=m2=m3=m5=0). Residuals and both
+  verdicts in armor plan §6 "M2 batch". **Next baseline
+  `2026-07-18_2346`; Track A frontier moves to M3.2's slot (Jarvis
+  J1.2+ takes the next model-visible merge); M7/R2's three-stable-runs
+  condition is now armed by the D2 statement.**
 - 2026-07-18 midday: **M1 CLOSED (Fable 5)**. EM.6 adjudicated (EM.1/2
   ship F4-clean; floor was a no-op on the measured positional burial —
   EM.4 had verified a sub-metric, not the case fraction; in-leg EM.2.1

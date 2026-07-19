@@ -4199,7 +4199,55 @@ per §4.3 with flag proof.
 | IG.2 | Exemption hygiene + CN.3 verb-adjacency window | DONE (`c123a83`) — adjacency ±60 chars restores CN.3's original design; retry-acceptance scan stays STRICT (require_verb_context=False) after MRG-003b caught the first cut letting a verb-less re-fabrication slip. Carry-ins landed: dangling late-rescan ilog flag; commitments `_MATCH_STOP` + first-person framing words |
 | IG.3 | IDG-001..007 + ADJ-001..002 + COM-013 + MRG set + full `--quick` | DONE — all guards pass, `--quick` 432/432 (test_inference_pending flap in one batch run re-passed alone — the documented COM-001-family live-model knife-edge, untouched surface) |
 | IG.4 | GAP-001/COM-008 conversion + GT-C9/GT-C10/MEM no-regression batches | DONE, ALL BARS MET — **GAP-001 4/5 with ZERO identifier/path-floor fires across all 25 turns** (false-positive class eliminated; the one miss is the bare name-the-gap knife edge), **COM-008 5/5** (stop-word widening converts the "I need to order…" shape), GT-C9 5/5 HELD, GT-C10 2/2, MEM-001 2/2, MEM-005 4/4 + 3/4 (r2 beta_probe = the documented kill-timing param band) |
-| IG.5 | Merge → candidate flight → compare vs `1851` + ship gate (Fable) | Merged to main (`ort` merge after `ced423e`), post-merge `--quick` 432/432; **candidate flight `2026-07-18_2346` IN FLIGHT** (detached PID 40904 + watchdog, pinned `--basetemp=results\ig_candidate_tmp`). Compare + gate pending (Fable) |
+| IG.5 | Merge → candidate flight → compare vs `1851` + ship gate (Fable) | Merged to main (`ort` merge after `ced423e`), post-merge `--quick` 432/432; candidate **`2026-07-18_2346`** clean. **SHIP GATE MET 2026-07-19 ~03:10 (Fable) — verdict below** |
+
+**IG.5 verdict (Fable 5, 2026-07-19 early morning).** Candidate
+**`2026-07-18_2346`**: 526 items, 518/5/3, 3h07m, clean exit, watchdog
+quiet (one mid-flight idle-GPU scare during `test_power` resolved as a
+between-example lull — not a wedge), 172 sandbox ilogs archived from the
+pinned basetemp. Compare vs `2026-07-18_1851`: **both IG conversion
+targets CONVERTED in-suite** — COM-008 ✓ (project_ops +0.075) and
+GAP-001 ✓ (the adjacency fix's target); calendar +0.250 (GT-A recovered),
+**memory_persistence 1.000 and memory_recall 1.000 — both memory boards
+perfect in the same run for the first time**; quant +0.043 (PROP-012
+recovered); injection/briefing/session 1.000 HELD; all six PC-verdict
+churn cases (GT-A, MEM-001, GRW-006, PROP-012, PRV-005, MEM-005) newly
+passing — confirming the PC.7 churn adjudications. **Flag attribution:**
+`foreign_path_floor` fired exactly 2× suite-wide (both its own IDG
+guards — surgical); `identifier_floor` 7× (its own MRG/PTL guard family,
+GT-C10's legitimate backstop turn, and ONE live catch on
+`test_initiative_memory` where the accepted retry grounded the reply and
+the case PASSED — the floor doing its job); adjacency narrowing verified
+live: GAP-001 converted with ZERO floor contact across its runs.
+**Down-deltas, all non-armor:** email −0.200 = EML-004's by-design
+0.2–0.8 band swinging low (EML-005 HELD — the floor's actual target);
+voice −0.133 = SKL-003 (re-passed same-day recheck — the CN-era
+knife-edge pair, churn) + SKL-005 pre-existing band; CFG-007 recheck
+4/5 = its documented 4-leg knife-edge flap, flag-free. **ALL IG ITEMS
+SHIP.** Next baseline = **`2026-07-18_2346`**, valid until the next
+model-visible merge (Jarvis J1.2+ queued for the next slot).
+
+**M2 EXIT (Fable 5, 2026-07-19).** Both legs' ship gates adjudicated
+(PC.7 + IG.5 verdicts above). **D2 scorecard statement, read on candidate
+`2026-07-18_2346`:** the golden conversation family — GT-A, GT-B,
+GT-C1..C10, GT-P5a/b, GT-P2a — ALL PASS in the same full run, with
+**m1 = m2 = m3 = m5 = 0** across the family (no redundant-ask check
+failed, the no-foreign-identifier LOCKED guards held everywhere, no
+dropped-instruction turn — merges executed and corrections held — and no
+narration dead-end: the promise-kept-or-carried LOCKED contract held).
+**D2's condition holds on this run**; the "three consecutive stable full
+runs" half is R2/soak's job, as the roadmap specifies. Parity rows: P5
+CLOSED (correction ledger + floor, GT-P5 family in-suite), P2 CLOSED
+(dangling-intent + false-completion floors; the turn-contract now has a
+deterministic carried-or-kept guarantee), P3 CLOSED-as-scoped (notes
+namespace armored + CN.3 adjacency fixed; files/runs namespaces
+documented as friction-gated future widening). **Documented residuals
+carried forward (D1 language):** EML-004 0.2–0.8 band (by design);
+CFG-007 knife-edge flap (4-leg history, flag-free); SKL-003/004/005
+voice-band churn family; MEM-005 kill-timing param family; GRW-005/
+PLB-004 playbook-initiative band; GT-C9's TARGET-grade phrasing variance
+(LOCKED contracts all hold). Roadmap M2 Status flipped CLOSED, dated,
+pointing here.
 
 ---
 

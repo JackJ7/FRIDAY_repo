@@ -109,7 +109,13 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      residual-floors leg: artifact_denial_floor; CONSOLIDATE
                      leg: identifier_floor, narrated_list_floor; READ-ASK
                      leg: read_ask_corrective; NARRATED-JSON leg:
-                     narrated_json_floor, consolidation_pending).
+                     narrated_json_floor, consolidation_pending;
+                     PENDING-TASK leg: pending_task_armed,
+                     generic_clarify_floor; RETRIEVED-NOTE leg:
+                     retrieved_note_floor; M1 batch: email_importance_floor,
+                     gear_check_floor; M2 batch: corrections_active,
+                     correction_floor, dangling_intent_floor,
+                     false_completion_floor, foreign_path_floor).
                      The READ-ASK GROUNDING FLOOR (armor RA leg, calendar-
                      first's third instance) sits BEFORE the phantom barrier:
                      when Jack's message names an EXISTING local file with
@@ -229,6 +235,71 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      vocabulary (NJ.2b, PT.8.1's engine-side twin) so a
                      narrated call's own JSON keys never read as fabricated
                      project names.
+                     PENDING-TASK LEG (PT.1–PT.3): self.pending_task is the
+                     GENERAL one-slot task ledger (the P4 gap) — armed at
+                     end-of-turn when a request-shaped message ends on a
+                     blocking clarify FRIDAY asked back (no landed action, no
+                     fresh offer, no consolidation task), TTL-refreshed on
+                     engagement, its status directive riding the referent
+                     block's END slot; a GENERIC-CLARIFY floor replaces a
+                     contentless "could you specify" when code already holds
+                     the answer; update_note_field fuzzy-matches field names
+                     (one-hit containment, canonical name kept — MEM-003).
+                     _blocking_clarify prefers the FINAL sentence and falls
+                     back to the first clarify-question anywhere (QB.4 — the
+                     14B fronts the true clarify then trails off).
+                     RETRIEVED-NOTE LEG (RN.1/RN.2): a REFERENCE-project
+                     resolution reframes the entity hint (the answer lives in
+                     the note, not a folder), and the RECALL floor catches a
+                     create-folder offer displacing a recall answer whose
+                     note the resolver already surfaced (STA-004).
+                     M1 BATCH: check_email tags mail clearing the
+                     deterministic importance bar with a DATA-shaped marker
+                     (never a verdict line — the F4 lesson) and the
+                     EMAIL-IMPORTANCE floor demands the tagged mail LEAD the
+                     reply (positional burial fails coverage, EM.2.1); the
+                     GEAR-DIRECTION floor cross-checks a reduction-gearbox
+                     ANSWER against τ·R·η computed from Jack's own numbers
+                     and replaces only a wrong ANSWER line (QB.3);
+                     CommitmentTracker.find_fuzzy closes chat-phrased
+                     commitments by asymmetric token containment with a
+                     stop-word list that now includes first-person framing
+                     ("I need to order…"), refusing ambiguity by NAMING
+                     candidates (QB.1 + IG carry-in).
+                     M2 BATCH (parity rows P5/P2/P3 — the armor plan §0b
+                     north star): self.corrections is the CORRECTION LEDGER
+                     (P5) — a conservative cue+contrast-pair detection whose
+                     WRONG side must appear in prior session text arms a
+                     session-scoped, TTL-free, FIFO(8) constraint list whose
+                     binding directive rides after the task directives; the
+                     CORRECTION FLOOR regenerates a reply stating a
+                     corrected-away value without the corrected one, then
+                     SUBSTITUTES deterministically (Jack's correction is
+                     authoritative — the date-floor posture); the stream
+                     holds once any correction is pinned. The DANGLING-INTENT
+                     floor (P2) fires when a request-shaped turn's reply
+                     OPENS its final sentence on a first-person-future
+                     promise with zero tools run ("let me know…" is a polite
+                     closer, excluded): ONE retry WITH tools whose emitted
+                     calls run through _run_tool and append results;
+                     an unrecovered promise arms pending_task with the
+                     promise as blocker and suppresses offer-arming (Jack
+                     already asked). A deterministic post-every-floor re-scan
+                     at arming time closes the S1 hole (the script floor runs
+                     last and can regenerate a fresh dangling tail). The
+                     FALSE-COMPLETION floor (P2) catches a done-claim while a
+                     task ledger is live with zero landed actions — one regen
+                     against the code-built ledger status, then the status
+                     line itself. The FOREIGN-NOTE-PATH floor (P3, IG.1)
+                     retries a reply naming a brain note path code can ground
+                     NOWHERE (disk, tool results, Jack's words, referents;
+                     fenced blocks exempt), falling back to the honest real
+                     listing; and _foreign_identifiers now requires project
+                     vocabulary within ±60 chars of a quoted span (IG.2 —
+                     restoring CN.3's designed verb-adjacency after a live
+                     false-positive on quoted design jargon; the
+                     retry-acceptance re-scan stays strict so a verb-less
+                     re-fabrication cannot slip).
                      The compaction digest and the memory pass's record
                      extraction are format-constrained (see model.py below);
                      the memory pass also backstops commitment inference —
