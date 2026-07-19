@@ -160,6 +160,11 @@ class Brain:
             raise PermissionDenied(
                 "The commitments note is managed — use track_commitment / "
                 "close_commitment instead of write_brain.")
+        if rel_check.startswith("tasks/"):
+            raise PermissionDenied(
+                "Task files are managed by the task ledger — use "
+                "create_task / complete_task_step / block_task instead of "
+                "write_brain.")
 
         # Calendar-mirror guard (Notes-10, Phase 1 item 3). The calendar API is
         # the ONLY authority for event dates (hard-won lesson #3). A note under

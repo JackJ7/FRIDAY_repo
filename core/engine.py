@@ -127,6 +127,10 @@ class Engine:
         # present, Jack's free-text project references resolve to a real note+
         # folder in CODE before the model can guess a path.
         self.project_resolver = None
+        # Durable task ledger (jarvis plan J1, roadmap M3.2). Set by bootstrap;
+        # may stay None (a bare sandbox), so the referent-block injection below
+        # guards with getattr — the same posture as project_resolver.
+        self.task_ledger = None
         # True while the deep-reasoning deep-mode model is engaged (future use; the
         # status console shows "deep mode" so Jack knows why it's slower).
         self.deep_active = False
@@ -359,6 +363,13 @@ class Engine:
 
         Returns the final ModelReply.
         """
+        # M3.2d: turn-scoped grounding source for complete_task_step (task_tools
+        # reads these through task_ctx.engine, never captures them at
+        # registration time — bootstrap builds tools before the Engine exists).
+        # Additive aliases; every other reader of user_input is unaffected.
+        self._turn_user_input = user_input
+        self._turn_tool_log = []
+        self._task_evidence_refused = 0
         # --- "I'm busy" gate (autoresearch). A live training run CLAIMS the
         # 12GB GPU; letting a chat reply generate concurrently would silently
         # starve one or the other of VRAM. So while a run is active, every turn
@@ -492,6 +503,25 @@ class Engine:
                     self._resolved_reference = _data
             except Exception:
                 self._resolved_reference = None  # resolution is best-effort
+
+        # Durable tasks referent block (jarvis plan J1.2, roadmap M3.2c). Status
+        # information, so it rides mid-block — the max-obedience tail stays
+        # reserved for the imperative directives below (offer/consolidation/
+        # pending/correction, measured order). Zero open tasks (the entire
+        # existing suite, and every task-free turn even with the ledger wired)
+        # means zero injected text — no behaviour change until Jack actually
+        # has a task open. Guarded getattr: a bare sandbox without the ledger
+        # is unaffected, same posture as project_resolver.
+        task_ledger = getattr(self, "task_ledger", None)
+        if task_ledger is not None and task_ledger.list_open():
+            tasks_block = (
+                "DURABLE TASKS (task ledger — code-tracked ground truth):\n"
+                f"{task_ledger.summary()}\n"
+                "Advance a step ONLY via complete_task_step with verbatim "
+                "evidence from a tool result this turn or Jack's own words. "
+                "Never state a step the ledger shows open as done.")
+            ref_block = (ref_block + "\n\n" + tasks_block
+                         if ref_block else tasks_block)
 
         # Offer ledger (Notes-10 Phase 2, §1). A bare affirmative to a standing
         # offer means "do it" — resolve it in CODE so a "Yes please" can't be
@@ -671,7 +701,10 @@ class Engine:
 
         # Messages created during this turn; persisted into history at the end.
         turn = [{"role": "user", "content": user_input}]
-        tool_log = []
+        # Same list object as self._turn_tool_log (set at turn start above) —
+        # appends below stay visible to complete_task_step's grounding check
+        # mid-turn, since tool calls execute sequentially within one turn.
+        tool_log = self._turn_tool_log
         # A code-executed consolidation (CN.2.1 escalation, run during the
         # referent-block build above) must appear in this turn's ledger like
         # any tool call — the memory pass's "ALREADY SAVED" note and the
@@ -2579,6 +2612,12 @@ class Engine:
             # caught the reply naming a note file code could ground nowhere
             # (the invented-path half of the GT-C9 residual, now countable).
             "foreign_path_floor": foreign_path_fired,
+            # Armor M3.2d (jarvis J1): open-task count at log time (0 when the
+            # ledger is absent or empty) and how many complete_task_step calls
+            # this turn were refused for ungrounded evidence — these two carry
+            # the whole M3.2 compare's attribution. Additive; schema stable.
+            "tasks_active": len(task_ledger.list_open()) if task_ledger else 0,
+            "task_evidence_refused": getattr(self, "_task_evidence_refused", 0),
         })
         return reply
 
@@ -4266,6 +4305,19 @@ class Engine:
                     surfaces.add(_norm(Path(p["folder"]).name))
         except Exception:
             return []
+        # M3.2 identifier-floor coexistence: real open tasks are disk-grounded
+        # tool-surfaced namespace exactly like a project surface (P3's
+        # philosophy) — union their slugs/titles in so a reply naming an OPEN
+        # task near a project verb doesn't false-positive as a fabrication.
+        # Fabricated slugs still fail (they're in neither set).
+        task_ledger = getattr(self, "task_ledger", None)
+        if task_ledger is not None:
+            try:
+                for t in task_ledger.list_open():
+                    surfaces.add(_norm(t.slug))
+                    surfaces.add(_norm(t.title))
+            except Exception:
+                pass   # coexistence is best-effort, never fatal to the floor
         surfaces.discard("")
         tool_names = {t["function"]["name"].lower()
                       for t in self.registry.to_ollama()}
