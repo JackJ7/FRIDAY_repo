@@ -58,10 +58,16 @@ class CommitmentTracker:
     FILE = "commitments.md"
 
     # Words too common to identify a commitment — the PT.3 stop-list idea,
-    # sized for short to-do phrasing ("Order the GM6208 motors").
+    # sized for short to-do phrasing ("Order the GM6208 motors"). The
+    # second row is armor IG (PC.7's COM-008 specimen): the model closed
+    # with "I need to order GM6208 motors" — first-person framing words
+    # carry no identity either, and needle⊆stored containment fails on
+    # them. Ambiguity safety is unchanged: 2+ hits still refuse by naming
+    # candidates (COM-010).
     _MATCH_STOP = frozenset((
         "the", "a", "an", "to", "my", "our", "that", "this", "one", "out",
-        "it", "them", "up", "please", "and", "for"))
+        "it", "them", "up", "please", "and", "for",
+        "i", "we", "you", "need", "want", "should", "must", "still"))
 
     @classmethod
     def _match_tokens(cls, text: str) -> set:

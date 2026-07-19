@@ -157,3 +157,25 @@ def test_com012_exact_substring_still_wins(sandbox):
         "close_commitment", {"which": c.id})
     assert "Closed:" in out, out
     assert not tr.open_items()
+
+
+@pytest.mark.case("COM-013", "first-person framing words carry no identity "
+                             "(armor IG, the PC.7 COM-008 specimen): 'I "
+                             "need to order GM6208 motors' closes 'Order "
+                             "the GM6208 motors'; ambiguity refusal intact")
+def test_com013_first_person_framing_close(sandbox):
+    tr = sandbox.service.engine.tracker
+    tr._save([], "reset")
+    tr.add("Order the GM6208 motors", inferred=False)
+    out = sandbox.service.engine.registry.call(
+        "close_commitment", {"which": "I need to order GM6208 motors"})
+    assert "Closed:" in out, out
+    assert not tr.open_items(), tr.open_items()
+    # Ambiguity edge stays refused with the widened stop-list: two motor
+    # orders + the same first-person fragment -> ERROR naming both.
+    a = tr.add("Order the GM6208 motors", inferred=False)
+    b = tr.add("Order the GM6208 motor mounts", inferred=False)
+    out = sandbox.service.engine.registry.call(
+        "close_commitment", {"which": "I need to order the GM6208"})
+    assert "ERROR" in out and a.id in out and b.id in out, out
+    assert len(tr.open_items()) == 2
