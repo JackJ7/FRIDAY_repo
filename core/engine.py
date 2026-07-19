@@ -1475,6 +1475,58 @@ class Engine:
                     live_token(addition)
                 narrated_json_fired = True
 
+        # Task-claim recovery floor (jarvis M3.2h — the GT-J1 STOP's fix).
+        # qwen2.5:14b routes "I did it — tick it off" to the commitment /
+        # project tool families (5/5 identical live runs, M3.2g verdict) and
+        # never calls complete_task_step, so the evidence gate never gets to
+        # teach the recovery. Jack's own words are ALREADY the contract's
+        # evidence channel (_grounded accepts a verbatim substring of his
+        # message), so when HIS message claims a step's work happened
+        # (unambiguous content match, no negation/conditional — see
+        # _claimed_task_step) and orders the tick, the ENGINE completes the
+        # step itself with the claim clause verbatim — through _run_tool, so
+        # gate, taint and referent tracking hold and the grounding gate
+        # passes by construction. Model self-claims never qualify (TKT-004's
+        # pin): the floor keys on user_input only. Receipt APPENDED, never
+        # replaced (the F4/A1 lesson). Keying on Jack's claim + end-of-turn
+        # ledger state covers every observed misroute, whichever wrong tool
+        # the model picked.
+        task_claim_fired = False
+        if (reply is not None and not phantom_fired
+                and not identifier_floor_fired and not artifact_denial_fired):
+            tc_claim = self._claimed_task_step(user_input)
+            if tc_claim is not None:
+                tc_slug, tc_step, tc_clause = tc_claim
+                tc_already = any(
+                    t.get("tool") == "complete_task_step"
+                    and str((t.get("args") or {}).get("slug", "")) == tc_slug
+                    and str((t.get("args") or {}).get("step", "")) == str(tc_step)
+                    and self._write_landed(t.get("result", ""))
+                    for t in tool_log)
+                if not tc_already:
+                    tc_args = {"slug": tc_slug, "step": tc_step,
+                               "evidence": tc_clause}
+                    if on_tool:
+                        on_tool("complete_task_step", tc_args)
+                    tc_result, tc_external = self._run_tool(
+                        "complete_task_step", tc_args)
+                    tool_log.append({"tool": "complete_task_step",
+                                     "args": tc_args,
+                                     "result": tc_result[:500]})
+                    turn.append({"role": "tool",
+                                 "content": self._wrap_data(tc_result,
+                                                            tc_external)})
+                    if self._write_landed(tc_result):
+                        addition = "\n\n" + str(tc_result).strip()[:400]
+                        reply.content = ((reply.content or "").rstrip()
+                                         + addition)
+                        reply.tool_calls = []
+                        turn.append({"role": "assistant",
+                                     "content": reply.content})
+                        if live_token:
+                            live_token(addition)
+                        task_claim_fired = True
+
         # False-completion floor (armor PC.4 — parity row P2's past-tense
         # sibling; the GT-C9 r1 residual: T4 "I've created a new consolidated
         # project file" while both duplicates sat unmerged). While a durable
@@ -2613,6 +2665,10 @@ class Engine:
             # caught a done-claim with zero landed actions while a tracked
             # task was still pending (the GT-C9 r1 residual, now countable).
             "false_completion_floor": false_completion_fired,
+            # Jarvis M3.2h: True when the task-claim recovery floor completed
+            # a step from Jack's own in-turn claim after the model misrouted
+            # the tick-off (the GT-J1 T2 signature, now countable).
+            "task_claim_floor": task_claim_fired,
             # Armor IG.1 (parity P3): True when the foreign-note-path floor
             # caught the reply naming a note file code could ground nowhere
             # (the invented-path half of the GT-C9 residual, now countable).
@@ -4106,6 +4162,88 @@ class Engine:
             return (f"That task is still pending: Jack asked \"{t['request']}\" "
                     f"and it is blocked on \"{t['blocker']}\".")
         return "No tracked task is pending."
+
+    # Task-claim recovery floor (jarvis M3.2h). CUE-B: the message orders a
+    # ledger tick or claims the doing in first person. The work-happened
+    # clause (CUE-A) is matched separately, per clause, in
+    # _claimed_task_step — BOTH must hold before the engine moves anything.
+    _TASK_TICK_CUE = re.compile(
+        r"\b(?:tick|check|cross)\s+(?:it|that|this|them|step\s+\w+"
+        r"|the\s+[\w' -]{1,40}?)\s+off\b"
+        r"|\b(?:tick|check|cross)\s+off\b"
+        r"|\bmark\s+(?:it|that|this|step\s+\w+|the\s+[\w' -]{1,40}?)\s+"
+        r"(?:as\s+)?(?:done|complete|completed|finished|off)\b"
+        r"|\bi\s+(?:just\s+)?did\s+(?:it|that|this)\b"
+        r"|\bi'?ve\s+(?:just\s+)?(?:done|finished)\s+(?:it|that|this)\b",
+        re.IGNORECASE)
+
+    # Any of these in the claim clause kills the fire: negation ('t catches
+    # isn't/don't/hasn't...), futures, conditionals, needs. Over-blocking is
+    # the safe direction (P6): a missed fire leaves the model's normal path
+    # standing; a false fire would tick off work that never happened —
+    # exactly what the never-claim contract forbids.
+    _TASK_CLAIM_BLOCKERS = re.compile(
+        r"'t\b|\bnot\b|\bnever\b|\bcannot\b|\byet\b|\bif\b|\bonce\b"
+        r"|\bwhen\b|\buntil\b|\bunless\b|\bbefore\b|\bafter\b|\bwill\b"
+        r"|\bgoing\s+to\b|\bgonna\b|\bneeds?\s+to\b|\bstill\b|\bshould\b"
+        r"|\bmust\b|\bplan(?:ning)?\s+to\b|\bhold\b",
+        re.IGNORECASE)
+
+    # Short/function words that would inflate step-clause overlap ("the",
+    # "off") — on top of _STOP_WORDS, which was built for >=4-char scans.
+    _TASK_CLAIM_EXTRA_STOP = frozenset(
+        "the and for off are was has had did its per now new old all out "
+        "get got set job task step".split())
+
+    def _claimed_task_step(self, user_input: str):
+        """M3.2h detection: (slug, 1-based step, verbatim claim clause) when
+        Jack's OWN message both orders a tick-off / claims the doing (CUE-B)
+        and contains a clause unambiguously matching exactly ONE open
+        pending/in-progress step (blocked steps never — unblock stays an
+        explicit flow), with no negation/conditional in that clause. None on
+        any doubt: a missed fire costs nothing, a false fire ticks off work
+        that never happened. Tokens are 4-char prefix-folded so
+        drained/drain agree; coverage >=60% of the step's content tokens
+        with >=2 hits; a second qualifying step anywhere drops the fire."""
+        ledger = getattr(self, "task_ledger", None)
+        text = user_input or ""
+        if ledger is None or not self._TASK_TICK_CUE.search(text):
+            return None
+        open_tasks = ledger.list_open()
+        if not open_tasks:
+            return None
+
+        stop = self._STOP_WORDS | self._TASK_CLAIM_EXTRA_STOP
+
+        def toks(s):
+            return {w[:4] for w in re.findall(r"[a-z0-9]+", (s or "").lower())
+                    if len(w) >= 3 and w not in stop}
+
+        clauses = [c.strip() for c in
+                   re.split(r"(?<=[.?!;])\s+|\s+—\s+|\n+", text) if c.strip()]
+        candidates = []   # (coverage, task, step index, clause)
+        for t in open_tasks:
+            for i, s in enumerate(t.steps):
+                if s.state not in ("pending", "in-progress"):
+                    continue
+                st = toks(s.text)
+                if len(st) < 2:
+                    continue
+                best = None
+                for c in clauses:
+                    if self._TASK_CLAIM_BLOCKERS.search(c):
+                        continue
+                    hits = len(st & toks(c))
+                    cov = hits / len(st)
+                    if hits >= 2 and cov >= 0.6 and (
+                            best is None or cov > best[0]):
+                        best = (cov, c)
+                if best is not None:
+                    candidates.append((best[0], t, i, best[1]))
+        if len(candidates) != 1:
+            return None   # nothing matched, or 2+ did — ambiguity drops it
+        _, t, i, clause = candidates[0]
+        return t.slug, i + 1, clause
 
     _WHICH_SLUG_ASK = re.compile(
         r"\bwhich (one|project|of these)\b|\bdo you mean\b", re.IGNORECASE)
