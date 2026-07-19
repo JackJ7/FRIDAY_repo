@@ -259,8 +259,17 @@ Per jarvis plan §6's recorded increment order:
 Then grade J1 acceptance (a)–(d).
 Model: **Sonnet 5** for M3.1/3.3/3.4; **Fable 5** designs M3.2 and
 adjudicates its compare (Sonnet may implement).
-**Status: QUEUED — M3.1 can start any time after M0; M3.2 waits for a
-free Track A slot.**
+**Status: DESIGNED 2026-07-19 (Fable 5) — implementation-ready for
+Sonnet 5 to pick up M3.1–M3.4 end-to-end in one session.** Full design
++ exact instructions in jarvis plan §6 "M3 batch": M3.2's compare
+adjudication is PRE-REGISTERED there as mechanical ship bars +
+churn rules (§M3.2-G) so Sonnet applies the gate itself; anything
+outside the table is a STOP that waits for Fable (QB.4 precedent).
+The Track A slot is Sonnet's for the M3.2 flight: baseline
+`2026-07-18_2346` re-verified this session (`git diff
+d1d4a12..9dbb1b0 -- '*.py'` empty). Order: M3.1+M3.2 → merge →
+flight (M3.3/M3.4 built worktree-side during it) → gate → merge
+M3.3/M3.4 → grade J1 (a)–(d) live with `--test-session`.
 
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
@@ -454,6 +463,22 @@ deltas, regression-prone prompt changes), never typing mistakes.
   `2026-07-18_2346`; Track A frontier moves to M3.2's slot (Jarvis
   J1.2+ takes the next model-visible merge); M7/R2's three-stable-runs
   condition is now armed by the D2 statement.**
+- 2026-07-19 morning: **M3 DESIGNED (Fable 5)**. Per Jack's instruction,
+  M3.1–M3.4 written implementation-ready for a single Sonnet 5 pickup
+  (jarvis plan §6 "M3 batch"), with M3.2's compare adjudication
+  PRE-REGISTERED as mechanical bars (§M3.2-G: perfect boards held, D2
+  family m1=m2=m3=m5=0 preserved, task-flag surgical hygiene, churn
+  recheck rule, known-band list) + explicit STOP-and-escalate
+  conditions so Sonnet can declare the gate or halt for Fable — never
+  improvise a verdict. Design decisions of note: evidence-grounded
+  `complete_task_step` (verbatim from this turn's tool results or
+  Jack's words — J1.2's code rule); injection only when a task is open
+  (schema presence is the sole suite-wide delta); no quoted example
+  names in schemas (CN.4.1); open-task slugs join the CN.3 surfaces
+  set; PC.4 false-completion floor deliberately NOT widened to durable
+  tasks (P6); jobs runner parks-on-confirm by gate construction, suite
+  detection = `results\SUITE_RUNNING.lock` + PID check; DND silences
+  toasts, not background work; `jobs.background_enabled` defaults OFF.
 - 2026-07-18 midday: **M1 CLOSED (Fable 5)**. EM.6 adjudicated (EM.1/2
   ship F4-clean; floor was a no-op on the measured positional burial —
   EM.4 had verified a sub-metric, not the case fraction; in-leg EM.2.1

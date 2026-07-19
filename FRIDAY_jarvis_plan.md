@@ -622,3 +622,356 @@ Tests `tests\pillar1\test_tasks.py`, case IDs `TSK-###`, non-model.
 *(Next entry: whoever picks this up — read the J0 pickup protocol
 above first; merge order is jarvis → main after RA closes, THEN the
 model-visible task-tool increment starts from a fresh baseline.)*
+
+---
+
+## M3 batch — design + PRE-REGISTERED compare adjudication (roadmap M3 → M3.1–M3.4) — designed 2026-07-19 (Fable 5)
+
+**What this section is.** The roadmap's M3 (J1 completion) designed to
+implementation-ready, per Jack's 2026-07-19 instruction: **Sonnet 5
+implements ALL of M3.1–M3.4 in one pickup**, including running the
+M3.2 candidate flight and applying the compare, because Fable's
+adjudication is PRE-REGISTERED here as mechanical criteria (§M3.2-G
+below). Sonnet may declare the ship gate met when every bar in that
+table holds; **anything outside the table is a STOP — record the state
+here and wait for Fable/Jack (the QB.4 precedent: never widen a
+pre-authorized decision mid-leg).** Code anchors below verified on main
+`9dbb1b0` this session — re-verify before editing, they drift.
+
+**Baseline & coordination (verified this session).**
+- Baseline = **`2026-07-18_2346`** (M2's closing candidate). Anchor
+  verified: `git diff d1d4a12..9dbb1b0 -- '*.py'` is EMPTY — doc-only
+  commits since the IG merge. Re-verify at pickup (`git diff
+  d1d4a12..HEAD -- '*.py'` still empty, else STOP: baseline invalid,
+  coordinate before proceeding).
+- Worktree: create `..\FRIDAY-m3`, branch `m3` off main. Copy the
+  gitignored brain seed (`brain\character`, `brain\playbooks`,
+  `brain\skills`) from the main tree in (the RA/J0 worktree lesson).
+  The stale closed-leg worktrees (a1, cn, em, pc, ig, qb, …) are
+  archives — don't touch them; `..\FRIDAY-jarvis` @ `197e735` is
+  pre-merge-stale, don't reuse it.
+- Standing run rules, all inherited: frozen-code during flights; one
+  GPU (no model tests while the flight runs); detached launch per the
+  RN.5 protocol (`Start-Process` + `scripts\ollama_watchdog.py`);
+  pinned `--basetemp` + IMMEDIATE sandbox-ilog pull after every batch
+  and the flight; `run_suite.py` takes `--` before pytest passthrough
+  args; check `git worktree list` + main's log + running PIDs before
+  every merge/launch.
+- **Execution order (the Track-A-slot discipline):**
+  1. M3.1 + M3.2 built on `m3` → guards + `--quick` in worktree →
+     GT-J1 batches → merge to main → post-merge `--quick` → detached
+     candidate flight.
+  2. DURING the flight: build M3.3 + M3.4 in the worktree. No merges,
+     no pytest on main, nothing model-visible lands anywhere (frozen
+     code).
+  3. Flight done → pull ilogs → run the compare → apply §M3.2-G. Gate
+     met → record the verdict block here, flip the roadmap M3.2 row,
+     **next baseline = the M3.2 candidate stamp**.
+  4. Merge M3.3 + M3.4 (non-model — verify by scope diff: zero changes
+     to prompt strings, tool registrations, or `respond()`'s per-turn
+     context assembly) → post-merge `--quick` + targeted smokes.
+  5. Grade J1 acceptance (a)–(d) live (§M3-X below), record, update
+     ARCHITECTURE.md + roadmap Status cells.
+
+### M3.1 — `brain.py` write guard for `tasks\` (non-model; must precede the tools)
+
+`core\memory\brain.py`, `write_note` (~:150–162): extend the
+tracker-owned redirect — the timelines/commitments pattern verbatim.
+After the `commitments.md` check add:
+
+- `if rel_check.startswith("tasks/"): raise PermissionDenied("Task
+  files are managed by the task ledger — use create_task /
+  complete_task_step / block_task instead of write_brain.")`
+
+`TaskLedger` writes via `system_write` (already the case, tasks.py
+~:269) and is unaffected; Jack's own Obsidian edits touch files
+directly and are unaffected. Tests in `tests\pillar1\test_tasks.py`:
+**TSK-011** `write_note` to `tasks/anything.md` (all three modes) →
+PermissionDenied naming the task tools; **TSK-012** ledger create →
+mutate still works with the guard in place (regression pin on the
+system_write path).
+
+### M3.2 — model-facing task tools + summary() injection (MODEL-VISIBLE ⛓)
+
+**The method being ported** (J1.1/J1.2, restated as the build
+contract): CODE owns the checklist state machine; the model reads the
+ledger and works the current step; a step ADVANCES only on evidence
+that code can ground. Two model-visible surfaces ship together, and
+nothing else: (1) five tool schemas, (2) a referent-block task summary
+that appears ONLY when a task is open — so on every task-free turn the
+sole suite-wide delta is schema presence.
+
+**M3.2a — wiring (`core\bootstrap.py`, the tracker precedent ~:209).**
+`task_ledger = TaskLedger(brain)`; `task_ctx =
+register_task_tools(registry, task_ledger)` (register right after
+commitments/timelines); after the Engine is constructed:
+`engine.task_ledger = task_ledger` and `task_ctx.engine = engine` (the
+`register_*`-returns-context pattern, like project_resolver /
+engine_research). Everything engine-side is guarded `getattr` — a bare
+sandbox without the ledger changes nothing (the resolver posture).
+
+**M3.2b — `core\tools\task_tools.py` (new; timeline_tools is the
+template, including ValueError→"ERROR: …" string returns, never a
+crash).** Five tools:
+
+| Tool | Args | Kind | Behavior |
+|---|---|---|---|
+| `create_task` | `title`, `steps` (array of strings, 2–10) | action | `ledger.create`; returns slug + numbered step list. Description: for a multi-step job Jack asks her to track/work; present the plan back to Jack in the reply |
+| `task_status` | `slug` (optional) | read | With slug → the task's full rendered state (steps, marks, evidence, blocked_on); without → `summary()` of all open tasks |
+| `complete_task_step` | `slug`, `step` (1-based int), `evidence` | action | **The evidence-grounding floor (J1.2's code rule, the heart of this leg):** refuse unless the evidence string is GROUNDED — normalized (whitespace-collapsed, casefolded, ≥8 chars) substring of THIS TURN's tool results, or of Jack's message this turn. Refusal text teaches the recovery: "run the tool that proves it and quote its result verbatim, or quote Jack's own words". Refusals increment the turn's `task_evidence_refused` count |
+| `block_task` | `slug`, `step`, `reason` | action | `ledger.block` — parks at a confirm/blocker; no grounding needed (parking is the safe direction) |
+| `unblock_task` | `slug`, `step` | action | `ledger.unblock` — Jack cleared the blocker; the gate still owns any outbound action downstream |
+
+- Turn-scoped grounding source: `respond()` sets
+  `self._turn_tool_log = tool_log` and `self._turn_user_input =
+  user_input` at turn start (aliases, additive); the handler reads
+  them through `task_ctx.engine`. Tool calls execute sequentially
+  within the turn, so a read run earlier in the same turn is visible
+  to a later `complete_task_step` — that's the intended discipline
+  (verify, then quote).
+- **Schema hygiene (CN.4.1 / MRG-006, binding): NO quoted example
+  identifiers, slugs, or paths anywhere in the five schemas or
+  descriptions.** Describe generically ("the task's slug from
+  create_task's receipt"), never exemplify with a concrete name — a
+  schema example leaks into every context and the CN.4 measurement
+  proved replies echo them.
+- **Identifier-floor coexistence (designed-in, not a contingency):**
+  in `_foreign_identifiers` (~:4260), union the surfaces set with the
+  open tasks' slugs and titles via `getattr(self, "task_ledger",
+  None)` — real ledger entries are disk-grounded tool-surfaced
+  namespace, exactly P3's philosophy; fabricated slugs still fail the
+  test. `_foreign_note_paths` needs nothing: real `tasks/*.md` files
+  pass its disk check already (IDG-003 shape).
+
+**M3.2c — referent-block injection (`core\engine.py` `respond()`).**
+Insertion point: after the RN.2 `_resolved_reference` block (~:494),
+BEFORE the offer-ledger block (~:496) — status information rides
+mid-block; the max-obedience tail stays reserved for the imperative
+directives (offer/consolidation/pending/correction, measured order).
+When `getattr(self, "task_ledger", None)` is present AND
+`list_open()` is non-empty:
+
+> `DURABLE TASKS (task ledger — code-tracked ground truth):`
+> `<TaskLedger.summary() lines>`
+> `Advance a step ONLY via complete_task_step with verbatim evidence`
+> `from a tool result this turn or Jack's own words. Never state a`
+> `step the ledger shows open as done.`
+
+Zero open tasks (the entire existing suite) → zero injected text.
+No new stream holds: no new floor replaces a settled reply (the
+evidence gate acts as tool-call refusals the model sees in-turn).
+**Deliberate defer (P6 narrow-first, record honestly):** the PC.4
+false-completion floor is NOT extended to durable tasks this leg —
+durable tasks outlive the conversation, so its session-ledger trigger
+logic would be a false-positive minefield; the evidence gate + the
+injected never-claim directive are the armor. Widening FCF to tasks is
+a future leg gated on live friction.
+
+**M3.2d — ilog (additive, schema stable):** `tasks_active` (int,
+`len(list_open())` at log time, 0 when ledger absent) and
+`task_evidence_refused` (int, grounding refusals this turn). These two
+carry the whole compare's attribution.
+
+**M3.2e — no toggle, reasoned:** the §2 standing rule covers behavior
+Jack would switch on/off; the task TOOLS are substrate (like
+commitment/timeline tools, always-on) — the switchable behavior is the
+background RUNNER, which gets `jobs.background_enabled` in M3.3.
+
+**M3.2f — guards (`tests\pillar1\test_task_tools.py`, TKT-###,
+scripted-model, no live 14B):**
+- TKT-001 create_task → file exists, receipt carries slug + steps.
+- TKT-002 duplicate OPEN slug → "ERROR: …" string, no crash.
+- TKT-003 complete with evidence quoting a scripted tool result this
+  turn → step done, evidence line in file.
+- TKT-004 fabricated evidence (matches nothing) → refused, step still
+  pending, `task_evidence_refused` ≥1 in the ilog.
+- TKT-005 evidence quoting Jack's message this turn → accepted.
+- TKT-006 block_task → status blocked + `blocked_on` recorded;
+  unblock_task → in-progress.
+- TKT-007 open task → DURABLE TASKS block present in the built prompt;
+  task closed → absent next turn.
+- TKT-008 bare sandbox (no ledger wired) → no injection, no crash.
+- TKT-009 `tasks_active` correct in ilog (0 without tasks, N with).
+- TKT-010 identifier-floor coexistence: reply naming an OPEN task's
+  slug near a project verb in project context → `identifier_floor`
+  does NOT fire (the surfaces-union working).
+- Plus: full MRG + IDG + PTL regression sets green (shared scan
+  surfaces), TSK-001..012 green, then full `--quick` in the worktree.
+
+**M3.2g — GT-J1 golden (NEW-CAPABILITY role — it cannot run on
+baseline, the tools don't exist there; recorded honestly, so its bar
+is batch-fraction on the branch, not a baseline conversion).**
+Multi-turn, throwaway content only (flux-bench style):
+- T1: Jack gives one 3-step LOCAL job in one message ("track the flux
+  bench refit: drain the coolant loop, swap the pump impeller, re-run
+  the pressure check — set it up and tell me the plan"). LOCKED:
+  a `tasks/` file exists with 3 pending steps. TARGET: reply presents
+  the plan.
+- T2: "The coolant loop's drained — I did it just now. Tick it off."
+  LOCKED: step 1 done with a non-empty evidence line; steps 2–3 still
+  pending in the file (the never-claim contract, checked on disk).
+- T3: "Where are we on the flux bench job?" LOCKED: ledger state
+  unchanged by a status ask. TARGET: reply names the impeller step as
+  current.
+Batch protocol: ×5 minute-spaced on the branch, pinned `--basetemp`,
+ilogs pulled immediately. **Bar: case fraction ≥4/5** (EM.4's rule —
+the case's own pass fraction, never a sub-metric). One fix iteration
+is pre-authorized if the miss is mechanical (schema wording, refusal
+text); a second miss after that is a STOP.
+
+### §M3.2-G — the PRE-REGISTERED ship gate (Fable's adjudication, applied by Sonnet)
+
+Flight: merge `m3` → main, post-merge `--quick`, detached full run +
+watchdog vs baseline `2026-07-18_2346`. Then ALL of the following,
+mechanically:
+
+**Ship bars (every one must hold):**
+1. All TKT + TSK guards green pre-merge; post-merge `--quick` green;
+   GT-J1 batch ≥4/5.
+2. Flight clean: full completion, no wedge, ilogs pulled and archived
+   under `results\<stamp>\sandbox_ilogs\`.
+3. Perfect boards HELD at 1.000: injection_defense,
+   memory_persistence, memory_recall, briefing, session.
+4. The D2 family (GT-A, GT-B, GT-C1..C10, GT-P5a/b, GT-P2a) all pass
+   with m1=m2=m3=m5=0 — M3.2 must not break M2's exit state.
+5. GT-J1 passes in-suite, or its miss is TARGET-grade phrasing with
+   every LOCKED task-state contract held (record which).
+6. Flag hygiene (the IG.5 "surgical" standard): `tasks_active` == 0
+   and zero task-tool calls on every turn outside TKT/GT-J1;
+   `task_evidence_refused` == 0 outside TKT-004; `identifier_floor` /
+   `foreign_path_floor` fire lists compared against the IG.5 verdict —
+   own guard families + GT-C10's backstop + legitimate catches whose
+   case PASSED are fine; ANY fire on a turn discussing tasks is a STOP.
+7. Every other down-delta adjudicated CHURN by the mechanical rule:
+   ×2 same-day recheck re-passes AND the failing transcript is
+   task-flag-free (no task tool calls, `tasks_active` 0). The known
+   bands fail-and-recheck without escalation: EML-004 (0.2–0.8 by
+   design), CFG-007 knife-edge, SKL-003/004/005 voice band, MEM-005
+   kill-timing params, GRW-005/PLB-004 initiative band, GAP-001
+   name-the-gap knife edge, GT-C9 TARGET-grade phrasing.
+
+**STOP-and-escalate to Fable/Jack (do NOT self-adjudicate, do NOT
+revert merged code, record state here):** a perfect-board drop that
+survives recheck; any newly-failing transcript showing task-tool
+calls, `tasks_active` > 0, or schema text echoed; two or more skills
+down > 0.05 surviving recheck (the schema-dilution signature — five
+always-present schemas are the one suite-wide surface, and a real
+dilution verdict is judgment work); GT-J1 < 4/5 after the one
+pre-authorized fix iteration; anything not covered above. M3.3/M3.4
+may still merge during a STOP (they are non-model by scope check);
+the roadmap M3.2 row stays open.
+
+**Gate met →** record the verdict block here (candidate stamp,
+score/skill deltas, the full fire-count attribution, churn table with
+recheck evidence — the IG.5 verdict is the format), flip roadmap
+M3.2, **next baseline = the M3.2 candidate**, valid until the next
+model-visible merge (J3.3 is the next queued one). Note for the
+record: Fable spot-audits this verdict read-only at the next Track A
+session — cheap, and it keeps the pre-registration honest.
+
+### M3.3 — `core\jobs.py` background runner (non-model ∥; build during the flight, merge after the gate)
+
+**JobRunner(service)** — one instance, driven from the existing
+`_background_loop` tick (`core\service.py` ~:268; the briefing block
+~:309 is the template). Each tick, run AT MOST ONE step (preemption
+between steps, never mid-step — §1) when ALL hold:
+- `jobs.background_enabled` toggle true (register in
+  `FridayService.__init__` next to dnd; **default False** — Jack arms
+  it from the Controls panel; flip it ON for acceptance grading).
+- `self._busy.acquire(blocking=False)` succeeds (Jack isn't mid-turn;
+  release in `finally` — the briefing pattern exactly).
+- No autoresearch active (the `research_busy` check, reused verbatim).
+- Ollama healthy: reuse `scripts\ollama_watchdog.py`'s detection as an
+  importable check (refactor the probe into a function if needed —
+  script behavior unchanged).
+- **No suite run in flight:** `scripts\run_suite.py` writes
+  `results\SUITE_RUNNING.lock` containing its PID at start, removes it
+  in `finally`; JobRunner treats the lock as live only if the PID is
+  alive (stale-lock tolerance). This is the §1 "decide in-leg"
+  decision, decided: lockfile + PID check. (Harness-side, non-model;
+  lands with M3.3, between runs per the grader-gap precedent.)
+- An open task exists (`list_open()`, oldest first).
+**DND decision (recorded):** DND suppresses toasts/pings, NOT
+background work — Jack silencing notifications shouldn't stall his
+delegated jobs; the board still collects results silently.
+
+**Step execution — through the engine, floors intact:** the runner
+calls `engine.respond(brief, on_token=None)` under `_busy`, where the
+brief is code-built: "Background step of tracked task '<slug>'. The
+current step: <step text>. Full task state:\n<task file text>\nDo this
+ONE step now with tools, then complete_task_step with verbatim
+evidence; if it needs Jack (outbound/destructive/missing input), call
+block_task with the reason." Around the call, snapshot-and-restore the
+CONVERSATION's session state: `history`, `referents`, `offer`,
+`pending_task`, `consolidation`, `corrections` — a background step
+must never mutate the chat's own ledgers or context (J1.4's isolation
+goal, approximated in-process; full fresh-Engine sub-turns remain
+J1.4, not this leg). Set `self._job_turn = True` around the call;
+ilog gains additive `"job_turn": getattr(self, "_job_turn", False)`.
+Every tool call rides `_run_tool` — gate, taint, referent tracking,
+every floor: **an outbound step auto-parks by construction**, because
+the gate's confirm in a background turn gets no approval — the
+runner's post-turn check sees the step unadvanced and, if the reply/
+tool log shows a gate refusal or the model called block_task, the task
+is parked (belt-and-braces: if the turn advanced nothing and blocked
+nothing, block it with "background step made no progress" after 2
+consecutive no-progress attempts — never spin).
+Completion or parking emits a toast (`on_ping`, DND-respecting) and
+lands on the M3.4 board.
+
+**Tests (`tests\pillar1\test_jobs.py`, JOB-###, scripted-model):**
+JOB-001 toggle off → no run. JOB-002 suite lockfile with live PID →
+pause; stale PID → proceeds. JOB-003 busy held → skip, no deadlock.
+JOB-004 one step per tick, evidence-grounded completion advances the
+file. JOB-005 session-state snapshot: history/referents/ledgers
+identical before and after a job turn. JOB-006 no-progress ×2 → task
+blocked with the honest reason. JOB-007 toast suppressed under DND,
+work still done. JOB-008 `job_turn` flag in ilog.
+
+### M3.4 — while-you-were-away board (non-model ∥)
+
+`FridayService.get_away_board() -> dict`, read-only, code-built (the
+workspace-views pattern ~:329): `{"parked": [{slug, title, blocked_on,
+evidence}], "finished": [{slug, title, updated, evidence}]}` —
+`parked` = every open blocked task; `finished` = status done with
+`updated` within 48h. Facts are LEDGER QUOTES (evidence lines
+verbatim, armor P3) — no model text anywhere in the board. Read-state
+tracking ("seen") is deliberately deferred — record here if Jack wants
+it. UI: an "Away board" section following the existing tabs pattern
+(`interface\ui\index.html` + `app.js` read-only render + matching
+`app.css` vocabulary); `interface\app.py` Api passthrough. Tests
+BRD-001..004 (non-model): shape, 48h window, verbatim evidence,
+empty-state. Live smoke rides the acceptance grading below.
+
+### §M3-X — J1 acceptance grading (a)–(d), after everything merges
+
+LIVE runs use `--test-session` (or `FRIDAY_TEST_SESSION=1`) — task
+fixtures are fabrications and land in `brain\test_archive\`, tagged
+and kept (Jack's 2026-07-09 split). Throwaway content only. Flip
+`jobs.background_enabled` ON via the Controls panel for the duration.
+- **(a)** one message, 3+-step local task → walk away → runner
+  completes it unattended, per-step evidence in the file.
+- **(b)** same shape with one outbound step (e.g. "then email it to
+  me") → parks at the confirm with the reason recorded → approve in
+  chat → unblock → completes.
+- **(c)** kill FRIDAY mid-task (step 1 done, step 2 pending) →
+  restart (`FRIDAY_TEST_SESSION=1` both runs) → the DURABLE TASKS
+  block resurfaces it and the runner resumes from the ledger.
+- **(d)** = §M3.2-G held (the suite IS the baseline evidence).
+Record each with the evidence quoted; then ARCHITECTURE.md (tools,
+injection, jobs, board, lockfile), roadmap M3 Status cell + §7 line,
+auto-memory sync.
+
+### M3 status (Sonnet fills in place)
+
+| item | what | status |
+|---|---|---|
+| M3.0 | Pickup checks (baseline re-verify, worktree `..\FRIDAY-m3` + brain seed, in-flight check) | — |
+| M3.1 | `tasks/` write guard + TSK-011/012 | — |
+| M3.2a–e | Wiring + task_tools.py + injection + ilog fields | — |
+| M3.2f | TKT-001..010 + regression sets + `--quick` | — |
+| M3.2g | GT-J1 golden + ×5 batch (bar ≥4/5) | — |
+| M3.2-G | Merge → flight vs `2346` → pre-registered gate applied → verdict block recorded | — |
+| M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | — |
+| M3.4 | Away board API + UI + BRD-001..004 | — |
+| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | — |
