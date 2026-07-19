@@ -201,7 +201,17 @@ F-grade re-ranks these above anything):
 Exit = D2's scorecard condition starts holding.
 Model: **Fable 5** (design-heavy, regression-prone floors — this is the
 subtlest armor work left).
-**Status: QUEUED behind M1 (or interleaved if a live F-grade demands it).**
+**Status: DESIGNED + IN PROGRESS 2026-07-18 evening (Fable 5).** Full
+design in armor plan §6 "M2 batch" section (end of file). Batching
+decision recorded there: **two legs** — **PC leg** = M2.1 + M2.2
+batched (correction ledger + dangling-intent/false-completion
+turn-contract floors; purely additive mechanisms), then **IG leg** =
+M2.3 alone (it modifies the shipped watch-listed CN.3 scan — GAP-001
+false-positive watch — so it gets its own compare, the EM precedent).
+GT-C9's invented-slug/narration residual (QB.7's #1-ranked candidate)
+decomposes into exactly these two legs and is M2's shared conversion
+bar. Baselines: PC uses `2026-07-18_0816` (verified py-diff-clean since
+`7773c75`); IG uses PC's candidate.
 
 ### M3 — J1 completion  (Track B, EXCEPT M3.2 which takes a Track A slot)
 

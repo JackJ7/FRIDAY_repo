@@ -3794,3 +3794,364 @@ gates adjudicated; every M1 residual either converted or written up as a
 documented known-limit with its band (D1 language); next-baseline rule
 restated with the QB candidate; roadmap M1 Status cell updated in place,
 dated, with a pointer back to these two leg records.
+
+---
+
+## M2 batch — design + adjudication rules (roadmap M2 → legs PC, IG) — designed 2026-07-18 evening (Fable 5)
+
+**What this section is.** The roadmap's M2 (parity gap closure: P5
+correction ledger, P2 dangling-intent floor, P3 identifier-grounding
+generalization — armor plan §0b rows) designed to implementation-ready.
+Per roadmap §5 M2 is Fable-owned end-to-end (design-heavy,
+regression-prone floors — "the subtlest armor work left"); this session
+Fable designs, implements, AND adjudicates. Code anchors below verified
+on main `d4cbc9a` this session — re-verify before editing, they drift.
+
+**Batching decision (recorded per roadmap §3/M2).** Two legs, two
+candidate runs, three roadmap rows:
+
+- **PC leg ("parity contracts") = M2.1 + M2.2 batched.** Both are purely
+  ADDITIVE mechanisms — a new session ledger (corrections) and new
+  turn-contract floors — touching no shipped floor's logic, each with its
+  own ilog flag and guard family, so per-item attribution stays clean
+  (the QB/RF batching precedent).
+- **IG leg ("identifier generalization") = M2.3 alone.** It modifies the
+  SHIPPED CN.3 scan surface, which carries a live false-positive watch
+  (GAP-001 knife-edge churn, 4th sighting at QB.7; the CN.6.1
+  'archived'-gaslighting incident is the measured harm mode). The
+  EM-leg precedent applies: a change to a fragile shipped surface gets
+  its own compare.
+- **Order: PC first** (P5 is the roadmap frontier and QB.7's #2-ranked
+  candidate), IG second off PC's candidate.
+
+**The GT-C9 residual is M2's concrete conversion target.** QB.7's
+#1-ranked next-leg candidate — GT-C9's invented-slug/narration class
+(~1-in-3: T4 "I've created a new consolidated project file" false
+completion claim + T8 dups unmerged, CN.2.1 escalation never re-engaged)
+— decomposes exactly into M2's two legs: the FALSE-COMPLETION half is a
+turn-contract violation (PC leg, PC.4), the INVENTED-PATH half is
+ungrounded-identifier fabrication in the notes namespace (IG leg). So
+M2 closes the top-ranked residual as a side effect of closing the parity
+rows, and GT-C9's case fraction (baseline ~2/3) is the measurable bar
+both legs share.
+
+**Baseline & coordination.** PC.0 baseline = **`2026-07-18_0816`**
+(verified this session: `git diff 7773c75..d4cbc9a -- '*.py'` is EMPTY —
+docs only since the QB merge; Jarvis J1.2+ still queued behind Track A).
+IG.0 baseline = PC's candidate. Standing rules: frozen-code during
+flights; one GPU; detached launch per the RN.5 protocol (`Start-Process`
++ `scripts\ollama_watchdog.py`); pinned `--basetemp` + immediate
+sandbox-ilog pull (proven at QB.7); `run_suite.py` needs `--` before
+pytest passthrough args; check `git worktree list` + main log before
+every merge/launch.
+
+---
+
+### PC leg (PC.0–PC.7) — correction ledger + turn-contract floors (roadmap M2.1 + M2.2)
+
+**Failure records.**
+- *P5 (correction durability):* the live F-graded transcript (Phase
+  CONSOLIDATE trigger) showed fabricated project names repeated AFTER
+  Jack's correction; §0b P5 row: "a user correction becomes a session
+  constraint and is never re-violated — analog: NOTHING." CN.3 has since
+  armored the fabricated-NAME instance; the general class (a corrected
+  VALUE/fact resurfacing later in the session) has zero armor and no
+  golden case — this leg builds both.
+- *P2 (turn contract):* §0b P2 row names the GAP: a general end-of-turn
+  dangling-intent floor ("reply ends first-person-future + zero tools
+  ran → recover or re-prompt"). Shipped armor covers only specific
+  verbs: CN.4 (list narration → runs list_projects), NJ.2 (narrated
+  JSON envelope → executes it), RF.4 Shape-D. The GENERAL promise tail
+  ("I'll check your inbox right away." — zero tools) has no floor. And
+  the measured GT-C9 residual adds the PAST-tense sibling: a false
+  completion claim while the tracked task is still pending.
+
+**PC.1 — correction ledger (P5, session-scoped, code-owned).**
+File: `core/engine.py`.
+- State: `self.corrections = []` in `__init__` (next to the other
+  ledgers, ~:79) — bounded FIFO of 8 `{wrong, right, turn}` dicts.
+  Session-scoped, NO TTL (P5's contract is "never re-violated" — unlike
+  tasks, constraints don't expire), survives history compaction by
+  construction (code state, not context).
+- Arming (pre-generation, next to `_pending_task_update`'s call site
+  ~:527): `_correction_update(user_input)` — detect the correction
+  shape CONSERVATIVELY. Fire only when ALL hold:
+  1. a correction CUE: message opens with
+     no/nope/wrong/incorrect/not quite/actually/correction/"that's
+     (wrong|not right)", or carries "i said/i meant/should be/it's
+     actually";
+  2. a contrast PAIR extracts: `<right>, not <wrong>` or
+     `not <wrong>, <right>` / `not <wrong> but <right>` (operands ≤40
+     chars, quotes stripped, both non-empty after trim, wrong ≠ right);
+  3. **validity conjunct (the anti-false-arm anchor): the WRONG side
+     appears in the session so far** — prior history text or the
+     session summary — so Jack thinking aloud in contrast shapes
+     ("fast, not perfect") can never pin a phantom correction. Both
+     orders are tried; the pair whose `wrong` clears this membership
+     test wins.
+- Directive (rides the referent-block append chain ~:530, AFTER the
+  pending-task directive — constraints stack at the very end):
+  "CORRECTIONS Jack made this session (binding, kept in code):\n
+  - It is \"<right>\", NOT \"<wrong>\" (corrected turn <n>).\n
+  Never state a struck value as current again; mention it only as the
+  corrected-away mistake."
+- ilog: `corrections_active` (count) — additive.
+
+**PC.2 — correction floor (P5's hard layer, date-floor posture).**
+Placement: post-generation, immediately BEFORE the date-answer floor
+(~:1722) — it is the same family (deterministic substitution against an
+authoritative source; here the source is Jack's own correction).
+- Fires when: settled reply non-empty, `self.corrections` non-empty,
+  and for some entry the reply carries `wrong` (case-insensitive,
+  word-boundary) while `right` is ABSENT. Both present = the reply is
+  discussing the correction honestly — never fire (the floor's pass
+  rule and the goldens' grading rule must match).
+- One corrective regen: "STOP: Jack corrected this earlier in this
+  session: it is \"<right>\", not \"<wrong>\". Your draft states the
+  corrected-away value as current. Rewrite stating the corrected
+  value." Accept iff the retry passes the same scan; otherwise
+  DETERMINISTIC SUBSTITUTION wrong→right in the draft (Jack's
+  correction is authoritative by construction — `_force_today_date`'s
+  exact posture).
+- Stream: add `bool(self.corrections)` to the `hold_stream` disjunction
+  (~:570–600). Accepted trade, recorded: after a session's first
+  correction every later turn streams settled-once instead of live
+  (same mechanism as PT/consolidation holds; on_tool still fires).
+  Watch item: if live soak shows the latency read as freezing, scope
+  the hold to N turns post-arm in a later leg.
+- ilog: `correction_floor` fired flag — additive.
+
+**PC.3 — dangling-intent floor (P2, the general promise tail).**
+Placement: AFTER the narrated-JSON floor (~:1355) — the specific
+narration floors (CN.4, NJ.2) stay preferred and their fired-flags are
+suppression conjuncts, same chaining as today.
+- Fires when ALL hold: `_looks_like_request(user_input)` (on a
+  NON-request turn a promise is an OFFER — the offer ledger owns it,
+  the P6 split); `not tool_log` (zero tools the whole turn);
+  narrated_list/narrated_json/identifier/artifact/phantom flags all
+  False; reply's FINAL sentence matches `_DANGLING_INTENT_TAIL` — the
+  generalized first-person-future promise (union of the CN.4/NJ.2
+  measured vocabularies, verb-anchored: "let me / I'll / I will / I'm
+  going to / I'm about to / give me a (moment|second)" + action verb,
+  NOT ending in "?").
+- Recovery (the "recover" arm of P2's recover-or-re-prompt): ONE regen
+  WITH tools enabled — corrective: "STOP: your reply ends by promising
+  an action (\"<sentence>\") but you ran no tools and did nothing. Do
+  it NOW: emit the tool call this turn, or state concretely what
+  input you are missing." If the retry emits tool calls: execute at
+  most 2 through `_run_tool` (gate/taint/referent tracking hold
+  exactly as native), APPEND the results to the draft (the CN.4/NJ.2
+  append-never-replace rule — no watched retraction, no empty-reply
+  risk, the F4/A1 lesson), then the promise reads as fulfilled.
+- Fallback (the "re-prompt" arm): retry emitted no tools → keep the
+  draft UNTOUCHED and arm the pending-task ledger with the promise
+  sentence as the blocker (PT.1's arming site ~:2114 gains
+  `or dangling_promise` alongside `_blocking_clarify` — the next
+  turn's directive then carries "your reply left it blocked on: 'I'll
+  check the inbox.' … DO the task now", which is PT.1's measured
+  recovery machinery doing what it already does).
+- ilog: `dangling_intent_floor` — additive.
+
+**PC.4 — false-completion floor (P2's past-tense sibling; the GT-C9
+residual's direct armor).**
+Placement: after the generic-clarify floor (~:1270), before the
+narrated-listing floor.
+- Fires when ALL hold: a durable task is LIVE (`self.consolidation is
+  not None or self.pending_task is not None` — the ledger is the truth
+  carrier; if the work landed in an earlier turn the ledger already
+  retired on disk-truth and the floor is silent, so honest
+  "yes, it's done" answers never trip); zero landed action tools this
+  turn (`action_landed` False — computed once, shared with the PT
+  arming block); the reply claims completion:
+  `\b(i'?ve|i have|i(?: just)? already|i)\s+(?:now\s+)?(created|updated
+  |merged|consolidated|moved|renamed|deleted|closed|saved|written
+  |added|completed|finished)\b` (past-tense claim vocabulary, measured
+  on GT-C9 r1's T4).
+- One corrective regen naming the code-owned truth: "STOP: your draft
+  claims the work is done, but no action landed this turn and the
+  tracked task is still pending: <deterministic ledger status —
+  candidates, survivor state / pending request + blocker>. Give the
+  TRUE status and the next concrete step." Accept iff the retry drops
+  the completion claim (same scan); otherwise REPLACE the claim with
+  the code-built status line (grounded from the ledger verbatim,
+  never fabricated — the CN.3-fallback posture).
+- Stream: both trigger conjuncts already hold the stream (consolidation
+  / pending_task non-None are in the disjunction) — no new hold.
+- ilog: `false_completion_floor` — additive.
+
+**PC.5 — new goldens (capture FIRST, on baseline code).**
+`tests/pillar1/test_corrections.py`, GT-P5 family (throwaway content
+per CLAUDE.md — hydro-rig / flux-bench style, never real projects):
+- **GT-P5a (value correction):** T1 "the pump relay coil is rated 24V"
+  → T2 "Actually, correction — the coil is 12V, not 24V." → T3
+  unrelated distractor → T4 "what's the coil rating on the hydro rig's
+  pump relay?" Checks: mentions "12" (TARGET) + a `correction_held`
+  check that fails ONLY when the wrong value appears WITHOUT the right
+  one (mirrors the floor's both-present-is-honest rule).
+- **GT-P5b (naming correction):** same shape, string-valued ("it's the
+  'flux bench', not the flux rig") with a T4 paraphrased recall ask.
+- **GT-P2a (promise tail):** "Can you check my email? Anything that
+  needs me today?" with a planted inbox — checks: not ending on an
+  unfulfilled promise (`not_narration_terminated` shape) + substance
+  present (TARGET).
+Capture protocol: ×5 each on UNBRANCHED baseline code (per-case pinned
+`--basetemp`, ilogs pulled immediately — the proven recheck driver
+pattern). The capture outcome sets each case's role: baseline-failing →
+CONVERSION case with a ≥4/5 bar; baseline-passing → LOCK/no-regression
+case (recorded honestly — P5's general-value class has no measured
+in-suite failure yet; its evidence is the live transcript + the parity
+map, and the MEASUREMENT is the golden family + deterministic guards +
+the full compare proving no false fires. The armor-ships-on-evidence
+rule is satisfied by the guards' determinism + the compare; the goldens
+keep it honest forever after).
+
+**PC.6 — guards + `--quick`.** All scripted-model, no live 14B:
+- COR-001 arming: cue + pair + history-membership arms; directive rides
+  next turn's block. COR-002 no-arm: contrast shape with NO cue, or
+  wrong-side absent from session history. COR-003 floor fires on a
+  scripted re-violation (wrong present, right absent) → retry accepted.
+  COR-004 retry still violates → deterministic substitution. COR-005
+  both-present reply → floor silent. COR-006 FIFO bound (9th correction
+  evicts oldest). COR-007 corrections hold the stream.
+- DIF-001 request + zero tools + promise tail → regen-with-tools path
+  executes the emitted call, result APPENDED, flag true. DIF-002
+  retry emits nothing → draft untouched, pending_task armed with the
+  promise as blocker. DIF-003 non-request turn (offer shape) → floor
+  silent, offer ledger arms as today. DIF-004 promise tail ending in
+  "?" or mid-reply promise followed by substance → silent. DIF-005
+  narrated-list tail → CN.4 fires, this floor stays out.
+- FCF-001 live consolidation + completion claim + zero landed actions
+  → regen; accepted retry drops the claim. FCF-002 retry still claims
+  → code-built status line replaces it. FCF-003 task retired (landed
+  earlier turn) + honest "it's done" → silent. FCF-004 no live task →
+  silent regardless of claim. FCF-005 live task + claim + action DID
+  land this turn → silent (landing retires the ledger downstream).
+Then full `--quick` green in the worktree.
+
+**PC.7 — conversion batches → merge → candidate → compare (Fable
+adjudicates).** Batches on branch: GT-C9 ×5 minute-spaced (bar: case
+fraction ≥4/5, baseline ~2/3 — the false-completion half; EM.4's
+case-fraction rule, never a sub-metric) + GT-P5a/b ×5 (bar per capture
+role) + GT-P2a ×5 + GT-C10 ×2 (no-regression edge). Merge pc→main,
+post-merge `--quick`, detached full run + watchdog (~500 items with
+the new cases/guards, ~3.5h), compare vs `2026-07-18_0816`. Expected
+board: project_ops holds-or-up (GT-C9 converts); memory/injection
+perfect boards HELD; email/quant/calendar unmoved (zero surface
+contact — verify by flag attribution: `correction_floor`,
+`dangling_intent_floor`, `false_completion_floor` False in every
+failing non-target transcript). Special attention: `corrections_active`
+must be 0 across the whole suite EXCEPT the GT-P5 turns (false arming
+= the P5 analog of CN.3's false-positive class — any nonzero elsewhere
+is a STOP-and-fix); dangling-floor regen-with-tools must show NO
+unsolicited action landings (gate/taint flags clean).
+
+| item | what | status |
+|---|---|---|
+| PC.0 | Baseline decision (`2026-07-18_0816`, py-diff-clean vs `7773c75`) + open leg (worktree `..\FRIDAY-pc`, branch `pc`) | pending |
+| PC.1 | Correction ledger (`_correction_update`, directive, `corrections_active`) | pending |
+| PC.2 | Correction floor (scan + regen + substitution + stream hold) | pending |
+| PC.3 | Dangling-intent floor (regen-with-tools + append; PT-arm fallback) | pending |
+| PC.4 | False-completion floor (ledger-truth conjunct + code-built status fallback) | pending |
+| PC.5 | GT-P5a/b + GT-P2a capture ×5 on baseline code (roles set by outcome) | pending |
+| PC.6 | COR/DIF/FCF guards + full `--quick` green | pending |
+| PC.7 | Batches → merge → candidate flight → compare vs `0816` + ship gate (Fable) | pending |
+
+---
+
+### IG leg (IG.0–IG.5) — identifier grounding beyond projects (roadmap M2.3)
+
+**Scope decision (P6 philosophy, recorded).** §0b P3 names "files,
+runs, notes". The MEASURED failures all live in the notes/brain
+namespace (GT-C9's invented note path; the transcript's invented
+slugs). IG.1 therefore generalizes to the BRAIN-PATH namespace now;
+bare filesystem paths and run stamps are documented as future widening
+gated on live friction — a general file-path scan is exactly the
+false-positive minefield the CN.6.1 incident warns about (grown
+verb-by-verb where friction shows, never a grand classifier).
+
+**IG.0 — baseline (PC's candidate) + GAP-001 forensics.** Before any
+code: pull GAP-001's failing transcripts from
+`results\2026-07-18_0816\sandbox_ilogs\` (and PC's candidate ilogs) and
+trace the CN.3 false-positive mechanism (4th knife-edge sighting).
+Whatever exemption it names lands in THIS leg (it is the same scan
+surface) — or, if the mechanism is not CN.3 contact, record the
+adjudication and clear the watch.
+
+**IG.1 — foreign-note-path floor.** `core/engine.py`, extending the
+CN.3 block (~:1078; shares its corrective/retry/fallback shape and its
+run-before-offer-arming position; SEPARATE fired flag for attribution).
+- Scan: brain-relative note-path tokens in the settled reply —
+  `\b(?:projects|inbox|notes|areas|resources|tasks)/[A-Za-z0-9_\-]+\.md\b`
+  (plus the existing quoted-identifier scan's outputs when they are
+  path-shaped).
+- A scanned path is FOREIGN iff ALL of: it does not exist under the
+  brain root (deterministic disk check through `Brain`); it appears in
+  NO tool result this turn (`tool_log` text — a path a tool surfaced
+  is grounded even if since deleted); it appears in NO user message
+  this session (Jack naming a to-be-created path must never trip —
+  read-content-is-data, Jack's words are ground truth); it is not on
+  the referent stack.
+- Trigger window (narrow, CN.3's posture): project context live
+  (CN.3's existing `project_context_live`) OR a brain read/write ran
+  this turn OR a durable task is pending. Bare chit-chat never scanned.
+- Correction: one regen naming the real inventory scoped to the
+  claimed directory ("STOP: your draft names note files that do not
+  exist: <paths>. The real files under projects/ are exactly: <listing
+  from disk>. Rewrite using ONLY real paths — never invent a path.").
+  Second miss → CN.3's honest fallback shape ("I mis-named some files
+  there — ignore those paths…" + the deterministic listing).
+- ilog: `foreign_path_floor` — additive.
+
+**IG.2 — exemption hygiene.** Reuse `_IDENTIFIER_NOISE` +
+`_VALUE_POSITION_TAIL` (the CN.6.1 lessons apply verbatim); add: fenced
+code blocks are exempt (a narrated tool call's `"path": "projects/x.md"`
+is NJ.2's territory — it EXECUTES the call and the result grounds the
+path); schema-example paths from tool docs (concrete throwaway names
+per CN.4.1) whitelisted by literal set if any surface in replies.
+
+**IG.3 — guards + `--quick`.** IDG-001 invented path in project context
+→ retry → accepted. IDG-002 retry still foreign → honest fallback,
+reply never emptied. IDG-003 real-on-disk path → silent. IDG-004 path
+surfaced only by a tool this turn (then deleted) → silent. IDG-005 path
+named by Jack (create intent) → silent. IDG-006 fenced-block path →
+silent. IDG-007 no-trigger-context turn → scan never runs. IDG-008
+value-position quote → silent (CN.6.1 regression edge). Plus the FULL
+MRG regression set green (same surface). Full `--quick` in worktree.
+
+**IG.4 — conversion batches.** GT-C9 ×5 (bar: case fraction ≥4/5 held
+or improved vs PC's batches — the invented-path half; attribution via
+`foreign_path_floor` vs `false_completion_floor` flags per turn) +
+GT-C10 ×2 + MEM-001/MEM-005 family ×2 (the CN.6.1 gaslighting
+no-regression edge: correct confirmations must never draw the
+mis-naming apology) + GAP-001 ×5 (watch: must not worsen; converts if
+IG.0's forensics found CN.3 contact).
+
+**IG.5 — merge → candidate → compare vs PC's candidate + ship gate
+(Fable).** Expected: project_ops/memory boards HELD, GT-C9 held-or-up,
+`foreign_path_floor` firing ONLY on turns with invented paths (fire
+count suite-wide reported in the verdict — the gear-floor "surgical"
+standard), GAP-001 adjudicated with its forensic record. Down-deltas
+per §4.3 with flag proof.
+
+| item | what | status |
+|---|---|---|
+| IG.0 | Baseline (PC candidate) + GAP-001 forensics from archived ilogs | pending |
+| IG.1 | Foreign-note-path floor + `foreign_path_floor` ilog | pending |
+| IG.2 | Exemption hygiene (noise/value-position/fences/schema names) | pending |
+| IG.3 | IDG-001..008 + MRG set + full `--quick` | pending |
+| IG.4 | GT-C9/GT-C10/MEM-family/GAP-001 batches | pending |
+| IG.5 | Merge → candidate flight → compare vs PC candidate + ship gate (Fable) | pending |
+
+---
+
+**M2 exit (roadmap Status flip to CLOSED requires):** both ship gates
+adjudicated; the D2 scorecard statement made explicitly — the golden
+conversation family (GT-A/GT-B/GT-C1..C10 + GT-P5a/b + GT-P2a) read
+for m1 (redundant asks), m2 (fabricated identifiers), m3
+(dropped-instruction turns), m5 (narration dead-ends) on both M2
+candidates, with the finding recorded here (D2's full condition — three
+consecutive stable runs — is R2/soak's job; M2's exit is that the
+condition STARTS holding); every M2 residual converted or documented
+with its band (D1 language); next-baseline rule restated with the IG
+candidate; roadmap M2 Status cell updated in place, dated, pointing
+back to these two leg records.
