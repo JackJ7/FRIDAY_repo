@@ -201,7 +201,14 @@ F-grade re-ranks these above anything):
 Exit = D2's scorecard condition starts holding.
 Model: **Fable 5** (design-heavy, regression-prone floors — this is the
 subtlest armor work left).
-**Status: DESIGNED + IN PROGRESS 2026-07-18 evening (Fable 5).** Full
+**Status: PC LEG CLOSED (SHIP GATE MET) 2026-07-18 ~22:35; IG leg open
+— Fable 5.** PC (M2.1+M2.2) shipped whole: correction ledger+floor,
+dangling-intent floor, false-completion floor; candidate
+`2026-07-18_1851` (516 items, 502/10/4) — GT-C9 5/5 + GT-P5b 5/5
+conversions, email +0.300, memory_recall +0.200, injection 1.000 held,
+zero false ledger arms suite-wide, all down-deltas churn-proven by
+same-day re-runs (verdict in armor plan §6 PC.7). IG (M2.3) next off
+baseline `1851`. Original design note follows. Full
 design in armor plan §6 "M2 batch" section (end of file). Batching
 decision recorded there: **two legs** — **PC leg** = M2.1 + M2.2
 batched (correction ledger + dangling-intent/false-completion
