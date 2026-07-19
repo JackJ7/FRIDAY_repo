@@ -4120,6 +4120,21 @@ the PC and IG candidates; if both are also flag-free, the watch item
 retires as churn (the earlier "CN.3 value-quote false positive"
 sightings were real but CN.6.1-era — the exemption that fixed them is
 already shipped).
+*Forensic result 2 (Fable, from the `1851` ilogs): the watch has a LIVE
+SPECIMEN.* GAP-001 run 1 at the PC candidate shows `identifier_floor:
+True` — 'alpha rig' entity-hints the turn (project context live), the
+design-jargon quotes in the draft scan as identifiers, resolve to no
+project, and the floor burns a retry that re-rolls a good answer
+against the knife-edge name-the-gap grader. **Mechanism: the SHIPPED
+`_foreign_identifiers` dropped the verb-ADJACENCY requirement of CN.3's
+original design** ("quoted names … adjacent to project verbs") — any
+quoted span on any project-context turn is scanned. IG.2 therefore
+re-introduces adjacency: quoted spans are scanned only within a
+project-verb window (merge/consolidate/survivor/fold/keep/duplicate/
+rename/slug/folder); GT-C9-class fabrications all sit inside it, the
+GAP-001 jargon class sits outside. The LOCKED grader-side
+no-foreign-identifier guard is unchanged (defense-in-depth intact).
+GAP-001 ×5 becomes an IG.4 conversion candidate rather than a watch.
 
 **IG.1 — foreign-note-path floor.** `core/engine.py`, extending the
 CN.3 block (~:1078; shares its corrective/retry/fallback shape and its
