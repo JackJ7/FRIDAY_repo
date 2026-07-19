@@ -966,12 +966,62 @@ auto-memory sync.
 
 | item | what | status |
 |---|---|---|
-| M3.0 | Pickup checks (baseline re-verify, worktree `..\FRIDAY-m3` + brain seed, in-flight check) | — |
-| M3.1 | `tasks/` write guard + TSK-011/012 | — |
-| M3.2a–e | Wiring + task_tools.py + injection + ilog fields | — |
-| M3.2f | TKT-001..010 + regression sets + `--quick` | — |
-| M3.2g | GT-J1 golden + ×5 batch (bar ≥4/5) | — |
-| M3.2-G | Merge → flight vs `2346` → pre-registered gate applied → verdict block recorded | — |
-| M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | — |
-| M3.4 | Away board API + UI + BRD-001..004 | — |
-| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | — |
+| M3.0 | Pickup checks (baseline re-verify, worktree `..\FRIDAY-m3` + brain seed, in-flight check) | DONE — baseline `d1d4a12..HEAD -- '*.py'` empty re-verified, worktree + brain seed created |
+| M3.1 | `tasks/` write guard + TSK-011/012 | DONE — TSK-011/012 green, GATE-012 regression held |
+| M3.2a–e | Wiring + task_tools.py + injection + ilog fields | DONE — `core/tools/task_tools.py`, bootstrap wiring, DURABLE TASKS block, `tasks_active`/`task_evidence_refused` ilog fields, identifier-floor surface union |
+| M3.2f | TKT-001..010 + regression sets + `--quick` | DONE — TKT-001..010, MRG+IDG+PTL+TSK green, full `--quick` 444/444 green on branch `m3` (commit `1f3137e`) |
+| M3.2g | GT-J1 golden + ×5 batch (bar ≥4/5) | **STOP — 0/3 live (batch halted early, mathematically below bar). See verdict below.** |
+| M3.2-G | Merge → flight vs `2346` → pre-registered gate applied → verdict block recorded | **NOT RUN — blocked on M3.2g STOP; M3.1+M3.2 stay on branch `m3`, unmerged** |
+| M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | in progress (non-model, proceeding per "M3.3/M3.4 may still merge during a STOP") |
+| M3.4 | Away board API + UI + BRD-001..004 | queued after M3.3 |
+| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | blocked on M3.2-G |
+
+**M3.2g STOP verdict (Sonnet, 2026-07-19, branch `m3` commit `1f3137e`)** — recorded
+per §M3.2-G's "STOP-and-escalate ... record state here" instruction, not
+self-adjudicated further:
+
+- Code side of M3.2 is solid: TKT-001..010 (scripted-model) all green,
+  including TKT-003/005 which exercise the SAME evidence-grounding path GT-J1
+  needs live. The gate is doing its job — refusing ungrounded evidence — the
+  problem is upstream of it.
+- Live signature (5 for 5 across 2 pre-batch sanity runs + 3 official
+  `--basetemp`-pinned batch runs, ALL identical): T1 (single-message 3-step
+  job) passes clean every time — `create_task` fires, file lands with 3
+  pending steps. T2 ("The coolant loop's drained — I did it just now. Tick it
+  off.") fails every time: qwen2.5:14b reaches for `close_commitment` /
+  `track_commitment` / (once) `resolve_project`+`list_projects` instead of
+  `complete_task_step` — it never even calls the right tool, so the refusal
+  text never gets a chance to teach the recovery.
+- One schema-wording fix iteration applied per the pre-authorization (commit
+  `1f3137e`): explicit "copy verbatim, never invent" on the `slug`/`evidence`
+  fields of `complete_task_step`/`block_task`/`unblock_task`, and
+  `create_task`/`task_status` descriptions now explicitly disambiguate from
+  `track_commitment` ("not a single promise") and the project tools ("not a
+  project folder"). Re-ran live after the fix: same failure signature,
+  unchanged (model still reached for `close_commitment`).
+- With 0/3 official batch runs holding and only 2 remaining, the ≥4/5 bar is
+  already mathematically unreachable — batch halted at run 3/5 rather than
+  spend more GPU time on a foregone conclusion (the 2 pre-batch sanity runs
+  showed the identical signature, so this isn't a batch-variance artifact).
+- **This is being read as a genuine model-ceiling gap, not a schema bug**: a
+  message that pairs "I did X just now" with "tick it off" pattern-matches
+  qwen2.5:14b's much more heavily-represented commitment-closing shape harder
+  than the newer task-ledger shape, even with disambiguating tool text. Per
+  the armor directive (CLAUDE.md) this is exactly the kind of ceiling that
+  wants a local workaround, not a shrug — but §M3.2-G's own STOP clause is
+  explicit that widening scope (e.g. a code-level barrier that redirects a
+  misrouted `close_commitment`/`track_commitment` call back onto the open
+  task when its wording matches an open step) is Fable/Jack's call, not
+  something to self-authorize mid-leg.
+- **Not touched, still available for the next leg**: a task-recovery floor
+  (mirroring the NJ.2/read-ask precedent — catch a misrouted
+  commitment-tool call that names language matching an open task step, and
+  redirect/retry against `complete_task_step` instead) is the obvious
+  candidate fix, but it is new armor scope, not a mechanical schema tweak, so
+  it waits for Fable's design per the pre-registration's own boundary.
+- **State left clean for resumption**: `m3` branch commit `1f3137e` has
+  M3.1+M3.2 code-complete, fully tested (TKT/TSK/MRG/IDG/PTL/`--quick` all
+  green), just unmerged. Nothing reverted. M3.3 build proceeds in the same
+  worktree per the explicit STOP allowance ("M3.3/M3.4 may still merge during
+  a STOP — they are non-model by scope check"); this roadmap's M3.2 row stays
+  open pending Fable/Jack's read.

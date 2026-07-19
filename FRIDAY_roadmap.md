@@ -259,17 +259,28 @@ Per jarvis plan §6's recorded increment order:
 Then grade J1 acceptance (a)–(d).
 Model: **Sonnet 5** for M3.1/3.3/3.4; **Fable 5** designs M3.2 and
 adjudicates its compare (Sonnet may implement).
-**Status: DESIGNED 2026-07-19 (Fable 5) — implementation-ready for
-Sonnet 5 to pick up M3.1–M3.4 end-to-end in one session.** Full design
-+ exact instructions in jarvis plan §6 "M3 batch": M3.2's compare
-adjudication is PRE-REGISTERED there as mechanical ship bars +
-churn rules (§M3.2-G) so Sonnet applies the gate itself; anything
-outside the table is a STOP that waits for Fable (QB.4 precedent).
-The Track A slot is Sonnet's for the M3.2 flight: baseline
-`2026-07-18_2346` re-verified this session (`git diff
-d1d4a12..9dbb1b0 -- '*.py'` empty). Order: M3.1+M3.2 → merge →
-flight (M3.3/M3.4 built worktree-side during it) → gate → merge
-M3.3/M3.4 → grade J1 (a)–(d) live with `--test-session`.
+**Status: M3.1 DONE, M3.2 code-complete but STOPPED at its pre-registered
+GT-J1 gate (2026-07-19, branch `m3` commit `1f3137e`) — M3.3/M3.4 in
+progress under the STOP's explicit carve-out.** M3.1 (write guard) and
+M3.2a-f (wiring, 5 task tools, DURABLE TASKS injection, ilog fields,
+TKT-001..010 + full regression, `--quick` 444/444) are all done and green
+on the `m3` branch, unmerged. M3.2g's GT-J1 batch (bar ≥4/5) went 0/3 live
+(2 pre-batch sanity runs made it 0/5) on the SAME signature every time:
+Jack says "I did it just now, tick it off" and qwen2.5:14b reaches for
+`close_commitment`/`track_commitment` instead of `complete_task_step` —
+it never even calls the right tool. One pre-authorized schema-wording fix
+iteration was applied (explicit "copy verbatim" + disambiguation from
+commitments/projects in the tool descriptions); the miss persisted
+unchanged. Per jarvis plan §6 §M3.2-G this is a STOP-and-escalate to
+Fable/Jack, not something Sonnet self-adjudicates further (full verdict +
+the likely fix shape — a task-recovery floor that catches a misrouted
+commitment call matching an open task step — recorded in jarvis plan §6).
+**M3.1+M3.2 stay on `m3`, unmerged; nothing reverted.** Per the STOP's own
+carve-out ("M3.3/M3.4 may still merge during a STOP — they are non-model
+by scope check"), Sonnet is continuing with M3.3 (JobRunner) and M3.4
+(away board) in the same worktree. The Track A slot Sonnet held for the
+M3.2 flight (baseline `2026-07-18_2346` re-verified this session) is now
+released back — no flight was run, since there is nothing to compare yet.
 
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
