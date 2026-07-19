@@ -1178,7 +1178,8 @@ class Engine:
                         on_token=None)
                     self.session_tokens += retry.eval_count
                     candidate = (retry.content or "").strip()
-                    if candidate and not self._foreign_identifiers(candidate):
+                    if candidate and not self._foreign_identifiers(
+                            candidate, require_verb_context=False):
                         reply.content = candidate
                     else:
                         # Deterministic honest floor: own the mis-naming and
@@ -1193,6 +1194,61 @@ class Engine:
                         live_token("\n" + reply.content)
                     turn.append({"role": "assistant",
                                  "content": reply.content})
+
+        # Foreign-note-path floor (armor IG.1 — parity row P3, the notes
+        # namespace). CN.3 grounds quoted project NAMES; nothing grounded
+        # note PATHS — the GT-C9 invented-slug residual's other half is the
+        # model naming a `projects/<invented>.md` that exists nowhere. A
+        # path is FOREIGN only when code can ground it NOWHERE: not on
+        # disk, not in any tool result this turn, not in Jack's own words
+        # this session (a to-be-created path he names must never trip —
+        # read-content-is-data, his words are ground truth), not on the
+        # referent stack. Trigger stays inside HELD contexts only (project
+        # context live / a pending task) — brain-tool turns without project
+        # context were deliberately left out so a replacement can never be
+        # a watched retraction (P6 narrow-first; widen only on live
+        # friction). Fenced blocks are exempt: a narrated call NJ.2
+        # executes grounds its own paths.
+        foreign_path_fired = False
+        if (reply is not None and not phantom_fired
+                and not identifier_floor_fired and not artifact_denial_fired
+                and (project_context_live or self.pending_task is not None)):
+            bad_paths = self._foreign_note_paths(reply.content or "",
+                                                 user_input, tool_log)
+            if bad_paths:
+                dirs = sorted({p.split("/", 1)[0] for p in bad_paths})
+                try:
+                    real_notes = [n for n in self.brain.list_notes()
+                                  if n.split("/", 1)[0] in dirs]
+                except Exception:
+                    real_notes = []
+                real_line = ", ".join(sorted(real_notes)[:12]) or "(none)"
+                correction = (
+                    "STOP: your draft names note files that do not exist: "
+                    + ", ".join(bad_paths) + ". The real notes there are "
+                    "exactly: " + real_line + ". Rewrite the reply using "
+                    "ONLY real paths — never invent a path.")
+                retry = self.model.chat(
+                    base + turn
+                    + [{"role": "assistant", "content": reply.content},
+                       {"role": "system", "content": correction}],
+                    on_token=None)
+                self.session_tokens += retry.eval_count
+                candidate = (retry.content or "").strip()
+                if candidate and not self._foreign_note_paths(
+                        candidate, user_input, tool_log):
+                    reply.content = candidate
+                else:
+                    # Deterministic honest floor: own the mis-naming and
+                    # hand back the real listing verbatim (CN.3's shape).
+                    reply.content = (
+                        "I mis-named some note files there — ignore those "
+                        "paths. The real notes are: " + real_line + ".")
+                reply.tool_calls = []
+                foreign_path_fired = True
+                if live_token:
+                    live_token("\n" + reply.content)
+                turn.append({"role": "assistant", "content": reply.content})
 
         # Generic-clarify floor (armor PENDING-TASK PT.2). A contentless
         # "could you specify" while CODE already holds the answer. Two
@@ -1213,7 +1269,8 @@ class Engine:
         # can never empty a reply (the F4/A1 empty-reply lesson).
         generic_clarify_fired = False
         if (reply is not None and not phantom_fired
-                and not artifact_denial_fired and not identifier_floor_fired):
+                and not artifact_denial_fired and not identifier_floor_fired
+                and not foreign_path_fired):
             content = reply.content or ""
             ptask = self.pending_task
             single_art = self._single_artifact_referent()
@@ -2273,6 +2330,10 @@ class Engine:
             if (dangling_promise is None and not tool_log
                     and self._looks_like_request(user_input)):
                 dangling_promise = self._dangling_tail(reply.content)
+                # IG carry-in (PC.7 attribution gap): the late re-scan is
+                # part of the floor's guarantee — count it in the ilog.
+                if dangling_promise is not None:
+                    dangling_floor_fired = True
             # PC.3: an unrecovered dangling promise on a REQUEST turn is not
             # an offer — Jack already asked, so making next turn's "yes" the
             # price of action is exactly the m1 friction the floor closes.
@@ -2514,6 +2575,10 @@ class Engine:
             # caught a done-claim with zero landed actions while a tracked
             # task was still pending (the GT-C9 r1 residual, now countable).
             "false_completion_floor": false_completion_fired,
+            # Armor IG.1 (parity P3): True when the foreign-note-path floor
+            # caught the reply naming a note file code could ground nowhere
+            # (the invented-path half of the GT-C9 residual, now countable).
+            "foreign_path_floor": foreign_path_fired,
         })
         return reply
 
@@ -4158,12 +4223,36 @@ class Engine:
                     or stripped.count("```") % 2 == 1)
         return calls, terminal
 
-    def _foreign_identifiers(self, text: str) -> list:
+    # IG.2 (the GAP-001 live specimen, candidate `2026-07-18_1851` run 1):
+    # CN.3's original design scanned quoted names "adjacent to project
+    # verbs"; the shipped scan dropped adjacency, so quoted technical
+    # JARGON in an ordinary answer on any entity-hint-live turn ('preload'
+    # in a gearbox design) scanned as an identifier, resolved to nothing,
+    # and burned a retry that re-rolled a good answer against a knife-edge
+    # grader. The window below restores the design: a quoted span is only
+    # identifier-SHAPED when project vocabulary sits within ±60 chars.
+    # Every measured fabrication (GT-C9/GT-C10 class, the live transcript's
+    # 'claude-code-updates' proposals) names its merge/keep/survivor intent
+    # right next to the quote; design jargon doesn't. The grader-side
+    # no-foreign-identifier LOCKED guard is unchanged — defense-in-depth.
+    _PROJECT_VERB_NEAR = re.compile(
+        r"\b(?:merg\w*|consolidat\w*|survivor|fold\w*|keep\w*|duplicat\w*"
+        r"|renam\w*|slug|folder|de-?dup\w*|combin\w*|projects?)\b",
+        re.IGNORECASE)
+
+    def _foreign_identifiers(self, text: str,
+                             require_verb_context: bool = True) -> list:
         """Quoted project-shaped identifiers in `text` that resolve to NO
         project surface on disk (CN.3). Substring tolerance mirrors the
         resolver's semantics: a candidate is real when its normalization sits
         inside a real surface's normalization ('flux' clears via 'fluxbeam';
-        a fabricated sibling like 'flux-beam-utils' does not)."""
+        a fabricated sibling like 'flux-beam-utils' does not).
+        `require_verb_context` applies the IG.2 adjacency window — True for
+        the DRAFT scan (deciding whether to engage at all; jargon quotes
+        stay exempt), False for the RETRY-acceptance scan (once a
+        fabrication is established this turn, ANY foreign quote in the
+        retry rejects it — MRG-003b's verb-less re-fabrication 'Then
+        \\'flux-beam-mega\\' it is.' must not slip the accept bar)."""
         from core.project_resolver import _norm
         resolver = getattr(self, "project_resolver", None)
         if resolver is None:
@@ -4190,12 +4279,56 @@ class Engine:
                 continue
             if self._VALUE_POSITION_TAIL.search(text[:m.start()]):
                 continue   # assignment/status VALUE, not an identifier (CN.6.1)
+            if require_verb_context:
+                window = text[max(0, m.start() - 60):m.end() + 60]
+                if not self._PROJECT_VERB_NEAR.search(window):
+                    continue   # quoted jargon, not an identifier (IG.2)
             trimmed = re.sub(r"^the\s+|\s+project$", "", cand,
                              flags=re.IGNORECASE)
             n = _norm(trimmed)
             if not n or any(n in s for s in surfaces):
                 continue
             foreign.append(cand)
+        return foreign
+
+    # IG.1 — brain-relative note-path tokens (the notes namespace the
+    # GT-C9 invented-slug class fabricates into).
+    _NOTE_PATH_TOKEN = re.compile(
+        r"\b(?:projects|inbox|notes|areas|resources|tasks|episodic"
+        r"|preferences|people|character|playbooks|skills)"
+        r"/[A-Za-z0-9_\-./]*\.md\b")
+
+    def _foreign_note_paths(self, text, user_input, tool_log) -> list:
+        """Note paths named in `text` that code can ground NOWHERE (IG.1):
+        not on disk under the brain root, not in any tool result/args this
+        turn, not in Jack's own words this session, not on the referent
+        stack. Fenced code blocks are never scanned (NJ.2 executes narrated
+        calls, which grounds their paths)."""
+        if not text:
+            return []
+        scanned = re.sub(r"```.*?(?:```|\Z)", " ", text, flags=re.DOTALL)
+        session_low = "\n".join(
+            [(m.get("content") or "") for m in self.history]
+            + [user_input or ""]).lower()
+        if self.history_summary:
+            session_low += "\n" + self.history_summary.lower()
+        tool_low = "\n".join(
+            str(t.get("result", "")) + " " + str(t.get("args", ""))
+            for t in (tool_log or [])).lower()
+        ref_low = " ".join(str(r) for r in self.referents).lower()
+        foreign = []
+        for m in self._NOTE_PATH_TOKEN.finditer(scanned):
+            rel = m.group(0)
+            low = rel.lower()
+            try:
+                if (self.brain.root / rel).exists():
+                    continue
+            except Exception:
+                continue   # unresolvable path token — never fatal
+            if low in session_low or low in tool_low or low in ref_low:
+                continue
+            if rel not in foreign:
+                foreign.append(rel)
         return foreign
 
     def _consolidation_covered(self, task) -> bool:
