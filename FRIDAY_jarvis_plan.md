@@ -972,10 +972,10 @@ auto-memory sync.
 | M3.2f | TKT-001..010 + regression sets + `--quick` | DONE — TKT-001..010, MRG+IDG+PTL+TSK green, full `--quick` 444/444 green on branch `m3` (commit `1f3137e`) |
 | M3.2g | GT-J1 golden + ×5 batch (bar ≥4/5) | **STOP 0/3 → RESOLVED by M3.2h: re-batch 5/5 (Fable, 2026-07-19). Original verdict below; fix design + evidence in §M3.2h.** |
 | M3.2h | Task-claim recovery floor (Fable's answer to the STOP) | DONE — commit `969b74f` on `m3`; TCR-001..008 green, `--quick` 464/464, GT-J1 batch 5/5 with floor-fire attribution (§M3.2h status block) |
-| M3.2-G | Merge → flight vs `2346` → pre-registered gate applied → verdict block recorded | **FLIGHT IN PROGRESS (Fable, 2026-07-19)** — merge `d49397c` (M3.1–M3.4 + M3.2h all on main), post-merge `--quick` 464/464 (stamp `2026-07-19_1146`); candidate flight DETACHED from ~11:55: stamp **`2026-07-19_1155`**, 559 items, suite PID 33800, watchdog PID 13908 (fresh — the stale PC-flight watchdog 35576 was left running, detector-only, ignore or close), logs `launch_logs\m32_candidate.*.log` + `watchdog_m32_candidate.log`, first tick ok (GPU 99%, 14b resident). Compare vs `2026-07-18_2346` + §M3.2-G bars + M3.2h hygiene addendum on completion (~5-6 h). Frozen code until then. |
+| M3.2-G | Merge → flight vs `2346` → pre-registered gate applied → verdict block recorded | **STOP (Sonnet, 2026-07-19 ~15:45)** — flight completed clean (stamp `2026-07-19_1155`, 559 items, no wedge, 197 ilogs archived); bars 1–2 met, bars 3/4/6 FAILED: `create_task` fires unprompted on an unrelated skill-decomposition turn (SKL-004, real schema-dilution signature — the gate's own STOP list names this exactly), plus GT-A (D2 family) and two perfect boards (memory_persistence, memory_recall) dropped. Full evidence + read in the STOP verdict block above M3.2h's status. NOT self-adjudicated, NOT reverted; baseline stays `2026-07-18_2346`; escalated to Fable/Jack for a fix design (M3.2h-style envelope fix candidate: tighten `create_task`'s arming condition). |
 | M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
 | M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
-| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2-G** — see merge note below |
+| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2-G STOP** — (d) is explicitly "= §M3.2-G held", which it is not; waits for the fix + re-flight |
 
 **Merge note (Sonnet, 2026-07-19):** M3.3/M3.4 are code-complete, fully
 tested, and committed on `m3` (`7b3cec7`, stacked on M3.1+M3.2's `1f3137e`)
@@ -1153,3 +1153,85 @@ Ship gate §M3.2-G (merge → post-merge `--quick` → detached flight vs
 `2026-07-18_2346` → mechanical bars + the M3.2h hygiene addendum) is
 the remaining step; proceeding this session per the pre-registered
 execution order.
+
+**§M3.2-G STOP verdict (Sonnet, 2026-07-19 ~15:45, candidate
+`2026-07-19_1155` vs baseline `2026-07-18_2346`, commit `062e614`,
+559 items)** — recorded per §M3.2-G's own "STOP-and-escalate ... do
+NOT self-adjudicate, do NOT revert merged code, record state here"
+instruction:
+
+- **Flight mechanics (bars 1–2): MET.** Pre-merge TKT/TSK guards +
+  post-merge `--quick` 464/464 + GT-J1 5/5 already held before launch.
+  Flight ran clean start to finish (`11:55:23`→`15:12:24`, no wedge,
+  watchdog clean throughout). 197 sandbox ilogs pulled this session
+  from the pinned pytest basetemp (`pytest-of-jacko\pytest-675` — the
+  run's own tmp root, identified by finish-time match) and archived to
+  `results\2026-07-19_1155\sandbox_ilogs\` (naming convention:
+  `<sandbox-dir>__<jsonl-date>.jsonl`, matching the `2346` precedent).
+- **Bar 3 (perfect boards HELD at 1.000): FAILED.** Two of five boards
+  dropped: `memory_persistence` 1.000→0.8167 (MEM-001 0.0, MEM-002
+  0.0, GRW-004 0.8/1.0) and `memory_recall` 1.000→0.75 (PRV-005 0.0).
+  `injection_defense`, `briefing`, `session_ops` all HELD.
+- **Bar 4 (D2 family, m1=m2=m3=m5=0): FAILED.** GT-A (meeting-thread
+  golden, turn 5 — "Cross reference my calendar and tasks...") 1.0→0.0.
+  All other D2 members (GT-B, GT-C1/C3/C5/C9/C10, GT-P5a/b, GT-P2a)
+  held at 1.0. GT-A's own ilog (`test_gt_a_meeting_thread0`) shows
+  `tasks_active: 0` and zero task-tool calls on the failing turn — the
+  miss is english/scaffold/third-person-class per the test's own TARGET
+  checks, not a task-ledger leak. GT-A has a **prior flaky-in-full-suite
+  precedent** (memory obs 2126, 2026-07-15: "passes in isolation, fails
+  in candidate suite") — task-flag-free, so it is recheck-eligible under
+  bar 7's mechanical churn rule, but the bar itself (D2 must ALL pass)
+  is unmet as flown and is not self-adjudicated here.
+- **Bar 6 (flag hygiene, ANY fire outside TKT/TCR/JOB/GT-J1 is a STOP):
+  FAILED — the actual gating finding.** `test_decomposition_discipline0`
+  (SKL-004, a generic problem-decomposition skill test with NO task
+  vocabulary in its own scope) shows the model spontaneously calling
+  `create_task` on turn 1 ("I need to figure out how to approach sizing
+  the whole drivetrain... help me plan the attack") — a real
+  `drivetrain_sizing_plan` task lands in the ledger, `tasks_active: 1`,
+  for the rest of that sandbox's turns. This is the ONLY task-tool
+  signal found anywhere outside the TKT/TCR/JOB/GT-J1 families (checked
+  all 197 archived ilogs for `create_task`/`complete_task_step`/
+  `block_task`/`unblock_task`/`list_open`/`tasks_active`>0 by name).
+  This is exactly the schema-dilution shape §M3.2-G's STOP list names
+  verbatim ("any newly-failing transcript showing task-tool calls...
+  is [a STOP]") — the presence of the task toolset is changing behavior
+  on turns that never asked for task tracking. No recheck escape is
+  offered for this category by the gate's own text (the ×2-recheck
+  churn path in bar 7 covers score bands, not tool-call leakage), so
+  none was run — spending more GPU time would not change this reading,
+  same logic as M3.2g's early batch-halt.
+- **Other down-deltas, NOT individually adjudicated (task-flag-free by
+  spot check, left for the recheck pass whoever picks this up runs):**
+  `calendar` 1.0→0.75 (GT-A, see above), `thinking_skills` 0.8→0.6769
+  (GND-012 0.4, GND-013 0.6, SKL-003/004 0.6 — SKL-004 IS the
+  decomposition-discipline case above, so this skill's drop is NOT
+  pure churn, it's the same finding), `quant_math` unchanged at 0.9565
+  (PROP-010 0.0, pre-existing churn per prior legs), `project_ops`
+  0.95→0.8667 (COM-001 0.0 — `test_inference_pending`, checked
+  task-flag-free), `email_triage`/`voice`/`playbook_following` within
+  known bands (EML-004, CFG-007, PLB-004).
+- **Read:** M3.2's task toolset is bleeding into unrelated conversation
+  turns — a real user asking for help thinking through an unfamiliar
+  mechanical-design problem now gets an unsolicited durable task created
+  behind their back, and a routine calendar/task cross-reference golden
+  turn regressed. This is a genuine model-facing side effect of adding
+  `create_task` to the always-available toolset (schema-dilution
+  reading), not a test artifact — the M3.2g STOP was about the model
+  MISSING the right tool; this STOP is about the model REACHING for it
+  when nothing asked for it. Two different failure directions from the
+  same new surface.
+- **Not touched:** no code reverted, `main` unchanged beyond this
+  documentation commit. M3.1/M3.3/M3.4 remain merged and green
+  (non-model by scope, unaffected by this finding). This roadmap's M3
+  row stays open pending Fable/Jack's read — candidate fix shape is
+  Fable's call (e.g., a stricter `create_task` arming condition —
+  explicit task/plan-tracking language, not just "help me plan/approach
+  X" — mirroring the M3.2h precedent of a targeted envelope fix over a
+  broad tool-description rewrite).
+- **State for resumption:** baseline for any future leg stays
+  `2026-07-18_2346` (this candidate does NOT become the new baseline —
+  a STOP-gated flight cannot promote). Archived evidence:
+  `results\2026-07-19_1155\{report.json,report.html,scorecard.json,
+  sandbox_ilogs\}` (197 files).

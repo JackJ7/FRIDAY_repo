@@ -259,46 +259,52 @@ Per jarvis plan §6's recorded increment order:
 Then grade J1 acceptance (a)–(d).
 Model: **Sonnet 5** for M3.1/3.3/3.4; **Fable 5** designs M3.2 and
 adjudicates its compare (Sonnet may implement).
-**Status: M3.2 STOP RESOLVED (Fable 5, 2026-07-19 ~11:45) — task-claim
-recovery floor (jarvis plan §6 M3.2h) designed + implemented on `m3`
-(commit `969b74f`), GT-J1 re-batch 5/5 (was 0/3); merged to main
-`d49397c` (M3.1–M3.4 together), post-merge `--quick` 464/464, §M3.2-G
-candidate flight `2026-07-19_1155` (559 items) DETACHED in progress vs
-baseline `2026-07-18_2346` — verdict on completion. FROZEN CODE until
-the flight lands.** The floor: when Jack's own message claims a step's work happened
+**Status: M3.1/M3.3/M3.4 DONE and merged to `main` (`d49397c`); M3.2
+STOPPED at its second, later gate — NOT closed.** Recap of the path so
+far: M3.2g's GT-J1 batch (bar ≥4/5) first went 0/3 live — qwen2.5:14b
+kept reaching for `close_commitment`/`track_commitment` instead of
+`complete_task_step` when Jack said "I did it just now, tick it off."
+Fable's M3.2h task-claim recovery floor (jarvis plan §6) fixed the
+envelope — when Jack's own message claims a step's work happened
 (unambiguous content match, no negation/conditional) and orders the
 tick, the ENGINE runs `complete_task_step` itself with his claim clause
 verbatim — Jack's words were already the tool contract's evidence
 channel, so no new trust surface; model self-claims still never move
 the ledger (TKT-004 pin). Batch ilogs show the misroute persisted
 (model ceiling confirmed) and the floor carried T2 in all five runs
-with zero false fires. Superseded STOP record follows. M3.1 (write guard) and
-M3.2a-f (wiring, 5 task tools, DURABLE TASKS injection, ilog fields,
-TKT-001..010 + full regression, `--quick` 444/444) are all done and green
-on the `m3` branch, unmerged. M3.2g's GT-J1 batch (bar ≥4/5) went 0/3 live
-(2 pre-batch sanity runs made it 0/5) on the SAME signature every time:
-Jack says "I did it just now, tick it off" and qwen2.5:14b reaches for
-`close_commitment`/`track_commitment` instead of `complete_task_step` —
-it never even calls the right tool. One pre-authorized schema-wording fix
-iteration was applied (explicit "copy verbatim" + disambiguation from
-commitments/projects in the tool descriptions); the miss persisted
-unchanged. Per jarvis plan §6 §M3.2-G this is a STOP-and-escalate to
-Fable/Jack, not something Sonnet self-adjudicates further (full verdict +
-the likely fix shape — a task-recovery floor that catches a misrouted
-commitment call matching an open task step — recorded in jarvis plan §6).
-**M3.1+M3.2 stay on `m3`, unmerged; nothing reverted.** Jack confirmed
-(2026-07-19) continuing M3.3+M3.4 in the same worktree; both are now also
-DONE and green (commit `7b3cec7`: JobRunner + toggle + suite lockfile +
-JOB-001..008; away board API + UI + BRD-001..004; full `--quick` 452/452
-on branch `m3`). **Nothing has merged to `main`** — M3.3/M3.4 structurally
-depend on M3.2's bootstrap wiring (`engine.task_ledger`), so they cannot
-merge alone without either permanently no-op'ing (task_ledger stays `None`)
-or dragging the STOPped, gate-failed M3.2 code onto `main` unreviewed. All
-four items (M3.1–M3.4) sit together on `m3`, fully tested, waiting on
-Fable/Jack's read of the GT-J1 verdict (jarvis plan §6) before anything
-lands. The Track A slot Sonnet held for the M3.2 flight (baseline
-`2026-07-18_2346` re-verified this session) is released back — no flight
-was run, since there is nothing to compare yet.
+with zero false fires (GT-J1 5/5, was 0/3) — this resolved M3.2g. M3.1–M3.4
++ M3.2h then merged to `main` (`d49397c`), post-merge `--quick` held
+464/464, and the pre-registered §M3.2-G flight launched: candidate
+`2026-07-19_1155` (559 items) vs baseline `2026-07-18_2346`.
+
+**The flight itself hit a NEW STOP (Sonnet, 2026-07-19 ~15:45; full
+evidence in jarvis plan §6, §M3.2-G STOP verdict).** Flight mechanics
+were clean (no wedge, 197 sandbox ilogs pulled and archived), but three
+of the seven mechanical ship bars failed: (1) `test_decomposition_discipline`
+(SKL-004, a generic "help me plan the attack" skill test with no task
+vocabulary of its own) shows the model spontaneously calling `create_task`
+unprompted — a real durable task lands in the ledger behind Jack's back.
+This is the ONLY task-tool signal anywhere outside the TKT/TCR/JOB/GT-J1
+families across all 197 ilogs, and it is exactly the schema-dilution
+shape the gate's STOP list names verbatim ("any newly-failing transcript
+showing task-tool calls... is a STOP") — no recheck escape applies to
+this category. (2) GT-A (D2 golden family) dropped 1.0→0.0 —
+task-flag-free, recheck-eligible, but the D2 bar (must ALL pass) is
+unmet as flown. (3) Two perfect boards dropped: `memory_persistence`
+1.000→0.8167, `memory_recall` 1.000→0.75.
+**This is the opposite failure direction from M3.2g: that STOP was the
+model MISSING the right tool; this one is the model REACHING for it
+when nothing asked for it.**
+Per §M3.2-G's own instruction this is NOT self-adjudicated further and
+NOT reverted — `main` is unchanged beyond documentation, M3.1/M3.3/M3.4
+stay merged and green (non-model, unaffected), and the candidate flight
+does NOT become the new baseline (baseline stays `2026-07-18_2346`
+pending a fix). **M3.2 — and therefore all of M3 — stays OPEN**,
+escalated to Fable/Jack for a fix design (likely shape: tighten
+`create_task`'s arming condition to require explicit task/plan-tracking
+language rather than firing on any "help me think through X" request —
+an M3.2h-style targeted envelope fix). M3-X (J1 acceptance a–d) stays
+BLOCKED: (d) is explicitly "= §M3.2-G held," which it is not.
 
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
@@ -508,6 +514,20 @@ deltas, regression-prone prompt changes), never typing mistakes.
   tasks (P6); jobs runner parks-on-confirm by gate construction, suite
   detection = `results\SUITE_RUNNING.lock` + PID check; DND silences
   toasts, not background work; `jobs.background_enabled` defaults OFF.
+- 2026-07-19 ~15:45: **M3.2-G STOP (Sonnet 5)** — the pre-registered
+  flight (candidate `2026-07-19_1155`, 559 items, vs baseline
+  `2026-07-18_2346`) ran clean but failed 3 of 7 mechanical ship bars:
+  `create_task` fired unprompted on an unrelated skill-decomposition
+  turn (SKL-004 — the only task-tool signal outside TKT/TCR/JOB/GT-J1
+  across 197 archived ilogs, the exact schema-dilution shape the gate's
+  STOP list names verbatim), GT-A (D2 family) dropped 1.0→0.0, and two
+  perfect boards (memory_persistence, memory_recall) dropped. This
+  followed and is separate from M3.2g's earlier STOP (model missing the
+  right tool; M3.2h's task-claim recovery floor fixed that, GT-J1 5/5,
+  merged `d49397c`) — this new STOP is the opposite direction (model
+  reaching for the tool unprompted). Not self-adjudicated, not reverted;
+  baseline stays `2026-07-18_2346`; **M3 remains OPEN**, escalated to
+  Fable/Jack. Full verdict in jarvis plan §6.
 - 2026-07-18 midday: **M1 CLOSED (Fable 5)**. EM.6 adjudicated (EM.1/2
   ship F4-clean; floor was a no-op on the measured positional burial —
   EM.4 had verified a sub-metric, not the case fraction; in-leg EM.2.1
