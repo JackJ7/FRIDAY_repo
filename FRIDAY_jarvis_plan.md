@@ -970,8 +970,9 @@ auto-memory sync.
 | M3.1 | `tasks/` write guard + TSK-011/012 | DONE — TSK-011/012 green, GATE-012 regression held |
 | M3.2a–e | Wiring + task_tools.py + injection + ilog fields | DONE — `core/tools/task_tools.py`, bootstrap wiring, DURABLE TASKS block, `tasks_active`/`task_evidence_refused` ilog fields, identifier-floor surface union |
 | M3.2f | TKT-001..010 + regression sets + `--quick` | DONE — TKT-001..010, MRG+IDG+PTL+TSK green, full `--quick` 444/444 green on branch `m3` (commit `1f3137e`) |
-| M3.2g | GT-J1 golden + ×5 batch (bar ≥4/5) | **STOP — 0/3 live (batch halted early, mathematically below bar). See verdict below.** |
-| M3.2-G | Merge → flight vs `2346` → pre-registered gate applied → verdict block recorded | **NOT RUN — blocked on M3.2g STOP; M3.1+M3.2 stay on branch `m3`, unmerged** |
+| M3.2g | GT-J1 golden + ×5 batch (bar ≥4/5) | **STOP 0/3 → RESOLVED by M3.2h: re-batch 5/5 (Fable, 2026-07-19). Original verdict below; fix design + evidence in §M3.2h.** |
+| M3.2h | Task-claim recovery floor (Fable's answer to the STOP) | DONE — commit `969b74f` on `m3`; TCR-001..008 green, `--quick` 464/464, GT-J1 batch 5/5 with floor-fire attribution (§M3.2h status block) |
+| M3.2-G | Merge → flight vs `2346` → pre-registered gate applied → verdict block recorded | **IN PROGRESS (Fable, 2026-07-19)** — merge + post-merge `--quick` + detached flight this session; verdict block on flight completion |
 | M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
 | M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
 | M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2-G** — see merge note below |
@@ -1041,3 +1042,114 @@ self-adjudicated further:
   worktree per the explicit STOP allowance ("M3.3/M3.4 may still merge during
   a STOP — they are non-model by scope check"); this roadmap's M3.2 row stays
   open pending Fable/Jack's read.
+
+### M3.2h — task-claim recovery floor (Fable 5's response to the M3.2g STOP, designed 2026-07-19)
+
+**The read (Fable, taking the STOP's escalation; Jack requested the fix
+2026-07-19 late morning).** The M3.2g verdict is accepted as recorded:
+genuine model ceiling, not schema wording — one pre-authorized wording
+iteration produced an unchanged 5-for-5 failure signature, and per the
+armor directive the answer is a local, verifiable workaround. Two facts
+already in evidence decide the fix shape:
+1. The tool contract ALREADY names Jack's own words this turn as a
+   legal evidence channel (`_grounded`: normalized ≥8-char substring of
+   the user message) — the floor opens **no new trust surface**.
+2. The failing turn IS Jack's own words: he states the step's work
+   happened and orders the tick. The model fails only the ENVELOPE
+   (wrong tool family), never the authority — exactly the
+   NJ.2 / RA.1 / calendar-first precedent, so the engine fixes only
+   the envelope.
+
+**The floor (engine `respond()`, settled-reply section — after the
+narrated-JSON floor, BEFORE the false-completion floor: execution beats
+correction, the PC.4 placement lesson).** Fire iff ALL hold:
+1. `task_ledger` wired with ≥1 open task (everywhere else in the suite
+   the floor is structurally dead — the DURABLE TASKS surgical posture).
+2. The user message carries a completion cue (CUE-B): a tick-off
+   imperative ("tick/check/cross … off", "mark … done/complete") or a
+   first-person done-claim ("I did it", "I've done that", …).
+3. One clause of the user message (split on sentence enders, " — ",
+   ";") CLAIM-matches exactly one candidate step (pending or
+   in-progress; blocked steps NEVER — unblock stays an explicit flow):
+   folded content tokens (≥3 chars, stop-worded, 4-char prefix fold so
+   drained/drain agree) cover ≥60% of the step's tokens with ≥2 hits,
+   strictly best across ALL open steps — a tie or a second candidate
+   above the bar drops the fire (the NJ.2 ambiguity rule).
+4. The claim clause carries no negation / conditional / future marker
+   ("isn't drained yet", "once the loop's drained", "need to drain"
+   never fire).
+5. No successful `complete_task_step` already landed on that step this
+   turn (a model that did its job wins; the floor is a backstop), and
+   no reply-rewriting floor (phantom / identifier / artifact-denial)
+   fired this turn.
+
+Action: the ENGINE runs `complete_task_step(slug, step, evidence=the
+claim clause verbatim)` through `_run_tool` — gate, taint and referent
+tracking hold, and the evidence is a substring of `user_input` so the
+grounding gate passes by construction (the floor cannot sneak
+ungrounded evidence past the contract). The receipt is APPENDED to the
+settled reply (never replaced, never a second model hop — the F4/A1
+lesson); an ERROR result appends nothing and records no fire. Keying on
+Jack's claim + end-of-turn ledger state (not on which wrong tool the
+model picked) covers every observed misroute signature:
+`close_commitment`, `track_commitment`, the project-tool detour, and
+zero-tools.
+
+**Never-claim contract, restated:** the floor moves the ledger ONLY on
+Jack's own in-turn words — the contract's existing evidence channel. A
+model claim ("Marked it off") with no landed action still moves
+nothing; a bare "Tick off step one" with no work-happened clause still
+moves nothing (TKT-004 is the pin for exactly this and stays green).
+
+**Ilog (additive, schema stable):** `task_claim_floor` bool.
+
+**Guards (`tests\pillar1\test_task_claim_floor.py`, TCR-###,
+scripted-model):**
+- TCR-001 misrouted `close_commitment` + Jack's claim ("The coolant
+  loop's drained — I did it just now. Tick it off.") → floor completes
+  step 1, evidence line is Jack's clause verbatim, receipt appended,
+  `task_claim_floor` true in the ilog.
+- TCR-002 same claim, model emits ZERO tools → floor fires.
+- TCR-003 two open steps both matching above the bar → NO fire
+  (ambiguity drop), ledger untouched.
+- TCR-004 bare tick-off with no content claim ("Tick off step one.")
+  → NO fire (TKT-004's scenario stays behind the evidence gate).
+- TCR-005 model correctly calls `complete_task_step` itself → no
+  double-fire.
+- TCR-006 negated / conditional claim → NO fire.
+- TCR-007 no open tasks + tick-off phrasing → NO fire, zero task-tool
+  calls (bar 6's surgical posture).
+- TCR-008 model calls `complete_task_step` but its paraphrased
+  evidence is REFUSED → floor recovers with the verbatim clause;
+  the refusal still counts in `task_evidence_refused`.
+
+**Adjudication addendum (extends §M3.2-G mechanically; nothing else
+reopened):**
+- GT-J1 batch re-run ×5 minute-spaced, same protocol, bar stays ≥4/5.
+- Flag hygiene gains one row: `task_claim_floor` fires ONLY on
+  TKT/TCR/GT-J1 turns; ANY fire elsewhere in the flight is a STOP
+  (implied by `tasks_active == 0` elsewhere, stated explicitly).
+- All other §M3.2-G bars unchanged and still binding for the merge +
+  flight vs `2026-07-18_2346`.
+
+**Status (updated in place, Fable, 2026-07-19 ~11:45):** IMPLEMENTED and
+batch-verified on branch `m3` (commit `969b74f`). Evidence:
+- TCR-001..008 all green first run after the floor landed (TDD: TCR-001
+  reproduced the live miss in miniature and failed before the fix).
+- Full `--quick` 464/464 in the worktree (TKT/TSK/MRG/IDG/PTL all held;
+  TKT-004's never-claim pin green with the floor live).
+- **GT-J1 live batch 5/5 — bar ≥4/5, was 0/3.** Attribution from the
+  pinned-basetemp ilogs (`results\gtj1_fix_run1..5`): the misroute
+  PERSISTED exactly as the M3.2g verdict read it — runs 2–5 the model
+  still called `track_commitment` first on T2, run 1 it called nothing —
+  and `task_claim_floor` fired True on T2 in all five runs, completing
+  step 1 on Jack's verbatim clause. T3 stayed clean 5/5 (zero floor
+  fires on the status ask); in run 4 the model tried an ungrounded
+  `complete_task_step` on T3 and the evidence gate REFUSED it
+  (`task_evidence_refused` 1, ledger unchanged) — the LOCKED contract
+  held because of the gate, exactly the designed division of labor.
+- Zero false fires anywhere in the batch or the scripted suites.
+Ship gate §M3.2-G (merge → post-merge `--quick` → detached flight vs
+`2026-07-18_2346` → mechanical bars + the M3.2h hygiene addendum) is
+the remaining step; proceeding this session per the pre-registered
+execution order.

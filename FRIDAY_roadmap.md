@@ -259,9 +259,18 @@ Per jarvis plan §6's recorded increment order:
 Then grade J1 acceptance (a)–(d).
 Model: **Sonnet 5** for M3.1/3.3/3.4; **Fable 5** designs M3.2 and
 adjudicates its compare (Sonnet may implement).
-**Status: M3.1 DONE, M3.2 code-complete but STOPPED at its pre-registered
-GT-J1 gate (2026-07-19, branch `m3` commit `1f3137e`) — M3.3/M3.4 in
-progress under the STOP's explicit carve-out.** M3.1 (write guard) and
+**Status: M3.2 STOP RESOLVED (Fable 5, 2026-07-19 ~11:45) — task-claim
+recovery floor (jarvis plan §6 M3.2h) designed + implemented on `m3`
+(commit `969b74f`), GT-J1 re-batch 5/5 (was 0/3); §M3.2-G merge + flight
+vs `2026-07-18_2346` in progress this session. M3.1/M3.3/M3.4 DONE on
+`m3`.** The floor: when Jack's own message claims a step's work happened
+(unambiguous content match, no negation/conditional) and orders the
+tick, the ENGINE runs `complete_task_step` itself with his claim clause
+verbatim — Jack's words were already the tool contract's evidence
+channel, so no new trust surface; model self-claims still never move
+the ledger (TKT-004 pin). Batch ilogs show the misroute persisted
+(model ceiling confirmed) and the floor carried T2 in all five runs
+with zero false fires. Superseded STOP record follows. M3.1 (write guard) and
 M3.2a-f (wiring, 5 task tools, DURABLE TASKS injection, ilog fields,
 TKT-001..010 + full regression, `--quick` 444/444) are all done and green
 on the `m3` branch, unmerged. M3.2g's GT-J1 batch (bar ≥4/5) went 0/3 live
