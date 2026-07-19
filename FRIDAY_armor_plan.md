@@ -4194,12 +4194,12 @@ per §4.3 with flag proof.
 
 | item | what | status |
 |---|---|---|
-| IG.0 | Baseline (PC candidate) + GAP-001 forensics from archived ilogs | pending |
-| IG.1 | Foreign-note-path floor + `foreign_path_floor` ilog | pending |
-| IG.2 | Exemption hygiene (noise/value-position/fences/schema names) | pending |
-| IG.3 | IDG-001..008 + MRG set + full `--quick` | pending |
-| IG.4 | GT-C9/GT-C10/MEM-family/GAP-001 batches | pending |
-| IG.5 | Merge → candidate flight → compare vs PC candidate + ship gate (Fable) | pending |
+| IG.0 | Baseline (PC candidate) + GAP-001 forensics from archived ilogs | DONE — baseline `2026-07-18_1851`; forensic blocks above (0816 = flag-free churn; 1851 = LIVE CN.3 false-positive specimen → adjacency fix) |
+| IG.1 | Foreign-note-path floor + `foreign_path_floor` ilog | DONE (`c123a83`) — trigger narrowed to HELD contexts only (project context / pending task; brain-tool-only turns deferred so a replacement can never be a watched retraction — P6, widen on live friction) |
+| IG.2 | Exemption hygiene + CN.3 verb-adjacency window | DONE (`c123a83`) — adjacency ±60 chars restores CN.3's original design; retry-acceptance scan stays STRICT (require_verb_context=False) after MRG-003b caught the first cut letting a verb-less re-fabrication slip. Carry-ins landed: dangling late-rescan ilog flag; commitments `_MATCH_STOP` + first-person framing words |
+| IG.3 | IDG-001..007 + ADJ-001..002 + COM-013 + MRG set + full `--quick` | DONE — all guards pass, `--quick` 432/432 (test_inference_pending flap in one batch run re-passed alone — the documented COM-001-family live-model knife-edge, untouched surface) |
+| IG.4 | GAP-001/COM-008 conversion + GT-C9/GT-C10/MEM no-regression batches | DONE, ALL BARS MET — **GAP-001 4/5 with ZERO identifier/path-floor fires across all 25 turns** (false-positive class eliminated; the one miss is the bare name-the-gap knife edge), **COM-008 5/5** (stop-word widening converts the "I need to order…" shape), GT-C9 5/5 HELD, GT-C10 2/2, MEM-001 2/2, MEM-005 4/4 + 3/4 (r2 beta_probe = the documented kill-timing param band) |
+| IG.5 | Merge → candidate flight → compare vs `1851` + ship gate (Fable) | Merged to main (`ort` merge after `ced423e`), post-merge `--quick` 432/432; **candidate flight `2026-07-18_2346` IN FLIGHT** (detached PID 40904 + watchdog, pinned `--basetemp=results\ig_candidate_tmp`). Compare + gate pending (Fable) |
 
 ---
 
