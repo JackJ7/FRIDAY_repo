@@ -275,12 +275,19 @@ unchanged. Per jarvis plan §6 §M3.2-G this is a STOP-and-escalate to
 Fable/Jack, not something Sonnet self-adjudicates further (full verdict +
 the likely fix shape — a task-recovery floor that catches a misrouted
 commitment call matching an open task step — recorded in jarvis plan §6).
-**M3.1+M3.2 stay on `m3`, unmerged; nothing reverted.** Per the STOP's own
-carve-out ("M3.3/M3.4 may still merge during a STOP — they are non-model
-by scope check"), Sonnet is continuing with M3.3 (JobRunner) and M3.4
-(away board) in the same worktree. The Track A slot Sonnet held for the
-M3.2 flight (baseline `2026-07-18_2346` re-verified this session) is now
-released back — no flight was run, since there is nothing to compare yet.
+**M3.1+M3.2 stay on `m3`, unmerged; nothing reverted.** Jack confirmed
+(2026-07-19) continuing M3.3+M3.4 in the same worktree; both are now also
+DONE and green (commit `7b3cec7`: JobRunner + toggle + suite lockfile +
+JOB-001..008; away board API + UI + BRD-001..004; full `--quick` 452/452
+on branch `m3`). **Nothing has merged to `main`** — M3.3/M3.4 structurally
+depend on M3.2's bootstrap wiring (`engine.task_ledger`), so they cannot
+merge alone without either permanently no-op'ing (task_ledger stays `None`)
+or dragging the STOPped, gate-failed M3.2 code onto `main` unreviewed. All
+four items (M3.1–M3.4) sit together on `m3`, fully tested, waiting on
+Fable/Jack's read of the GT-J1 verdict (jarvis plan §6) before anything
+lands. The Track A slot Sonnet held for the M3.2 flight (baseline
+`2026-07-18_2346` re-verified this session) is released back — no flight
+was run, since there is nothing to compare yet.
 
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 

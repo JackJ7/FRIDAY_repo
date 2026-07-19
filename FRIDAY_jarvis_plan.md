@@ -972,9 +972,25 @@ auto-memory sync.
 | M3.2f | TKT-001..010 + regression sets + `--quick` | DONE — TKT-001..010, MRG+IDG+PTL+TSK green, full `--quick` 444/444 green on branch `m3` (commit `1f3137e`) |
 | M3.2g | GT-J1 golden + ×5 batch (bar ≥4/5) | **STOP — 0/3 live (batch halted early, mathematically below bar). See verdict below.** |
 | M3.2-G | Merge → flight vs `2346` → pre-registered gate applied → verdict block recorded | **NOT RUN — blocked on M3.2g STOP; M3.1+M3.2 stay on branch `m3`, unmerged** |
-| M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | in progress (non-model, proceeding per "M3.3/M3.4 may still merge during a STOP") |
-| M3.4 | Away board API + UI + BRD-001..004 | queued after M3.3 |
-| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | blocked on M3.2-G |
+| M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
+| M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
+| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2-G** — see merge note below |
+
+**Merge note (Sonnet, 2026-07-19):** M3.3/M3.4 are code-complete, fully
+tested, and committed on `m3` (`7b3cec7`, stacked on M3.1+M3.2's `1f3137e`)
+— but they are NOT separately mergeable to `main`: both depend on M3.2's
+bootstrap wiring (`engine.task_ledger`), so merging them alone would either
+require cherry-picking around M3.2 (leaving `task_ledger` permanently `None`
+— pointless, they'd no-op forever) or dragging M3.2's STOPped, gate-failed
+code onto `main` unreviewed. Per Jack's steer ("continue M3.3/M3.4 now") the
+intent was build-and-test-in-branch, not merge — so **nothing has been
+merged to `main` this session.** All four items (M3.1–M3.4) sit
+together on `m3`, green, waiting on the M3.2g GT-J1 verdict above. M3-X's
+items (a)–(c) (JobRunner/away-board live behavior) could in principle be
+graded directly against the `m3` worktree's own live instance without
+touching `main`, but (d) is explicitly "= §M3.2-G held" and cannot be
+graded until that verdict resolves — so M3-X waits as a whole rather than
+partially closing.
 
 **M3.2g STOP verdict (Sonnet, 2026-07-19, branch `m3` commit `1f3137e`)** — recorded
 per §M3.2-G's "STOP-and-escalate ... record state here" instruction, not
