@@ -266,6 +266,41 @@ def test_dif006_conditional_promise_silent(sandbox):
 
 
 @pytest.mark.upgrade
+@pytest.mark.case("DIF-007", "a LATE floor (script floor, last by design) "
+                             "regenerating the reply into a fresh dangling "
+                             "tail still gets the promise carried — the "
+                             "post-floor re-scan arms the ledger (GT-P2a "
+                             "pc-batch r3's S1 hole)")
+def test_dif007_late_floor_rescan(sandbox):
+    eng = _eng(sandbox, [
+        "ให้ฉันตรวจ"
+        "สอบกล่องจด"
+        "หมาย",                   # drifted draft (Thai)
+        "I'll check the inbox in a moment.",           # S1 regen: dangles
+    ])
+    eng.respond("Please check the inbox for me.")
+    final = eng.history[-1]["content"]
+    assert final == "I'll check the inbox in a moment.", final
+    assert eng.pending_task is not None, "late dangle not carried"
+    assert "check the inbox" in eng.pending_task["blocker"].lower()
+
+
+@pytest.mark.upgrade
+@pytest.mark.case("DIF-008", "'let me know if …' is a polite closer that "
+                             "directs JACK to act — never a dangle, no "
+                             "retry burned, no ledger armed (GT-P2a r3's "
+                             "false-positive shape)")
+def test_dif008_let_me_know_closer(sandbox):
+    closer = ("Both emails are routine. Let me know if you want to review "
+              "them in detail.")
+    eng = _eng(sandbox, [closer])
+    eng.respond("Please check my email and tell me if anything needs me.")
+    assert eng.history[-1]["content"] == closer
+    assert eng.pending_task is None
+    assert len(eng.model.seen) == 1, "a retry was burned on a polite closer"
+
+
+@pytest.mark.upgrade
 @pytest.mark.case("DIF-005", "narrated-listing tail stays CN.4's: the "
                              "specific floor runs list_projects, this one "
                              "stays out")

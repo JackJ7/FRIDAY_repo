@@ -55,7 +55,8 @@ def promise_kept_or_carried(status: str) -> Check:
     carried, never silently dropped. Vacuously true when the turn ran a tool
     or didn't end on a promise, so model phrasing variance can't flake it."""
     tail_promise = re.compile(
-        r"(let me|i[’']ll|i will|i am going to|i'?m going to|going to)"
+        r"(let me (?!know\b)|i[’']ll|i will|i am going to|i'?m going to"
+        r"|going to)"
         r"\b[^.!?]{0,80}\b(check|read|look|pull|fetch|get|scan|review"
         r"|go through|summari[sz]e)\w*[^.!?]{0,40}[.!…]?\s*$", re.IGNORECASE)
     def _final_sentence(text):
@@ -92,7 +93,8 @@ def not_promise_terminated(status: str) -> Check:
     """The behavioural half: the reply does not END on an unfulfilled
     check/read promise (the m5 narration-dead-end metric, email flavour)."""
     tail_promise = re.compile(
-        r"(let me|i[’']ll|i will|i am going to|i'?m going to|going to)"
+        r"(let me (?!know\b)|i[’']ll|i will|i am going to|i'?m going to"
+        r"|going to)"
         r"\b[^.!?]{0,80}\b(check|read|look|pull|fetch|get|scan|review"
         r"|go through|summari[sz]e)\w*[^.!?]{0,40}[.!…]?\s*$", re.IGNORECASE)
     def _fn(ctx):

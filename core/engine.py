@@ -1455,19 +1455,8 @@ class Engine:
                 and not identifier_floor_fired and not artifact_denial_fired
                 and not false_completion_fired and not phantom_fired
                 and self._looks_like_request(user_input)):
-            # The FINAL SENTENCE must OPEN on the promise (short lead like
-            # "Sure — " allowed). A promise trailing another clause is
-            # usually Jack-conditioned ("double-check the path and I'll
-            # read it" — RAF-004's honest blocker shape) — the turn ended
-            # on a stated need, not a dangle. Narrow-first, per P6.
-            sentences = [s.strip() for s in
-                         re.split(r"(?<=[.?!])\s+|\n+",
-                                  (reply.content or "").strip())
-                         if s.strip()]
-            final_sentence = sentences[-1] if sentences else ""
-            m = self._DANGLING_INTENT_TAIL.search(final_sentence)
-            if m and m.start() <= 15:
-                promise = m.group(0).strip()
+            promise = self._dangling_tail(reply.content)
+            if promise:
                 correction = (
                     "STOP: your reply ends by promising an action "
                     f"(\"{promise}\") but you ran no tools and did nothing. "
@@ -2273,6 +2262,17 @@ class Engine:
             offer_text = self._offer_in_reply(turn_text or reply.content)
             self.offer = ({"text": offer_text, "referents": list(self.referents)}
                           if offer_text else None)
+            # PC.3 late re-scan: a floor that runs AFTER the dangling floor
+            # (the script floor is LAST by design) can REPLACE the reply and
+            # introduce a fresh dangling tail nothing re-vets — measured on
+            # GT-P2a (pc batch r3): S1 regenerated a drifted draft into
+            # "…Let me know if you want to review…" and the promise-carried
+            # guarantee silently lapsed. The "carried" half needs no retry,
+            # so re-run the deterministic tail test here (post-every-floor):
+            # zero tools + request turn + dangling final text → carry it.
+            if (dangling_promise is None and not tool_log
+                    and self._looks_like_request(user_input)):
+                dangling_promise = self._dangling_tail(reply.content)
             # PC.3: an unrecovered dangling promise on a REQUEST turn is not
             # an offer — Jack already asked, so making next turn's "yes" the
             # price of action is exactly the m1 friction the floor closes.
@@ -3938,7 +3938,11 @@ class Engine:
     # promise check uses a subset, so every shape the golden grades is a
     # shape this floor engages.
     _DANGLING_INTENT_TAIL = re.compile(
-        r"(?:let me|i[’']ll|i will|i am going to|i'?m going to"
+        # "let me know…" is excluded by the lookahead: it directs JACK to
+        # act (the licence-tail idiom, a polite closer after a complete
+        # answer) — measured on GT-P2a pc-batch r3, where counting it as a
+        # dangle would have armed a task ledger on a finished reply.
+        r"(?:let me (?!know\b)|i[’']ll|i will|i am going to|i'?m going to"
         r"|i'?m about to|going to|give me a (?:moment|sec(?:ond)?))"
         r"\b[^.!?]{0,80}"
         r"\b(?:check|read|look|pull|fetch|get|scan|review|go through"
@@ -3956,6 +3960,23 @@ class Engine:
         r"(?:created|updated|merged|consolidated|moved|renamed|deleted"
         r"|closed|saved|written|added|completed|finished|executed|applied)\b",
         re.IGNORECASE)
+
+    def _dangling_tail(self, text):
+        """The PC.3 detection, shared by the floor and the late re-scan at
+        PT-arm time: the reply's FINAL SENTENCE opens (short lead like
+        "Sure — " allowed) on a first-person-future promise. A promise
+        trailing another clause is usually Jack-conditioned ("double-check
+        the path and I'll read it" — RAF-004's honest blocker shape) — the
+        turn ended on a stated need, not a dangle. Narrow-first, per P6.
+        Returns the promise sentence-match or None."""
+        sentences = [s.strip() for s in
+                     re.split(r"(?<=[.?!])\s+|\n+", (text or "").strip())
+                     if s.strip()]
+        final_sentence = sentences[-1] if sentences else ""
+        m = self._DANGLING_INTENT_TAIL.search(final_sentence)
+        if m and m.start() <= 15:
+            return m.group(0).strip()
+        return None
 
     def _task_status_line(self) -> str:
         """Code-built truth for the false-completion floor: what the live
