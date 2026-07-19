@@ -261,9 +261,11 @@ Model: **Sonnet 5** for M3.1/3.3/3.4; **Fable 5** designs M3.2 and
 adjudicates its compare (Sonnet may implement).
 **Status: M3.2 STOP RESOLVED (Fable 5, 2026-07-19 ~11:45) — task-claim
 recovery floor (jarvis plan §6 M3.2h) designed + implemented on `m3`
-(commit `969b74f`), GT-J1 re-batch 5/5 (was 0/3); §M3.2-G merge + flight
-vs `2026-07-18_2346` in progress this session. M3.1/M3.3/M3.4 DONE on
-`m3`.** The floor: when Jack's own message claims a step's work happened
+(commit `969b74f`), GT-J1 re-batch 5/5 (was 0/3); merged to main
+`d49397c` (M3.1–M3.4 together), post-merge `--quick` 464/464, §M3.2-G
+candidate flight `2026-07-19_1155` (559 items) DETACHED in progress vs
+baseline `2026-07-18_2346` — verdict on completion. FROZEN CODE until
+the flight lands.** The floor: when Jack's own message claims a step's work happened
 (unambiguous content match, no negation/conditional) and orders the
 tick, the ENGINE runs `complete_task_step` itself with his claim clause
 verbatim — Jack's words were already the tool contract's evidence
