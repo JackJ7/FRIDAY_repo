@@ -137,6 +137,20 @@ class TaskLedger:
                     out.append(t)
             return sorted(out, key=lambda t: t.slug)
 
+    def list_all(self):
+        """Every task regardless of status, slug order — list_open()
+        deliberately excludes done/cancelled tasks, but the while-you-were-
+        away board (J1.5, roadmap M3.4) needs exactly the done ones."""
+        with self._lock:
+            out = []
+            for rel in self.brain.list_notes():
+                if not rel.startswith(self.DIR + "/"):
+                    continue
+                t = self._read(rel[len(self.DIR) + 1:-3])
+                if t is not None:
+                    out.append(t)
+            return sorted(out, key=lambda t: t.slug)
+
     def summary(self) -> str:
         """Compact active-task lines — built for the future referent-block
         injection (that wiring is a separate, model-visible increment)."""

@@ -128,7 +128,21 @@ def main():
         print("   * Windows won't sleep: powercfg /change standby-timeout-ac 0")
     print("=" * 70)
 
-    result = subprocess.run(cmd, env=env, cwd=str(ROOT))
+    # M3.3 (jarvis J1): a live sentinel JobRunner checks before ever taking a
+    # background step — a suite run and an unattended job both want the GPU/
+    # brain, and the run must win. PID-tagged (not just presence) so a crashed
+    # run's stale lock doesn't wedge the runner forever (JobRunner tolerates
+    # a dead PID as "not running").
+    lock_path = ROOT / "results" / "SUITE_RUNNING.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path.write_text(str(os.getpid()), encoding="utf-8")
+    try:
+        result = subprocess.run(cmd, env=env, cwd=str(ROOT))
+    finally:
+        try:
+            lock_path.unlink()
+        except OSError:
+            pass
 
     print("\n" + "=" * 70)
     print(f"Report: {results / 'report.html'}")

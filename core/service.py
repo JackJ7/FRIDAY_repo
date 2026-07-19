@@ -20,11 +20,12 @@ import re
 import threading
 import urllib.parse
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from core.accountability import Accountability
 from core.bootstrap import ROOT, build_engine, data_dir, load_config
+from core.jobs import JobRunner
 from core.model import ModelError
 from core.project_meta import project_status
 from core.toggles import ToggleRegistry
@@ -99,6 +100,16 @@ class FridayService:
             "dnd", "bool", "Do Not Disturb",
             "Silence pings and toasts. The Needs You panel still updates.",
             default=self.acc.dnd, on_change=self.acc.set_dnd, persist=False)
+        # Background jobs (jarvis plan J1.3/J1.4, roadmap M3.3): default OFF —
+        # Jack arms it from the Controls panel. The switchable behavior is the
+        # RUNNER; the task tools themselves are always-on substrate (M3.2e).
+        self.jobs = JobRunner(self)
+        self.toggles.register(
+            "jobs.background_enabled", "bool", "Background jobs",
+            "Let FRIDAY work tracked tasks unattended (one step per tick) "
+            "when idle. Outbound/destructive steps always park for your "
+            "confirm — this never bypasses that.",
+            default=False)
 
         self._stop = threading.Event()
         self._activity = "idle"
@@ -234,6 +245,31 @@ class FridayService:
         # still feeds her context so she can judge importance.
         return data
 
+    def get_away_board(self) -> dict:
+        """While-you-were-away board (jarvis plan J1.5, roadmap M3.4):
+        read-only, code-built — every fact is a ledger quote (armor P3), no
+        model text anywhere. `parked` = every open blocked task; `finished`
+        = status done with `updated` within the last 48h."""
+        ledger = getattr(self.engine, "task_ledger", None)
+        if ledger is None:
+            return {"parked": [], "finished": []}
+        cutoff = datetime.now() - timedelta(hours=48)
+        parked, finished = [], []
+        for t in ledger.list_all():
+            evidence = [e for s in t.steps for e in s.evidence]
+            if t.status == "blocked":
+                parked.append({"slug": t.slug, "title": t.title,
+                               "blocked_on": t.blocked_on, "evidence": evidence})
+            elif t.status == "done":
+                try:
+                    updated = datetime.fromisoformat(t.updated)
+                except ValueError:
+                    continue
+                if updated >= cutoff:
+                    finished.append({"slug": t.slug, "title": t.title,
+                                     "updated": t.updated, "evidence": evidence})
+        return {"parked": parked, "finished": finished}
+
     def set_dnd(self, value: bool) -> bool:
         # Compat shim (sidebar DND link, older tests): dnd is a registry
         # toggle now — one control path, so the Controls panel never disagrees.
@@ -323,6 +359,11 @@ class FridayService:
                     finally:
                         self._set_activity("idle")
                         self._busy.release()
+
+                # Background jobs (M3.3): at most one tracked-task step per
+                # tick, only when idle/enabled/healthy — JobRunner owns every
+                # other gating decision (busy, research, suite lock, Ollama).
+                self.jobs.tick()
             except Exception:
                 pass  # the heartbeat must never die; next tick tries again
 

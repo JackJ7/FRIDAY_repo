@@ -131,6 +131,11 @@ class Engine:
         # may stay None (a bare sandbox), so the referent-block injection below
         # guards with getattr — the same posture as project_resolver.
         self.task_ledger = None
+        # True while a background job step (core/jobs.py, roadmap M3.3) drives
+        # this turn — set by JobRunner around its engine.respond() call, never
+        # by chat. Logged additively so the ilog can attribute turns to the
+        # runner vs live chat.
+        self._job_turn = False
         # True while the deep-reasoning deep-mode model is engaged (future use; the
         # status console shows "deep mode" so Jack knows why it's slower).
         self.deep_active = False
@@ -2618,6 +2623,10 @@ class Engine:
             # the whole M3.2 compare's attribution. Additive; schema stable.
             "tasks_active": len(task_ledger.list_open()) if task_ledger else 0,
             "task_evidence_refused": getattr(self, "_task_evidence_refused", 0),
+            # Armor M3.3 (jarvis J1): True when JobRunner drove this turn
+            # unattended rather than live chat — lets the compare attribute
+            # any flag to the runner vs a real conversation. Additive.
+            "job_turn": getattr(self, "_job_turn", False),
         })
         return reply
 

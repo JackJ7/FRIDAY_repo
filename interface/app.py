@@ -153,6 +153,11 @@ class FridayApp:
         def get_uploads(self):
             return self._app.service.get_uploads()
 
+        # ----- while-you-were-away board (jarvis plan J1.5, roadmap M3.4) -----
+
+        def get_away_board(self):
+            return self._app.service.get_away_board()
+
         # ----- history tab + settings panel -----
 
         def list_sessions(self):

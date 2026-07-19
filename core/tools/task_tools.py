@@ -15,6 +15,20 @@ def _normalize(s: str) -> str:
     return re.sub(r"\s+", " ", str(s or "")).strip().casefold()
 
 
+def render_task(t) -> str:
+    """The full rendered state of one Task — shared by the task_status tool
+    and JobRunner's background-step brief (core/jobs.py, M3.3), so a job
+    step sees exactly what Jack would see asking task_status himself."""
+    lines = [f"Task '{t.slug}' ({t.status}):"]
+    for i, s in enumerate(t.steps):
+        lines.append(f"{i + 1}. [{s.state}] {s.text}")
+        for ev in s.evidence:
+            lines.append(f"   evidence: {ev}")
+    if t.blocked_on:
+        lines.append(f"blocked_on: {t.blocked_on}")
+    return "\n".join(lines)
+
+
 def _grounded(evidence: str, tool_log: list, user_input: str) -> bool:
     """GROUNDED = normalized (whitespace-collapsed, casefolded, >=8 chars)
     substring of THIS TURN's tool results or of Jack's message this turn."""
@@ -68,14 +82,7 @@ def register_task_tools(registry, ledger):
         t = ledger.get(slug)
         if t is None:
             return f"ERROR: no such task '{slug}'. Use task_status with no slug to list open tasks."
-        lines = [f"Task '{t.slug}' ({t.status}):"]
-        for i, s in enumerate(t.steps):
-            lines.append(f"{i + 1}. [{s.state}] {s.text}")
-            for ev in s.evidence:
-                lines.append(f"   evidence: {ev}")
-        if t.blocked_on:
-            lines.append(f"blocked_on: {t.blocked_on}")
-        return "\n".join(lines)
+        return render_task(t)
 
     def complete_task_step(slug: str, step: int, evidence: str) -> str:
         if not _grounded(evidence, _turn_tool_log(), _turn_user_input()):
