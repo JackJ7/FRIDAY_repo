@@ -77,6 +77,15 @@ class Engine:
         # measured mechanisms — the A6-ablation precedent). None, or
         # {request, blocker, turns_left}. See _pending_task_update.
         self.pending_task = None
+        # Correction ledger (armor PC.1 — parity row P5): Jack's corrections
+        # of the session record, pinned in CODE so they cannot scroll off or
+        # be dropped by attention (the live F-transcript repeated a
+        # fabrication AFTER Jack's correction — the class this closes).
+        # Unlike the task ledgers there is NO TTL: a correction is a session
+        # CONSTRAINT ("never re-violated"), not a task, and it survives
+        # history compaction by construction. FIFO-bounded list of
+        # {wrong, right} dicts — see _correction_update.
+        self.corrections = []
         # Did THIS turn's user message carry merge intent? (CN.4.1) — set every
         # turn by _consolidation_update. The CN.3 fabrication scan must ride
         # every merge-flavoured turn, not just pending-task turns: measured on
@@ -529,6 +538,17 @@ class Engine:
             ref_block = ((ref_block + "\n\n" + pending_directive)
                          if ref_block else pending_directive)
 
+        # Correction ledger (armor PC.1 — parity row P5): detect a correction
+        # in THIS message (conservative cue + contrast pair + the wrong side
+        # really said earlier — see _correction_update) and pin it; the
+        # binding-constraints directive rides at the very end of the block,
+        # after the task directives (constraints stack in the max-obedience
+        # tail the three ledgers already proved out).
+        correction_directive = self._correction_update(user_input)
+        if correction_directive:
+            ref_block = ((ref_block + "\n\n" + correction_directive)
+                         if ref_block else correction_directive)
+
         # Streaming-preview guard (Phase 1, finding #2). On turns where a
         # post-generation barrier below may REPLACE the whole reply, DON'T
         # stream tokens live — otherwise the user watches a fabrication (or an
@@ -603,7 +623,13 @@ class Engine:
             # the stream so the offer never flickers before the answer.
             # (Usually already held via _entity_hint, which the reference
             # reframe sets; kept explicit so the two can't drift.)
-            or self._resolved_reference is not None)
+            or self._resolved_reference is not None
+            # PC.2: once a correction is pinned, any reply may be replaced or
+            # substituted by the correction floor — hold so Jack never
+            # watches a corrected-away value flicker on screen. Accepted
+            # trade (recorded in the M2 design): post-correction turns
+            # stream settled-once for the rest of the session.
+            or bool(self.corrections))
         live_token = None if hold_stream else on_token
 
         base = [{"role": "system", "content": self._system_prompt(extra=ref_block)}]
@@ -1354,6 +1380,136 @@ class Engine:
                     live_token(addition)
                 narrated_json_fired = True
 
+        # False-completion floor (armor PC.4 — parity row P2's past-tense
+        # sibling; the GT-C9 r1 residual: T4 "I've created a new consolidated
+        # project file" while both duplicates sat unmerged). While a durable
+        # task is LIVE — the code-owned ledgers are the truth carriers; if
+        # the work landed in an earlier turn they already retired on disk
+        # truth — a reply claiming the work is done with ZERO landed actions
+        # this turn is lying to Jack about state code can check. Placed
+        # AFTER the narrated-tool floors on purpose (design deviation,
+        # recorded in the plan's PC.4 row): a narrated call NJ.2 can execute
+        # makes the claim TRUE — execution beats correction. One regen
+        # against the ledger status; a retry that still claims gets the
+        # code-built status line instead (grounded from the ledger verbatim,
+        # never fabricated — the CN.3-fallback posture). Both trigger
+        # conjuncts already hold the stream, so no watched retraction.
+        false_completion_fired = False
+        if (reply is not None
+                and (self.consolidation is not None
+                     or self.pending_task is not None)
+                and not phantom_fired and not identifier_floor_fired
+                and not narrated_list_fired and not narrated_json_fired
+                and self._COMPLETION_CLAIM.search(reply.content or "")):
+            fc_landed = any(
+                self.registry.kind(t["tool"]) in ("action", "action_confirmed")
+                and self._write_landed(t.get("result", ""))
+                for t in tool_log)
+            if not fc_landed:
+                status_line = self._task_status_line()
+                correction = (
+                    "STOP: your draft claims the work is done, but no action "
+                    "landed this turn and the tracked task is still pending. "
+                    f"The true state, kept in code: {status_line} Give Jack "
+                    "the TRUE status and the next concrete step — never claim "
+                    "completion the tools don't show.")
+                retry = self.model.chat(
+                    base + turn
+                    + [{"role": "assistant", "content": reply.content},
+                       {"role": "system", "content": correction}],
+                    on_token=None)
+                self.session_tokens += retry.eval_count
+                candidate = (retry.content or "").strip()
+                if candidate and not self._COMPLETION_CLAIM.search(candidate):
+                    reply.content = candidate
+                else:
+                    # Deterministic honest floor: the ledger status IS the
+                    # true answer — code-built, never fabricated.
+                    reply.content = status_line
+                reply.tool_calls = []
+                false_completion_fired = True
+                if live_token:  # None on a held turn — single emit streams it
+                    live_token("\n" + reply.content)
+                turn.append({"role": "assistant", "content": reply.content})
+
+        # Dangling-intent floor (armor PC.3 — parity row P2, the GENERAL
+        # promise tail). CN.4 fulfills a narrated LISTING and NJ.2 executes a
+        # narrated CALL; everything else that ends "I'll check your inbox
+        # right away." with zero tools run still dies on a promise. On a
+        # REQUEST-shaped turn (a promise on a statement turn is an OFFER —
+        # the offer ledger owns those, the P6 split) the floor gives the
+        # model ONE retry WITH tools: emitted calls run through _run_tool
+        # (gate, taint and referent tracking hold exactly as native) and
+        # their results are APPENDED — never replaced, never a second model
+        # hop on the result (the F4/A1 lesson), so the promise reads as
+        # fulfilled. A retry that still doesn't act leaves the draft
+        # untouched and CARRIES the promise: the pending-task ledger arms
+        # with the promise sentence as the blocker (PT.1's measured
+        # machinery does the rest next turn) and the offer ledger is
+        # suppressed — Jack already asked; waiting for another "yes" is the
+        # m1 redundant-ask friction this floor exists to close.
+        dangling_floor_fired = False
+        dangling_promise = None
+        if (reply is not None and not tool_log
+                and not narrated_list_fired and not narrated_json_fired
+                and not identifier_floor_fired and not artifact_denial_fired
+                and not false_completion_fired and not phantom_fired
+                and self._looks_like_request(user_input)):
+            # The FINAL SENTENCE must OPEN on the promise (short lead like
+            # "Sure — " allowed). A promise trailing another clause is
+            # usually Jack-conditioned ("double-check the path and I'll
+            # read it" — RAF-004's honest blocker shape) — the turn ended
+            # on a stated need, not a dangle. Narrow-first, per P6.
+            sentences = [s.strip() for s in
+                         re.split(r"(?<=[.?!])\s+|\n+",
+                                  (reply.content or "").strip())
+                         if s.strip()]
+            final_sentence = sentences[-1] if sentences else ""
+            m = self._DANGLING_INTENT_TAIL.search(final_sentence)
+            if m and m.start() <= 15:
+                promise = m.group(0).strip()
+                correction = (
+                    "STOP: your reply ends by promising an action "
+                    f"(\"{promise}\") but you ran no tools and did nothing. "
+                    "Do it NOW: emit the tool call this turn, or state "
+                    "concretely what input you are missing. Never end a turn "
+                    "on 'let me / I'll ...'.")
+                retry = self.model.chat(
+                    base + turn
+                    + [{"role": "assistant", "content": reply.content},
+                       {"role": "system", "content": correction}],
+                    tools=self.registry.to_ollama(), on_token=None)
+                self.session_tokens += retry.eval_count
+                dangling_floor_fired = True
+                if retry.tool_calls:
+                    additions = []
+                    for tc in retry.tool_calls[:2]:
+                        name = tc.get("function", {}).get("name", "?")
+                        args = tc.get("function", {}).get("arguments") or {}
+                        if isinstance(args, str):
+                            try:
+                                args = json.loads(args)
+                            except json.JSONDecodeError:
+                                args = {}
+                        if on_tool:
+                            on_tool(name, args)
+                        df_result, df_external = self._run_tool(name, args)
+                        tool_log.append({"tool": name, "args": args,
+                                         "result": df_result[:500]})
+                        turn.append({"role": "tool",
+                                     "content": self._wrap_data(df_result,
+                                                                df_external)})
+                        additions.append(str(df_result).strip()[:400])
+                    addition = "\n\n" + "\n\n".join(additions)
+                    reply.content = (reply.content or "").rstrip() + addition
+                    reply.tool_calls = []
+                    turn.append({"role": "assistant", "content": reply.content})
+                    if live_token:
+                        live_token(addition)
+                else:
+                    # The re-prompt arm: keep the draft, carry the promise.
+                    dangling_promise = promise
+
         # Calendar-first corrective pass (Phase 2, item 1; plan D2). Phase 1
         # measured the prompt rule failing: on a bare "what day is X?" the 14B
         # answers from the injected accountability summary with ZERO
@@ -1719,6 +1875,48 @@ class Engine:
                             live_token("\n" + reply.content)
                         turn.append({"role": "assistant", "content": reply.content})
 
+        # Correction floor (armor PC.2 — parity row P5's hard layer). The
+        # ledger directive above is the soft layer; this is the guarantee: a
+        # settled reply stating a corrected-away value WITHOUT the corrected
+        # one gets one regen, and a retry that still violates gets the
+        # deterministic substitution — Jack's correction is authoritative by
+        # construction, the same posture as _force_today_date. A reply
+        # carrying BOTH values is discussing the correction honestly and
+        # never fires (the goldens grade by the same rule, so the floor and
+        # the grader cannot drift). Scan semantics are deliberately literal
+        # (case-insensitive substring of the stored operands): a phrasing
+        # variant ("24 volts" for "24V") slips floor AND grader identically
+        # — the accepted, documented residual.
+        correction_floor_fired = False
+        if reply is not None and self.corrections and not phantom_fired:
+            viol = self._correction_violation(reply.content)
+            if viol:
+                correction = (
+                    "STOP: Jack corrected this earlier in this session — it "
+                    f"is \"{viol['right']}\", not \"{viol['wrong']}\". Your "
+                    "draft states the corrected-away value as current. "
+                    "Rewrite the reply stating the corrected value.")
+                retry = self.model.chat(
+                    base + turn
+                    + [{"role": "assistant", "content": reply.content},
+                       {"role": "system", "content": correction}],
+                    on_token=None)
+                self.session_tokens += retry.eval_count
+                candidate = (retry.content or "").strip()
+                if candidate and not self._correction_violation(candidate):
+                    reply.content = candidate
+                else:
+                    # Deterministic floor: substitute in the draft. Cannot be
+                    # wrong — the corrected value is Jack's own words.
+                    reply.content = re.sub(
+                        re.escape(viol["wrong"]), viol["right"],
+                        reply.content or "", flags=re.IGNORECASE)
+                reply.tool_calls = []
+                correction_floor_fired = True
+                if live_token:  # None on a held turn — single emit streams it
+                    live_token("\n" + reply.content)
+                turn.append({"role": "assistant", "content": reply.content})
+
         # Date-answer floor (Phase 1, item 1). Pure determinism: the clock is
         # authoritative for "today", so a reply that states a today-cued full
         # date contradicting it is simply wrong (the "March 15, 2023" hallucination
@@ -2075,6 +2273,14 @@ class Engine:
             offer_text = self._offer_in_reply(turn_text or reply.content)
             self.offer = ({"text": offer_text, "referents": list(self.referents)}
                           if offer_text else None)
+            # PC.3: an unrecovered dangling promise on a REQUEST turn is not
+            # an offer — Jack already asked, so making next turn's "yes" the
+            # price of action is exactly the m1 friction the floor closes.
+            # Suppress the offer so the pending-task arm below can carry the
+            # promise instead. Statement-turn offers (DIF-003) are untouched:
+            # the floor never sets dangling_promise on a non-request turn.
+            if dangling_promise is not None:
+                self.offer = None
 
         # Retire the pending consolidation once the merge actually LANDED
         # (armor CONSOLIDATE CN.2) — disk truth, not narration: a merge the
@@ -2115,6 +2321,13 @@ class Engine:
                     and self.consolidation is None
                     and self._looks_like_request(user_input)):
                 blocker = self._blocking_clarify(reply.content)
+                # PC.3's re-prompt arm: a promise the dangling floor could
+                # not get acted on is a blocker too — the ledger's directive
+                # ("your reply left it blocked on: '<promise>' … DO the task
+                # now") is the recovery machinery, already measured for
+                # clarify-question blockers.
+                if not blocker and dangling_promise is not None:
+                    blocker = dangling_promise
                 if blocker:
                     self.pending_task = {
                         "request": " ".join(user_input.split())[:160],
@@ -2288,6 +2501,19 @@ class Engine:
             # computation from Jack's own stated reduction/efficiency numbers
             # (GOLD-gear-03's direction-churn signature), now countable.
             "gear_check_floor": gear_check_fired,
+            # Armor PC.1/PC.2 (parity P5): how many corrections are pinned
+            # this turn, and whether the correction floor had to catch a
+            # corrected-away value re-stated as current.
+            "corrections_active": len(self.corrections),
+            "correction_floor": correction_floor_fired,
+            # Armor PC.3 (parity P2): True when the dangling-intent floor
+            # engaged a promise-terminated request turn (recovered with a
+            # tool round, or carried via the pending-task ledger).
+            "dangling_intent_floor": dangling_floor_fired,
+            # Armor PC.4 (parity P2): True when the false-completion floor
+            # caught a done-claim with zero landed actions while a tracked
+            # task was still pending (the GT-C9 r1 residual, now countable).
+            "false_completion_floor": false_completion_fired,
         })
         return reply
 
@@ -3614,6 +3840,138 @@ class Engine:
             "- If you genuinely still need something, your question must "
             "NAME this task and the missing piece — never a generic 'could "
             "you specify' / 'please clarify'.")
+
+    # ---- Correction ledger (armor PC.1/PC.2 — parity row P5) -------------
+    # Detection is deliberately conservative: a correction CUE, an
+    # extractable contrast PAIR, and — the anti-false-arm anchor — the WRONG
+    # side must really have been said earlier in the session (history or the
+    # compaction summary), so Jack thinking aloud in contrast shapes ("fast,
+    # not perfect") can never pin a phantom correction.
+    _CORRECTION_CUE = re.compile(
+        r"^\s*(?:no\b|nope\b|wrong\b|incorrect\b|not quite\b|actually\b"
+        r"|correction\b|that'?s (?:wrong|not right|incorrect))"
+        r"|\bcorrection\b|\bi (?:said|meant)\b|\bshould (?:be|have been)\b"
+        r"|\bit'?s actually\b", re.IGNORECASE)
+    # Quoted operands preferred (multi-word names extract whole); the
+    # unquoted branch takes a single value-like token so free prose can't
+    # smear the operand ("...coil is 12V, not 24V" -> 12V / 24V).
+    _CORRECTION_PAIRS = (
+        re.compile(                                   # 'right', not 'wrong'
+            r"['\"‘“](?P<right>[^'\"‘“’”]{2,40})['\"’”]\s*,?\s+not\s+"
+            r"(?:the\s+)?['\"‘“]?(?P<wrong>[^,.;:!?'\"‘“’”—–]{2,40})"
+            r"['\"’”]?", re.IGNORECASE),
+        re.compile(                                   # right, not wrong
+            r"(?P<right>[\w%/.\-]{2,20})\s*,?\s+not\s+"
+            r"(?:the\s+)?(?P<wrong>[^,.;:!?'\"‘“’”—–]{2,40})", re.IGNORECASE),
+        re.compile(                                   # not wrong — right
+            r"\bnot\s+(?:the\s+)?['\"‘“]?(?P<wrong>[^,.;:!?'\"‘“’”—–]{2,40}?)"
+            r"['\"’”]?\s*(?:[,—–]|\bbut\b)\s*['\"‘“]?"
+            r"(?P<right>[^,.;:!?'\"‘“’”—–]{2,40})['\"’”]?", re.IGNORECASE),
+    )
+    _CORRECTIONS_MAX = 8
+
+    @staticmethod
+    def _trim_operand(text: str) -> str:
+        """Strip filler heads, quotes and trailing punctuation so operands
+        store as the value Jack means ('it's the 24V one' -> '24V one')."""
+        t = (text or "").strip().strip("'\"‘“’”").strip()
+        t = re.sub(r"^(?:it'?s|it is|that'?s|that is|i said|i meant"
+                   r"|should be|use|called|named|the|a|an)\s+", "", t,
+                   flags=re.IGNORECASE).strip()
+        return t.rstrip(".!?,;: ").strip("'\"‘“’”")
+
+    def _correction_update(self, user_input: str) -> str:
+        """Arm the correction ledger from THIS message when the conservative
+        shape holds, then return the binding-constraints directive ("" when
+        no corrections are pinned). Code owns the state; the model only
+        reads the directive — the ledger contract every floor here uses."""
+        text = user_input or ""
+        if self._CORRECTION_CUE.search(text):
+            session = "\n".join(
+                (m.get("content") or "") for m in self.history).lower()
+            if self.history_summary:
+                session += "\n" + self.history_summary.lower()
+            for pat in self._CORRECTION_PAIRS:
+                m = pat.search(text)
+                if not m:
+                    continue
+                wrong = self._trim_operand(m.group("wrong"))
+                right = self._trim_operand(m.group("right"))
+                if (not wrong or not right
+                        or wrong.lower() == right.lower()
+                        or wrong.lower() not in session):
+                    continue
+                # Same wrong-value corrected twice: freshest right wins.
+                self.corrections = [c for c in self.corrections
+                                    if c["wrong"].lower() != wrong.lower()]
+                self.corrections.append({"wrong": wrong, "right": right})
+                del self.corrections[:-self._CORRECTIONS_MAX]
+                break
+        if not self.corrections:
+            return ""
+        rows = "\n".join(
+            f'- It is "{c["right"]}", NOT "{c["wrong"]}".'
+            for c in self.corrections)
+        return (
+            "CORRECTIONS Jack made this session (binding, kept in code):\n"
+            + rows + "\n"
+            "Never state a struck value as current again; mention it only "
+            "as the corrected-away mistake.")
+
+    def _correction_violation(self, text):
+        """The floor's scan: the first pinned correction whose WRONG value
+        appears in `text` while its RIGHT value is absent, or None. Literal
+        case-insensitive substrings on purpose — the goldens grade with the
+        same rule, so floor and grader cannot drift."""
+        low = (text or "").lower()
+        if not low:
+            return None
+        for c in self.corrections:
+            if c["wrong"].lower() in low and c["right"].lower() not in low:
+                return c
+        return None
+
+    # ---- Turn-contract floors (armor PC.3/PC.4 — parity row P2) ----------
+    # The GENERAL promise tail: first-person-future + action verb ENDING the
+    # reply, not question-shaped. Superset of the CN.4/NJ.2 measured
+    # vocabularies (those specific floors run first and win); the golden's
+    # promise check uses a subset, so every shape the golden grades is a
+    # shape this floor engages.
+    _DANGLING_INTENT_TAIL = re.compile(
+        r"(?:let me|i[’']ll|i will|i am going to|i'?m going to"
+        r"|i'?m about to|going to|give me a (?:moment|sec(?:ond)?))"
+        r"\b[^.!?]{0,80}"
+        r"\b(?:check|read|look|pull|fetch|get|scan|review|go through"
+        r"|summari[sz]e|list|run|search|find|open|draft|write|merge"
+        r"|consolidat|organi[sz]e|examine|compare|inspect|verify|update"
+        r"|create)\w*"
+        r"[^.!?]{0,40}[.!…]?\s*$", re.IGNORECASE)
+
+    # A completion CLAIM (past-tense done-assertion). Fires the
+    # false-completion floor only alongside a LIVE task ledger + zero landed
+    # actions — recounting genuinely-finished earlier work never trips
+    # because landing already retired the ledger.
+    _COMPLETION_CLAIM = re.compile(
+        r"\b(?:i'?ve|i have|i)\s+(?:now\s+|already\s+|just\s+){0,2}"
+        r"(?:created|updated|merged|consolidated|moved|renamed|deleted"
+        r"|closed|saved|written|added|completed|finished|executed|applied)\b",
+        re.IGNORECASE)
+
+    def _task_status_line(self) -> str:
+        """Code-built truth for the false-completion floor: what the live
+        ledgers actually say. Grounded verbatim — never a model's account."""
+        if self.consolidation is not None:
+            task = self.consolidation
+            cands = ", ".join(task.get("candidates", [])) or "(unresolved)"
+            surv = task.get("survivor") or "not confirmed yet"
+            return (f"That consolidation is still pending: candidates "
+                    f"{cands}; survivor {surv}; merge_projects has not "
+                    "landed.")
+        if self.pending_task is not None:
+            t = self.pending_task
+            return (f"That task is still pending: Jack asked \"{t['request']}\" "
+                    f"and it is blocked on \"{t['blocker']}\".")
+        return "No tracked task is pending."
 
     _WHICH_SLUG_ASK = re.compile(
         r"\bwhich (one|project|of these)\b|\bdo you mean\b", re.IGNORECASE)
