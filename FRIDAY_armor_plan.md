@@ -4047,14 +4047,14 @@ unsolicited action landings (gate/taint flags clean).
 
 | item | what | status |
 |---|---|---|
-| PC.0 | Baseline decision (`2026-07-18_0816`, py-diff-clean vs `7773c75`) + open leg (worktree `..\FRIDAY-pc`, branch `pc`) | pending |
-| PC.1 | Correction ledger (`_correction_update`, directive, `corrections_active`) | pending |
-| PC.2 | Correction floor (scan + regen + substitution + stream hold) | pending |
-| PC.3 | Dangling-intent floor (regen-with-tools + append; PT-arm fallback) | pending |
-| PC.4 | False-completion floor (ledger-truth conjunct + code-built status fallback) | pending |
-| PC.5 | GT-P5a/b + GT-P2a capture ×5 on baseline code (roles set by outcome) | pending |
-| PC.6 | COR/DIF/FCF guards + full `--quick` green | pending |
-| PC.7 | Batches → merge → candidate flight → compare vs `0816` + ship gate (Fable) | pending |
+| PC.0 | Baseline decision (`2026-07-18_0816`, py-diff-clean vs `7773c75`) + open leg (worktree `..\FRIDAY-pc`, branch `pc`) | DONE — design committed `2b95a36`, worktree provisioned with brain seed |
+| PC.1 | Correction ledger (`_correction_update`, directive, `corrections_active`) | DONE (`4e8a4f0`) |
+| PC.2 | Correction floor (scan + regen + substitution + stream hold) | DONE (`4e8a4f0`) |
+| PC.3 | Dangling-intent floor (regen-with-tools + append; PT-arm fallback) | DONE (`4e8a4f0` + in-leg `197783f`): TWO batch-evidence corrections — (1) sentence-start anchoring after the floor false-fired on RAF-004's Jack-conditioned blocker ("double-check the path and I'll read it"), DIF-006; (2) the S1 HOLE: the script floor (last by design) regenerated a drifted GT-P2a draft into a fresh dangling tail AFTER this floor passed — fixed with a shared `_dangling_tail()` + deterministic post-every-floor re-scan at PT-arm time (DIF-007), plus "let me know …" excluded from the promise vocabulary in floor AND golden (it directs JACK to act — a polite closer, not a dangle; DIF-008) |
+| PC.4 | False-completion floor (ledger-truth conjunct + code-built status fallback) | DONE (`4e8a4f0`); placement deviation recorded: runs AFTER the narrated-tool floors, not before — a narrated call NJ.2 can execute makes the claim TRUE, execution beats correction |
+| PC.5 | GT-P5a/b + GT-P2a capture ×5 on baseline code (roles set by outcome) | DONE — **GT-P5b 3/5 on baseline** (r1/r4 fail exactly on `correction-held`: "corrected-away 'flux rig' stated as current") → CONVERSION case; GT-P5a 5/5 and GT-P2a 5/5 → LOCK roles. P5's general-value class now has a real in-suite measured failure |
+| PC.6 | COR-001..007 + DIF-001..008 + FCF-001..004 guards + full `--quick` green | DONE — 19 guards pass; `--quick` 422/422 (one implementation bug caught by FCF-001/002 in first run: `_COMPLETION_CLAIM` missing whitespace between head and verb — fixed before commit) |
+| PC.7 | Batches → merge → candidate flight → compare vs `0816` + ship gate (Fable) | Batches DONE, ALL BARS MET: **GT-C9 5/5** (bar ≥4/5, baseline ~2/3 — the false-completion half converts), **GT-P5b 5/5** (bar ≥4/5, baseline 3/5), GT-P5a 5/5, GT-C10 2/2; GT-P2a 4/5 in-batch → r3 forensics found the S1 hole (fixed in-leg, see PC.3) → 3/3 recheck post-fix. Merged `197783f` (fast-forward), post-merge `--quick` 422/422. **Candidate flight `2026-07-18_1851` IN FLIGHT** (516 items, detached PID 9804 + watchdog, pinned `--basetemp=results\pc_candidate_tmp`). Compare + ship gate pending (Fable) |
 
 ---
 
@@ -4076,6 +4076,17 @@ trace the CN.3 false-positive mechanism (4th knife-edge sighting).
 Whatever exemption it names lands in THIS leg (it is the same scan
 surface) — or, if the mechanism is not CN.3 contact, record the
 adjudication and clear the watch.
+*Forensic result (Fable, 2026-07-18 evening, from the archived `0816`
+ilogs):* GAP-001's failing run at `0816` shows **ZERO armor flags** —
+`identifier_floor` (and every other floor flag) False on all 5 runs;
+the miss is the 14B diving into gearbox design without naming the
+absent spec, graded down by the name-the-gap check. **At 0816 the
+CN.3-false-positive hypothesis does NOT reproduce — adjudicated plain
+knife-edge churn there.** Watch stays open pending the same read on
+the PC and IG candidates; if both are also flag-free, the watch item
+retires as churn (the earlier "CN.3 value-quote false positive"
+sightings were real but CN.6.1-era — the exemption that fixed them is
+already shipped).
 
 **IG.1 — foreign-note-path floor.** `core/engine.py`, extending the
 CN.3 block (~:1078; shares its corrective/retry/fallback shape and its
