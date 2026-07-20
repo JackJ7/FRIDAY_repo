@@ -30,6 +30,144 @@ _TASK_TRACKING_CUE = re.compile(
     r"|\bin\s+the\s+background\b"
 )
 
+# M3.2k's landed-create floor is deliberately narrower than family arming.
+# The family also arms for status/completion/background work; only a positive
+# request to CREATE durable tracking may license the engine-owned recovery.
+_EXPLICIT_TASK_CREATION = re.compile(
+    r"\bcreate\s+(?:(?:a|any|this|the|my|another)\s+)?tasks?\b"
+    r"|\btrack\s+(?:this|the)\b"
+    r"|\bset\s+up\b[^.!?;:]*\b(?:tasks?|checklists?)\b"
+    r"|\bmake\b[^.!?;:]*\bchecklists?\b",
+    re.IGNORECASE,
+)
+_TASK_CREATION_NEGATION = re.compile(
+    r"\b(?:do\s+not|don't|don’t|never|no\s+need\s+to)\b",
+    re.IGNORECASE,
+)
+_TASK_TITLE_PREFIX = re.compile(
+    r"^\s*(?:"
+    r"track\s+(?:this\s+as\s+(?:a\s+)?task|this\s+job|the)"
+    r"|create\s+(?:(?:a|this|the|my|another)\s+)?task(?:\s+for)?"
+    r"|set\s+up\s+(?:(?:a|this|the|my)\s+)?(?:task|checklist)(?:\s+for)?"
+    r"|make\s+(?:(?:a|this|the|my)\s+)?checklist(?:\s+for)?"
+    r")\s*",
+    re.IGNORECASE,
+)
+_TASK_META_TAIL = re.compile(
+    r"\s*(?:[—-]\s*)?(?:set\s+it\s+up|tell\s+me\s+the\s+plan)\b.*$",
+    re.IGNORECASE,
+)
+
+
+def explicit_task_creation_requested(text: str) -> bool:
+    """Return True only for positive, explicit durable-task creation intent.
+
+    M3.2j proved that schema visibility and creation intent are different
+    contracts: bare task discussion must stay harmless, while M3.2k needs a
+    hard recovery only when Jack actually requested a new tracked checklist.
+    """
+    value = str(text or "")
+    for match in _EXPLICIT_TASK_CREATION.finditer(value):
+        clause_start = max(value.rfind(mark, 0, match.start())
+                           for mark in ".!?;\n") + 1
+        clause_end_candidates = [
+            pos for mark in ".!?;\n"
+            if (pos := value.find(mark, match.end())) >= 0
+        ]
+        clause_end = min(clause_end_candidates) if clause_end_candidates \
+            else len(value)
+        if not _TASK_CREATION_NEGATION.search(value[clause_start:clause_end]):
+            return True
+    return False
+
+
+def _clean_recovered(value: str) -> str:
+    """Trim separators only; recovered task text otherwise remains verbatim."""
+    return str(value or "").strip(" \t\r\n,;:.—-")
+
+
+def _request_title(user_input: str) -> tuple[str, str] | None:
+    """Return a user-grounded title and the request tail after its colon."""
+    value = str(user_input or "")
+    if ":" not in value:
+        return None
+    lead, tail = value.split(":", 1)
+    title = _clean_recovered(_TASK_TITLE_PREFIX.sub("", lead, count=1))
+    if not title:
+        # Generic "track this as a task:" leads name the work immediately
+        # after the colon.  Stop at the first clause boundary; never infer.
+        named = re.split(r"[.;\n]", tail, maxsplit=1)[0]
+        title = _clean_recovered(named)
+        if title:
+            tail = tail[len(named):].lstrip(" .;:\t\r\n")
+    if not title or title.casefold() not in value.casefold():
+        return None
+    return title, tail
+
+
+def _request_steps(tail: str) -> list[str] | None:
+    """Recover 2-10 explicit action clauses from Jack's colon-delimited ask."""
+    value = _TASK_META_TAIL.sub("", str(tail or ""))
+    parts = re.split(r"\s*(?:,|;|\bthen\b)\s*", value,
+                     flags=re.IGNORECASE)
+    steps = [_clean_recovered(part) for part in parts]
+    if (not 2 <= len(steps) <= 10 or any(not step for step in steps)
+            or len({step.casefold() for step in steps}) != len(steps)):
+        return None
+    return steps
+
+
+def _reply_step_blocks(reply_text: str) -> list[list[str]]:
+    """Return contiguous numbered/bullet blocks, rejecting ambiguity upstream."""
+    blocks = []
+    current = []
+    kind = None
+    expected = 1
+    for line in str(reply_text or "").splitlines():
+        numbered = re.match(r"^\s*(\d+)[.)]\s+(.+?)\s*$", line)
+        bullet = re.match(r"^\s*[-*+]\s+(.+?)\s*$", line)
+        if numbered and int(numbered.group(1)) == expected \
+                and kind in (None, "numbered"):
+            kind = "numbered"
+            current.append(_clean_recovered(numbered.group(2)))
+            expected += 1
+            continue
+        if bullet and kind in (None, "bullet"):
+            kind = "bullet"
+            current.append(_clean_recovered(bullet.group(1)))
+            continue
+        if current:
+            blocks.append(current)
+            current = []
+            kind = None
+            expected = 1
+    if current:
+        blocks.append(current)
+    return blocks
+
+
+def recover_task_plan(user_input: str,
+                      reply_text: str) -> tuple[str, list[str]] | None:
+    """Recover one unambiguous user-grounded title and 2-10 concrete steps.
+
+    The floor may copy Jack or FRIDAY's explicit plan; it never invents a
+    title, a step, or a choice between competing lists.
+    """
+    recovered = _request_title(user_input)
+    if recovered is None:
+        return None
+    title, tail = recovered
+    steps = _request_steps(tail)
+    if steps is None:
+        blocks = _reply_step_blocks(reply_text)
+        if len(blocks) != 1:
+            return None
+        steps = blocks[0]
+        if (not 2 <= len(steps) <= 10 or any(not step for step in steps)
+                or len({step.casefold() for step in steps}) != len(steps)):
+            return None
+    return title, steps
+
 
 def _has_task_tracking_cue(text: str) -> bool:
     return bool(_TASK_TRACKING_CUE.search(str(text or "").casefold()))

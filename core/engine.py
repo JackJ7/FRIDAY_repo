@@ -22,6 +22,8 @@ from core.canon import (NoAnswer, Q, answer, canon_answer, canon_calc_args,
 from core.invariants import INVARIANTS
 from core.model import ModelReply
 from core.reasoning import scaffold_text
+from core.tools.task_tools import (explicit_task_creation_requested,
+                                   recover_task_plan)
 
 
 class Engine:
@@ -429,6 +431,17 @@ class Engine:
                 on_token(msg)
             return reply
 
+        # M3.2k: capture explicit empty-ledger creation intent at the NORMAL
+        # turn boundary, before retrieval or any tool can change ledger state.
+        # The late landed-create floor uses this immutable start condition;
+        # an open task never licenses a second task through recovery.
+        task_ledger = getattr(self, "task_ledger", None)
+        task_creation_requested = (
+            task_ledger is not None
+            and not task_ledger.list_open()
+            and explicit_task_creation_requested(user_input)
+        )
+
         # M3.2i: capture the schema gate at the NORMAL model-turn boundary.
         # Keep this below research's deterministic early returns: those stop
         # paths deliberately work on a bare Engine with no registry or model.
@@ -526,7 +539,6 @@ class Engine:
         # means zero injected text — no behaviour change until Jack actually
         # has a task open. Guarded getattr: a bare sandbox without the ledger
         # is unaffected, same posture as project_resolver.
-        task_ledger = getattr(self, "task_ledger", None)
         if task_ledger is not None and task_ledger.list_open():
             tasks_block = (
                 "DURABLE TASKS (task ledger — code-tracked ground truth):\n"
@@ -662,6 +674,10 @@ class Engine:
             # a retracted generic re-ask.
             or self.pending_task is not None
             or bool(pending_directive)
+            # M3.2k: a landed-create floor may append a real tool receipt or
+            # replace an under-specified draft with a code-built gap.  Hold
+            # these turns so every face sees only that settled transcript.
+            or task_creation_requested
             # RN.2: a reference-project recall turn may have its create-folder
             # OFFER draft replaced by the retrieved-note recall floor — hold
             # the stream so the offer never flickers before the answer.
@@ -2390,6 +2406,54 @@ class Engine:
             else:
                 turn.append({"role": "assistant", "content": reply.content})
 
+        # M3.2k landed-create floor.  GT-J1 proved that the model can receive
+        # the right schema, state the exact plan, and still emit zero tools;
+        # the LAST script retry can introduce that plan after every earlier
+        # tool-capable recovery has passed.  The normal tool loop always wins.
+        # Only an explicit EMPTY-ledger creation request with no successful
+        # create_task receipt reaches this deterministic, post-script seam.
+        task_creation_floor_fired = False
+        create_landed = any(
+            item.get("tool") == "create_task"
+            and self._write_landed(item.get("result", ""))
+            for item in tool_log
+        )
+        if (reply is not None and task_creation_requested
+                and not create_landed):
+            task_creation_floor_fired = True
+            recovered_plan = recover_task_plan(user_input, reply.content)
+            if recovered_plan is None:
+                gap = ("I haven't created a task: I need a clear title and "
+                       "2-10 concrete steps. What title and steps should I use?")
+                reply.content = ((reply.content or "").rstrip() + "\n\n" + gap
+                                 if (reply.content or "").strip() else gap)
+            else:
+                title, steps = recovered_plan
+                args = {"title": title, "steps": steps}
+                tool_call = {"function": {"name": "create_task",
+                                           "arguments": args}}
+                # Replace a floor-authored trailing assistant draft with the
+                # real tool-call envelope.  The settled text returns once,
+                # after the tool result, with the receipt appended.
+                envelope = {"role": "assistant", "content": "",
+                            "tool_calls": [tool_call]}
+                if (turn and turn[-1].get("role") == "assistant"
+                        and not turn[-1].get("tool_calls")):
+                    turn[-1] = envelope
+                else:
+                    turn.append(envelope)
+                if on_tool:
+                    on_tool("create_task", args)
+                result, external = self._run_tool("create_task", args)
+                turn.append({"role": "tool",
+                             "content": self._wrap_data(result, external)})
+                tool_log.append({"tool": "create_task", "args": args,
+                                 "result": result[:500]})
+                reply.content = ((reply.content or "").rstrip() + "\n\n"
+                                 + result)
+            reply.tool_calls = []
+            turn.append({"role": "assistant", "content": reply.content})
+
         # Deferred single stream for a held turn (see hold_stream above): now
         # that every post-generation barrier has settled, emit the VETTED reply
         # exactly once. The user never saw the pre-correction text, so a phantom
@@ -2678,6 +2742,10 @@ class Engine:
             # a step from Jack's own in-turn claim after the model misrouted
             # the tick-off (the GT-J1 T2 signature, now countable).
             "task_claim_floor": task_claim_fired,
+            # Jarvis M3.2k: True when explicit empty-ledger creation reached
+            # the post-script landed-create floor.  Tool/result/task fields
+            # distinguish a successful receipt from an honest blocked/gap.
+            "task_creation_floor": task_creation_floor_fired,
             # Armor IG.1 (parity P3): True when the foreign-note-path floor
             # caught the reply naming a note file code could ground nowhere
             # (the invented-path half of the GT-C9 residual, now countable).
