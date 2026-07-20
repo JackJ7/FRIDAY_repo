@@ -32,6 +32,11 @@ GT_J1_T1 = (
     "and tell me the plan."
 )
 
+GT_A_T5 = (
+    "Cross reference my calendar and tasks — remove any task you don't "
+    "see on the calendar, but don't add any tasks."
+)
+
 FLUX_STEPS = [
     "Drain the coolant loop",
     "Swap the pump impeller",
@@ -182,3 +187,53 @@ def test_tka006_open_task_keeps_claim_floor_working(sandbox):
     assert task.steps[1].state == "pending"
     assert capture[-1]["task_claim_floor"] is True
     assert capture[-1]["task_tools_armed"] is True
+
+
+@pytest.mark.case("TKA-007", "GT-A's bare task-noun cross-reference does "
+                             "not expose the durable-task schemas")
+def test_tka007_gt_a_bare_task_nouns_do_not_arm(sandbox):
+    capture = []
+    eng = _engine(sandbox, [
+        "I'll compare the calendar information without opening a durable "
+        "task ledger."
+    ], capture=capture)
+
+    eng.respond(GT_A_T5)
+
+    assert TASK_TOOLS.isdisjoint(_tool_names(eng.model.tools_seen[0]))
+    assert not any(message.get("role") == "tool" for message in eng.history)
+    assert capture[-1]["task_tools_armed"] is False
+    assert capture[-1]["tasks_active"] == 0
+
+
+@pytest.mark.case("TKA-008", "a positive explicit create-task request still "
+                             "arms the family and creates the task")
+def test_tka008_positive_create_task_request_arms(sandbox):
+    capture = []
+    eng = _engine(sandbox, [
+        {"content": "", "tool_calls": [_call(
+            "create_task", title="Calibration run",
+            steps=["Zero the gauge", "Apply the reference load"])]},
+        "Created — here's the calibration checklist.",
+    ], capture=capture)
+
+    eng.respond("Create a task for the calibration run: zero the gauge, "
+                "then apply the reference load.")
+
+    assert TASK_TOOLS <= _tool_names(eng.model.tools_seen[0])
+    assert eng.task_ledger.get("calibration_run") is not None
+    assert capture[-1]["task_tools_armed"] is True
+
+
+@pytest.mark.case("TKA-009", "a negated create-task phrase does not arm an "
+                             "empty durable ledger")
+def test_tka009_negated_create_task_request_does_not_arm(sandbox):
+    capture = []
+    eng = _engine(sandbox, ["Understood — I won't create anything."],
+                  capture=capture)
+
+    eng.respond("Do not create any tasks for this calendar review.")
+
+    assert TASK_TOOLS.isdisjoint(_tool_names(eng.model.tools_seen[0]))
+    assert capture[-1]["task_tools_armed"] is False
+    assert capture[-1]["tasks_active"] == 0

@@ -11,12 +11,17 @@ Jack's own words — never on the model's bare say-so.
 import re
 
 
-# M3.2i's deliberately narrow distinction: planning a job is conversation;
-# asking FRIDAY to TRACK it is a durable ledger action.  The final `track the /
-# track this` phrase is calibrated from every TKT/TCR creation prompt and the
-# GT-J1 T1 golden; broad planning words such as plan/approach/steps stay out.
+# M3.2i/M3.2j's deliberately narrow distinction: discussing a task or
+# planning a job is conversation; asking FRIDAY to TRACK/CREATE one is a
+# durable ledger action.  Bare task nouns stay out (GT-A's calendar/task
+# cross-reference armed task_status); the positive create phrase and final
+# `track the / track this` phrase preserve explicit creation requests plus
+# every TKT/TCR creation prompt and the GT-J1 T1 golden.  Broad planning words
+# such as plan/approach/steps stay out.
 _TASK_TRACKING_CUE = re.compile(
-    r"\b(?:tasks?|checklists?|to-do|todo)\b"
+    r"\b(?:checklists?|to-do|todo)\b"
+    r"|(?<!don't )(?<!don’t )(?<!do not )(?<!never )"
+    r"\bcreate\s+(?:(?:a|any|this|the|my|another)\s+)?tasks?\b"
     r"|\btrack\s+(?:this|the)\b"
     r"|\bkeep\s+(?:track|a\s+list)\b"
     r"|\b(?:check|tick|mark|cross)\s+off\b"
