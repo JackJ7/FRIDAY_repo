@@ -974,9 +974,10 @@ auto-memory sync.
 | M3.2h | Task-claim recovery floor (Fable's answer to the STOP) | DONE — commit `969b74f` on `m3`; TCR-001..008 green, `--quick` 464/464, GT-J1 batch 5/5 with floor-fire attribution (§M3.2h status block) |
 | M3.2-G | Merge → flight vs `2346` → pre-registered gate applied → verdict block recorded | **STOP (Sonnet, 2026-07-19 ~15:45)** — flight completed clean (stamp `2026-07-19_1155`, 559 items, no wedge, 197 ilogs archived); bars 1–2 met, bars 3/4/6 FAILED: `create_task` fires unprompted on an unrelated skill-decomposition turn (SKL-004, real schema-dilution signature — the gate's own STOP list names this exactly), plus GT-A (D2 family) and two perfect boards (memory_persistence, memory_recall) dropped. Full evidence + read in the STOP verdict block above M3.2h's status. NOT self-adjudicated, NOT reverted; baseline stays `2026-07-18_2346`; escalated to Fable/Jack for a fix design (M3.2h-style envelope fix candidate: tighten `create_task`'s arming condition). |
 | M3.2i | Task-tool arming gate + TKA-001..006 + re-flight | **STOP (Codex, 2026-07-20 ~01:05)** — implementation commit `5e99fae`, merged to `main` as `f6145dd`; worktree and post-merge `--quick` 470/470; GT-J1 live batch met the ≥4/5 bar (five LOCKED passes; target scores 5/5, 5/5, 5/5, 4/5, 5/5). Candidate `2026-07-19_2059` completed 556/565 in 3:55:52 with 198 ilogs archived. The original SKL-004 leak was fixed (`task_tools_armed=False`, no task call there), but the new M3.2i hygiene row FAILED mechanically: GT-A's calendar/task cross-reference armed the family and called `task_status` with `tasks_active=0`, outside TKT/TCR/TKA/JOB/GT-J1. §M3.2-G bar 6 therefore also failed. No rechecks or M3-X run; baseline stays `2026-07-18_2346`. Full verdict at the end of §M3.2i. |
+| M3.2j | Intent-bearing task noun gate + TKA-007..009 + re-flight | **STOP AT GT-J1 BATCH (Codex, 2026-07-20 ~02:55)** — isolated branch `codex/m3-2j`, code commits `9f1bb66` + `34bc0ca`; cue fix TDD/targeted/quick green, allowed test-session ledger iteration TSK-013 red→green + affected consumers 52/52 + `--quick` 474/474. GT-J1: run 1 failed on the archive enumeration gap; run 2 passed LOCKED 3/3 (TARGET 4/5); run 3 then failed because T1 had `task_tools_armed=True` but the model called no tool and only narrated the plan. Two misses make the >=4/5 bar unreachable, so runs 4-5 were not spent. Nothing merged; no flight/M3-X. Baseline remains `2026-07-18_2346`. Full STOP verdict at end of §M3.2j. |
 | M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
 | M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
-| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2i re-flight STOP** — (d) is explicitly "= §M3.2-G held", and bar 6 plus the new arming-hygiene row did not hold. Per M3.2i step 6, acceptance, ARCHITECTURE update, and memory sync were not run. |
+| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2j GT-J1 STOP** — M3.2j never reached merge/flight, so (d) remains unmet. ARCHITECTURE update and memory sync did not run. |
 
 **Merge note (Sonnet, 2026-07-19):** M3.3/M3.4 are code-complete, fully
 tested, and committed on `m3` (`7b3cec7`, stacked on M3.1+M3.2's `1f3137e`)
@@ -1550,3 +1551,33 @@ and hygiene pin updated):**
 
 Designed and recorded by Codex (GPT-5.6) under Jack's explicit authorization
 — 2026-07-20.
+
+**M3.2j STOP verdict (Codex, 2026-07-20 ~02:55; isolated branch
+`codex/m3-2j`, commits `9f1bb66` + `34bc0ca`; docs STOP commit `cb2a87d`).**
+
+- Pre-live code gates met: TKA-007/TKA-009 red→green; initial targeted
+  compatibility 46/46; correctly seeded worktree `--quick` 473/473.
+- Required test-session routing exposed a pre-existing TaskLedger enumeration
+  gap on GT-J1 run 1: `create_task` wrote
+  `test_archive/tasks/flux_bench_refit.md`, but `list_open()` discarded that
+  physical archive prefix and logged `tasks_active=0`. The one licensed fix
+  iteration added TSK-013 plus logical task-slug enumeration. TSK-013
+  red→green, affected TKA/TCR/TKT/TSK/BRD/JOB 52/52, post-fix worktree
+  `--quick` 474/474 (`2026-07-20_0246`).
+- GT-J1 run 2 passed under `FRIDAY_TEST_SESSION=1`: LOCKED 3/3, TARGET 4/5;
+  T2's persistent commitment-tool misroute was recovered by
+  `task_claim_floor=True`. Its ilog was archived immediately under
+  `results\gtj1_m3j_run2\sandbox_ilogs` in the worktree.
+- GT-J1 run 3 was the second miss. T1 had `task_tools_armed=True` but the
+  model emitted zero tools, narrated the correct three-step plan, and asked
+  for confirmation without calling `create_task`. With no task, T2/T3 also
+  failed LOCKED state. Its ilog is under
+  `results\gtj1_m3j_run3\sandbox_ilogs`.
+- Two misses make the >=4/5 bar unreachable; runs 4-5 were not spent. The one
+  fix allowance is consumed. No further code change, merge, post-merge quick,
+  detached flight, compare recheck, M3-X, ARCHITECTURE update, or memory sync
+  ran. M3.2j code remains unmerged on the clean isolated branch; candidate
+  `2026-07-19_2059` remains unpromoted; baseline remains
+  `2026-07-18_2346`; M3 stays OPEN.
+
+STOP recorded by Codex (GPT-5.6) — 2026-07-20.

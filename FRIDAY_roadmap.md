@@ -357,6 +357,17 @@ JobRunner, and M3.2h floor paths unchanged. Exact TDD guards and the
 re-flight protocol are recorded in jarvis plan §M3.2j. Baseline remains
 `2026-07-18_2346`; candidate `2026-07-19_2059` remains unpromoted.
 
+**M3.2j STOPPED at GT-J1 (Codex, 2026-07-20 ~02:55):** the intent-bearing
+cue fix and guards passed; a required test-session TaskLedger archive gap was
+fixed in the one licensed iteration (TSK-013 red→green, affected consumers
+52/52, worktree `--quick` 474/474). GT-J1 run 2 passed LOCKED 3/3, but run 3
+was the second batch miss: T1 had `task_tools_armed=True` yet the model called
+no tool, narrated the plan, and asked for confirmation. The >=4/5 bar became
+unreachable, so runs 4-5 were not spent. Code commits `9f1bb66` + `34bc0ca`
+remain only on `codex/m3-2j`; nothing merged, no flight or M3-X ran, candidate
+`2026-07-19_2059` remains unpromoted, baseline remains `2026-07-18_2346`,
+and **M3 stays OPEN**. Full evidence is in jarvis plan §M3.2j.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,
