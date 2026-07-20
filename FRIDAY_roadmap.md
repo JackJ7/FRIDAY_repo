@@ -323,6 +323,26 @@ specimen) → GT-J1 batch ≥4/5 → merge → detached flight vs
 hygiene row → gate met → flip M3.2, new baseline = candidate, run M3-X
 (a–d live), close M3. Any STOP escalates back to Fable/Jack.
 
+**M3.2i IMPLEMENTED, MERGED, AND RE-FLOWN — NEW STOP (Codex,
+2026-07-20 ~01:05; full verdict in jarvis plan §M3.2i).** The gate landed
+on `main` (`f6145dd`): TKA-001..006 green, both worktree and post-merge
+`--quick` 470/470, GT-J1 live batch met its ≥4/5 bar, and the unrelated
+REPO-003 malformed-regex failure was repaired by distinguishing ripgrep's
+invalid-pattern exit 2 from valid no-match exit 1. Candidate
+`2026-07-19_2059` completed cleanly (556/565 in 3:55:52; 198 ilogs
+archived). The original SKL-004 task-creation leak is fixed — task schemas
+were hidden and no task call occurred there — but the flight hit the new
+arming-hygiene row's literal STOP: GT-A turn 5 ("Cross reference my
+calendar and tasks...") matched CUE-T's bare `tasks` noun,
+`task_tools_armed=True`, and the model called `task_status` despite
+`tasks_active=0`. That call is outside TKT/TCR/TKA/JOB/GT-J1, so it also
+fails §M3.2-G bar 6. As flown, memory_persistence/memory_recall dropped
+and GT-C10 missed too, but their task-signal-free rechecks were not run
+after the independent hard STOP. No self-fix, M3-X, ARCHITECTURE update,
+or memory sync was attempted. Code remains merged; candidate `2059` is
+NOT the baseline; baseline remains `2026-07-18_2346`; **M3 remains OPEN
+and returns to Fable/Jack.**
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,
@@ -553,6 +573,13 @@ deltas, regression-prone prompt changes), never typing mistakes.
   §M3.2i has the full design, TKA-001..006 guards, and the mechanical
   execution protocol (Codex implements; STOPs escalate to Fable/Jack;
   gate met → M3-X → M3 closes).
+- 2026-07-20 ~01:05: **M3.2i RE-FLIGHT STOP (Codex)** — gate merged as
+  `f6145dd`; quick 470/470, GT-J1 batch bar met, full candidate
+  `2026-07-19_2059` completed 556/565 with 198 ilogs. Original SKL-004
+  leak fixed, but GT-A's "calendar and tasks" turn armed the task schemas
+  and called `task_status` outside every permitted family, violating both
+  §M3.2-G bar 6 and M3.2i's explicit arming-hygiene STOP row. No rechecks
+  or M3-X after the hard STOP; baseline remains `2026-07-18_2346`; M3 OPEN.
 - 2026-07-18 midday: **M1 CLOSED (Fable 5)**. EM.6 adjudicated (EM.1/2
   ship F4-clean; floor was a no-op on the measured positional burial —
   EM.4 had verified a sub-metric, not the case fraction; in-leg EM.2.1

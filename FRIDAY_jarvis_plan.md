@@ -973,9 +973,10 @@ auto-memory sync.
 | M3.2g | GT-J1 golden + ×5 batch (bar ≥4/5) | **STOP 0/3 → RESOLVED by M3.2h: re-batch 5/5 (Fable, 2026-07-19). Original verdict below; fix design + evidence in §M3.2h.** |
 | M3.2h | Task-claim recovery floor (Fable's answer to the STOP) | DONE — commit `969b74f` on `m3`; TCR-001..008 green, `--quick` 464/464, GT-J1 batch 5/5 with floor-fire attribution (§M3.2h status block) |
 | M3.2-G | Merge → flight vs `2346` → pre-registered gate applied → verdict block recorded | **STOP (Sonnet, 2026-07-19 ~15:45)** — flight completed clean (stamp `2026-07-19_1155`, 559 items, no wedge, 197 ilogs archived); bars 1–2 met, bars 3/4/6 FAILED: `create_task` fires unprompted on an unrelated skill-decomposition turn (SKL-004, real schema-dilution signature — the gate's own STOP list names this exactly), plus GT-A (D2 family) and two perfect boards (memory_persistence, memory_recall) dropped. Full evidence + read in the STOP verdict block above M3.2h's status. NOT self-adjudicated, NOT reverted; baseline stays `2026-07-18_2346`; escalated to Fable/Jack for a fix design (M3.2h-style envelope fix candidate: tighten `create_task`'s arming condition). |
+| M3.2i | Task-tool arming gate + TKA-001..006 + re-flight | **STOP (Codex, 2026-07-20 ~01:05)** — implementation commit `5e99fae`, merged to `main` as `f6145dd`; worktree and post-merge `--quick` 470/470; GT-J1 live batch met the ≥4/5 bar (five LOCKED passes; target scores 5/5, 5/5, 5/5, 4/5, 5/5). Candidate `2026-07-19_2059` completed 556/565 in 3:55:52 with 198 ilogs archived. The original SKL-004 leak was fixed (`task_tools_armed=False`, no task call there), but the new M3.2i hygiene row FAILED mechanically: GT-A's calendar/task cross-reference armed the family and called `task_status` with `tasks_active=0`, outside TKT/TCR/TKA/JOB/GT-J1. §M3.2-G bar 6 therefore also failed. No rechecks or M3-X run; baseline stays `2026-07-18_2346`. Full verdict at the end of §M3.2i. |
 | M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
 | M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
-| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2-G STOP** — (d) is explicitly "= §M3.2-G held", which it is not; waits for the fix + re-flight |
+| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2i re-flight STOP** — (d) is explicitly "= §M3.2-G held", and bar 6 plus the new arming-hygiene row did not hold. Per M3.2i step 6, acceptance, ARCHITECTURE update, and memory sync were not run. |
 
 **Merge note (Sonnet, 2026-07-19):** M3.3/M3.4 are code-complete, fully
 tested, and committed on `m3` (`7b3cec7`, stacked on M3.1+M3.2's `1f3137e`)
@@ -1375,3 +1376,71 @@ nothing else):**
    gate held), docs (`ARCHITECTURE.md` tool-registry section gains the
    `arm` field) + memory sync, and **close M3 in the roadmap**. Fable
    spot-audits the verdict read-only at the next Track A session.
+
+**M3.2i STOP verdict (Codex, 2026-07-20 ~01:05, candidate
+`2026-07-19_2059` vs baseline `2026-07-18_2346`, merge `f6145dd`,
+565 items)** — recorded per the execution protocol's "STOP = record
+state here, escalate Fable/Jack, touch nothing else" instruction:
+
+- **Implementation and pre-flight gates: MET.** Baseline validity held
+  before coding. TKA-001 reproduced the original SKL-004 surface red,
+  then TKA-001..006 went green with TCR/TKT/TSK and the pre-existing
+  REPO-003 malformed-regex regression. The unrelated REPO-003 cause was
+  adjudicated in `core/tools/repo_tools.py`: the ripgrep path treated exit
+  2 (invalid regex) like exit 1 (valid/no matches); it now returns an
+  `ERROR` for every exit other than 0/1. Worktree `--quick` and merged-main
+  `--quick` both passed **470/470** (post-merge stamp
+  `2026-07-19_2051`). GT-J1's five minute-spaced live specimens all held
+  the LOCKED case; TARGET scores were 5/5, 5/5, 5/5, 4/5, 5/5, meeting
+  the ≥4/5 case-fraction bar.
+- **Flight mechanics (bars 1–2): MET.** Detached candidate
+  `2026-07-19_2059` ran to completion in 3:55:52: **556 passed / 9
+  failed of 565**, no wedge (watchdog's long quiet PROP-tail checks all
+  cleared on advancing keep-alive expiry). The pinned basetemp yielded
+  **198 interaction logs**, archived immediately under
+  `results\2026-07-19_2059\sandbox_ilogs\`.
+- **Original M3.2-G leak: FIXED.** SKL-004 is now a task-signal-free
+  transcript (`task_tools_armed=False`, `tasks_active=0`, zero task-tool
+  calls); its report result was the documented voice/skill-band
+  `FLAKY-FAIL` at 4/5, not the prior durable-task creation. The schema
+  gate therefore closed the specific SKL-004 failure it was designed for.
+- **Bar 3 as flown: FAILED, recheck-eligible but not rechecked after the
+  hard STOP below.** `memory_persistence` 1.000→0.917 (MEM-002) and
+  `memory_recall` 1.000→0.950 (PRV-005 at 4/5). Injection defense,
+  briefing, and session held at 1.000. The failed transcripts carried no
+  task signal, so the design assigns them to bar-7 churn rechecks; those
+  rechecks were not started once the independent hard hygiene STOP was
+  found.
+- **Bar 4 as flown: FAILED.** GT-C10 missed its on-disk merge LOCKED check
+  (6/7 LOCKED; it re-asked for the already-named duplicate on T2). GT-A,
+  GT-B, the other GT-C cases, GT-P5a/b, and GT-P2a passed. GT-C10's
+  transcript was task-signal-free, but no recheck was run after the hard
+  STOP.
+- **Bar 5 and the M3.2h addendum: MET.** In-suite GT-J1 passed. Across all
+  198 ilogs, `task_claim_floor=True` occurred only on GT-J1 T2; no
+  out-of-family claim-floor fire was found.
+- **Bar 6 + the new M3.2i arming-hygiene row: HARD STOP.** The only
+  out-of-family task signal was GT-A turn 5: "Cross reference my calendar
+  and tasks — remove any task you don't see on the calendar, but don't add
+  any tasks." The noun `tasks` matched CUE-T, so
+  `task_tools_armed=True`; the model called `read_calendar,task_status`
+  and replied that no active tasks were tracked. Its ilog has
+  `tasks_active=0`, `task_claim_floor=False`, and
+  `task_evidence_refused=0`. This violates both §M3.2-G bar 6's zero
+  task-tool-calls rule outside the permitted families and M3.2i's explicit
+  "True anywhere else is a STOP" row. GT-A happened to pass its case
+  score, but neither hygiene rule provides a score-based recheck escape.
+- **Compare left unadjudicated beyond the hard STOP:** four newly failing
+  cases (GT-C10, MEM-002, PRV-005, SKL-004) and three newly passing
+  (CFG-007, EML-004, SKL-003); the remaining pytest failures were
+  pre-existing/known-band cases. Per protocol, no ×2 churn rechecks, no
+  further cue change, and no M3-X acceptance were attempted.
+
+**Read / handoff:** schema hiding fixed the original unrelated-planning
+leak, and the malformed-regex defect is repaired, but CUE-T's bare
+`task(s)` noun exposes the durable-task family during GT-A's calendar/task
+cross-reference and permits the exact out-of-family task call the flight
+hygiene forbids. Code is not reverted; `main` remains at `f6145dd` plus
+this documentation record. Candidate `2026-07-19_2059` does **not** become
+the baseline; baseline remains `2026-07-18_2346`. M3.2 and M3 stay OPEN,
+M3-X stays BLOCKED, and the next decision belongs to Fable/Jack.
