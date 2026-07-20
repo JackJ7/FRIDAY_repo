@@ -1235,3 +1235,143 @@ instruction:
   a STOP-gated flight cannot promote). Archived evidence:
   `results\2026-07-19_1155\{report.json,report.html,scorecard.json,
   sandbox_ilogs\}` (197 files).
+
+### M3.2i — task-tool arming gate (Fable 5's response to the §M3.2-G STOP, designed 2026-07-19 evening; implementer: Codex, mechanical protocol below)
+
+**The read (Fable, taking the STOP's escalation).** The verdict is
+accepted as recorded. But the escalation note's "tighten create_task's
+arming condition" is only half the fix — the STOP evidence points at
+TWO coupled problems from one surface:
+1. Bar 6: the model REACHED for `create_task` on a turn with no task
+   vocabulary (SKL-004). An in-tool guard alone would stop the ledger
+   write but the schema would still sit in every call.
+2. Bars 3–4: perfect boards and GT-A dropped on transcripts that are
+   task-flag-free. The gate's own text names the mechanism: "five
+   always-present schemas are the one suite-wide surface" — dilution by
+   PRESENCE, not by calls. No in-tool guard can touch that.
+
+So the fix is **schema-scoped**: on turns where nothing asks for task
+tracking and nothing is tracked, the model must not see the task tools
+at all. That removes both failure modes by construction — a schema that
+isn't in the payload can't be called AND can't dilute — and it restores
+non-task turns to a baseline-identical toolset, which is what bars 3–4
+measure. In-tool guarding stays as defense in depth (prompts are soft;
+schema filtering + code refusal are the two hard layers).
+
+**The design (three small pieces, all local, all code-checkable):**
+
+1. **Registry arming (mechanism).** `Tool` gains an optional
+   `arm: callable | None = None` field (default None = always armed —
+   every existing tool unchanged). `ToolRegistry.register(...)` accepts
+   and stores it; `to_ollama()` skips tools whose `arm()` returns False
+   at call time. `call()` does NOT check `arm` — the M3.2h floor drives
+   `complete_task_step` through `_run_tool` engine-side and must keep
+   working when schemas are hidden (the floor is engine-initiated, not
+   model-initiated; gate/taint checks in `_run_tool` still apply).
+
+2. **The arming predicate (policy).** One shared closure registered on
+   ALL FIVE task tools (create/status/complete/block/unblock — they arm
+   and disarm as a family; a partial set invites exactly the misroutes
+   M3.2g/M3.2h dealt with). Armed iff EITHER:
+   - the ledger has ≥1 open task (`status != done`) — status, ticks,
+     block/unblock must work on follow-up turns, and the
+     `TaskLedger.summary()` referent-block injection already keys on
+     the same state; OR
+   - THIS turn's user message carries explicit task-tracking language
+     (CUE-T): word-boundary, casefolded match on tracking-explicit
+     vocabulary only — the nouns "task"/"tasks", "checklist",
+     "to-do"/"todo (list)", the phrases "keep track", "keep a list",
+     "check off"/"tick off"/"mark off"/"cross off", and the unattended
+     markers "while I'm away"/"while I'm out"/"unattended"/"in the
+     background". Read the turn input via the `ctx.engine` pattern
+     already in `task_tools.py` (`_turn_user_input`).
+   **Deliberately NOT cues:** "plan", "approach", "figure out", "help
+   me think/work through", "steps". The SKL-004 live specimen ("I need
+   to figure out how to approach sizing the whole drivetrain... help me
+   plan the attack") must arm NOTHING. Planning talk is conversation;
+   tracking talk is a ledger. That line is the whole fix.
+   **Cue-list calibration rule (do this BEFORE writing the list in
+   code):** read GT-J1's T1 and every TKT/TCR creation-turn prompt.
+   Each must contain ≥1 CUE-T item verbatim. If one doesn't, extend the
+   list ONLY with tracking-explicit wording taken from that prompt
+   (e.g. "work through it and check things off" → the "check off"
+   family). If a golden's creation turn contains NO tracking-explicit
+   wording at all, STOP and escalate to Fable/Jack — do not stretch the
+   list toward planning vocabulary to make a test pass.
+
+3. **In-tool guard (defense in depth).** `create_task` re-checks CUE-T
+   against `_turn_user_input()` at execution time and, on miss, refuses
+   without touching the ledger:
+   `"ERROR: Jack didn't ask to track a task this turn — answer his
+   question directly. Use create_task only when he explicitly asks for
+   a tracked task/checklist."`
+   This covers the armed-because-a-task-is-open case (model tries to
+   spawn a SECOND unrelated task on a status turn) and any recovered/
+   narrated tool-call path that bypasses schema filtering. The other
+   four tools get no in-tool guard — operating on an EXISTING open task
+   is what they're for, and the M3.2h floor + evidence gate already
+   police the dangerous one (`complete_task_step`).
+
+**Ilog (additive, schema stable):** `task_tools_armed` bool per turn.
+`create_task` refusals land in the normal tool-result stream (no new
+counter; grep the archived ilogs for the refusal string when auditing).
+
+**Guards (`tests\pillar1\test_task_arming.py`, TKA-###, scripted-model;
+TDD — write TKA-001 first and watch it fail on current `main`):**
+- TKA-001 the SKL-004 live specimen VERBATIM (drivetrain decomposition
+  ask), empty ledger → `task_tools_armed` False, zero task schemas in
+  the model payload (assert on the actual `to_ollama()` list the engine
+  sends), zero task-tool calls, `tasks_active` 0. This is the
+  regression pin for the whole STOP.
+- TKA-002 explicit ask ("Track this as a task: ... checklist ...") →
+  armed, `create_task` succeeds, receipt presented.
+- TKA-003 one open task + neutral follow-up ("how's it looking?") →
+  armed (family arms on open state); scripted model calls `create_task`
+  for an unrelated second task WITHOUT CUE-T this turn → refused with
+  the redirect string, ledger unchanged, original task intact.
+- TKA-004 empty ledger + neutral turn → `to_ollama()` payload contains
+  no task tool; TCR-007's zero-fire posture reconfirmed alongside.
+- TKA-005 GT-J1's T1 phrasing verbatim → armed (pins the cue-list
+  calibration so a later wording edit can't silently disarm the
+  golden).
+- TKA-006 open task + Jack's tick-claim turn (TCR-001 scenario) →
+  M3.2h floor still fires and completes the step even though arming
+  came from open-state, proving floor and gate compose.
+- Existing suites that must stay green untouched: TKT-001..., TCR-001..008,
+  TSK, GT-J1 module, `--quick` full.
+
+**Execution protocol (Codex, mechanical — the M3.2h/§M3.2-G machinery
+reused verbatim; STOP = record state here, escalate Fable/Jack, touch
+nothing else):**
+1. Fresh worktree off current `main` (`..\FRIDAY-m3` may be reused only
+   after `git -C ..\FRIDAY-m3 status` is clean and it's fast-forwarded
+   to `main`). Confirm baseline validity first: `git log
+   541898c..HEAD -- '*.py'` on `main` must be empty (docs-only since
+   the STOP), else STOP — baseline `2026-07-18_2346` would be invalid.
+2. Implement pieces 1–3 exactly as above (cue-list calibration rule
+   BEFORE coding the list). TKA-001 red-then-green; all TKA + TCR + TKT
+   + TSK green; `--quick` full pass in the worktree.
+3. GT-J1 live batch ×5, minute-spaced, bar ≥4/5 — same protocol and
+   attribution style as the M3.2h status block (pinned basetemp, floor
+   fires recorded). One pre-authorized fix iteration on a miss;
+   a second miss is a STOP.
+4. Merge to `main`, post-merge `--quick`, then the detached full-suite
+   candidate flight vs baseline `2026-07-18_2346` per the RN.5 protocol
+   (Start-Process detached + ollama_watchdog; FROZEN CODE until it
+   lands).
+5. Adjudicate §M3.2-G bars 1–7 unchanged, PLUS the M3.2h addendum row,
+   PLUS one new M3.2i row: **`task_tools_armed` True ONLY on turns in
+   the TKT/TCR/TKA/JOB/GT-J1 families or turns whose sandbox has an
+   open task in those families; True anywhere else is a STOP.**
+   Expectation stated for the record: bars 3–4 recover BECAUSE non-task
+   turns now carry a baseline-identical payload — if a perfect board
+   still fails on a task-flag-free, armed-False transcript, that's the
+   bar-7 churn rule's territory (×2 recheck), NOT a dilution finding;
+   GT-A specifically has the flaky-in-full-suite precedent (obs 2126)
+   and is recheck-eligible.
+6. Gate met → verdict block here (IG.5 format), flip roadmap M3.2,
+   **next baseline = the M3.2i candidate**, then immediately run M3-X:
+   J1 acceptance (a)–(d) graded live under `--test-session` ((d) = this
+   gate held), docs (`ARCHITECTURE.md` tool-registry section gains the
+   `arm` field) + memory sync, and **close M3 in the roadmap**. Fable
+   spot-audits the verdict read-only at the next Track A session.

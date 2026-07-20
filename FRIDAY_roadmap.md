@@ -306,6 +306,23 @@ language rather than firing on any "help me think through X" request —
 an M3.2h-style targeted envelope fix). M3-X (J1 acceptance a–d) stays
 BLOCKED: (d) is explicitly "= §M3.2-G held," which it is not.
 
+**Fix DESIGNED (Fable 5, 2026-07-19 evening): M3.2i task-tool arming
+gate — jarvis plan §M3.2i has the full design + exact mechanical
+protocol for Codex to execute end-to-end.** Shape: the five task-tool
+schemas are only shown to the model when a turn explicitly asks for
+task tracking (tight CUE-T vocabulary — "plan/approach/figure out" are
+deliberately NOT cues) or when the ledger already has an open task;
+`create_task` additionally re-checks the cue in-tool and refuses
+otherwise (defense in depth). Schema-scoped, not just in-tool, because
+the STOP's bars 3–4 failed on task-flag-free transcripts — dilution by
+schema PRESENCE — which only removing the schemas from non-task turns
+can fix; non-task turns become baseline-identical by construction.
+Path to close M3: TKA-001..006 guards (TKA-001 pins the SKL-004 live
+specimen) → GT-J1 batch ≥4/5 → merge → detached flight vs
+`2026-07-18_2346` → §M3.2-G bars + M3.2h addendum + new M3.2i arming
+hygiene row → gate met → flip M3.2, new baseline = candidate, run M3-X
+(a–d live), close M3. Any STOP escalates back to Fable/Jack.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,
@@ -528,6 +545,14 @@ deltas, regression-prone prompt changes), never typing mistakes.
   reaching for the tool unprompted). Not self-adjudicated, not reverted;
   baseline stays `2026-07-18_2346`; **M3 remains OPEN**, escalated to
   Fable/Jack. Full verdict in jarvis plan §6.
+- 2026-07-19 evening: **M3.2i DESIGNED (Fable 5)** — the answer to the
+  §M3.2-G STOP: schema-scoped task-tool arming gate (registry `arm`
+  predicate + CUE-T tracking-explicit vocabulary + in-tool `create_task`
+  refusal), chosen over an in-tool-only guard because bars 3–4 failed on
+  task-flag-free transcripts (dilution by schema presence). Jarvis plan
+  §M3.2i has the full design, TKA-001..006 guards, and the mechanical
+  execution protocol (Codex implements; STOPs escalate to Fable/Jack;
+  gate met → M3-X → M3 closes).
 - 2026-07-18 midday: **M1 CLOSED (Fable 5)**. EM.6 adjudicated (EM.1/2
   ship F4-clean; floor was a no-op on the measured positional burial —
   EM.4 had verified a sub-metric, not the case fraction; in-leg EM.2.1
