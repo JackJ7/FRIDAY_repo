@@ -11,6 +11,25 @@ Jack's own words — never on the model's bare say-so.
 import re
 
 
+# M3.2i's deliberately narrow distinction: planning a job is conversation;
+# asking FRIDAY to TRACK it is a durable ledger action.  The final `track the /
+# track this` phrase is calibrated from every TKT/TCR creation prompt and the
+# GT-J1 T1 golden; broad planning words such as plan/approach/steps stay out.
+_TASK_TRACKING_CUE = re.compile(
+    r"\b(?:tasks?|checklists?|to-do|todo)\b"
+    r"|\btrack\s+(?:this|the)\b"
+    r"|\bkeep\s+(?:track|a\s+list)\b"
+    r"|\b(?:check|tick|mark|cross)\s+off\b"
+    r"|\bwhile\s+i(?:['’]m| am)\s+(?:away|out)\b"
+    r"|\bunattended\b"
+    r"|\bin\s+the\s+background\b"
+)
+
+
+def _has_task_tracking_cue(text: str) -> bool:
+    return bool(_TASK_TRACKING_CUE.search(str(text or "").casefold()))
+
+
 def _normalize(s: str) -> str:
     return re.sub(r"\s+", " ", str(s or "")).strip().casefold()
 
@@ -62,7 +81,20 @@ def register_task_tools(registry, ledger):
     def _turn_user_input():
         return getattr(ctx.engine, "_turn_user_input", "") or ""
 
+    def _task_tools_armed():
+        # An open ledger keeps status/tick/block operations available on
+        # follow-up turns.  With no open work, only Jack's explicit tracking
+        # language licenses exposing this schema family to the model.
+        return bool(ledger.list_open()) or _has_task_tracking_cue(
+            _turn_user_input())
+
     def create_task(title: str, steps: list) -> str:
+        # Open-state arming exposes the family so an existing task can be
+        # operated on; it must not license a second, unrelated creation.
+        if not _has_task_tracking_cue(_turn_user_input()):
+            return ("ERROR: Jack didn't ask to track a task this turn — "
+                    "answer his question directly. Use create_task only when "
+                    "he explicitly asks for a tracked task/checklist.")
         steps = [str(s).strip() for s in (steps or []) if str(s).strip()]
         if not (2 <= len(steps) <= 10):
             return (f"ERROR: a task needs 2-10 steps, got {len(steps)}. "
@@ -131,6 +163,7 @@ def register_task_tools(registry, ledger):
          "required": ["title", "steps"]},
         create_task,
         kind="action",
+        arm=_task_tools_armed,
     )
     registry.register(
         "task_status",
@@ -142,6 +175,7 @@ def register_task_tools(registry, ledger):
         {"type": "object", "properties": {
             "slug": {"type": "string"}}},
         task_status,
+        arm=_task_tools_armed,
     )
     registry.register(
         "complete_task_step",
@@ -162,6 +196,7 @@ def register_task_tools(registry, ledger):
          "required": ["slug", "step", "evidence"]},
         complete_task_step,
         kind="action",
+        arm=_task_tools_armed,
     )
     registry.register(
         "block_task",
@@ -177,6 +212,7 @@ def register_task_tools(registry, ledger):
          "required": ["slug", "step", "reason"]},
         block_task,
         kind="action",
+        arm=_task_tools_armed,
     )
     registry.register(
         "unblock_task",
@@ -189,5 +225,6 @@ def register_task_tools(registry, ledger):
          "required": ["slug", "step"]},
         unblock_task,
         kind="action",
+        arm=_task_tools_armed,
     )
     return ctx
