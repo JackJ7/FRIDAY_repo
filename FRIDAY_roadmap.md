@@ -393,6 +393,20 @@ diff remains inside the registered M3.2k files. Fresh GT-J1 x5 is next; the
 new batch's one mechanical-fix allowance is unspent. No merge, flight,
 baseline promotion, or M3-X has run.
 
+**M3.2k GT-J1 PASS (Codex, 2026-07-20 ~14:59):** five fresh official runs
+(`2026-07-20_1450`, `_1452`, `_1454`, `_1455`, `_1457`) each passed LOCKED
+3/3 and TARGET 5/5: case fraction 5/5 against the >=4/5 bar. Runs 1-4 landed
+native creation; run 5's rejected over-argumented native call was recovered
+by the licensed empty-ledger landed-create floor, producing exactly one task
+from the request-grounded plan. All T1 turns ended armed/active with no generic
+pending ledger; all T2 claim-floor recoveries held; all T3 status asks left
+the ledger unchanged. Each sandbox ilog is archived 1/1 under its result
+directory. The written `-k GT-J1` selector was mechanically corrected to the
+tracked `-k test_gt_j1_flux_bench_job`; its preliminary zero-collection run
+made no model call and is not a specimen. The one-fix allowance remains
+unspent. Merge and post-merge quick are next; full-flight, promotion, and M3-X
+remain gated.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,

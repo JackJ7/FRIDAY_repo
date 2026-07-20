@@ -1835,3 +1835,33 @@ Designed and recorded by Codex (GPT-5.6) — 2026-07-20.
   mechanical-fix allowance remains unspent.
 
 Implementation evidence recorded by Codex (GPT-5.6) — 2026-07-20.
+
+**M3.2k live GT-J1 gate (Codex, 2026-07-20 ~14:59).**
+
+- The registered `-k GT-J1` selector collected zero cases because the tracked
+  pytest node is named `test_gt_j1_flux_bench_job`. That zero-case command
+  (`2026-07-20_1449`) made no model call and produced no specimen, so it is not
+  an official attempt. The five official runs used
+  `-k test_gt_j1_flux_bench_job`; all other registered arguments, distinct
+  pinned basetemps, and `FRIDAY_TEST_SESSION=1` were unchanged.
+- Runs `2026-07-20_1450`, `2026-07-20_1452`, `2026-07-20_1454`,
+  `2026-07-20_1455`, and `2026-07-20_1457` each passed LOCKED 3/3 and TARGET
+  5/5. The official case fraction is therefore **5/5**, above the >=4/5 bar;
+  the licensed mechanical-fix allowance was not used.
+- Runs 1-4 landed native `create_task` at T1 with
+  `task_creation_floor=False`. Run 5 first made a real but rejected
+  `create_task(goal=...)` call, then the landed-create floor retried through
+  `_run_tool` with the grounded title and three request-verbatim steps;
+  `task_creation_floor=True` and the second receipt created exactly one task.
+  This is the licensed explicit empty-ledger recovery, not a miss.
+- Every T1 ended `task_tools_armed=True`, `tasks_active=1`,
+  `pending_task_armed=False`, and `script_drift_corrective=False`. Every T2
+  retained one active task and used the M3.2h `task_claim_floor=True` recovery
+  after the model's commitment-family misroute. Every T3 used `task_status`,
+  left the ledger unchanged, and had both floors false. No run fired the
+  creation floor outside T1.
+- Each basetemp interaction JSONL was copied immediately after its command to
+  that stamp's `sandbox_ilogs\` directory and verified exactly 1/1 before the
+  next official run. The five result directories above are the audit roots.
+
+GT-J1 gate adjudicated PASS and recorded by Codex (GPT-5.6) — 2026-07-20.
