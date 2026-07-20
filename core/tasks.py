@@ -33,6 +33,7 @@ from datetime import datetime
 
 import yaml
 
+from core.memory.brain import TEST_ARCHIVE
 from core.project_meta import slug as _slugify
 
 # Step state <-> checklist mark. Parsing accepts exactly these four.
@@ -129,10 +130,8 @@ class TaskLedger:
         """Active tasks (pending / in-progress / blocked), slug order."""
         with self._lock:
             out = []
-            for rel in self.brain.list_notes():
-                if not rel.startswith(self.DIR + "/"):
-                    continue
-                t = self._read(rel[len(self.DIR) + 1:-3])
+            for slug in self._slugs():
+                t = self._read(slug)
                 if t is not None and t.status not in ("done", "cancelled"):
                     out.append(t)
             return sorted(out, key=lambda t: t.slug)
@@ -143,13 +142,32 @@ class TaskLedger:
         away board (J1.5, roadmap M3.4) needs exactly the done ones."""
         with self._lock:
             out = []
-            for rel in self.brain.list_notes():
-                if not rel.startswith(self.DIR + "/"):
-                    continue
-                t = self._read(rel[len(self.DIR) + 1:-3])
+            for slug in self._slugs():
+                t = self._read(slug)
                 if t is not None:
                     out.append(t)
             return sorted(out, key=lambda t: t.slug)
+
+    def _slugs(self):
+        """Logical task identities, independent of test-session routing.
+
+        Test writes physically live under test_archive/, while read_note()
+        overlays that provenance prefix behind the original logical path.
+        GT-J1 under --test-session exposed the matching enumeration gap:
+        list_notes() correctly returned test_archive/tasks/x.md, but the
+        ledger filtered only tasks/x.md and reported zero active work.
+        Normalize only that established prefix and deduplicate so an archive
+        overlay and its real-note fallback remain one task identity.
+        """
+        task_prefix = self.DIR + "/"
+        archive_prefix = TEST_ARCHIVE + "/"
+        slugs = set()
+        for rel in self.brain.list_notes():
+            logical = (rel[len(archive_prefix):]
+                       if rel.startswith(archive_prefix) else rel)
+            if logical.startswith(task_prefix) and logical.endswith(".md"):
+                slugs.add(logical[len(task_prefix):-3])
+        return sorted(slugs)
 
     def summary(self) -> str:
         """Compact active-task lines — built for the future referent-block

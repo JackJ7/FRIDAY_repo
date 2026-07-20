@@ -164,3 +164,20 @@ def test_write_guard_leaves_ledger_path_open(sandbox):
     assert t.slug == "job_alpha"
     led.complete_step("job_alpha", 0, "alpha finished; verified")
     assert led.get("job_alpha").steps[0].state == "done"
+
+
+@pytest.mark.case("TSK-013", "test-session task files keep their logical "
+                             "ledger identity under test_archive routing")
+def test_test_session_archive_tasks_remain_listable(sandbox):
+    sandbox.brain.test_session = True
+    led = _ledger(sandbox)
+
+    led.create("Calibration run", ["Zero the gauge", "Apply reference load"])
+
+    archived = (sandbox.brain.root / "test_archive" / "tasks" /
+                "calibration_run.md")
+    assert archived.is_file()
+    assert [task.slug for task in led.list_open()] == ["calibration_run"]
+    assert [task.slug for task in led.list_all()] == ["calibration_run"]
+    led.complete_step("calibration_run", 0, "Zero the gauge")
+    assert led.get("calibration_run").steps[0].state == "done"
