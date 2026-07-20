@@ -1444,3 +1444,109 @@ hygiene forbids. Code is not reverted; `main` remains at `f6145dd` plus
 this documentation record. Candidate `2026-07-19_2059` does **not** become
 the baseline; baseline remains `2026-07-18_2346`. M3.2 and M3 stay OPEN,
 M3-X stays BLOCKED, and the next decision belongs to Fable/Jack.
+
+### M3.2j — intent-bearing task noun gate (authorized by Jack 2026-07-20; Codex owns design + execution)
+
+**Authorization.** Jack explicitly authorized Codex to invent and execute
+the next fix after the M3.2i STOP without waiting for Fable or a second Jack
+decision. All pre-registered mechanical gates remain binding; a NEW STOP is
+still recorded here and halts the leg.
+
+**Read-only diagnosis / root cause.** The registry mechanism is correct:
+`to_ollama()` hides an unarmed schema family, while `call()` remains
+available to M3.2h's engine-owned task-claim recovery floor. Open-ledger
+arming, TaskLedger state, and the floor are also correct. The conflict is
+one policy token in `core\tools\task_tools.py`: CUE-T treats standalone
+`task`/`tasks` as explicit durable-tracking intent. GT-A turn 5 — "Cross
+reference my calendar and tasks — remove any task you don't see on the
+calendar, but don't add any tasks." — has an empty durable ledger and never
+asks to create or track one. The bare nouns nevertheless arm all five
+schemas; once `task_status` is visible, the model's call is expected rather
+than a second defect.
+
+**Alternatives considered.** (1) A GT-A/calendar-specific negative
+lookaround is smaller in characters but encodes one transcript rather than
+the semantic boundary and would miss the next generic task-reference shape.
+(2) Per-tool arming or a new engine intent classifier could hide
+`task_status` separately, but broadens two proven seams and risks the
+open-task, JobRunner, and M3.2h flows. **Selected:** keep family arming and
+make the ambiguous noun intent-bearing.
+
+**Smallest code-enforced fix.** Change only the shared CUE-T regex in
+`core\tools\task_tools.py`:
+
+- Standalone `task`/`tasks` is NOT a cue.
+- `task(s)` remains a cue only in a positive explicit `create ... task`
+  construction (with ordinary short determiners such as `a`, `this`, `the`,
+  `my`, or `another`). `don't` / `do not` / `never create ... task` is not a
+  cue. Do not add a broad `add ... task` branch: the GT-A specimen itself says
+  "don't add any tasks", so that would reproduce the bug under a new token.
+- Existing `track this/the ...` wording remains unchanged.
+- Existing standalone `checklist`/`to-do` vocabulary, `keep track`/`keep a
+  list`, check/tick/mark/cross-off phrases, unattended/background markers,
+  and open-ledger arming remain unchanged.
+- `create_task` continues to re-check this same predicate. No registry or
+  engine change: engine-side `complete_task_step` recovery must remain able
+  to call through the registry when schemas are hidden.
+
+**Exact behavior boundary.** Empty ledger: the GT-A cross-reference, "what
+tasks are on the calendar?", and other bare task-noun discussion do NOT arm.
+Explicit "Create a task...", "Track this job...", "make me a checklist",
+and the GT-J1 T1 wording DO arm. Any open task arms
+the family on neutral status/follow-up, completion, block, unblock, and
+JobRunner turns exactly as before. `create_task` still refuses a second
+unrelated task when open-state arming is the only license.
+
+**TDD guards (`tests\pillar1\test_task_arming.py`):**
+
+- TKA-007: GT-A turn 5 verbatim, empty ledger, scripted direct reply. Assert
+  the actual first model payload contains zero task schemas, no task tool
+  enters history, `task_tools_armed is False`, and `tasks_active == 0`.
+  Write first and observe it fail on merged M3.2i because `task(s)` arms.
+- TKA-008: explicit "Create a task for the calibration run..."
+  turn with a scripted `create_task` call. Assert the whole family is visible,
+  the task file/receipt lands, and `task_tools_armed is True`. This prevents
+  the negative fix from deleting legitimate direct-create phrasing.
+- TKA-009: "Do not create any tasks..." with an empty ledger remains
+  disarmed. This pins the negation guard on the one newly added creation
+  construction.
+- Existing TKA-001..006 are unchanged and must remain green. TKA-002/TKA-005
+  retain explicit creation/GT-J1 calibration; TKA-003 preserves open-task
+  follow-up plus second-create refusal; TKA-006 and TCR-001..008 preserve the
+  engine recovery floor; TKT covers completion/block/unblock and TSK covers
+  ledger/write guards.
+
+**Mechanical execution protocol (M3.2i reused, only baseline-validity anchor
+and hygiene pin updated):**
+
+1. Start from a clean isolated worktree at current `main`. Because the
+   intentionally merged M3.2i code is itself the candidate surface relative
+   to baseline `2026-07-18_2346`, baseline validity for this continuation is:
+   `git log f6145dd..HEAD -- '*.py'` on `main` must be empty before M3.2j
+   coding. Docs-only STOP/design commits are allowed. Any later Python change
+   outside the single CUE-T fix is a STOP.
+2. Add TKA-007/TKA-008; run TKA-007 alone and observe the expected red arming
+   failure. Make the one regex change. Run TKA-007/TKA-008 green, then all TKA
+   + TCR + TKT + TSK and the focused compatibility groups named by M3.2i.
+   Run one full `python run_suite.py --quick` in the worktree.
+3. Run GT-J1 live batch x5 under `--test-session`, pinned basetemp,
+   minute-spaced, with bar >=4/5 and the M3.2h attribution fields recorded.
+   One pre-authorized fix iteration on a miss; a second miss is a STOP.
+4. Merge to `main`, run one post-merge `--quick`, then launch the frozen-code
+   detached full candidate flight against baseline `2026-07-18_2346` using
+   the same RN.5 Start-Process + watchdog protocol. Archive all sandbox ilogs.
+5. Adjudicate M3.2-G bars 1-7, the M3.2h addendum, and this revised arming
+   hygiene rule: `task_tools_armed=True` is licensed only by an open task or
+   explicit intent-bearing CUE-T language in TKT/TCR/TKA/JOB/GT-J1. The GT-A
+   turn-5 pin must be `task_tools_armed=False`, `tasks_active=0`, with zero
+   task-tool calls. Bare task nouns never license arming. Any other
+   out-of-family `True`/task call remains a hard STOP. Task-signal-free
+   score drops use bar 7's x2 recheck rule; no hygiene STOP receives a score
+   escape.
+6. Only if every gate holds: record the IG.5-style verdict here, promote the
+   new candidate baseline, run M3-X (a)-(d) live under `--test-session`, update
+   ARCHITECTURE.md's registry/task/job/board contracts, perform the required
+   memory sync, and close M3 in `FRIDAY_roadmap.md`.
+
+Designed and recorded by Codex (GPT-5.6) under Jack's explicit authorization
+— 2026-07-20.

@@ -343,6 +343,20 @@ or memory sync was attempted. Code remains merged; candidate `2059` is
 NOT the baseline; baseline remains `2026-07-18_2346`; **M3 remains OPEN
 and returns to Fable/Jack.**
 
+**M3.2j FIX AUTHORIZED (Jack, 2026-07-20; design/implementation delegated
+to Codex while Jack is away).** Read-only diagnosis found no registry,
+ledger, or M3.2h defect: CUE-T's standalone `task(s)` noun is the whole
+conflict. GT-A merely discusses a generic task collection while asking for
+a calendar cross-reference; with an empty durable ledger that noun exposed
+all five task schemas, and the model reasonably selected visible
+`task_status`. The smallest local fix is to remove standalone `task(s)` as
+an arming cue and retain a negation-aware explicit `create ... task`
+construction, while leaving checklist/to-do,
+track-this/the, check/tick/mark/cross-off, unattended, open-ledger,
+JobRunner, and M3.2h floor paths unchanged. Exact TDD guards and the
+re-flight protocol are recorded in jarvis plan §M3.2j. Baseline remains
+`2026-07-18_2346`; candidate `2026-07-19_2059` remains unpromoted.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,
