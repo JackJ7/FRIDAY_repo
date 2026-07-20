@@ -975,6 +975,7 @@ auto-memory sync.
 | M3.2-G | Merge → flight vs `2346` → pre-registered gate applied → verdict block recorded | **STOP (Sonnet, 2026-07-19 ~15:45)** — flight completed clean (stamp `2026-07-19_1155`, 559 items, no wedge, 197 ilogs archived); bars 1–2 met, bars 3/4/6 FAILED: `create_task` fires unprompted on an unrelated skill-decomposition turn (SKL-004, real schema-dilution signature — the gate's own STOP list names this exactly), plus GT-A (D2 family) and two perfect boards (memory_persistence, memory_recall) dropped. Full evidence + read in the STOP verdict block above M3.2h's status. NOT self-adjudicated, NOT reverted; baseline stays `2026-07-18_2346`; escalated to Fable/Jack for a fix design (M3.2h-style envelope fix candidate: tighten `create_task`'s arming condition). |
 | M3.2i | Task-tool arming gate + TKA-001..006 + re-flight | **STOP (Codex, 2026-07-20 ~01:05)** — implementation commit `5e99fae`, merged to `main` as `f6145dd`; worktree and post-merge `--quick` 470/470; GT-J1 live batch met the ≥4/5 bar (five LOCKED passes; target scores 5/5, 5/5, 5/5, 4/5, 5/5). Candidate `2026-07-19_2059` completed 556/565 in 3:55:52 with 198 ilogs archived. The original SKL-004 leak was fixed (`task_tools_armed=False`, no task call there), but the new M3.2i hygiene row FAILED mechanically: GT-A's calendar/task cross-reference armed the family and called `task_status` with `tasks_active=0`, outside TKT/TCR/TKA/JOB/GT-J1. §M3.2-G bar 6 therefore also failed. No rechecks or M3-X run; baseline stays `2026-07-18_2346`. Full verdict at the end of §M3.2i. |
 | M3.2j | Intent-bearing task noun gate + TKA-007..009 + re-flight | **STOP AT GT-J1 BATCH (Codex, 2026-07-20 ~02:55)** — isolated branch `codex/m3-2j`, code commits `9f1bb66` + `34bc0ca`; cue fix TDD/targeted/quick green, allowed test-session ledger iteration TSK-013 red→green + affected consumers 52/52 + `--quick` 474/474. GT-J1: run 1 failed on the archive enumeration gap; run 2 passed LOCKED 3/3 (TARGET 4/5); run 3 then failed because T1 had `task_tools_armed=True` but the model called no tool and only narrated the plan. Two misses make the >=4/5 bar unreachable, so runs 4-5 were not spent. Nothing merged; no flight/M3-X. Baseline remains `2026-07-18_2346`. Full STOP verdict at end of §M3.2j. |
+| M3.2k | Explicit task-create landed floor + TCF guards + re-flight | **DESIGNED / AUTHORIZED (Jack, 2026-07-20; Codex executing)** — post-M3.2j forensics found the remaining defect: arming only makes `create_task` available, while a late tool-free script correction can replace the final reply after every tool-capable recovery floor. The approved smallest fix is an engine-owned, post-script landed-create floor over a narrow positive creation predicate and deterministic title/checklist recovery. Full scope, TDD, and gates are at §M3.2k below. A fresh one-mechanical-fix GT-J1 allowance is authorized; all prior ship bars remain binding. |
 | M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
 | M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
 | M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2j GT-J1 STOP** — M3.2j never reached merge/flight, so (d) remains unmet. ARCHITECTURE update and memory sync did not run. |
@@ -1581,3 +1582,223 @@ Designed and recorded by Codex (GPT-5.6) under Jack's explicit authorization
   `2026-07-18_2346`; M3 stays OPEN.
 
 STOP recorded by Codex (GPT-5.6) — 2026-07-20.
+
+### M3.2k — explicit task-create landed floor (approved by Jack 2026-07-20; Codex owns design + execution)
+
+**Authorization and controlling boundary.** Jack approved Option 1 after the
+M3.2j STOP and authorized Codex to do the work needed to execute it. This is a
+new leg, not a resumption of M3.2j's remaining runs. It may bring forward only
+M3.2j code commits `9f1bb66` (intent-bearing CUE-T) and `34bc0ca`
+(test-session TaskLedger enumeration), then add the landed-create floor
+described here. A fresh ONE mechanical fix iteration is licensed for the new
+GT-J1 batch; a second miss is a STOP. Every §M3.2-G, M3.2h, and M3.2j hygiene
+bar remains binding.
+
+**Read-only forensic verdict.** The schemas and ledger are no longer the
+failure:
+
+- Run 1 called `create_task`; the only failure was the test-session physical
+  `test_archive/tasks/` enumeration gap, fixed and pinned by `34bc0ca` /
+  TSK-013.
+- Run 2 called `create_task`, created one open archived task, and passed all
+  three LOCKED contracts. M3.2h recovered T2's commitment-tool misroute.
+- Run 3 entered T1 with `task_tools_armed=True`, but the main model round chose
+  zero tools. Its settled draft then tripped the output-script floor. That
+  floor deliberately regenerates tool-free and runs LAST; its replacement
+  correctly narrated the three-step plan and ended `Confirm this plan?` after
+  every tool-capable recovery floor had already passed. The late scan could
+  only arm the general `pending_task` ledger (`pending_task_armed=True`), not
+  the durable TaskLedger (`tasks_active=0`). No later turn could recover T2/T3.
+- Therefore the missing invariant is **landed creation**, not visibility:
+  explicit creation intent can currently finish with an armed schema and a
+  plan, but no successful `create_task` receipt.
+
+**Alternatives adjudicated.** (1) A single tool-enabled corrective retry is a
+smaller diff but still probabilistic; qwen can ignore the tool again, so it is
+not a code floor. (2) A pre-turn structured planner would cover underspecified
+requests, but adds a model call and new orchestration to every successful
+creation turn. **Selected:** one bounded, deterministic post-generation floor
+that recovers only text already present in Jack's request or FRIDAY's explicit
+plan and calls the existing tool through the existing engine seam.
+
+**Smallest code-enforced design.** Two files own the behavior:
+
+1. `core\tools\task_tools.py` keeps M3.2j's `_TASK_TRACKING_CUE` unchanged and
+   adds two pure helpers:
+
+   ```python
+   def explicit_task_creation_requested(text: str) -> bool:
+       """Positive create/track/set-up intent only; discussion and negation
+       return False."""
+
+   def recover_task_plan(user_input: str,
+                         reply_text: str) -> tuple[str, list[str]] | None:
+       """An unambiguous user-grounded title plus 2-10 concrete steps, or
+       None. Never invent a title or step."""
+   ```
+
+   The creation predicate is intentionally narrower than family arming. It
+   accepts positive `create ... task`, `track this/the ...`, `set up ...
+   task/checklist`, and `make ... checklist` constructions. `don't`, `do not`,
+   `never`, and `no need to` in the governing clause block it. Bare task nouns,
+   task/calendar cross-reference, status/tick/block/unblock language, generic
+   planning, and open-ledger state alone never qualify.
+
+   Recovery is deterministic and bounded. The title must be a substring of
+   Jack's request: the named span before the first task-plan colon, or the
+   first named clause after a generic `track this as a task:` / `track this
+   job:` lead. Steps are tried in this order: (a) 2-10 explicit action clauses
+   in Jack's colon-delimited request, split only on commas, semicolons, or
+   `then`, with trailing `set it up / tell me the plan` meta-language removed;
+   (b) the first contiguous 1-based numbered block in the final reply; (c) the
+   first contiguous bullet block in the final reply. Recovered strings remain
+   verbatim apart from surrounding whitespace/punctuation. Missing title,
+   fewer than two steps, more than ten steps, duplicate/empty steps, or two
+   competing list blocks returns `None`.
+
+2. `core\engine.py` captures the turn-start condition before retrieval:
+
+   ```python
+   task_creation_requested = (
+       task_ledger is not None
+       and not task_ledger.list_open()
+       and explicit_task_creation_requested(user_input)
+   )
+   ```
+
+   The normal model/tool loop always wins. AFTER the output-script floor and
+   BEFORE the held stream, history persistence, offer ledger, and general
+   pending-task ledger, the engine checks for a successful `create_task` in
+   `tool_log`. If none landed and the turn-start condition is true, it calls
+   `recover_task_plan`. A recovered plan is executed as
+   `_run_tool("create_task", {"title": title, "steps": steps})`; this is the
+   same seam as native calls, so taint confirmation, the registry's in-tool
+   cue guard, TaskLedger duplicate protection, Brain git writes, test-session
+   archive routing, referent tracking, `on_tool`, and receipt semantics remain
+   intact. No direct `TaskLedger.create` call is permitted.
+
+   The synthetic transcript uses a real assistant tool-call envelope, then a
+   tool result, then the final assistant text with the receipt appended. A
+   successful receipt makes `action_landed=True`, so the generic pending-task
+   ledger does not also arm. A blocked/error receipt is reported verbatim. If
+   recovery returns `None`, no tool runs and the reply gains this code-built
+   knowledge-gap line: `I haven't created a task: I need a clear title and
+   2-10 concrete steps. What title and steps should I use?` No model-authored
+   guess becomes ledger state.
+
+   Add additive ilog field `task_creation_floor`: True when this recovery floor
+   engages, including an honest blocked/gap outcome; `tools`, tool receipt, and
+   `tasks_active` distinguish landed from non-landed. It must be False outside
+   explicit empty-ledger creation turns.
+
+**Preserved contracts / explicit non-scope.** No registry change, no schema
+wording change, no model-client/tool-choice change, no direct Brain/TaskLedger
+write, no change to open-task injection or the five task tools, no change to
+M3.2h claim matching/evidence, no JobRunner change, and no change to board or
+Service APIs. Existing open tasks keep the family armed and keep status,
+completion, block/unblock, background execution, and evidence checks exactly
+as shipped. The floor is empty-ledger creation recovery only. Any required
+Python change outside `core\tools\task_tools.py`, `core\engine.py`, the brought-
+forward `core\tasks.py`, and their task-floor tests is a STOP for Jack/Fable.
+
+**TDD cases (`tests\pillar1\test_task_creation_floor.py`, case IDs TCF-001..007).**
+
+- TCF-001 — GT-J1 T1 verbatim, empty ledger, scripted zero-tool numbered plan:
+  RED on M3.2j because no task exists; GREEN requires one `flux_bench_refit`
+  task with the exact three pending steps, a real `create_task` receipt,
+  `task_creation_floor=True`, `task_tools_armed=True`, `tasks_active=1`.
+- TCF-002 — first scripted reply contains a qualifying foreign-script run;
+  script-floor retry returns the English GT-J1 plan with zero tools. GREEN
+  proves ordering: `script_drift_corrective=True`, `task_creation_floor=True`,
+  and the same durable three-step task exists.
+- TCF-003 — native `create_task` lands in the main loop. GREEN requires one
+  task, one receipt, and `task_creation_floor=False` (never double-create).
+- TCF-004 — parametrized GT-A turn 5, SKL-004, `What tasks are on the
+  calendar?`, and `Do not create any tasks for this review.` GREEN requires no
+  task schemas where M3.2j says disarmed, zero task calls, zero tasks, and
+  `task_creation_floor=False`.
+- TCF-005 — one existing open task plus a neutral status/follow-up reply.
+  GREEN requires no second task and no floor fire; existing TKA/TKT/TCR/JOB
+  tests remain the authoritative open-flow coverage.
+- TCF-006 — positive creation wording without a recoverable title or 2-step
+  plan. GREEN requires no mutation, no tool call, the exact code-built gap,
+  and `task_creation_floor=True`.
+- TCF-007 — `Brain.test_session=True` plus the TCF-001 zero-tool recovery.
+  GREEN requires the physical `test_archive/tasks/flux_bench_refit.md`, logical
+  `list_open()` visibility, and no real `tasks/flux_bench_refit.md` write.
+
+**Implementation sequence (red → green, independently auditable).**
+
+1. On `main`, verify `git log f6145dd..HEAD -- '*.py'` is empty; commit this
+   design/roadmap update. Create `C:\tmp\FRIDAY-m3k`, branch
+   `codex/m3-2k`, from that commit. Cherry-pick only `9f1bb66` and `34bc0ca`.
+2. Add TCF-001 and TCF-002 first. Run
+   `python -m pytest tests\pillar1\test_task_creation_floor.py -v --tb=short`
+   and record the expected RED: zero durable tasks / missing floor field.
+3. Implement only the two pure helpers, the post-script engine floor, and the
+   additive ilog field. Re-run TCF-001/002 GREEN; commit the minimal floor.
+4. Add TCF-003..007 one at a time, observe each new behavior RED where the
+   behavior is new, implement only what is necessary, and keep the prior TCF
+   set GREEN. Commit tests/edge guards separately from any refactor.
+5. Run focused compatibility:
+   `python -m pytest tests\pillar1\test_task_creation_floor.py tests\pillar1\test_task_arming.py tests\pillar1\test_task_claim_floor.py tests\pillar1\test_task_tools.py tests\pillar1\test_tasks.py tests\pillar1\test_jobs.py tests\pillar1\test_task_board.py -v --tb=short`.
+   Then run `python run_suite.py --quick`. Any failure not proven pre-existing
+   on current main is a STOP; do not patch unrelated behavior.
+
+**Live GT-J1 gate (new batch; stopped M3.2j runs do not count).** With FRIDAY
+closed, port 47533 ownership checked, no suite/job/research owner, and Ollama
+healthy, set `FRIDAY_TEST_SESSION=1`. Run five official, minute-spaced commands
+from the clean worktree, substituting only N=1..5 in both names:
+
+```powershell
+$env:FRIDAY_TEST_SESSION='1'
+python run_suite.py --skill project_ops --runs 1 -- --basetemp C:\tmp\gtj1_m3k_runN -k GT-J1
+```
+
+After EACH command, immediately locate the command's newly generated results
+directory, copy that basetemp's interaction JSONL into its
+`sandbox_ilogs\` subdirectory, and verify the copy count before the next run.
+Record LOCKED/TARGET scores, `create_task` calls,
+`task_creation_floor`, `task_claim_floor`, `task_tools_armed`, `tasks_active`,
+script fires, and archive path for all three turns. Bar remains case fraction
+>=4/5. The fresh allowance covers ONE mechanical fix after a miss, with TDD +
+focused + `--quick` rerun before another specimen; the second miss is an
+immediate STOP, and misses are never relabeled or removed from the official
+attempt record.
+
+**Merge / flight / close protocol (conditional, unchanged bars).** Only after
+the GT-J1 bar: verify worktree clean and exact scoped diff, merge
+`codex/m3-2k` to `main`, run post-merge `python run_suite.py --quick`, then
+freeze code. Recheck worktrees, main log, port/process ownership, suite lock,
+Ollama health, and brain/test-session state. Launch the full candidate detached
+with PowerShell `Start-Process` and run `scripts\ollama_watchdog.py` alongside,
+using a pinned full-flight `--basetemp`; do not run model work during flight.
+On completion archive every sandbox ilog immediately, resolve the generated
+stamp from the completed run, and compare it exactly:
+
+```powershell
+$candidateStamp = (Get-ChildItem results -Directory |
+    Sort-Object LastWriteTime | Select-Object -Last 1).Name
+python run_suite.py --compare 2026-07-18_2346 $candidateStamp
+```
+
+Then apply §M3.2-G bars 1-7 plus:
+
+- M3.2h: `task_claim_floor` only in licensed TCR/GT-J1 claim turns; evidence
+  rules and task-claim floor held.
+- M3.2j: bare task discussion/GT-A remain disarmed; any out-of-family
+  `task_tools_armed=True` or task call is a hard STOP.
+- M3.2k: `task_creation_floor=True` only on explicit empty-ledger creation
+  turns in TCF/GT-J1 (or an exact in-suite equivalent that passes); every fire
+  must have a grounded recovered plan and an auditable result. Any fire on
+  bare discussion, unrelated planning, open-task operation, JobRunner, or a
+  negated request is a hard STOP. Task-signal-free deltas retain bar 7's x2
+  recheck rule; hygiene failures get no score escape.
+
+Only if every bar holds: record the IG.5-style verdict, promote the candidate
+as the new baseline, run M3-X J1 acceptance (a)-(d) live under test-session,
+update `ARCHITECTURE.md`, `FRIDAY_jarvis_plan.md`, and `FRIDAY_roadmap.md`,
+perform Jack's requested memory sync, and close M3. No merge, detached flight,
+baseline promotion, M3-X, or closure may cross a failed gate.
+
+Designed and recorded by Codex (GPT-5.6) — 2026-07-20.

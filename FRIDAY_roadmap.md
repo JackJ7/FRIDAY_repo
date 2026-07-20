@@ -368,6 +368,22 @@ remain only on `codex/m3-2j`; nothing merged, no flight or M3-X ran, candidate
 `2026-07-19_2059` remains unpromoted, baseline remains `2026-07-18_2346`,
 and **M3 stays OPEN**. Full evidence is in jarvis plan §M3.2j.
 
+**M3.2k DESIGNED / AUTHORIZED (Jack + Codex, 2026-07-20):** read-only
+forensics found that M3.2j fixed visibility hygiene but did not enforce a
+landed creation: GT-J1 run 3's main round chose zero tools, then the LAST,
+tool-free script floor rewrote the answer into a correct checklist plus
+`Confirm this plan?`; only the generic pending-request ledger armed, while the
+durable TaskLedger stayed empty. Jack approved the smallest code-enforced
+answer: a narrow positive creation predicate plus a post-script engine floor
+that deterministically recovers an already-stated title/2-10-step plan and
+runs the existing `create_task` through `_run_tool`. No direct ledger write,
+no registry/model-client change, and no widening of bare-task/planning arming.
+TCF-001..007, exact scope, a fresh one-mechanical-fix GT-J1 allowance, and all
+merge/flight/closure gates are registered in jarvis plan §M3.2k. Work will use
+a new isolated `codex/m3-2k` candidate; stopped M3.2j runs do not count. Active
+baseline remains `2026-07-18_2346`; candidate `2026-07-19_2059` remains
+unpromoted; **M3 stays OPEN until every registered bar holds.**
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,
