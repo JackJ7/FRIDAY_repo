@@ -429,6 +429,15 @@ class Engine:
                 on_token(msg)
             return reply
 
+        # M3.2i: capture the schema gate at the NORMAL model-turn boundary.
+        # Keep this below research's deterministic early returns: those stop
+        # paths deliberately work on a bare Engine with no registry or model.
+        # All five task tools share one predicate, so create_task's presence
+        # represents the family and matches the payload about to be sent.
+        self._task_tools_armed = any(
+            tool["function"]["name"] == "create_task"
+            for tool in self.registry.to_ollama())
+
         # Start tainted if externally-sourced content is still in context from
         # an earlier turn; a fresh read this turn will refine it below.
         self._taint = self._external_in_context()
@@ -2679,6 +2688,9 @@ class Engine:
             # the whole M3.2 compare's attribution. Additive; schema stable.
             "tasks_active": len(task_ledger.list_open()) if task_ledger else 0,
             "task_evidence_refused": getattr(self, "_task_evidence_refused", 0),
+            # Jarvis M3.2i: whether the task-tool schema family was visible to
+            # the model this turn (explicit tracking cue or existing open task).
+            "task_tools_armed": getattr(self, "_task_tools_armed", False),
             # Armor M3.3 (jarvis J1): True when JobRunner drove this turn
             # unattended rather than live chat — lets the compare attribute
             # any flag to the runner vs a real conversation. Additive.

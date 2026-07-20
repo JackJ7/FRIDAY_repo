@@ -21,6 +21,7 @@ state-changing tool escalates to a Jack-confirm. Kinds:
 """
 
 from dataclasses import dataclass
+from typing import Callable
 
 
 @dataclass
@@ -30,6 +31,7 @@ class Tool:
     parameters: dict   # JSON schema for the arguments
     func: callable
     kind: str = "internal"
+    arm: Callable[[], bool] | None = None
 
 
 class ToolRegistry:
@@ -37,9 +39,9 @@ class ToolRegistry:
         self._tools = {}
 
     def register(self, name: str, description: str, parameters: dict, func,
-                 kind: str = "internal"):
+                 kind: str = "internal", arm=None):
         assert kind in ("internal", "external_read", "action", "action_confirmed")
-        self._tools[name] = Tool(name, description, parameters, func, kind)
+        self._tools[name] = Tool(name, description, parameters, func, kind, arm)
 
     def kind(self, name: str) -> str:
         """A tool's declared kind; unknown names are 'internal' (they can't
@@ -59,6 +61,7 @@ class ToolRegistry:
                 },
             }
             for t in self._tools.values()
+            if t.arm is None or t.arm()
         ]
 
     def call(self, name: str, args: dict) -> str:

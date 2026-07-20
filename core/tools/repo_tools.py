@@ -163,6 +163,13 @@ def register_repo_tools(registry, workspaces: Path):
             r = subprocess.run(
                 ["rg", "-n", "--no-heading", "-m", str(max_hits), pattern],
                 cwd=str(root), capture_output=True, text=True, timeout=120)
+            # ripgrep uses exit 1 for a valid search with no matches, but
+            # exit 2 for malformed regexes and other search failures.  The
+            # latter used to be mistaken for an empty result whenever rg was
+            # installed, even though the Python fallback reported it loudly.
+            if r.returncode not in (0, 1):
+                detail = r.stderr.strip() or f"ripgrep exit {r.returncode}"
+                return f"ERROR: search failed: {detail[:300]}"
             hits = r.stdout.strip().splitlines()[:max_hits]
         else:
             try:
