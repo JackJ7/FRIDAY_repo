@@ -975,10 +975,10 @@ auto-memory sync.
 | M3.2-G | Merge → flight vs `2346` → pre-registered gate applied → verdict block recorded | **STOP (Sonnet, 2026-07-19 ~15:45)** — flight completed clean (stamp `2026-07-19_1155`, 559 items, no wedge, 197 ilogs archived); bars 1–2 met, bars 3/4/6 FAILED: `create_task` fires unprompted on an unrelated skill-decomposition turn (SKL-004, real schema-dilution signature — the gate's own STOP list names this exactly), plus GT-A (D2 family) and two perfect boards (memory_persistence, memory_recall) dropped. Full evidence + read in the STOP verdict block above M3.2h's status. NOT self-adjudicated, NOT reverted; baseline stays `2026-07-18_2346`; escalated to Fable/Jack for a fix design (M3.2h-style envelope fix candidate: tighten `create_task`'s arming condition). |
 | M3.2i | Task-tool arming gate + TKA-001..006 + re-flight | **STOP (Codex, 2026-07-20 ~01:05)** — implementation commit `5e99fae`, merged to `main` as `f6145dd`; worktree and post-merge `--quick` 470/470; GT-J1 live batch met the ≥4/5 bar (five LOCKED passes; target scores 5/5, 5/5, 5/5, 4/5, 5/5). Candidate `2026-07-19_2059` completed 556/565 in 3:55:52 with 198 ilogs archived. The original SKL-004 leak was fixed (`task_tools_armed=False`, no task call there), but the new M3.2i hygiene row FAILED mechanically: GT-A's calendar/task cross-reference armed the family and called `task_status` with `tasks_active=0`, outside TKT/TCR/TKA/JOB/GT-J1. §M3.2-G bar 6 therefore also failed. No rechecks or M3-X run; baseline stays `2026-07-18_2346`. Full verdict at the end of §M3.2i. |
 | M3.2j | Intent-bearing task noun gate + TKA-007..009 + re-flight | **STOP AT GT-J1 BATCH (Codex, 2026-07-20 ~02:55)** — isolated branch `codex/m3-2j`, code commits `9f1bb66` + `34bc0ca`; cue fix TDD/targeted/quick green, allowed test-session ledger iteration TSK-013 red→green + affected consumers 52/52 + `--quick` 474/474. GT-J1: run 1 failed on the archive enumeration gap; run 2 passed LOCKED 3/3 (TARGET 4/5); run 3 then failed because T1 had `task_tools_armed=True` but the model called no tool and only narrated the plan. Two misses make the >=4/5 bar unreachable, so runs 4-5 were not spent. Nothing merged; no flight/M3-X. Baseline remains `2026-07-18_2346`. Full STOP verdict at end of §M3.2j. |
-| M3.2k | Explicit task-create landed floor + TCF guards + re-flight | **DESIGNED / AUTHORIZED (Jack, 2026-07-20; Codex executing)** — post-M3.2j forensics found the remaining defect: arming only makes `create_task` available, while a late tool-free script correction can replace the final reply after every tool-capable recovery floor. The approved smallest fix is an engine-owned, post-script landed-create floor over a narrow positive creation predicate and deterministic title/checklist recovery. Full scope, TDD, and gates are at §M3.2k below. A fresh one-mechanical-fix GT-J1 allowance is authorized; all prior ship bars remain binding. |
+| M3.2k | Explicit task-create landed floor + TCF guards + re-flight | **IMPLEMENTED; PRE-LIVE GATES GREEN (Codex, 2026-07-20 ~14:46)** — isolated `codex/m3-2k`; brought forward only the two licensed M3.2j commits, then landed floor commit `b2b283f` and edge-guard commit `692f08e`. TCF-001/002 red→green, all TCF 10/10, focused compatibility 62/62, worktree `--quick` 484/484. Fresh GT-J1 x5 is next; its one mechanical-fix allowance is unspent. Full evidence at the end of §M3.2k. |
 | M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
 | M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
-| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2j GT-J1 STOP** — M3.2j never reached merge/flight, so (d) remains unmet. ARCHITECTURE update and memory sync did not run. |
+| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2k live gate / flight** — M3.2k's pre-live gates are green, but GT-J1, merge, detached flight, and §M3.2-G adjudication have not run. |
 
 **Merge note (Sonnet, 2026-07-19):** M3.3/M3.4 are code-complete, fully
 tested, and committed on `m3` (`7b3cec7`, stacked on M3.1+M3.2's `1f3137e`)
@@ -1802,3 +1802,36 @@ perform Jack's requested memory sync, and close M3. No merge, detached flight,
 baseline promotion, M3-X, or closure may cross a failed gate.
 
 Designed and recorded by Codex (GPT-5.6) — 2026-07-20.
+
+**M3.2k implementation status (Codex, 2026-07-20 ~14:46; isolated
+`C:\tmp\FRIDAY-m3k`, branch `codex/m3-2k`).**
+
+- Main was exactly `b6b409b`; `git log f6145dd..HEAD -- '*.py'` was empty.
+  The worktree started from that design commit. Cherry-picks retained only
+  `9f1bb66`'s CUE-T/test guards and `34bc0ca`'s TaskLedger/test-session guard;
+  their older living-doc hunks were discarded in favor of `b6b409b`'s newer
+  M3.2j STOP + M3.2k record.
+- TCF-001/002 failed red exactly because `flux_bench_refit` did not exist after
+  either the zero-tool numbered plan or the script-floor replacement (2 failed,
+  stamp `2026-07-20_1423`). The narrow creation predicate, deterministic
+  request/reply plan recovery, post-script `_run_tool("create_task", ...)`
+  floor, real synthetic tool transcript, held-stream ordering, and additive
+  `task_creation_floor` ilog field then passed both cases (commit `b2b283f`).
+- TCF-003..007 were added and executed one at a time. Native create wins with
+  no double fire; GT-A/SKL-004/bare-task/negated-create stay disarmed; an open
+  task excludes the floor; an under-specified positive ask reports the exact
+  code-built gap without mutation; test-session recovery writes only
+  `test_archive/tasks/` and stays logically visible. Combined TCF: 10/10
+  (`2026-07-20_1434`); edge guards committed separately as `692f08e`.
+- Focused compatibility passed 62/62 (`2026-07-20_1436`). The written command's
+  `test_task_board.py` path does not exist; the tracked M3.4 suite is
+  `tests\pillar1\test_away_board.py`, substituted mechanically and recorded
+  here. Worktree `python run_suite.py --quick` then passed 484/484 with 95
+  deselected in 7:33 (stamp `2026-07-20_1437`).
+- Exact diff from `b6b409b` is limited to the licensed `core\tasks.py`,
+  `core\tools\task_tools.py`, `core\engine.py`, and their TKA/TSK/TCF tests.
+  No registry, schema wording, model client, JobRunner, board, Service API, or
+  direct Brain/TaskLedger write changed. The fresh GT-J1 batch is next; its one
+  mechanical-fix allowance remains unspent.
+
+Implementation evidence recorded by Codex (GPT-5.6) — 2026-07-20.

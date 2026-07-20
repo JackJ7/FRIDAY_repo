@@ -384,6 +384,15 @@ a new isolated `codex/m3-2k` candidate; stopped M3.2j runs do not count. Active
 baseline remains `2026-07-18_2346`; candidate `2026-07-19_2059` remains
 unpromoted; **M3 stays OPEN until every registered bar holds.**
 
+**M3.2k IMPLEMENTED / PRE-LIVE GREEN (Codex, 2026-07-20 ~14:46):** isolated
+`codex/m3-2k` brought forward only the licensed M3.2j code, then added the
+post-script landed-create floor (`b2b283f`) and separate TCF edge guards
+(`692f08e`). TCF-001/002 red→green; all TCF 10/10; focused task/job/board
+compatibility 62/62; worktree `--quick` 484/484 (`2026-07-20_1437`). Exact
+diff remains inside the registered M3.2k files. Fresh GT-J1 x5 is next; the
+new batch's one mechanical-fix allowance is unspent. No merge, flight,
+baseline promotion, or M3-X has run.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,
