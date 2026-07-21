@@ -307,13 +307,15 @@ class Engine:
 
     def _project_persistence_recovery(self, user_input: str,
                                       resolved: dict | None,
-                                      tool_log: list):
+                                      tool_log: list,
+                                      durable_landed: bool = False):
         """Return one grounded recovery `(tool, args)`, or None.
 
         Status values come directly from Jack's explicit imperative.  Fact
-        recovery reuses the model's rejected content only when its attempted
-        nested path names the same uniquely resolved existing project.  No
-        content, path, project, or status is inferred by this helper.
+        recovery prefers the model's rejected content when its attempted
+        nested path names the same uniquely resolved existing project.  A
+        resolve-only turn may instead persist the literal text following an
+        explicit record cue.  No path, project, status, or fact is inferred.
         """
         if not resolved or not resolved.get("note_path"):
             return None
@@ -332,7 +334,8 @@ class Engine:
                     "path": note_path, "field": "Status", "value": desired}
             return None
 
-        if not self._EXPLICIT_RECORD_CUE.search(user_input or ""):
+        record_match = self._EXPLICIT_RECORD_CUE.search(user_input or "")
+        if not record_match or durable_landed:
             return None
         slug = str(resolved.get("slug", ""))
         if not slug:
@@ -356,7 +359,15 @@ class Engine:
                         attempted.get("summary") or
                         f"Record fact in {resolved.get('title', 'project')}")[:160],
                 }
-        return None
+        fact = (user_input or "")[record_match.end():].strip()
+        if not fact or len(fact) > 1000 or fact in note:
+            return None
+        return "write_brain", {
+            "path": note_path,
+            "content": "\n- " + fact + "\n",
+            "mode": "append",
+            "summary": "Record explicit project fact",
+        }
 
     def _character(self) -> str:
         """The character brief — read fresh each time so edits in Obsidian
@@ -2578,15 +2589,17 @@ class Engine:
         # M3.2l project-persistence floor.  `FridayService` emits on_done as
         # soon as respond() returns, before the asynchronous memory pass.  An
         # explicit status command therefore must land here to survive a kill
-        # at that boundary.  The second licensed shape retries the measured
-        # rejected nested-project fact write against the canonical note.
+        # at that boundary.  The fact path persists Jack's literal text after
+        # an explicit record cue; rejected nested-project content remains the
+        # preferred structured source when one exists.
         project_persistence_floor_fired = False
         durable_landed = any(
             item.get("tool") in self._DURABLE_WRITE_TOOLS
             and self._write_landed(item.get("result", ""))
             for item in tool_log)
-        recovery = None if durable_landed else self._project_persistence_recovery(
-            user_input, getattr(self, "_resolved_project", None), tool_log)
+        recovery = self._project_persistence_recovery(
+            user_input, getattr(self, "_resolved_project", None), tool_log,
+            durable_landed=durable_landed)
         if reply is not None and recovery is not None:
             name, args = recovery
             project_persistence_floor_fired = True

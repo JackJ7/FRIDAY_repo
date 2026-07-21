@@ -396,3 +396,51 @@ def test_explicit_project_status_lands_before_reply(sandbox):
               and tool["args"].get("field") == "Status"
               and not str(tool["result"]).startswith("ERROR")]
     assert len(landed) == 1
+
+
+@pytest.mark.case("MEM-021", "an explicit project fact survives a resolve-only "
+                              "main turn without waiting for memory pass")
+def test_explicit_project_fact_lands_after_resolve_only(sandbox):
+    capture = []
+    eng = sandbox.service.engine
+    eng.vote_enabled = False
+    eng.ilog.log = lambda record: capture.append(record)
+    eng.model = _MemoryScriptModel([
+        {"content": "", "tool_calls": [_memory_call(
+            "resolve_project", name="alpha rig")]},
+        "The project is active but has no folder. Should I create one?",
+    ])
+
+    eng.respond(
+        "For the record: the alpha rig's frame is 2020 aluminum extrusion.")
+
+    assert "the alpha rig's frame is 2020 aluminum extrusion" in sandbox.note(
+        "projects/alpha_rig.md").casefold()
+    assert capture[-1]["project_persistence_floor"] is True
+
+
+@pytest.mark.case("MEM-022", "an incorrect native project-status write is "
+                              "corrected to the user's explicit value")
+def test_explicit_project_status_corrects_wrong_native_value(sandbox):
+    capture = []
+    eng = sandbox.service.engine
+    eng.vote_enabled = False
+    eng.ilog.log = lambda record: capture.append(record)
+    eng.model = _MemoryScriptModel([
+        {"content": "", "tool_calls": [_memory_call(
+            "update_note_field", path="projects/gamma_arm.md",
+            field="Status", value="reference")]},
+        "I updated gamma arm to reference.",
+    ])
+
+    eng.respond(
+        "The gamma arm project is wrapped up for good - set its status to archived.")
+
+    from core.project_meta import project_status
+    assert project_status(sandbox.note("projects/gamma_arm.md")) == "archived"
+    assert capture[-1]["project_persistence_floor"] is True
+    status_writes = [tool for tool in capture[-1]["tools"]
+                     if tool["tool"] == "update_note_field"
+                     and tool["args"].get("field") == "Status"]
+    assert [tool["args"]["value"] for tool in status_writes] == [
+        "reference", "archived"]
