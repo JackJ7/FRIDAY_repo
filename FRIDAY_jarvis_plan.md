@@ -976,7 +976,7 @@ auto-memory sync.
 | M3.2i | Task-tool arming gate + TKA-001..006 + re-flight | **STOP (Codex, 2026-07-20 ~01:05)** — implementation commit `5e99fae`, merged to `main` as `f6145dd`; worktree and post-merge `--quick` 470/470; GT-J1 live batch met the ≥4/5 bar (five LOCKED passes; target scores 5/5, 5/5, 5/5, 4/5, 5/5). Candidate `2026-07-19_2059` completed 556/565 in 3:55:52 with 198 ilogs archived. The original SKL-004 leak was fixed (`task_tools_armed=False`, no task call there), but the new M3.2i hygiene row FAILED mechanically: GT-A's calendar/task cross-reference armed the family and called `task_status` with `tasks_active=0`, outside TKT/TCR/TKA/JOB/GT-J1. §M3.2-G bar 6 therefore also failed. No rechecks or M3-X run; baseline stays `2026-07-18_2346`. Full verdict at the end of §M3.2i. |
 | M3.2j | Intent-bearing task noun gate + TKA-007..009 + re-flight | **STOP AT GT-J1 BATCH (Codex, 2026-07-20 ~02:55)** — isolated branch `codex/m3-2j`, code commits `9f1bb66` + `34bc0ca`; cue fix TDD/targeted/quick green, allowed test-session ledger iteration TSK-013 red→green + affected consumers 52/52 + `--quick` 474/474. GT-J1: run 1 failed on the archive enumeration gap; run 2 passed LOCKED 3/3 (TARGET 4/5); run 3 then failed because T1 had `task_tools_armed=True` but the model called no tool and only narrated the plan. Two misses make the >=4/5 bar unreachable, so runs 4-5 were not spent. Nothing merged; no flight/M3-X. Baseline remains `2026-07-18_2346`. Full STOP verdict at end of §M3.2j. |
 | M3.2k | Explicit task-create landed floor + TCF guards + re-flight | **IMPLEMENTED; PRE-LIVE GATES GREEN (Codex, 2026-07-20 ~14:46)** — isolated `codex/m3-2k`; brought forward only the two licensed M3.2j commits, then landed floor commit `b2b283f` and edge-guard commit `692f08e`. TCF-001/002 red→green, all TCF 10/10, focused compatibility 62/62, worktree `--quick` 484/484. Fresh GT-J1 x5 is next; its one mechanical-fix allowance is unspent. Full evidence at the end of §M3.2k. |
-| M3.2l | Hard-STOP repair: deterministic explicit-project persistence + banned-voice-tell floor | **DESIGNED / AUTHORIZED (Jack + Codex, 2026-07-21)** — archived `_1835` / `_2143` evidence proves two code-level gaps: explicit project writes can miss the main-turn durability boundary, and prompt-only voice rules repeatedly leak an enumerated tell. The scoped plan and gates are at the end of §M3.2l. Baseline stays `2026-07-18_2346`; no promotion or M3-X is licensed by design/implementation alone. |
+| M3.2l | Hard-STOP repair: deterministic explicit-project persistence + banned-voice-tell floor | **IMPLEMENTED / PRE-LIVE GREEN (Codex, 2026-07-21 ~02:16)** — plan `3a4e79c`, implementation `e1a6a0e`; MEM-019/020 and VOX-004/005 RED→GREEN, focused 57/57, `--quick` 503/503 (`2026-07-21_0205`). Focused live x2 is next. Baseline stays `2026-07-18_2346`; no promotion or M3-X is licensed yet. Full evidence at the end of §M3.2l. |
 | M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
 | M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
 | M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2k live gate / flight** — M3.2k's pre-live gates are green, but GT-J1, merge, detached flight, and §M3.2-G adjudication have not run. |
@@ -1986,19 +1986,19 @@ task arming, or baseline change is in scope.
 
 #### Implementation plan
 
-- [ ] **L.1 — RED project-persistence guards.** In
+- [x] **L.1 — RED project-persistence guards.** In
   `tests/pillar1/test_memory.py`, add scripted end-to-end guards for the exact
   rejected nested-write and resolve-only status misses. Run only the two new
   nodes and confirm they fail because the durable write/flag is absent.
-- [ ] **L.2 — GREEN project floor.** In `core/engine.py`, add the conservative
+- [x] **L.2 — GREEN project floor.** In `core/engine.py`, add the conservative
   parsers/recovery helper and invoke it after the output-script floor, before
   streaming/on_done. Run the L.1 nodes plus the existing MEM-001/MEM-005
   deterministic consumers; expected all green.
-- [ ] **L.3 — RED/GREEN voice floor.** In `tests/pillar1/test_voice.py`, first
+- [x] **L.3 — RED/GREEN voice floor.** In `tests/pillar1/test_voice.py`, first
   add a detector/substitution matrix guard and an end-to-end streamed-reply
   guard, confirm RED, then add the stream sanitizer/final-content enforcement
   in `core/engine.py`. Verify output-format bypass explicitly.
-- [ ] **L.4 — focused compatibility.** Run the new guards plus existing
+- [x] **L.4 — focused compatibility.** Run the new guards plus existing
   memory/voice/script/stream/task-floor suites that share the late seam. Then
   run `python run_suite.py --quick` only if those focused tests are green.
 - [ ] **L.5 — focused live gate.** With no suite/model process already owning
@@ -2013,3 +2013,13 @@ task arming, or baseline change is in scope.
   requires a frozen-code full candidate compare against `2026-07-18_2346`.
   Until that flight passes every registered bar: no promotion, M3-X, memory
   sync, architecture closeout, or M3 closure.
+
+**Implementation / pre-live evidence (Codex, 2026-07-21 ~02:16).** Dedicated
+branch `codex/m3-2l`; plan commit `3a4e79c`; implementation commit `e1a6a0e`.
+MEM-019/020 failed on the intended missing writes, then passed 2/2 after the
+project floor. VOX-004/005 failed on the absent sanitizer / leaked stream, then
+passed 17/17 after implementation; the readability refactor re-passed all 19
+new guards. Shared-seam compatibility passed 57/57 (11 live-model tests
+deselected). Quick candidate `2026-07-21_0205` passed 503/503 with 95
+deselected in 6:15. `.codex/` remained untouched and untracked. L.5 focused
+live x2 remains required before any full flight or gate-lifting claim.

@@ -426,6 +426,21 @@ not promoted; baseline remains `2026-07-18_2346`; merged code is not reverted;
 M3.2/M3 stay OPEN; no second recheck, M3-X, architecture closeout, memory sync,
 or closure ran. Next decision: Fable/Jack.
 
+**M3.2l IMPLEMENTED / PRE-LIVE GREEN (Codex, 2026-07-21 ~02:16):** Jack
+authorized a plan and implementation to lift the STOP. Archived ilogs traced
+MEM-005 to the `on_done`-before-memory-pass kill window, MEM-001 to an
+unrecovered rejected nested-project write, and VOX-002 to the same enumerated
+`let me know if` closer on candidate and recheck; every task signal was
+disarmed, excluding M3.2k contact. Plan `3a4e79c` and implementation `e1a6a0e`
+on `codex/m3-2l` add narrow, resolver-grounded main-turn persistence recovery
+plus exact settled/streamed voice substitutions, both through existing safety
+boundaries and with additive ilog flags. New guards were RED→GREEN (memory 2/2,
+voice 17/17); focused compatibility passed 57/57; `--quick` passed 503/503
+(`2026-07-21_0205`). Focused live MEM-001 + MEM-005[*] + VOX-002 must pass
+twice before a full frozen-code flight is licensed. Baseline remains
+`2026-07-18_2346`; `_1835` remains unpromoted; M3.2/M3 remain OPEN; no M3-X,
+memory sync, promotion, or closure has occurred.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,
