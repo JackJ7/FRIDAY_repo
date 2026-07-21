@@ -435,8 +435,8 @@ disarmed, excluding M3.2k contact. Plan `3a4e79c` and implementation `e1a6a0e`
 on `codex/m3-2l` add narrow, resolver-grounded main-turn persistence recovery
 plus exact settled/streamed voice substitutions, both through existing safety
 boundaries and with additive ilog flags. New guards were RED→GREEN (memory 2/2,
-voice 17/17); focused compatibility passed 57/57; `--quick` passed 503/503
-(`2026-07-21_0205`). Focused live MEM-001 + MEM-005[*] + VOX-002 must pass
+voice 17/17); focused compatibility passed 57/57; the exact-HEAD `--quick`
+passed 503/503 (`2026-07-21_0219`, 95 deselected, 6:20). Focused live MEM-001 + MEM-005[*] + VOX-002 must pass
 twice before a full frozen-code flight is licensed. Baseline remains
 `2026-07-18_2346`; `_1835` remains unpromoted; M3.2/M3 remain OPEN; no M3-X,
 memory sync, promotion, or closure has occurred.
