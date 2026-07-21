@@ -976,10 +976,10 @@ auto-memory sync.
 | M3.2i | Task-tool arming gate + TKA-001..006 + re-flight | **STOP (Codex, 2026-07-20 ~01:05)** — implementation commit `5e99fae`, merged to `main` as `f6145dd`; worktree and post-merge `--quick` 470/470; GT-J1 live batch met the ≥4/5 bar (five LOCKED passes; target scores 5/5, 5/5, 5/5, 4/5, 5/5). Candidate `2026-07-19_2059` completed 556/565 in 3:55:52 with 198 ilogs archived. The original SKL-004 leak was fixed (`task_tools_armed=False`, no task call there), but the new M3.2i hygiene row FAILED mechanically: GT-A's calendar/task cross-reference armed the family and called `task_status` with `tasks_active=0`, outside TKT/TCR/TKA/JOB/GT-J1. §M3.2-G bar 6 therefore also failed. No rechecks or M3-X run; baseline stays `2026-07-18_2346`. Full verdict at the end of §M3.2i. |
 | M3.2j | Intent-bearing task noun gate + TKA-007..009 + re-flight | **STOP AT GT-J1 BATCH (Codex, 2026-07-20 ~02:55)** — isolated branch `codex/m3-2j`, code commits `9f1bb66` + `34bc0ca`; cue fix TDD/targeted/quick green, allowed test-session ledger iteration TSK-013 red→green + affected consumers 52/52 + `--quick` 474/474. GT-J1: run 1 failed on the archive enumeration gap; run 2 passed LOCKED 3/3 (TARGET 4/5); run 3 then failed because T1 had `task_tools_armed=True` but the model called no tool and only narrated the plan. Two misses make the >=4/5 bar unreachable, so runs 4-5 were not spent. Nothing merged; no flight/M3-X. Baseline remains `2026-07-18_2346`. Full STOP verdict at end of §M3.2j. |
 | M3.2k | Explicit task-create landed floor + TCF guards + re-flight | **MERGED; HARD STOP (Codex, signed 2026-07-20)** — main merge `c66f24e`; signed STOP `346d4c8`. Fresh GT-J1 passed 5/5 and task hygiene held, but candidate `2026-07-20_1835` scored 566 passed / 2 flaky / 11 failed: `memory_persistence` fell to 0.8333 and stayed non-perfect on the only useful recheck, while VOX-002 repeated. Baseline remains `2026-07-18_2346`; no promotion or downstream closeout is licensed. Full evidence at the end of §M3.2k. |
-| M3.2l | Hard-STOP repair: deterministic explicit-project persistence + banned-voice-tell floor | **IMPLEMENTED / PRE-LIVE GREEN (Codex, 2026-07-21 ~02:26)** — plan `3a4e79c`, implementation `e1a6a0e`; MEM-019/020 and VOX-004/005 RED→GREEN, focused 57/57, exact-HEAD `--quick` 503/503 (`2026-07-21_0219`). Focused live x2 is next. Baseline stays `2026-07-18_2346`; no promotion or M3-X is licensed yet. Full evidence at the end of §M3.2l. |
+| M3.2l | Hard-STOP repair: deterministic explicit-project persistence + banned-voice-tell floor | **IMPLEMENTED; LIVE REPEAT PAUSED (Codex, 2026-07-21 ~02:54)** — plan `3a4e79c`; initial implementation `e1a6a0e`; live-discovered guards/fix `8db71ef`. MEM-019..022 and VOX-004/005 are RED→GREEN, focused 59/59, exact-commit `--quick` 505/505 (`2026-07-21_0242`). Focused batch `2026-07-21_0249` passed 6/6, but PID 10744 reacquired port 47533 before the required repeat, so L.5 and the hard STOP remain open. Baseline stays `2026-07-18_2346`; no promotion or M3-X is licensed. Full evidence at the end of §M3.2l. |
 | M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
 | M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
-| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2l validation / re-flight** — M3.2k merged and its flight reached a signed hard STOP. M3.2l is pre-live green, but focused live x2 and a frozen-code full candidate are still required before §M3.2-G can be adjudicated again. |
+| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2l validation / re-flight** — M3.2k merged and its flight reached a signed hard STOP. M3.2l is implemented with one useful focused pass, but two uncontended focused batches and a frozen-code full candidate are still required before §M3.2-G can be adjudicated again. |
 
 **Merge note (Sonnet, 2026-07-19):** M3.3/M3.4 are code-complete, fully
 tested, and committed on `m3` (`7b3cec7`, stacked on M3.1+M3.2's `1f3137e`)
@@ -2004,7 +2004,7 @@ task arming, or baseline change is in scope.
 - [ ] **L.5 — focused live gate.** With no suite/model process already owning
   the GPU, run only `MEM-001`, all `MEM-005` parameters, and `VOX-002` on the
   repaired commit using pinned basetemp and immediate ilog archival. Required:
-  memory_persistence 4/4 and VOX-002 8/8, both new flags confined to their
+  memory rows 5/5 and VOX-002 prompts 8/8, both new flags confined to their
   licensed turns, task schemas disarmed/no task calls. One repeat of this same
   focused batch must also pass to prove the recurring failures are removed.
 - [ ] **L.6 — verdict.** Record commits, commands, counts, stamps, flag audit,
@@ -2031,3 +2031,27 @@ single-GPU rule forbids overlap between a live instance and model-marked tests.
 The process was not stopped or altered. Focused live x2, full flight, and every
 downstream gate therefore remain unrun; resume L.5 after Jack closes the live
 instance or explicitly authorizes a controlled shutdown.
+
+**L.5 live-discovered correction and partial evidence (Codex, 2026-07-21
+~02:54).** When port 47533 temporarily had no listener, the first launch
+incorrectly inherited `FRIDAY_TEST_SESSION=1`; that invalid sandbox specimen
+(`2026-07-21_0229`) routed otherwise successful status writes to the archive
+overlay. Its 6/6 ilogs were preserved, but it does not count. With the variable
+absent, `2026-07-21_0234` exposed two genuine residual shapes: MEM-001 could
+resolve only with no rejected write to reuse, and MEM-005[gamma_arm] could land
+the wrong native status value. MEM-021/022 reproduced both RED. Commit
+`8db71ef` now persists only the literal text after an explicit record cue and
+corrects status to the explicit requested value even after a wrong native
+write. MEM-019..022 passed 4/4, shared late-seam compatibility passed 59/59,
+and exact-commit quick `2026-07-21_0242` passed 505/505 (95 deselected, 6:20).
+
+Focused batch `2026-07-21_0249` then passed all six selected nodes: MEM-001,
+four MEM-005 parameters, and VOX-002 (eight prompts). All 6/6 sandbox ilog
+files were archived immediately. Across 13 main-turn rows, task arming was
+0, nonzero `tasks_active` was 0, and task-tool calls were 0. The persistence
+floor fired only on its two licensed recovery turns; the voice floor did not
+need to fire and VOX-002 still passed. Before the required repeat, the same
+live FRIDAY PID 10744 reacquired port 47533, so the launch guard stopped the
+command. The process was not altered. Conservatively, L.5 remains incomplete;
+no full flight is licensed until Jack closes that instance (or explicitly
+authorizes controlled shutdown) and two uncontended focused batches pass.

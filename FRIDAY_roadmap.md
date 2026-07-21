@@ -448,6 +448,20 @@ process was not stopped. Resume focused live x2 only after the instance closes
 or Jack explicitly authorizes a controlled shutdown; all STOP state above
 remains unchanged.
 
+**M3.2l LIVE-DISCOVERED FIX / REPEAT PAUSED (Codex, 2026-07-21 ~02:54):** an
+invalid `FRIDAY_TEST_SESSION=1` sandbox specimen was preserved at `_0229` and
+discarded from judgment. Corrected batch `_0234` exposed resolve-only explicit
+fact loss plus a wrong native status value. MEM-021/022 reproduced both RED;
+commit `8db71ef` closes them without inference. MEM-019..022 passed 4/4,
+late-seam compatibility 59/59, and exact-commit quick `_0242` passed 505/505.
+Focused batch `_0249` passed MEM-001, all four MEM-005 rows, and VOX-002 (6/6
+nodes; 8/8 voice prompts); 6/6 ilogs were archived, with zero task arming,
+active tasks, or task calls and only licensed persistence-floor fires. PID
+10744 then reacquired port 47533 before the mandatory repeat, so no second
+batch or full flight was launched and the process was not altered. L.5 and the
+original hard STOP remain open; baseline/promotion/M3-X/closure state is
+unchanged.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,

@@ -184,12 +184,15 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      precedes the asynchronous memory pass, so an explicit,
                      uniquely resolved `set ... status to <value>` command is
                      enforced before `respond()` returns when the model only
-                     resolved the project. The same narrow floor retries the
+                     resolved the project. It also corrects a native status
+                     write when the model chose a value other than Jack's
+                     explicit value. The same narrow floor retries the
                      measured rejected `projects/<slug>/...` fact write
-                     against that existing project's canonical note, but only
-                     with Jack's explicit record cue and the rejected call's
-                     own content. Both paths use `_run_tool`, so taint and gate
-                     rules remain unchanged. M3.2l also applies exact
+                     against that existing project's canonical note. If the
+                     model only resolves, it appends the literal text after
+                     Jack's explicit record cue; it never invents fact text.
+                     All paths use `_run_tool`, so taint and gate rules remain
+                     unchanged. M3.2l also applies exact
                      substitutions for the voice note's enumerated banned
                      chatbot tells to both settled content and a token-aware
                      streaming wrapper; explicit format-contract turns bypass
