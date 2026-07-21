@@ -976,6 +976,7 @@ auto-memory sync.
 | M3.2i | Task-tool arming gate + TKA-001..006 + re-flight | **STOP (Codex, 2026-07-20 ~01:05)** — implementation commit `5e99fae`, merged to `main` as `f6145dd`; worktree and post-merge `--quick` 470/470; GT-J1 live batch met the ≥4/5 bar (five LOCKED passes; target scores 5/5, 5/5, 5/5, 4/5, 5/5). Candidate `2026-07-19_2059` completed 556/565 in 3:55:52 with 198 ilogs archived. The original SKL-004 leak was fixed (`task_tools_armed=False`, no task call there), but the new M3.2i hygiene row FAILED mechanically: GT-A's calendar/task cross-reference armed the family and called `task_status` with `tasks_active=0`, outside TKT/TCR/TKA/JOB/GT-J1. §M3.2-G bar 6 therefore also failed. No rechecks or M3-X run; baseline stays `2026-07-18_2346`. Full verdict at the end of §M3.2i. |
 | M3.2j | Intent-bearing task noun gate + TKA-007..009 + re-flight | **STOP AT GT-J1 BATCH (Codex, 2026-07-20 ~02:55)** — isolated branch `codex/m3-2j`, code commits `9f1bb66` + `34bc0ca`; cue fix TDD/targeted/quick green, allowed test-session ledger iteration TSK-013 red→green + affected consumers 52/52 + `--quick` 474/474. GT-J1: run 1 failed on the archive enumeration gap; run 2 passed LOCKED 3/3 (TARGET 4/5); run 3 then failed because T1 had `task_tools_armed=True` but the model called no tool and only narrated the plan. Two misses make the >=4/5 bar unreachable, so runs 4-5 were not spent. Nothing merged; no flight/M3-X. Baseline remains `2026-07-18_2346`. Full STOP verdict at end of §M3.2j. |
 | M3.2k | Explicit task-create landed floor + TCF guards + re-flight | **IMPLEMENTED; PRE-LIVE GATES GREEN (Codex, 2026-07-20 ~14:46)** — isolated `codex/m3-2k`; brought forward only the two licensed M3.2j commits, then landed floor commit `b2b283f` and edge-guard commit `692f08e`. TCF-001/002 red→green, all TCF 10/10, focused compatibility 62/62, worktree `--quick` 484/484. Fresh GT-J1 x5 is next; its one mechanical-fix allowance is unspent. Full evidence at the end of §M3.2k. |
+| M3.2l | Hard-STOP repair: deterministic explicit-project persistence + banned-voice-tell floor | **DESIGNED / AUTHORIZED (Jack + Codex, 2026-07-21)** — archived `_1835` / `_2143` evidence proves two code-level gaps: explicit project writes can miss the main-turn durability boundary, and prompt-only voice rules repeatedly leak an enumerated tell. The scoped plan and gates are at the end of §M3.2l. Baseline stays `2026-07-18_2346`; no promotion or M3-X is licensed by design/implementation alone. |
 | M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
 | M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
 | M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2k live gate / flight** — M3.2k's pre-live gates are green, but GT-J1, merge, detached flight, and §M3.2-G adjudication have not run. |
@@ -1938,3 +1939,77 @@ acceptance, `ARCHITECTURE.md` closeout, memory sync, or roadmap closure ran.
 The next decision belongs to Fable/Jack.
 
 STOP adjudicated and recorded by Codex (GPT-5.6) — 2026-07-20.
+
+### M3.2l — deterministic persistence + voice floors (authorized 2026-07-21)
+
+> **For agentic workers:** implement this section inline, task by task, with
+> RED→GREEN evidence. The hard STOP above remains binding until the focused
+> live gates below pass; implementation alone cannot promote `_1835`, run
+> M3-X, or close M3.
+
+**Goal.** Remove the two mechanisms that made §M3.2-G impossible to pass:
+explicit project facts/status changes can miss the main-turn durability
+boundary, and the prompt-only voice layer can emit an enumerated chatbot tell.
+
+**Root-cause evidence.** In `_1835`, MEM-001 called `write_brain` on forbidden
+`projects/alpha_rig/frame_material.md`; the corrective was not obeyed and the
+memory pass wrote nothing. MEM-005[beta_probe] called only `resolve_project`;
+`FridayService` emitted `on_done`, the hard-kill landed, and the later memory
+pass never had a chance. Recheck `_2143` repeated that exact MEM-005 shape on
+alpha_rig. VOX-002 leaked `let me know if` twice in `_1835` and once in `_2143`.
+The task schemas/floors were disarmed on all of these turns, excluding M3.2k
+contact as the cause.
+
+**Chosen architecture.** Keep the model's normal tool loop first. At the late,
+post-script enforcement seam in `Engine.respond`, add two narrow local floors:
+
+1. A project-persistence floor may act only when the deterministic resolver
+   found exactly one existing project. It (a) executes an explicit
+   `set ... status to <value>` through existing `update_note_field` when disk
+   truth does not already match, or (b) retries a rejected nested
+   `projects/<resolved-slug>/...` fact write against the existing canonical
+   `projects/<resolved-slug>.md` note when Jack used an explicit record cue.
+   Both paths use `_run_tool`, preserve taint confirmation, append a real tool
+   receipt, and expose one additive `project_persistence_floor` ilog flag.
+   Ambiguity, missing content, a different slug, questions, and any already-
+   landed write stay untouched.
+2. A voice floor replaces only the exact phrases already enumerated as banned
+   in `brain/character/friday_voice.md` (for example `let me know if` →
+   `tell me if`). A small streaming wrapper applies the same substitutions to
+   emitted tokens, so the UI and `reply.content` agree and no banned draft
+   flickers. It is active only when the voice head was injected; explicit
+   output-format turns remain byte-untouched. Additive ilog flag:
+   `voice_tell_floor`.
+
+No registry/schema, Brain, service ordering, model weights, grader threshold,
+task arming, or baseline change is in scope.
+
+#### Implementation plan
+
+- [ ] **L.1 — RED project-persistence guards.** In
+  `tests/pillar1/test_memory.py`, add scripted end-to-end guards for the exact
+  rejected nested-write and resolve-only status misses. Run only the two new
+  nodes and confirm they fail because the durable write/flag is absent.
+- [ ] **L.2 — GREEN project floor.** In `core/engine.py`, add the conservative
+  parsers/recovery helper and invoke it after the output-script floor, before
+  streaming/on_done. Run the L.1 nodes plus the existing MEM-001/MEM-005
+  deterministic consumers; expected all green.
+- [ ] **L.3 — RED/GREEN voice floor.** In `tests/pillar1/test_voice.py`, first
+  add a detector/substitution matrix guard and an end-to-end streamed-reply
+  guard, confirm RED, then add the stream sanitizer/final-content enforcement
+  in `core/engine.py`. Verify output-format bypass explicitly.
+- [ ] **L.4 — focused compatibility.** Run the new guards plus existing
+  memory/voice/script/stream/task-floor suites that share the late seam. Then
+  run `python run_suite.py --quick` only if those focused tests are green.
+- [ ] **L.5 — focused live gate.** With no suite/model process already owning
+  the GPU, run only `MEM-001`, all `MEM-005` parameters, and `VOX-002` on the
+  repaired commit using pinned basetemp and immediate ilog archival. Required:
+  memory_persistence 4/4 and VOX-002 8/8, both new flags confined to their
+  licensed turns, task schemas disarmed/no task calls. One repeat of this same
+  focused batch must also pass to prove the recurring failures are removed.
+- [ ] **L.6 — verdict.** Record commits, commands, counts, stamps, flag audit,
+  and limitations here and in `FRIDAY_roadmap.md`. A full suite is required
+  only after the two focused live batches pass, because M3.2-G promotion still
+  requires a frozen-code full candidate compare against `2026-07-18_2346`.
+  Until that flight passes every registered bar: no promotion, M3-X, memory
+  sync, architecture closeout, or M3 closure.
