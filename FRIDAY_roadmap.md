@@ -441,6 +441,13 @@ twice before a full frozen-code flight is licensed. Baseline remains
 `2026-07-18_2346`; `_1835` remains unpromoted; M3.2/M3 remain OPEN; no M3-X,
 memory sync, promotion, or closure has occurred.
 
+**M3.2l LIVE GATE PAUSED (Codex, 2026-07-21 ~02:19):** no suite lock existed,
+but Jack's live FRIDAY held port 47533 as PID 10744 (`pythonw.exe`). Per the
+hard single-GPU rule, no model-marked focused batch was launched and the live
+process was not stopped. Resume focused live x2 only after the instance closes
+or Jack explicitly authorizes a controlled shutdown; all STOP state above
+remains unchanged.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,

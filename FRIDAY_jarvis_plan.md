@@ -2023,3 +2023,11 @@ new guards. Shared-seam compatibility passed 57/57 (11 live-model tests
 deselected). Quick candidate `2026-07-21_0205` passed 503/503 with 95
 deselected in 6:15. `.codex/` remained untouched and untracked. L.5 focused
 live x2 remains required before any full flight or gate-lifting claim.
+
+**L.5 launch pause (Codex, 2026-07-21 ~02:19).** Read-only ownership checks
+found no `results/SUITE_RUNNING.lock`, but port 47533 was LISTENING under PID
+10744 (`pythonw.exe`, started 01:13) — Jack's live FRIDAY instance. The standing
+single-GPU rule forbids overlap between a live instance and model-marked tests.
+The process was not stopped or altered. Focused live x2, full flight, and every
+downstream gate therefore remain unrun; resume L.5 after Jack closes the live
+instance or explicitly authorizes a controlled shutdown.
