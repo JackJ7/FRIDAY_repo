@@ -407,6 +407,25 @@ made no model call and is not a specimen. The one-fix allowance remains
 unspent. Merge and post-merge quick are next; full-flight, promotion, and M3-X
 remain gated.
 
+**M3.2k FULL-FLIGHT STOP (Codex, 2026-07-20 ~22:29):** the scoped branch
+merged to main as `c66f24e`; post-merge `--quick` passed 484/484
+(`2026-07-20_1503`). An initial full run (`2026-07-20_1512`) is explicitly
+invalid because the live-GT `FRIDAY_TEST_SESSION=1` setting was mistakenly
+applied to sandbox fixtures; its 191 ilogs are retained, the failure was
+reproduced with the flag and cleared without it, and no code changed. The
+corrected detached candidate `2026-07-20_1835` completed without a wedge:
+566 passed / 2 flaky / 11 failed of 579, with all 195 ilogs archived. D2,
+in-suite GT-J1 (LOCKED 3/3, TARGET 4/5), and all M3.2h/j/k task hygiene held;
+GT-A stayed disarmed and all task signals were confined to licensed families.
+However memory_persistence fell 1.000 -> 0.8333. First same-day recheck
+`2026-07-20_2143` repassed the two candidate memory misses but failed
+MEM-005[alpha_rig], so the perfect board remained non-perfect; VOX-002 also
+failed again. That is the pre-registered hard STOP (perfect-board drop
+surviving recheck, and x2 CHURN proof now impossible). Candidate `_1835` is
+not promoted; baseline remains `2026-07-18_2346`; merged code is not reverted;
+M3.2/M3 stay OPEN; no second recheck, M3-X, architecture closeout, memory sync,
+or closure ran. Next decision: Fable/Jack.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,

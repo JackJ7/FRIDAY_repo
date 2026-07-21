@@ -1865,3 +1865,76 @@ Implementation evidence recorded by Codex (GPT-5.6) — 2026-07-20.
   next official run. The five result directories above are the audit roots.
 
 GT-J1 gate adjudicated PASS and recorded by Codex (GPT-5.6) — 2026-07-20.
+
+**M3.2k §M3.2-G STOP verdict (Codex, 2026-07-20 ~22:29; corrected
+candidate `2026-07-20_1835` vs baseline `2026-07-18_2346`, merged commit
+`c66f24e`, 579 items).** This is the registered hard STOP: keep the merged
+code, record the evidence, do not promote, and do not continue to M3-X.
+
+- **Merge / pre-flight (bar 1): MET.** The clean, scoped `codex/m3-2k`
+  candidate merged to main as `c66f24e`. Post-merge `--quick` passed 484/484
+  with 95 deselected in 7:10 (`2026-07-20_1503`). TCF was 10/10, focused
+  compatibility 62/62, and the fresh GT-J1 batch was 5/5 before merge.
+- **One operator-invalid flight is retained but excluded.** Flight
+  `2026-07-20_1512` was launched with `FRIDAY_TEST_SESSION=1`, a flag licensed
+  for the live GT-J1 specimens but not for the full sandbox suite. It forced
+  every fixture Brain into live-session `test_archive/` routing, so tests that
+  correctly read their ordinary throwaway paths produced a common
+  `FileNotFoundError` surface (85 failures). A focused `test_author` probe
+  reproduced the failure with the flag set and passed with it unset. This was
+  a harness configuration error, not a candidate specimen; its 191 ilogs are
+  nevertheless preserved under `results\2026-07-20_1512\sandbox_ilogs\`.
+  No code changed. The corrected launch explicitly removed the environment
+  flag; its parent config had no test-session override.
+- **Corrected flight mechanics (bar 2): MET.** Candidate
+  `2026-07-20_1835` ran detached from 18:35:45 to 21:36:08 and completed
+  566 passed / 2 flaky-fail / 11 failed of 579 in 3:00:24. The detector found
+  no wedge; every long quiet-tail suspicion cleared on advancing Ollama
+  keep-alive expiry. All 195 basetemp interaction logs were copied immediately
+  and uniquely to `results\2026-07-20_1835\sandbox_ilogs\`. Provenance's dirty
+  bit is solely main's pre-existing, intentionally untouched untracked
+  `.codex\`; tracked code was frozen at `c66f24e`.
+- **Bar 3 (perfect boards): HARD STOP after the licensed recheck.**
+  `injection_defense`, `memory_recall`, `briefing`, and `session_ops` held
+  1.000. `memory_persistence` fell 1.000 -> 0.8333 on MEM-001 and
+  MEM-005[beta_probe]. The first same-day recheck (`2026-07-20_2143`) made
+  MEM-001 and beta_probe pass, but MEM-005[alpha_rig] then failed, leaving the
+  perfect board non-perfect. The pre-registered STOP rule says a perfect-board
+  drop surviving recheck is an immediate escalation. No second recheck is
+  permitted to relabel that outcome.
+- **Bar 4 (D2): MET.** GT-A, GT-B, GT-C1..C10, GT-P5a/b, and GT-P2a all
+  passed. GT-A turn 5 was exactly disarmed: `task_tools_armed=False`,
+  `tasks_active=0`, and zero task-tool calls; its full score was LOCKED 5/5,
+  TARGET 14/14.
+- **Bar 5 (in-suite GT-J1): MET.** GT-J1 passed with LOCKED 3/3 and TARGET
+  4/5. T1 landed native `create_task`; T2's commitment misroute was recovered
+  by `task_claim_floor=True`; T3 left the ledger unchanged. Its only TARGET
+  miss was that the status reply did not name the current impeller step.
+- **Bar 6 + M3.2h/j/k hygiene: MET.** Across 1,132 archived ilog rows, all
+  39 armed/active rows and all 26 task-tool calls belonged only to TKT, TCR,
+  JOB, or GT-J1. `task_claim_floor` fired once, only on GT-J1 T2;
+  `task_creation_floor` fired zero times in-suite; evidence refusals were zero.
+  GT-A and every other out-of-family turn were disarmed with zero task state.
+  The seven identifier-floor and two foreign-path-floor fires were confined
+  to their own IDG/MRG/PTL/initiative guard cases; no task-discussion fire
+  occurred.
+- **Bar 7: NOT MET independently of bar 3.** Compare deltas were
+  memory_persistence -0.167, voice -0.267, quant_math -0.043, and
+  thinking_skills -0.031; newly failing cases were MEM-001,
+  MEM-005[beta_probe], VOX-002, PROP-012, GND-012, and GND-013. The first x2
+  churn batch rechecked all six candidate failures: GND-012, GND-013, MEM-001,
+  beta_probe, and PROP-012 repassed, while VOX-002 still failed; the expanded
+  MEM-005 parametrization also produced the alpha_rig failure above. Result:
+  7/9 passed, 2 failed, with all 242 recheck ilog rows task-disarmed,
+  `tasks_active=0`, zero task-tool calls, and zero task-floor fires. Because
+  the rule requires both same-day rechecks to repass, VOX-002's first recheck
+  failure also makes CHURN adjudication impossible. All nine recheck ilogs are
+  archived under `results\2026-07-20_2143\sandbox_ilogs\`.
+
+**State at STOP.** Candidate `2026-07-20_1835` is not promoted; baseline
+remains `2026-07-18_2346`. Main keeps merged commit `c66f24e` per the explicit
+no-revert rule. M3.2 and M3 remain OPEN. No second recheck, M3-X live
+acceptance, `ARCHITECTURE.md` closeout, memory sync, or roadmap closure ran.
+The next decision belongs to Fable/Jack.
+
+STOP adjudicated and recorded by Codex (GPT-5.6) — 2026-07-20.
