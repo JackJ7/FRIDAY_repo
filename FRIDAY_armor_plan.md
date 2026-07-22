@@ -4262,3 +4262,27 @@ condition STARTS holding); every M2 residual converted or documented
 with its band (D1 language); next-baseline rule restated with the IG
 candidate; roadmap M2 Status cell updated in place, dated, pointing
 back to these two leg records.
+
+---
+
+### M3.2m quant-math armor leg — PROP-012 (authorized 2026-07-22)
+
+**Status: IN PROGRESS / prior STOP binding.** Jack authorized Codex's narrow
+recommendation after M3.2l candidate `2026-07-21_2238` and recheck
+`2026-07-22_0108` both reproduced PROP-012's `1 W x 1 minute -> 60 Wh` error.
+Archived ilogs prove the model first obtained the correct `0.0166667 Wh` from
+`calc`, then ran the canned `40 W x 90 min -> 60 Wh` example and let the generic
+last-calc ANSWER builder promote that stale result. Task, persistence, and voice
+surfaces were cold. The approved armor is an exact-one-power/exact-one-minute-
+duration energy cross-check in `core/engine.py`, modeled on QB.3, with an
+additive `energy_time_floor` ilog flag. It is not a prompt tweak or a global
+calc-order change.
+
+The authoritative TDD steps, focused x2 target gate, merge/freeze protocol,
+fresh full-candidate gate, unchanged M3.2-G bars, and STOP prohibitions are in
+`FRIDAY_jarvis_plan.md` §M3.2m M.1–M.8. Active comparison baseline remains
+`2026-07-18_2346`; failed candidate `_2238` remains unpromoted; M3.2/M3 remain
+OPEN. No promotion, M3-X, external memory sync, or closure is licensed by plan
+or implementation alone.
+
+Armor-leg record authored and signed by Codex (GPT-5.6) — 2026-07-22.

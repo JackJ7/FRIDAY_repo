@@ -2352,3 +2352,137 @@ watchdogs launched by this session were stopped after their suite processes
 exited; no live FRIDAY process was touched.
 
 HARD STOP adjudicated and signed by Codex (GPT-5.6) — 2026-07-22.
+
+### M3.2m — deterministic energy-time cross-check floor (authorized 2026-07-22)
+
+> **For agentic workers:** REQUIRED SUB-SKILL: execute this plan inline with
+> `superpowers:executing-plans`; do not delegate or overlap shared-brain/GPU
+> work. Follow every checkbox in order. A failed registered gate is recorded
+> here and execution stops at that checkbox. It does not license a patch-forward
+> rerun, promotion, M3-X, or M3 closure.
+
+**Authorization / goal.** Jack accepted Codex's recommendation to open one
+narrow M3.2m quant-math armor leg for PROP-012: root-cause trace, TDD, focused
+gates, then one fresh frozen candidate. The M3.2l hard STOP above remains
+binding. This leg may make the explicit `power x duration -> energy` case
+deterministic; it may not change the base model, grader, case inputs, N=5
+sampling, vote thresholds, task arming, persistence/voice floors, or any other
+registered M3.2-G bar.
+
+**Root-cause trace (read-only evidence, Codex, 2026-07-22).** Candidate
+`2026-07-21_2238` and valid recheck `2026-07-22_0108` contain the same failing
+chain. For the falsifying `1 W` / `1 minute` example, the model first called
+`calc` correctly with `1 W * 1 min -> 0.0166667 Wh`. It then made a second,
+unrelated call copied from the model-visible canned example (`40 W * 90 min`,
+or the equivalent `40 W * 1.5 h`, `-> 60 Wh`). The generic ANSWER-contract
+floor intentionally builds a missing final line from the **last** successful
+calc result, so it deterministically promoted the stale example to
+`ANSWER: 60 Wh`. The same chain occurred in the frozen flight and first
+recheck; task/persistence/voice flags were cold. This is not a missing-tool or
+arithmetic-engine failure: Pint returned the correct value before the stale
+second call displaced it.
+
+**Design decision.** Add an engine-side `energy_time_floor` beside the existing
+gear-direction cross-check. It arms only when Jack's message has exactly one
+power quantity in W/watts, exactly one duration in minutes, and an explicit
+energy ask. Code computes the one unambiguous Wh result from those stated
+quantities and checks the final ANSWER quantity through the existing Pint/canon
+path. A correct compatible answer is untouched. A missing, dimensionally wrong,
+or >2% mismatching answer is replaced with a short deterministic explanation
+and final `ANSWER: <value> Wh`; the ilog records `energy_time_floor: true`.
+Ambiguous messages (multiple powers or durations), non-energy asks, and other
+time/unit families stay silent. This is the QB.3 hard-check pattern, scoped to
+PROP-012's measured shape.
+
+Rejected alternatives: (1) removing or rewording the `40 W * 90 min` examples
+is prompt-only mitigation and cannot enforce the invariant; (2) changing the
+generic ANSWER floor from last-calc to first-calc would break legitimate
+multi-step/corrective calculations; (3) globally judging calc-call relevance
+would require a broad expression-to-prompt semantic matcher beyond this
+evidence. No new dependency, tool, schema, prompt contract, or service boundary
+is licensed.
+
+**Implementation plan / registered gates.** All commands use pinned Python
+`C:\Users\jacko\AppData\Local\Programs\Python\Python313\python.exe`.
+Model/live runs must verify no `results\SUITE_RUNNING.lock`, no port-47533
+owner, no competing FRIDAY/job/research/model process, healthy Ollama, and
+`FRIDAY_TEST_SESSION` absent; each uses a unique pinned `--basetemp` and copies
+its ilogs immediately. Never stop Jack's process.
+
+- [x] **M.1 — reconcile, trace, isolate, baseline.** Start from signed STOP
+  `7d22b1b`; create `codex/m3-2m` at `C:\tmp\FRIDAY-m32m`; seed only ignored
+  read-only harness brain files. Baseline
+  `test_answer_floor.py + test_gear_check.py` must pass before edits. Record the
+  expected invalid missing-seed specimen separately from the valid rerun.
+
+- [ ] **M.2 — RED guards before production code.** Create
+  `tests/pillar1/test_energy_time_floor.py` with cases:
+  ETM-001 stale `60 Wh` is replaced by `0.0166667 Wh`; ETM-002 a reply with no
+  parseable ANSWER quantity becomes the same deterministic, non-empty result;
+  ETM-003 a correct answer is byte-
+  untouched and flag-false; ETM-004 two power quantities stay untouched;
+  ETM-005 two durations stay untouched; ETM-006 a non-energy ask stays
+  untouched. Run the new file and capture the expected RED caused by the
+  absent floor/ilog field, not by fixture or syntax failure.
+
+- [ ] **M.3 — minimal GREEN implementation.** Modify only `core/engine.py` for
+  the narrow regexes, deterministic cross-check/replacement, and additive ilog
+  boolean. Keep it after the generic ANSWER floor and before the final script
+  barrier. Update `ARCHITECTURE.md` with the new hard-check contract. Run the
+  ETM file to GREEN, then the ETM + answer-floor + gear-check files together.
+  Any legacy failure or unexpected model call is a STOP.
+
+- [ ] **M.4 — focused pure-code compatibility.** Run the calc/answer/gear and
+  interaction-log schema consumers selected by code search, then the full
+  non-model `run_suite.py --quick` on exact branch HEAD. Record stamp, count,
+  duration, warning/failure state, Git status, and exact commit. Any failure is
+  a STOP; do not launch a model batch.
+
+- [ ] **M.5 — focused live target x2.** On unchanged code, run PROP-012 alone
+  in two independent registered batches (normal sandbox durability, so
+  `FRIDAY_TEST_SESSION` absent). Each batch must pass the N=5/Hypothesis case,
+  archive every ilog, and show: every eligible mismatch corrected only by
+  `energy_time_floor`; correct turns remain flag-false; zero task arming,
+  active tasks, task calls/refusals/floors; and no persistence/voice-floor
+  contact. Both batches must pass. One miss, ambiguous fire, missing archive,
+  contaminated environment, or attribution gap is a hard STOP.
+
+- [ ] **M.6 — integrate and freeze.** Commit a signed focused verdict on the
+  branch. Verify `main` is still exactly `7d22b1b` and tracked-clean apart from
+  the pre-existing untouched `.codex/`; merge `codex/m3-2m` with `--no-ff` and
+  run post-merge `--quick`. Merge conflict, main drift, unexpected file, or
+  quick failure is a STOP. The exact merge commit is the model-visible freeze;
+  a documentation-only provenance commit may follow.
+
+- [ ] **M.7 — one fresh frozen full candidate.** If and only if M.2–M.6 pass,
+  launch one detached full `run_suite.py` candidate on the exact frozen merge,
+  against active baseline `2026-07-18_2346`, with detector-only watchdog at no
+  more than 45-minute cadence and immediate complete ilog archival. Do not edit
+  model-visible code while it runs.
+
+- [ ] **M.8 — mechanical adjudication / handoff.** Apply every existing
+  M3.2-G + h/j/k/l bar without waiver, plus: PROP-012 must be 1.000;
+  `energy_time_floor` may fire only on an unambiguous energy-time turn whose
+  produced answer mismatched the code result; no other board may regress
+  without the already-registered same-day x2 churn proof. A failed first
+  recheck makes x2 impossible and stops the leg. Only a complete passing gate
+  may promote the fresh stamp and license M3-X. Record all commits, commands,
+  reports, archives, flag counts, deltas, limitations, prohibited next actions,
+  and sign the verdict in this plan, `FRIDAY_armor_plan.md`, and
+  `FRIDAY_roadmap.md`. External memory sync remains outside authorization.
+
+**M.1 evidence.** Worktree creation initially required sandbox approval, then
+landed at `C:\tmp\FRIDAY-m32m` on `codex/m3-2m`, exact start `7d22b1b`. The
+first baseline specimen `2026-07-22_0802` errored 12/12 at fixture setup because
+fresh worktrees omit ignored `brain/character/friday.md`; it made no product
+assertion and is excluded. After copying only the harness seed plus ignored
+playbook/skill markdown from the main checkout, unchanged-code baseline
+`2026-07-22_0803` passed 12/12 in 17.37s (one pre-existing SyntaxWarning in
+`repo_tools.py`). Tracked branch status remained clean. Root-cause hypothesis:
+the generic last-successful-calc contract is correct in isolation, but the
+model's stale second call is not grounded to this prompt; therefore the fix
+must validate the final energy result against Jack's unambiguous inputs, not
+change calc ordering globally.
+
+M3.2m plan/root-cause record authored and signed by Codex (GPT-5.6) —
+2026-07-22.

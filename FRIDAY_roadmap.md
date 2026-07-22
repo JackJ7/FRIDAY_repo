@@ -743,6 +743,17 @@ deltas, regression-prone prompt changes), never typing mistakes.
   and called `task_status` outside every permitted family, violating both
   §M3.2-G bar 6 and M3.2i's explicit arming-hygiene STOP row. No rechecks
   or M3-X after the hard STOP; baseline remains `2026-07-18_2346`; M3 OPEN.
+- 2026-07-22 ~08:05: **M3.2m PROP-012 ARMOR LEG AUTHORIZED / IN PROGRESS
+  (Codex)** — Jack accepted the narrow recommendation after M3.2l's frozen
+  candidate `_2238` and valid recheck `_0108` both reproduced the same stale
+  canned-example chain: correct `calc(1 W x 1 min) = 0.0166667 Wh`, then an
+  unrelated `40 W x 90 min = 60 Wh` call displaced it through the generic
+  last-calc ANSWER builder. Branch `codex/m3-2m` is isolated at
+  `C:\tmp\FRIDAY-m32m` from signed STOP `7d22b1b`; unchanged-code focused
+  baseline passed 12/12 after seeding the ignored harness files. The registered
+  M.1–M.8 TDD/focused-x2/frozen-candidate protocol is in jarvis plan §M3.2m;
+  armor rationale is in armor plan §M3.2m. Prior STOP remains binding:
+  baseline `_2346`, M3 OPEN, no promotion/M3-X/memory sync/closure yet.
 - 2026-07-18 midday: **M1 CLOSED (Fable 5)**. EM.6 adjudicated (EM.1/2
   ship F4-clean; floor was a no-op on the measured positional burial —
   EM.4 had verified a sub-metric, not the case fraction; in-leg EM.2.1
