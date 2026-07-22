@@ -2434,7 +2434,7 @@ its ilogs immediately. Never stop Jack's process.
   ETM file to GREEN, then the ETM + answer-floor + gear-check files together.
   Any legacy failure or unexpected model call is a STOP.
 
-- [ ] **M.4 — focused pure-code compatibility.** Run the calc/answer/gear and
+- [x] **M.4 — focused pure-code compatibility.** Run the calc/answer/gear and
   interaction-log schema consumers selected by code search, then the full
   non-model `run_suite.py --quick` on exact branch HEAD. Record stamp, count,
   duration, warning/failure state, Git status, and exact commit. Any failure is
@@ -2518,3 +2518,19 @@ licensed; all model/merge/promotion/M3-X/closure gates remain blocked.
 
 Implementation boundary adjudicated and signed by Codex (GPT-5.6) —
 2026-07-22.
+
+**M.4 focused / exact-HEAD quick verdict (Codex, 2026-07-22 ~08:32 PDT):
+PASS.** Exact implementation commit `677b0e2` was tracked-clean. Focused calc,
+ANSWER, canonical-vote, ETM, gear, and narrated-calc recovery compatibility
+result `2026-07-22_0817` passed 43/43. The first `--quick` specimen `_0818`
+completed 510 passed / 2 failed only because the fresh worktree lacked ignored
+`brain/character/friday_voice.md`; both failures were `FileNotFoundError`
+before a product assertion. It is retained as invalid environmental evidence.
+After completing the read-only character seed from the main checkout, the
+identical command on unchanged `677b0e2`, with `FRIDAY_TEST_SESSION` absent,
+produced valid result `2026-07-22_0825`: 512/512 passed, 95 deselected, in
+399.54s. No tracked file changed and no model call ran. M.5 focused live batch
+1 is licensed subject to the registered lock/port/process/Ollama preflight;
+merge, full candidate, promotion, M3-X, memory sync, and closure remain blocked.
+
+Focused/quick gate adjudicated and signed by Codex (GPT-5.6) — 2026-07-22.
