@@ -475,6 +475,17 @@ vs `_2346` → every §M3.2-G + h/j/k/l bar → only then baseline promotion and
 M3-X. Long-run routine checks are capped at 45-minute cadence. Any registered
 STOP leaves M3 open and blocks promotion/M3-X/closure.
 
+**M3.2l L.5/L.6 FOCUSED GATE PASS (Codex, 2026-07-21 ~22:25):** repeat
+`2026-07-21_2221` passed MEM-001 + four MEM-005 rows + VOX-002 (6/6 nodes,
+8/8 voice prompts) on unchanged `8db71ef` code with `FRIDAY_TEST_SESSION`
+absent and pinned basetemp. All 6/6 ilogs are archived under that result.
+Audit: 13 main turns, zero task arming/active tasks/task calls/evidence
+refusals or task floors; exactly two licensed persistence fires and no needed
+voice fire. Together with `_0249`, the required focused batches are 2/2 PASS.
+M3.2l is now licensed to merge and run post-merge quick; the original STOP,
+baseline `_2346`, promotion, M3-X, and M3 closure remain unchanged until the
+frozen full candidate passes every registered bar.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,

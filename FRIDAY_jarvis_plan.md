@@ -976,7 +976,7 @@ auto-memory sync.
 | M3.2i | Task-tool arming gate + TKA-001..006 + re-flight | **STOP (Codex, 2026-07-20 ~01:05)** — implementation commit `5e99fae`, merged to `main` as `f6145dd`; worktree and post-merge `--quick` 470/470; GT-J1 live batch met the ≥4/5 bar (five LOCKED passes; target scores 5/5, 5/5, 5/5, 4/5, 5/5). Candidate `2026-07-19_2059` completed 556/565 in 3:55:52 with 198 ilogs archived. The original SKL-004 leak was fixed (`task_tools_armed=False`, no task call there), but the new M3.2i hygiene row FAILED mechanically: GT-A's calendar/task cross-reference armed the family and called `task_status` with `tasks_active=0`, outside TKT/TCR/TKA/JOB/GT-J1. §M3.2-G bar 6 therefore also failed. No rechecks or M3-X run; baseline stays `2026-07-18_2346`. Full verdict at the end of §M3.2i. |
 | M3.2j | Intent-bearing task noun gate + TKA-007..009 + re-flight | **STOP AT GT-J1 BATCH (Codex, 2026-07-20 ~02:55)** — isolated branch `codex/m3-2j`, code commits `9f1bb66` + `34bc0ca`; cue fix TDD/targeted/quick green, allowed test-session ledger iteration TSK-013 red→green + affected consumers 52/52 + `--quick` 474/474. GT-J1: run 1 failed on the archive enumeration gap; run 2 passed LOCKED 3/3 (TARGET 4/5); run 3 then failed because T1 had `task_tools_armed=True` but the model called no tool and only narrated the plan. Two misses make the >=4/5 bar unreachable, so runs 4-5 were not spent. Nothing merged; no flight/M3-X. Baseline remains `2026-07-18_2346`. Full STOP verdict at end of §M3.2j. |
 | M3.2k | Explicit task-create landed floor + TCF guards + re-flight | **MERGED; HARD STOP (Codex, signed 2026-07-20)** — main merge `c66f24e`; signed STOP `346d4c8`. Fresh GT-J1 passed 5/5 and task hygiene held, but candidate `2026-07-20_1835` scored 566 passed / 2 flaky / 11 failed: `memory_persistence` fell to 0.8333 and stayed non-perfect on the only useful recheck, while VOX-002 repeated. Baseline remains `2026-07-18_2346`; no promotion or downstream closeout is licensed. Full evidence at the end of §M3.2k. |
-| M3.2l | Hard-STOP repair: deterministic explicit-project persistence + banned-voice-tell floor | **IMPLEMENTED; LIVE REPEAT PAUSED (Codex, 2026-07-21 ~02:54)** — plan `3a4e79c`; initial implementation `e1a6a0e`; live-discovered guards/fix `8db71ef`. MEM-019..022 and VOX-004/005 are RED→GREEN, focused 59/59, exact-commit `--quick` 505/505 (`2026-07-21_0242`). Focused batch `2026-07-21_0249` passed 6/6, but PID 10744 reacquired port 47533 before the required repeat, so L.5 and the hard STOP remain open. Baseline stays `2026-07-18_2346`; no promotion or M3-X is licensed. Full evidence at the end of §M3.2l. |
+| M3.2l | Hard-STOP repair: deterministic explicit-project persistence + banned-voice-tell floor | **L.5/L.6 PASS; READY TO MERGE (Codex, 2026-07-21 ~22:25)** — plan `3a4e79c`, code `e1a6a0e` + `8db71ef`, continuation `f78a698`. Deterministic evidence is MEM-019..022 4/4, focused 59/59, quick 505/505 (`_0242`). Both valid live batches (`_0249`, `_2221`) passed 6/6 nodes and VOX 8/8 with 6/6 ilogs each, zero task signals, and only licensed persistence fires. Scoped merge/post-merge quick is licensed; the full-flight STOP, baseline `_2346`, promotion, and M3-X remain blocked until §M3.2-G passes. Full evidence at the end of §M3.2l. |
 | M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
 | M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
 | M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2l validation / re-flight** — M3.2k merged and its flight reached a signed hard STOP. M3.2l is implemented with one useful focused pass, but two uncontended focused batches and a frozen-code full candidate are still required before §M3.2-G can be adjudicated again. |
@@ -2001,13 +2001,13 @@ task arming, or baseline change is in scope.
 - [x] **L.4 — focused compatibility.** Run the new guards plus existing
   memory/voice/script/stream/task-floor suites that share the late seam. Then
   run `python run_suite.py --quick` only if those focused tests are green.
-- [ ] **L.5 — focused live gate.** With no suite/model process already owning
+- [x] **L.5 — focused live gate.** With no suite/model process already owning
   the GPU, run only `MEM-001`, all `MEM-005` parameters, and `VOX-002` on the
   repaired commit using pinned basetemp and immediate ilog archival. Required:
   memory rows 5/5 and VOX-002 prompts 8/8, both new flags confined to their
   licensed turns, task schemas disarmed/no task calls. One repeat of this same
   focused batch must also pass to prove the recurring failures are removed.
-- [ ] **L.6 — verdict.** Record commits, commands, counts, stamps, flag audit,
+- [x] **L.6 — verdict.** Record commits, commands, counts, stamps, flag audit,
   and limitations here and in `FRIDAY_roadmap.md`. A full suite is required
   only after the two focused live batches pass, because M3.2-G promotion still
   requires a frozen-code full candidate compare against `2026-07-18_2346`.
@@ -2093,7 +2093,7 @@ port.
 
 ##### Closeout execution checklist
 
-- [ ] **C.1 — finish L.5 with one uncontended repeat.** Re-check the suite
+- [x] **C.1 — finish L.5 with one uncontended repeat.** Re-check the suite
   lock, port 47533, running pytest/FRIDAY owners, Ollama `/api/ps`, GPU load,
   branch/HEAD, and tracked cleanliness once immediately before launch. Abort
   if any owner is present; never stop it. Explicitly remove
@@ -2132,7 +2132,7 @@ port.
   zero task-evidence refusals. Any miss is the registered STOP: archive,
   record, and do not spend another specimen.
 
-- [ ] **C.2 — record L.5/L.6 and freeze the integration candidate.** Record
+- [x] **C.2 — record L.5/L.6 and freeze the integration candidate.** Record
   both valid focused stamps (`2026-07-21_0249` plus the repeat), exact command,
   commit, node/prompt counts, archive count, and full flag audit here and in
   `FRIDAY_roadmap.md`; check L.5/L.6 only if C.1 passes. Verify
@@ -2247,3 +2247,30 @@ soften a grader, treat a report-free run as evidence, overlap the shared brain/
 GPU/port, or infer permission to stop Jack's process.
 
 Continuation plan authored and signed by Codex (GPT-5.6) — 2026-07-21.
+
+**C.1/C.2 focused-gate verdict (Codex, 2026-07-21 ~22:25 PDT): PASS.**
+The preflight found no suite lock or port-47533 listener, Ollama had no
+resident model, GPU load was 1% / 1042 MiB, and
+`git diff 8db71ef..HEAD -- '*.py'` was empty. The exact command above ran with
+`FRIDAY_TEST_SESSION` removed and pinned basetemp
+`C:\tmp\m32l_live2_20260721_222149`; result `2026-07-21_2221` passed all six
+selected nodes in 171.75s: MEM-001, MEM-005[alpha_rig/beta_probe/gamma_arm/
+delta_sled], and VOX-002. VOX-002's evidence contains eight prompts, all
+`ok=True` with an empty banned-tell field (8/8). The six basetemp ilogs were
+copied immediately and uniquely to
+`results\2026-07-21_2221\sandbox_ilogs\` (6 source / 6 archive).
+
+Across 22 ilog rows / 13 main-turn rows: `task_tools_armed=True` 0;
+`tasks_active>0` 0; task-tool calls 0; task-evidence refusals 0;
+task-claim/task-creation fires 0. `project_persistence_floor` fired exactly
+twice, only for the licensed alpha-rig explicit fact and beta-probe explicit
+status recovery; `voice_tell_floor` fired 0 because all eight native replies
+already passed. Together with first valid batch `2026-07-21_0249` (same 6/6,
+8/8 voice, 6/6 ilogs, zero task signals, two licensed persistence fires), L.5
+is 2/2 uncontended PASS. L.6 is therefore PASS for the focused gate and the
+scoped merge/post-merge quick is licensed. Existing exact-code deterministic
+evidence remains 4/4 MEM-019..022, 59/59 shared seam, and 505/505 quick at
+`_0242`; no Python changed after `8db71ef`. The original M3.2-G STOP remains
+binding until the post-merge frozen full flight passes every bar.
+
+Focused gate adjudicated and signed by Codex (GPT-5.6) — 2026-07-21.
