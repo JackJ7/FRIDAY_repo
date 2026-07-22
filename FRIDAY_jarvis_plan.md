@@ -2415,7 +2415,7 @@ its ilogs immediately. Never stop Jack's process.
   `test_answer_floor.py + test_gear_check.py` must pass before edits. Record the
   expected invalid missing-seed specimen separately from the valid rerun.
 
-- [ ] **M.2 — RED guards before production code.** Create
+- [x] **M.2 — RED guards before production code.** Create
   `tests/pillar1/test_energy_time_floor.py` with cases:
   ETM-001 stale `60 Wh` is replaced by `0.0166667 Wh`; ETM-002 a reply with no
   parseable ANSWER quantity becomes the same deterministic, non-empty result;
@@ -2486,3 +2486,15 @@ change calc ordering globally.
 
 M3.2m plan/root-cause record authored and signed by Codex (GPT-5.6) —
 2026-07-22.
+
+**M.2 RED evidence (Codex, 2026-07-22 ~08:08 PDT).** New pure-code guards
+ETM-001..006 ran against unchanged production code as result
+`2026-07-22_0808` and failed 6/6 for the intended missing behavior. ETM-001
+returned the stale canned-example `ANSWER: 60 Wh`; ETM-002 retained the
+no-number draft after the existing ANSWER retry; ETM-003..006 reached their
+behavior assertions and then raised only the expected missing
+`energy_time_floor` ilog key. There were no fixture, import, collection, or
+syntax errors. This is the required RED and licenses M.3's minimal production
+edit; it does not license a model batch, merge, promotion, M3-X, or closure.
+
+RED boundary adjudicated and signed by Codex (GPT-5.6) — 2026-07-22.
