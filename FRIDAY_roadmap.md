@@ -770,6 +770,18 @@ deltas, regression-prone prompt changes), never typing mistakes.
   detached frozen candidate only. Baseline `_2346`, prior STOP, and all no-
   promotion/no-M3-X/no-memory-sync/no-closure rules remain binding through
   mechanical M.8 adjudication. Recorded and signed by Codex (GPT-5.6).
+- 2026-07-22 ~13:30: **M3.2m FULL-FLIGHT HARD STOP / NOT PROMOTED
+  (Codex)** — candidate `2026-07-22_1012` completed all 607 items in 3:03:20
+  (592 pass, 6 flaky-fail, 9 fail), watchdog-confirmed no wedge, with 195/195
+  ilogs archived byte-for-byte. PROP-012 passed 1.000, but the sole
+  `energy_time_floor` fire deterministically regressed GOLD-budget-01: the
+  model correctly calculated 30 W × 5 minutes × 6 cycles = 15 Wh, then the
+  floor ignored `6 cycles per day` and overwrote it with one-cycle 2.5 Wh.
+  This unlicensed ambiguous fire is the registered M.8 hard STOP; no rechecks
+  were spent. Baseline `_2346` remains active; M3.2/M3 stay OPEN; no promotion,
+  M3-X, external memory sync, or closure ran. Main retains `7cae0ff` under the
+  no-revert rule. Full signed bar audit: jarvis plan §M3.2m. Recorded and
+  signed by Codex (GPT-5.6).
 - 2026-07-18 midday: **M1 CLOSED (Fable 5)**. EM.6 adjudicated (EM.1/2
   ship F4-clean; floor was a no-op on the measured positional burial —
   EM.4 had verified a sub-metric, not the case fraction; in-leg EM.2.1

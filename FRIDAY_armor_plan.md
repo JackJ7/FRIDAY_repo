@@ -4267,7 +4267,7 @@ back to these two leg records.
 
 ### M3.2m quant-math armor leg — PROP-012 (authorized 2026-07-22)
 
-**Status: INTEGRATION PASS / FROZEN CANDIDATE PENDING / prior STOP binding.** Jack authorized Codex's narrow
+**Status: FULL-FLIGHT HARD STOP / NOT PROMOTED.** Jack authorized Codex's narrow
 recommendation after M3.2l candidate `2026-07-21_2238` and recheck
 `2026-07-22_0108` both reproduced PROP-012's `1 W x 1 minute -> 60 Wh` error.
 Archived ilogs prove the model first obtained the correct `0.0166667 Wh` from
@@ -4303,6 +4303,26 @@ baseline `_2346`, the prior STOP, and all promotion/M3-X/closure prohibitions
 remain binding pending mechanical M.8 adjudication.
 
 Integration verdict signed by Codex (GPT-5.6) — 2026-07-22.
+
+**Frozen-candidate verdict (Codex, 2026-07-22): HARD STOP.** Candidate
+`2026-07-22_1012` completed 607/607 in 3:03:20 (592 pass, 6 flaky-fail,
+9 fail), with no wedge and 195/195 ilogs archived byte-for-byte. PROP-012
+passed 1.000. However, the only `energy_time_floor` fire was unlicensed and
+deterministically regressed GOLD-budget-01: the prompt asked for daily energy
+from 30 W × 5 minutes × 6 cycles, and the model's `calc` correctly returned
+15 Wh; the floor ignored the six-cycle multiplier and replaced it with the
+one-cycle value 2.5 Wh. Quant-math therefore fell 0.957→0.913 and
+GOLD-budget-01 fell 1.000→0.000.
+
+This is a code-attributed, non-churn failure of the registered surgical bar,
+so no same-day rechecks were spent. Candidate `_1012` is not promoted;
+baseline `2026-07-18_2346` remains active; M3.2/M3 remain OPEN; no M3-X,
+external memory sync, or closure ran. Main retains merge `7cae0ff` under the
+no-revert rule. A future leg requires separate authorization and must reject
+or account for multiplicative qualifiers before the simple W×time floor can
+fire. Full bar-by-bar evidence is in `FRIDAY_jarvis_plan.md` §M3.2m.
+
+HARD STOP verdict signed by Codex (GPT-5.6) — 2026-07-22.
 
 Focused armor verdict signed by Codex (GPT-5.6) — 2026-07-22.
 
