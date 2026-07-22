@@ -4262,3 +4262,38 @@ condition STARTS holding); every M2 residual converted or documented
 with its band (D1 language); next-baseline rule restated with the IG
 candidate; roadmap M2 Status cell updated in place, dated, pointing
 back to these two leg records.
+
+---
+
+### M3.2m quant-math armor leg — PROP-012 (authorized 2026-07-22)
+
+**Status: FOCUSED x2 PASS / INTEGRATION PENDING / prior STOP binding.** Jack authorized Codex's narrow
+recommendation after M3.2l candidate `2026-07-21_2238` and recheck
+`2026-07-22_0108` both reproduced PROP-012's `1 W x 1 minute -> 60 Wh` error.
+Archived ilogs prove the model first obtained the correct `0.0166667 Wh` from
+`calc`, then ran the canned `40 W x 90 min -> 60 Wh` example and let the generic
+last-calc ANSWER builder promote that stale result. Task, persistence, and voice
+surfaces were cold. The approved armor is an exact-one-power/exact-one-minute-
+duration energy cross-check in `core/engine.py`, modeled on QB.3, with an
+additive `energy_time_floor` ilog flag. It is not a prompt tweak or a global
+calc-order change.
+
+The authoritative TDD steps, focused x2 target gate, merge/freeze protocol,
+fresh full-candidate gate, unchanged M3.2-G bars, and STOP prohibitions are in
+`FRIDAY_jarvis_plan.md` §M3.2m M.1–M.8. Active comparison baseline remains
+`2026-07-18_2346`; failed candidate `_2238` remains unpromoted; M3.2/M3 remain
+OPEN. No promotion, M3-X, external memory sync, or closure is licensed by plan
+or implementation alone.
+
+**Focused verdict (Codex, 2026-07-22):** exact model-visible commit `677b0e2`
+passed PROP-012 twice under independent N=5/100-example batches:
+`2026-07-22_0835` (40:29) and `_0917` (38:36). Both ilogs were archived
+byte-for-byte. Across 200 energy turns, all 200 final quantities were correct;
+`energy_time_floor` fired only twice, while 198 correct native turns stayed
+cold. Task arming/active tasks/task calls/task floors and persistence/voice
+fires were all zero. This licenses only the registered merge/post-merge quick;
+full-candidate promotion and M3-X remain blocked.
+
+Focused armor verdict signed by Codex (GPT-5.6) — 2026-07-22.
+
+Armor-leg record authored and signed by Codex (GPT-5.6) — 2026-07-22.
