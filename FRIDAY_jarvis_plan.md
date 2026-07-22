@@ -2449,7 +2449,7 @@ its ilogs immediately. Never stop Jack's process.
   contact. Both batches must pass. One miss, ambiguous fire, missing archive,
   contaminated environment, or attribution gap is a hard STOP.
 
-- [ ] **M.6 — integrate and freeze.** Commit a signed focused verdict on the
+- [x] **M.6 — integrate and freeze.** Commit a signed focused verdict on the
   branch. Verify `main` is still exactly `7d22b1b` and tracked-clean apart from
   the pre-existing untouched `.codex/`; merge `codex/m3-2m` with `--no-ff` and
   run post-merge `--quick`. Merge conflict, main drift, unexpected file, or
@@ -2559,3 +2559,20 @@ prohibitions remain binding until a fresh frozen full candidate passes every
 registered bar.
 
 Focused live gate adjudicated and signed by Codex (GPT-5.6) — 2026-07-22.
+
+**M.6 integration / freeze verdict (Codex, 2026-07-22 ~10:07 PDT): PASS.**
+Immediately before integration, `main` was exact signed STOP `7d22b1b`, with
+tracked files clean and only the pre-existing untouched untracked `.codex/`.
+The branch scope was exactly the four owning documents, `core/engine.py`, and
+`tests/pillar1/test_energy_time_floor.py`. `codex/m3-2m` merged with `--no-ff`
+without conflict as `7cae0ff303ea945293984b8a9e0f69797c8db854`; that merge is
+the frozen model-visible candidate code.
+
+Post-merge quick result `2026-07-22_1000` passed 512/512 with 95 deselected in
+391.05s (6:31) on exact `7cae0ff`; no corrective rerun or production edit was
+needed. Tracked status remained clean and `.codex/` remained untouched. M.7 is
+licensed subject to its registered uncontended preflight. Active baseline
+`2026-07-18_2346` and every promotion/M3-X/closure prohibition remain binding
+until M.8 mechanically passes the single fresh frozen candidate.
+
+Integration gate adjudicated and signed by Codex (GPT-5.6) — 2026-07-22.

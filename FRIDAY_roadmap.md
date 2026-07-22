@@ -762,6 +762,14 @@ deltas, regression-prone prompt changes), never typing mistakes.
   persistence/voice contact). Jarvis plan §M3.2m M.5 has the signed audit.
   Only scoped merge + post-merge quick is now licensed; baseline `_2346`,
   prior STOP, no promotion/M3-X/memory sync/closure remain unchanged.
+- 2026-07-22 ~10:07: **M3.2m INTEGRATION PASS / FROZEN CANDIDATE PENDING
+  (Codex)** — scoped branch `codex/m3-2m` merged cleanly with `--no-ff` as
+  exact model-visible freeze `7cae0ff`; post-merge quick `2026-07-22_1000`
+  passed 512/512 with 95 deselected in 391.05s. Tracked main remained clean
+  apart from the pre-existing untouched `.codex/`. This licenses M.7's single
+  detached frozen candidate only. Baseline `_2346`, prior STOP, and all no-
+  promotion/no-M3-X/no-memory-sync/no-closure rules remain binding through
+  mechanical M.8 adjudication. Recorded and signed by Codex (GPT-5.6).
 - 2026-07-18 midday: **M1 CLOSED (Fable 5)**. EM.6 adjudicated (EM.1/2
   ship F4-clean; floor was a no-op on the measured positional burial —
   EM.4 had verified a sub-metric, not the case fraction; in-leg EM.2.1

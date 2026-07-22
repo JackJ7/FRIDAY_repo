@@ -4267,7 +4267,7 @@ back to these two leg records.
 
 ### M3.2m quant-math armor leg — PROP-012 (authorized 2026-07-22)
 
-**Status: FOCUSED x2 PASS / INTEGRATION PENDING / prior STOP binding.** Jack authorized Codex's narrow
+**Status: INTEGRATION PASS / FROZEN CANDIDATE PENDING / prior STOP binding.** Jack authorized Codex's narrow
 recommendation after M3.2l candidate `2026-07-21_2238` and recheck
 `2026-07-22_0108` both reproduced PROP-012's `1 W x 1 minute -> 60 Wh` error.
 Archived ilogs prove the model first obtained the correct `0.0166667 Wh` from
@@ -4293,6 +4293,16 @@ byte-for-byte. Across 200 energy turns, all 200 final quantities were correct;
 cold. Task arming/active tasks/task calls/task floors and persistence/voice
 fires were all zero. This licenses only the registered merge/post-merge quick;
 full-candidate promotion and M3-X remain blocked.
+
+**Integration verdict (Codex, 2026-07-22):** scoped branch `codex/m3-2m`
+merged cleanly with `--no-ff` as model-visible freeze `7cae0ff`. Post-merge
+quick result `2026-07-22_1000` passed 512/512 with 95 deselected in 391.05s.
+Tracked main remained clean apart from the pre-existing untouched untracked
+`.codex/`. This licenses the one registered detached frozen candidate only;
+baseline `_2346`, the prior STOP, and all promotion/M3-X/closure prohibitions
+remain binding pending mechanical M.8 adjudication.
+
+Integration verdict signed by Codex (GPT-5.6) — 2026-07-22.
 
 Focused armor verdict signed by Codex (GPT-5.6) — 2026-07-22.
 
