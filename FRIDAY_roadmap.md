@@ -486,6 +486,13 @@ M3.2l is now licensed to merge and run post-merge quick; the original STOP,
 baseline `_2346`, promotion, M3-X, and M3 closure remain unchanged until the
 frozen full candidate passes every registered bar.
 
+**M3.2l MERGED / POST-MERGE QUICK PASS (Codex, 2026-07-21 ~22:35):** the
+six-file scoped branch merged cleanly to unchanged main as `b60f2a6`.
+Post-merge quick `2026-07-21_2228` passed 505/505 with 95 deselected in 6:32.
+Model-visible code is now frozen for the detached full candidate against
+baseline `2026-07-18_2346`. No promotion, M3-X, or closure is licensed before
+the complete ilog archive and mechanical §M3.2-G + h/j/k/l adjudication.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,

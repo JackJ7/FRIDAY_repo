@@ -976,7 +976,7 @@ auto-memory sync.
 | M3.2i | Task-tool arming gate + TKA-001..006 + re-flight | **STOP (Codex, 2026-07-20 ~01:05)** — implementation commit `5e99fae`, merged to `main` as `f6145dd`; worktree and post-merge `--quick` 470/470; GT-J1 live batch met the ≥4/5 bar (five LOCKED passes; target scores 5/5, 5/5, 5/5, 4/5, 5/5). Candidate `2026-07-19_2059` completed 556/565 in 3:55:52 with 198 ilogs archived. The original SKL-004 leak was fixed (`task_tools_armed=False`, no task call there), but the new M3.2i hygiene row FAILED mechanically: GT-A's calendar/task cross-reference armed the family and called `task_status` with `tasks_active=0`, outside TKT/TCR/TKA/JOB/GT-J1. §M3.2-G bar 6 therefore also failed. No rechecks or M3-X run; baseline stays `2026-07-18_2346`. Full verdict at the end of §M3.2i. |
 | M3.2j | Intent-bearing task noun gate + TKA-007..009 + re-flight | **STOP AT GT-J1 BATCH (Codex, 2026-07-20 ~02:55)** — isolated branch `codex/m3-2j`, code commits `9f1bb66` + `34bc0ca`; cue fix TDD/targeted/quick green, allowed test-session ledger iteration TSK-013 red→green + affected consumers 52/52 + `--quick` 474/474. GT-J1: run 1 failed on the archive enumeration gap; run 2 passed LOCKED 3/3 (TARGET 4/5); run 3 then failed because T1 had `task_tools_armed=True` but the model called no tool and only narrated the plan. Two misses make the >=4/5 bar unreachable, so runs 4-5 were not spent. Nothing merged; no flight/M3-X. Baseline remains `2026-07-18_2346`. Full STOP verdict at end of §M3.2j. |
 | M3.2k | Explicit task-create landed floor + TCF guards + re-flight | **MERGED; HARD STOP (Codex, signed 2026-07-20)** — main merge `c66f24e`; signed STOP `346d4c8`. Fresh GT-J1 passed 5/5 and task hygiene held, but candidate `2026-07-20_1835` scored 566 passed / 2 flaky / 11 failed: `memory_persistence` fell to 0.8333 and stayed non-perfect on the only useful recheck, while VOX-002 repeated. Baseline remains `2026-07-18_2346`; no promotion or downstream closeout is licensed. Full evidence at the end of §M3.2k. |
-| M3.2l | Hard-STOP repair: deterministic explicit-project persistence + banned-voice-tell floor | **L.5/L.6 PASS; READY TO MERGE (Codex, 2026-07-21 ~22:25)** — plan `3a4e79c`, code `e1a6a0e` + `8db71ef`, continuation `f78a698`. Deterministic evidence is MEM-019..022 4/4, focused 59/59, quick 505/505 (`_0242`). Both valid live batches (`_0249`, `_2221`) passed 6/6 nodes and VOX 8/8 with 6/6 ilogs each, zero task signals, and only licensed persistence fires. Scoped merge/post-merge quick is licensed; the full-flight STOP, baseline `_2346`, promotion, and M3-X remain blocked until §M3.2-G passes. Full evidence at the end of §M3.2l. |
+| M3.2l | Hard-STOP repair: deterministic explicit-project persistence + banned-voice-tell floor | **MERGED; POST-MERGE QUICK PASS; FULL FLIGHT NEXT (Codex, 2026-07-21 ~22:35)** — plan `3a4e79c`, code `e1a6a0e` + `8db71ef`, merge `b60f2a6`. Both focused batches passed 6/6 + VOX 8/8 with clean hygiene; post-merge quick passed 505/505 (`_2228`). Model-visible code is frozen for the full candidate vs baseline `_2346`. The original STOP, promotion, and M3-X remain blocked until §M3.2-G passes. Full evidence at the end of §M3.2l. |
 | M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
 | M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
 | M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2l validation / re-flight** — M3.2k merged and its flight reached a signed hard STOP. M3.2l is implemented with one useful focused pass, but two uncontended focused batches and a frozen-code full candidate are still required before §M3.2-G can be adjudicated again. |
@@ -2142,7 +2142,7 @@ port.
   `git diff --name-status main..HEAD`, and confirm `.codex/` has no diff.
   Commit the focused verdict as a documentation-only Git boundary.
 
-- [ ] **C.3 — registered merge and post-merge deterministic gate.** Only from
+- [x] **C.3 — registered merge and post-merge deterministic gate.** Only from
   the clean scoped branch after C.2, switch the owning checkout to `main`,
   verify it is still `346d4c8`, and merge without rewriting either lineage:
 
@@ -2274,3 +2274,17 @@ evidence remains 4/4 MEM-019..022, 59/59 shared seam, and 505/505 quick at
 binding until the post-merge frozen full flight passes every bar.
 
 Focused gate adjudicated and signed by Codex (GPT-5.6) — 2026-07-21.
+
+**C.3 integration verdict (Codex, 2026-07-21 ~22:35 PDT): PASS.** The
+documentation-only focused verdict was committed on the scoped branch as
+`b1b5739`; tracked status was clean apart from untouched `.codex/`, main was
+still exactly `346d4c8`, and the six-file scope check held. The registered
+`--no-ff` merge completed without conflict as `b60f2a6` (`Merge M3.2l
+persistence and voice floors`). With `FRIDAY_TEST_SESSION` absent, post-merge
+quick result `2026-07-21_2228` passed 505/505 with 95 deselected in 392.97s.
+No correction or rerun was needed. Model-visible code is frozen at `b60f2a6`;
+the following documentation-only evidence commit is the full-flight Git
+provenance boundary. C.4 is licensed; all promotion/M3-X/closure bars remain
+blocked on C.5 adjudication.
+
+Integration gate adjudicated and signed by Codex (GPT-5.6) — 2026-07-21.
