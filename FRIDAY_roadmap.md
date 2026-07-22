@@ -462,6 +462,19 @@ batch or full flight was launched and the process was not altered. L.5 and the
 original hard STOP remain open; baseline/promotion/M3-X/closure state is
 unchanged.
 
+**M3 CLOSEOUT CONTINUATION SIGNED (Codex, 2026-07-21 ~22:15):** Phase-0 audit
+matched the handoff exactly: `codex/m3-2l` `cc22645`, main `346d4c8`, only the
+six licensed branch files plus untouched untracked `.codex/`; all named
+reports/archives exist. `_0249` was independently re-audited 6/6 with 6/6
+ilogs, 13 main turns, zero task signals, and two licensed persistence-floor
+fires. The former runtime blocker has cleared (no port-47533 listener or suite
+lock; Ollama healthy/unloaded; GPU idle). The signed mechanical continuation
+is in `FRIDAY_jarvis_plan.md` §M3.2l C.1–C.7: one focused repeat → signed
+L.5/L.6 verdict → scoped merge/post-merge quick → frozen detached full flight
+vs `_2346` → every §M3.2-G + h/j/k/l bar → only then baseline promotion and
+M3-X. Long-run routine checks are capped at 45-minute cadence. Any registered
+STOP leaves M3 open and blocks promotion/M3-X/closure.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,

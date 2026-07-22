@@ -2055,3 +2055,195 @@ live FRIDAY PID 10744 reacquired port 47533, so the launch guard stopped the
 command. The process was not altered. Conservatively, L.5 remains incomplete;
 no full flight is licensed until Jack closes that instance (or explicitly
 authorizes controlled shutdown) and two uncontended focused batches pass.
+
+#### M3.2l continuation / M3 closeout plan (signed 2026-07-21)
+
+> **For agentic workers:** REQUIRED SUB-SKILL: execute this plan inline with
+> `superpowers:executing-plans`; do not delegate shared-brain/GPU work. Every
+> checkbox is conditional on the preceding registered gate. A failed gate is
+> recorded here and execution stops at that checkbox.
+
+**Goal:** finish L.5/L.6, integrate only the scoped M3.2l repair, and close M3
+only if the frozen full candidate and M3-X satisfy every registered mechanical
+bar.
+
+**Architecture / scope:** this is a continuation of the authorized M3.2l
+design, not a redesign. The model-visible delta remains limited to
+`core/engine.py`'s resolver-grounded main-turn persistence recovery and exact
+settled/streamed voice substitutions, with guards in `test_memory.py` and
+`test_voice.py`; the three owning documents carry plan/evidence only. No new
+dependency, schema, registry, model, prompt contract, gate threshold, task
+arming rule, or service ordering is licensed.
+
+**Reconciled start state (read-only audit, Codex, 2026-07-21 ~22:15 PDT).**
+Branch `codex/m3-2l` is exactly `cc22645`; `main` is `346d4c8`; the branch
+diff is the six licensed files (`ARCHITECTURE.md`, both owning plans,
+`core/engine.py`, `test_memory.py`, `test_voice.py`) and the only worktree
+status is the pre-existing untouched untracked `.codex/`. The suite lock and
+port 47533 listener are absent. Ollama's local API is healthy; qwen2.5:14b is
+present at digest `7cdf5a0187d5...`, `/api/ps` reports no resident model, and
+the RTX 5070 is idle at 2% / 1056 MiB. No active research run exists. Promised
+reports exist for `_0219`, `_0229`, `_0234`, `_0242`, `_0249`, `_1835`, and
+`_2143`; their archived-ilog counts are respectively 0, 6, 6, 0, 6, 195, and
+9. Re-audit of `_0249` confirms 6/6 nodes, 6/6 ilogs, 13 main-turn rows, zero
+task arming/active tasks/task calls/evidence refusals, and exactly two licensed
+`project_persistence_floor` fires. The documented state has not drifted; the
+only resolved condition is that Jack's former PID 10744 no longer owns the
+port.
+
+##### Closeout execution checklist
+
+- [ ] **C.1 — finish L.5 with one uncontended repeat.** Re-check the suite
+  lock, port 47533, running pytest/FRIDAY owners, Ollama `/api/ps`, GPU load,
+  branch/HEAD, and tracked cleanliness once immediately before launch. Abort
+  if any owner is present; never stop it. Explicitly remove
+  `FRIDAY_TEST_SESSION`, then run the same six-node batch on frozen `cc22645`
+  with a unique pinned basetemp:
+
+  ```powershell
+  Remove-Item Env:FRIDAY_TEST_SESSION -ErrorAction SilentlyContinue
+  $runTag = Get-Date -Format 'yyyyMMdd_HHmmss'
+  $baseTemp = "C:\tmp\m32l_live2_$runTag"
+  $resultBefore = @(Get-ChildItem results -Directory | Select-Object -ExpandProperty Name)
+  C:\Users\jacko\AppData\Local\Programs\Python\Python313\python.exe `
+    run_suite.py --runs 1 -- `
+    "--basetemp=$baseTemp" `
+    -k "test_fact_written or test_hard_kill_durability or test_no_chatbot_tells"
+
+  $newResults = @(Get-ChildItem results -Directory |
+    Where-Object Name -NotIn $resultBefore | Sort-Object LastWriteTime)
+  if ($newResults.Count -ne 1) { throw "Expected one result, found $($newResults.Count)" }
+  $repeatStamp = $newResults[0].Name
+  $sourceIlogs = @(Get-ChildItem $baseTemp -Recurse -File -Filter '*.jsonl' |
+    Where-Object FullName -Match '[\\/]logs[\\/]interactions[\\/]')
+  if ($sourceIlogs.Count -ne 6) { throw "Expected six ilogs, found $($sourceIlogs.Count)" }
+  $archive = New-Item "results\$repeatStamp\sandbox_ilogs" -ItemType Directory -Force
+  for ($i = 0; $i -lt $sourceIlogs.Count; $i++) {
+    Copy-Item -LiteralPath $sourceIlogs[$i].FullName `
+      -Destination (Join-Path $archive ("repeat2_{0:D3}_{1}" -f ($i + 1), $sourceIlogs[$i].Name))
+  }
+  ```
+
+  This immediately copies every basetemp `logs\interactions\*.jsonl` into the
+  new repeat result's `sandbox_ilogs\` and verifies 6/6 files before any
+  other model call. PASS requires MEM-001 + four MEM-005 rows + VOX-002 =
+  6/6, VOX-002 prompt evidence 8/8, zero unlicensed floor fires, zero
+  `task_tools_armed`, zero nonzero `tasks_active`, zero task-tool calls, and
+  zero task-evidence refusals. Any miss is the registered STOP: archive,
+  record, and do not spend another specimen.
+
+- [ ] **C.2 — record L.5/L.6 and freeze the integration candidate.** Record
+  both valid focused stamps (`2026-07-21_0249` plus the repeat), exact command,
+  commit, node/prompt counts, archive count, and full flag audit here and in
+  `FRIDAY_roadmap.md`; check L.5/L.6 only if C.1 passes. Verify
+  `git diff 8db71ef..HEAD -- '*.py'` is empty so the existing exact-code
+  deterministic evidence remains applicable: MEM-019..022 4/4, shared seam
+  59/59, and quick 505/505 at `_0242`. Run `git diff --check main..HEAD`,
+  `git diff --name-status main..HEAD`, and confirm `.codex/` has no diff.
+  Commit the focused verdict as a documentation-only Git boundary.
+
+- [ ] **C.3 — registered merge and post-merge deterministic gate.** Only from
+  the clean scoped branch after C.2, switch the owning checkout to `main`,
+  verify it is still `346d4c8`, and merge without rewriting either lineage:
+
+  ```powershell
+  git switch main
+  git merge --no-ff codex/m3-2l -m "Merge M3.2l persistence and voice floors"
+  C:\Users\jacko\AppData\Local\Programs\Python\Python313\python.exe run_suite.py --quick
+  ```
+
+  Record the merge commit and quick stamp/count. Any merge conflict, unexpected
+  file, main drift, or quick failure is a STOP; do not patch forward or start
+  the flight. Never overwrite/promote failed candidate `_1835`, and never
+  revert the previously merged M3.2k lineage as an adjudication shortcut.
+
+- [ ] **C.4 — frozen detached full candidate flight.** Freeze the exact merge
+  commit and verify tracked cleanliness, no suite lock, free port 47533, no
+  competing live/job/research/model process, healthy Ollama, and
+  `FRIDAY_TEST_SESSION` absent. Launch `run_suite.py` detached with a unique
+  pinned basetemp, redirected launch logs, and the detector-only watchdog in a
+  second
+  hidden detached process. Set watchdog `--poll-sec 2700` so routine health
+  sampling is at most once per 45 minutes; do not perform extra polling.
+  The registered command shape is:
+
+  ```powershell
+  Remove-Item Env:FRIDAY_TEST_SESSION -ErrorAction SilentlyContinue
+  $repo = 'C:\Users\jacko\Documents\FRIDAY'
+  $python = 'C:\Users\jacko\AppData\Local\Programs\Python\Python313\python.exe'
+  $runTag = Get-Date -Format 'yyyy-MM-dd_HHmmss'
+  $baseTemp = "C:\tmp\m32l_full_$runTag"
+  $outLog = "$repo\results\launch_logs\m32l_candidate_$runTag.out.log"
+  $errLog = "$repo\results\launch_logs\m32l_candidate_$runTag.err.log"
+  $suiteProcess = Start-Process -FilePath $python `
+    -ArgumentList @('run_suite.py', '--', "--basetemp=$baseTemp") `
+    -WorkingDirectory $repo -RedirectStandardOutput $outLog `
+    -RedirectStandardError $errLog -WindowStyle Hidden -PassThru
+  $watchLog = "$repo\results\launch_logs\watchdog_m32l_candidate_$runTag.log"
+  $watchErr = "$repo\results\launch_logs\watchdog_m32l_candidate_$runTag.err.log"
+  $watchdogProcess = Start-Process -FilePath $python `
+    -ArgumentList @('scripts\ollama_watchdog.py', '--log', $outLog,
+      '--pid', "$($suiteProcess.Id)", '--poll-sec', '2700') `
+    -WorkingDirectory $repo -RedirectStandardOutput $watchLog `
+    -RedirectStandardError $watchErr -WindowStyle Hidden -PassThru
+  ```
+
+  Preserve the exact launch command, PIDs, merge commit, config hash, model
+  name/digest, basetemp, and logs in this document. Let the suite finish
+  completely before inspecting results. A wedge/owner conflict is a STOP for
+  Jack, never authority to kill a process.
+
+- [ ] **C.5 — archive and mechanically adjudicate the flight.** Immediately
+  copy every full-basetemp interaction JSONL to
+  the candidate result's `sandbox_ilogs\`, prove unique source/destination counts,
+  verify report/scorecard provenance and frozen tracked code (distinguishing
+  untouched `.codex/`), then run:
+
+  ```powershell
+  $candidateStamp = (Get-ChildItem results -Directory |
+    Where-Object { Test-Path (Join-Path $_.FullName 'report.json') } |
+    Sort-Object LastWriteTime | Select-Object -Last 1).Name
+  C:\Users\jacko\AppData\Local\Programs\Python\Python313\python.exe `
+    run_suite.py --compare 2026-07-18_2346 $candidateStamp
+  ```
+
+  Apply §M3.2-G bars 1–7 and every M3.2h/j/k/l addendum mechanically: required
+  guards/post-merge quick/GT-J1; clean completion/no wedge/full ilog archive;
+  all five perfect boards at 1.000; the entire D2 family passing with
+  m1=m2=m3=m5=0; in-suite GT-J1 LOCKED/TARGET contract; surgical task/tool/
+  identifier/floor hygiene; and the exact same-day x2 churn rule for every
+  other down-delta. For M3.2l specifically, persistence/voice fires must be
+  licensed by the originating turn and no task hygiene may dilute. A perfect
+  board surviving its permitted recheck, any task leak/schema echo, uncovered
+  regression, failed D2/LOCKED contract, or unregistered outcome is a signed
+  hard STOP: no promotion, no M3-X, no closure.
+
+- [ ] **C.6 — promote only a passing candidate and run M3-X.** If and only if
+  C.5 passes every bar, record the IG.5-style verdict and make the successful
+  candidate stamp the new baseline. Then run M3-X (a)–(c) on the merged commit
+  with throwaway names and `--test-session` / `FRIDAY_TEST_SESSION=1`, keeping
+  all fabricated memories under `brain\test_archive\`; grade (d) from C.5.
+  For (a), prove a 3+-step local task completes unattended with per-step
+  evidence. For (b), prove an outbound step parks at explicit confirmation;
+  do not approve/send anything without Jack's direct involvement, then record
+  the remaining blocked state if he is unavailable. For (c), prove kill/restart
+  durability and resume from the ledger. Immediately archive the live M3-X
+  ilogs and quote the ledger/board evidence. Any failed acceptance item leaves
+  M3 open.
+
+- [ ] **C.7 — documentation and signed handoff.** Only after C.6 passes, update
+  `ARCHITECTURE.md`, this M3 table/section, `FRIDAY_roadmap.md` status/results,
+  baseline/candidate records, commands, commits, deltas, archives, limitations,
+  and exact M3-X evidence; commit each truthful boundary. External persistent
+  memory is explicitly outside this authorization and requires Jack's separate
+  direct request. Final status is `CLOSED` only with objective evidence for
+  every bar; otherwise it is `STOPPED` with the exact blocker and prohibited
+  downstream actions.
+
+**Rollback / prohibitions:** Git history is the rollback path; no hard reset,
+history rewrite, deletion of evidence, deletion of live-test memories, or
+mutation of `.codex/`. Never rerun a failed model-visible gate until it passes,
+soften a grader, treat a report-free run as evidence, overlap the shared brain/
+GPU/port, or infer permission to stop Jack's process.
+
+Continuation plan authored and signed by Codex (GPT-5.6) — 2026-07-21.
