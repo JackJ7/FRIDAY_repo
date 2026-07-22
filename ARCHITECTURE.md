@@ -115,7 +115,8 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      retrieved_note_floor; M1 batch: email_importance_floor,
                      gear_check_floor; M2 batch: corrections_active,
                      correction_floor, dangling_intent_floor,
-                     false_completion_floor, foreign_path_floor).
+                     false_completion_floor, foreign_path_floor; M3.2l:
+                     project_persistence_floor, voice_tell_floor).
                      The READ-ASK GROUNDING FLOOR (armor RA leg, calendar-
                      first's third instance) sits BEFORE the phantom barrier:
                      when Jack's message names an EXISTING local file with
@@ -152,7 +153,7 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      script, so foreign-script tool-narration hops never reach
                      the live stream OR the transcript (drifted hop narration
                      is scrubbed; the settled-reply script floor remains the
-                     last barrier).
+                     last GENERATIVE barrier).
                      RESIDUAL-FLOORS LEG (armor plan §6): a local path handed
                      to web_fetch is refused in CODE with a message naming
                      read_file/list_dir (GND-014 arg-guard — the failure was a
@@ -179,6 +180,23 @@ core\engine.py       Engine — one respond() call does: retrieve brain context,
                      established fact (MEM-018). This closed the historical
                      injection churn: a planted instruction could previously
                      LAUNDER itself into durable memory via the memory pass.
+                     M3.2l MAIN-TURN DURABILITY FLOOR: `on_done` intentionally
+                     precedes the asynchronous memory pass, so an explicit,
+                     uniquely resolved `set ... status to <value>` command is
+                     enforced before `respond()` returns when the model only
+                     resolved the project. It also corrects a native status
+                     write when the model chose a value other than Jack's
+                     explicit value. The same narrow floor retries the
+                     measured rejected `projects/<slug>/...` fact write
+                     against that existing project's canonical note. If the
+                     model only resolves, it appends the literal text after
+                     Jack's explicit record cue; it never invents fact text.
+                     All paths use `_run_tool`, so taint and gate rules remain
+                     unchanged. M3.2l also applies exact
+                     substitutions for the voice note's enumerated banned
+                     chatbot tells to both settled content and a token-aware
+                     streaming wrapper; explicit format-contract turns bypass
+                     voice and remain byte-untouched.
                      CONSOLIDATE LEG (CN.1–CN.6.1): project consolidation is
                      ENGINE-OWNED STATE. self.consolidation is a
                      pending-consolidation ledger armed when a merge-intent

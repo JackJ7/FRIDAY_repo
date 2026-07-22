@@ -199,6 +199,176 @@ class Engine:
             return ""
         return voice.split(self.VOICE_MARKER)[0].rstrip()
 
+    # M3.2l: the active voice note enumerates these as mechanically banned,
+    # but the local 14B still leaked the same closer on both `_1835` and its
+    # licensed recheck.  Exact substitutions are safer and cheaper than a
+    # second prose generation: they preserve the surrounding answer and make
+    # the same guarantee in reply.content and the live token stream.
+    _VOICE_TELL_REPLACEMENTS = (
+        ("as a language model", "from what I can access"),
+        ("i would be happy to", "I can"),
+        ("i apologize for the inconvenience", "that was inconvenient"),
+        ("i apologize for the confusion", "that was confusing"),
+        ("is there anything else", "what else needs attention"),
+        ("as an ai", "from what I can access"),
+        ("i'd be happy to", "I can"),
+        ("happy to help", "I can help"),
+        ("feel free to reach", "you can reach"),
+        ("let me know if", "tell me if"),
+        ("great question", "worth checking"),
+        ("good question", "worth checking"),
+        ("hope this helps", "that covers it"),
+        ("certainly!", "yes —"),
+        ("absolutely!", "yes —"),
+        ("of course!", "yes —"),
+    )
+
+    @classmethod
+    def _sanitize_voice_tells(cls, text: str) -> tuple[str, bool]:
+        """Replace only the voice spec's exact enumerated chatbot tells."""
+        clean = str(text or "")
+        changed = False
+        for tell, replacement in cls._VOICE_TELL_REPLACEMENTS:
+            clean, count = re.subn(re.escape(tell), replacement, clean,
+                                   flags=re.IGNORECASE)
+            changed = changed or bool(count)
+        return clean, changed
+
+    class _VoiceStream:
+        """Streaming exact-phrase replacer that works across token splits."""
+
+        def __init__(self, emit, replacements):
+            self.emit = emit
+            self.replacements = tuple(replacements)
+            self.buffer = ""
+            self.changed = False
+
+        def __call__(self, token: str):
+            self.buffer += str(token or "")
+            self._drain(final=False)
+
+        def _drain(self, final: bool):
+            phrases = tuple(tell for tell, _ in self.replacements)
+            while self.buffer:
+                low = self.buffer.lower()
+                matched = next(
+                    ((tell, replacement)
+                     for tell, replacement in self.replacements
+                     if low.startswith(tell)), None)
+                if matched:
+                    tell, replacement = matched
+                    self.emit(replacement)
+                    self.buffer = self.buffer[len(tell):]
+                    self.changed = True
+                    continue
+                # Emit everything before the next complete tell in one chunk.
+                # This keeps the UI's callback cadence token-like instead of
+                # degrading it to one callback per character.
+                positions = [low.find(tell) for tell in phrases
+                             if low.find(tell) > 0]
+                if positions:
+                    cut = min(positions)
+                    self.emit(self.buffer[:cut])
+                    self.buffer = self.buffer[cut:]
+                    continue
+                if not final:
+                    # Retain only the longest suffix that could grow into a
+                    # tell on the next token; everything before it is stable.
+                    keep = 0
+                    max_len = min(len(self.buffer),
+                                  max(len(tell) for tell in phrases))
+                    for size in range(1, max_len + 1):
+                        suffix = low[-size:]
+                        if any(tell.startswith(suffix) for tell in phrases):
+                            keep = size
+                    if keep:
+                        if len(self.buffer) > keep:
+                            self.emit(self.buffer[:-keep])
+                            self.buffer = self.buffer[-keep:]
+                        return
+                self.emit(self.buffer)
+                self.buffer = ""
+
+        def flush(self):
+            self._drain(final=True)
+
+    # M3.2l: explicit project-memory commands that code can ground exactly.
+    # These are deliberately narrow.  The general memory pass remains the
+    # semantic layer; this floor only closes the two measured worst-window
+    # losses where Jack already supplied the project, value, and write intent.
+    _EXPLICIT_PROJECT_STATUS = re.compile(
+        r"\bset\s+(?:its|the\s+project(?:'s)?)\s+status\s+to\s+"
+        r"['\"]?([a-z][a-z0-9_-]*(?:\s+[a-z][a-z0-9_-]*){0,2})"
+        r"['\"]?\s*[.!?]?\s*$", re.IGNORECASE)
+    _EXPLICIT_RECORD_CUE = re.compile(
+        r"^\s*(?:for the record|note this down|record this|remember this)\s*:",
+        re.IGNORECASE)
+    _PROJECT_CREATE_GUARD = "ERROR: new notes under projects/ are managed"
+
+    def _project_persistence_recovery(self, user_input: str,
+                                      resolved: dict | None,
+                                      tool_log: list,
+                                      durable_landed: bool = False):
+        """Return one grounded recovery `(tool, args)`, or None.
+
+        Status values come directly from Jack's explicit imperative.  Fact
+        recovery prefers the model's rejected content when its attempted
+        nested path names the same uniquely resolved existing project.  A
+        resolve-only turn may instead persist the literal text following an
+        explicit record cue.  No path, project, status, or fact is inferred.
+        """
+        if not resolved or not resolved.get("note_path"):
+            return None
+        note_path = str(resolved["note_path"]).replace("\\", "/")
+        try:
+            note = self.brain.read_note(note_path)
+        except Exception:
+            return None
+
+        status_match = self._EXPLICIT_PROJECT_STATUS.search(user_input or "")
+        if status_match:
+            from core.project_meta import project_status
+            desired = " ".join(status_match.group(1).split()).casefold()
+            if desired and project_status(note).casefold() != desired:
+                return "update_note_field", {
+                    "path": note_path, "field": "Status", "value": desired}
+            return None
+
+        record_match = self._EXPLICIT_RECORD_CUE.search(user_input or "")
+        if not record_match or durable_landed:
+            return None
+        slug = str(resolved.get("slug", ""))
+        if not slug:
+            return None
+        prefix = f"projects/{slug}/"
+        for item in reversed(tool_log):
+            if (item.get("tool") != "write_brain"
+                    or not str(item.get("result", "")).startswith(
+                        self._PROJECT_CREATE_GUARD)):
+                continue
+            attempted = item.get("args") or {}
+            path = str(attempted.get("path", "")).replace("\\", "/")
+            content = str(attempted.get("content", ""))
+            if (path.startswith(prefix) and content.strip()
+                    and content.strip() not in note):
+                return "write_brain", {
+                    "path": note_path,
+                    "content": "\n" + content.strip() + "\n",
+                    "mode": "append",
+                    "summary": str(
+                        attempted.get("summary") or
+                        f"Record fact in {resolved.get('title', 'project')}")[:160],
+                }
+        fact = (user_input or "")[record_match.end():].strip()
+        if not fact or len(fact) > 1000 or fact in note:
+            return None
+        return "write_brain", {
+            "path": note_path,
+            "content": "\n- " + fact + "\n",
+            "mode": "append",
+            "summary": "Record explicit project fact",
+        }
+
     def _character(self) -> str:
         """The character brief — read fresh each time so edits in Obsidian
         take effect on the very next message."""
@@ -492,9 +662,11 @@ class Engine:
                 + checklist_block(conjuncts)
         # Voice (Task 4): rides per-message UNLESS the message names an
         # output format — a user-specified format outranks voice, always.
+        voice_active = False
         if not self._FORMAT_DIRECTIVE.search(user_input):
             voice = self._voice_head()
             if voice:
+                voice_active = True
                 ref_block = (ref_block + "\n\n" if ref_block else "") + voice
 
         # Entity-resolution hint (Notes-10 Phase 3, §1 — the JARVIS layer). Jack's
@@ -522,13 +694,17 @@ class Engine:
         # below uses this to catch a create-folder OFFER that displaced the
         # recall answer (STA-004). Best-effort, like the hint itself; absent
         # resolver = None = no behaviour change.
+        self._resolved_project = None
         self._resolved_reference = None
         if resolver is not None:
             try:
                 _outcome, _data = resolver.resolve_one(user_input)
-                if _outcome == "one" and _data.get("status") == "reference":
-                    self._resolved_reference = _data
+                if _outcome == "one":
+                    self._resolved_project = _data
+                    if _data.get("status") == "reference":
+                        self._resolved_reference = _data
             except Exception:
+                self._resolved_project = None
                 self._resolved_reference = None  # resolution is best-effort
 
         # Durable tasks referent block (jarvis plan J1.2, roadmap M3.2c). Status
@@ -690,7 +866,11 @@ class Engine:
             # trade (recorded in the M2 design): post-correction turns
             # stream settled-once for the rest of the session.
             or bool(self.corrections))
-        live_token = None if hold_stream else on_token
+        voice_stream = (self._VoiceStream(
+            on_token, self._VOICE_TELL_REPLACEMENTS)
+            if voice_active and on_token is not None else None)
+        settled_token = voice_stream or on_token
+        live_token = None if hold_stream else settled_token
 
         base = [{"role": "system", "content": self._system_prompt(extra=ref_block)}]
         # History compaction (Notes-10 Phase 2, §4): a running digest of turns
@@ -2406,6 +2586,53 @@ class Engine:
             else:
                 turn.append({"role": "assistant", "content": reply.content})
 
+        # M3.2l project-persistence floor.  `FridayService` emits on_done as
+        # soon as respond() returns, before the asynchronous memory pass.  An
+        # explicit status command therefore must land here to survive a kill
+        # at that boundary.  The fact path persists Jack's literal text after
+        # an explicit record cue; rejected nested-project content remains the
+        # preferred structured source when one exists.
+        project_persistence_floor_fired = False
+        durable_landed = any(
+            item.get("tool") in self._DURABLE_WRITE_TOOLS
+            and self._write_landed(item.get("result", ""))
+            for item in tool_log)
+        recovery = self._project_persistence_recovery(
+            user_input, getattr(self, "_resolved_project", None), tool_log,
+            durable_landed=durable_landed)
+        if reply is not None and recovery is not None:
+            name, args = recovery
+            project_persistence_floor_fired = True
+            tool_call = {"function": {"name": name, "arguments": args}}
+            turn.append({"role": "assistant", "content": "",
+                         "tool_calls": [tool_call]})
+            if on_tool:
+                on_tool(name, args)
+            result, external = self._run_tool(name, args)
+            turn.append({"role": "tool",
+                         "content": self._wrap_data(result, external)})
+            tool_log.append({"tool": name, "args": args,
+                             "result": str(result)[:500]})
+            reply.content = str(result)
+            reply.tool_calls = []
+            turn.append({"role": "assistant", "content": reply.content})
+
+        # M3.2l voice-tell floor.  Stream substitutions have already protected
+        # visible tokens on an ordinary turn; applying the identical table to
+        # settled content keeps history, ilogs, and every non-streaming face in
+        # lockstep.  Format-contract turns never injected voice and bypass it.
+        voice_tell_floor_fired = False
+        if reply is not None and voice_active:
+            clean, changed = self._sanitize_voice_tells(reply.content)
+            if changed:
+                voice_tell_floor_fired = True
+                reply.content = clean
+                if (turn and turn[-1].get("role") == "assistant"
+                        and not turn[-1].get("tool_calls")):
+                    turn[-1]["content"] = clean
+                else:
+                    turn.append({"role": "assistant", "content": clean})
+
         # M3.2k landed-create floor.  GT-J1 proved that the model can receive
         # the right schema, state the exact plan, and still emit zero tools;
         # the LAST script retry can introduce that plan after every earlier
@@ -2458,8 +2685,10 @@ class Engine:
         # that every post-generation barrier has settled, emit the VETTED reply
         # exactly once. The user never saw the pre-correction text, so a phantom
         # review or a dodge is gone from the stream, not merely retracted.
-        if hold_stream and on_token and reply is not None and reply.content:
-            on_token(reply.content)
+        if hold_stream and settled_token and reply is not None and reply.content:
+            settled_token(reply.content)
+        if voice_stream is not None:
+            voice_stream.flush()
 
         if reply is not None and (not turn or turn[-1].get("role") != "assistant"):
             turn.append({"role": "assistant", "content": reply.content})
@@ -2710,6 +2939,14 @@ class Engine:
             # the live stream and transcript by the per-round shim — the hop
             # drift rate the a6a7s1 sweep flagged, now countable per turn.
             "script_hops_suppressed": hops_suppressed,
+            # M3.2l: an explicit, uniquely resolved project write/status
+            # command reached the deterministic main-turn durability floor.
+            "project_persistence_floor": project_persistence_floor_fired,
+            # M3.2l: exact voice-spec tell removed from settled content or
+            # from a streamed intermediate round. Format-contract turns bypass.
+            "voice_tell_floor": (
+                voice_tell_floor_fired
+                or bool(voice_stream is not None and voice_stream.changed)),
             # Floors leg: True when the settled reply came back EMPTY after
             # tools ran (the F4 signature — silence would have shipped), and
             # whether the code-built honest reply had to stand in because the

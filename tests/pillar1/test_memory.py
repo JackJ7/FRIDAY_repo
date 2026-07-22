@@ -7,7 +7,30 @@ from pathlib import Path
 
 import pytest
 
+from core.model import ModelReply
 from helpers.harness import SEED_PROJECTS, repeat_behavior
+
+
+class _MemoryScriptModel:
+    """Deterministic replies for main-turn persistence-floor guards."""
+
+    def __init__(self, script):
+        self.script = list(script)
+
+    def chat(self, messages, tools=None, on_token=None, format=None):
+        item = self.script.pop(0) if self.script else ""
+        reply = ModelReply()
+        if isinstance(item, dict):
+            reply.content = item.get("content", "")
+            reply.tool_calls = list(item.get("tool_calls", []))
+        else:
+            reply.content = item
+        reply.eval_count = 5
+        return reply
+
+
+def _memory_call(tool_name, **arguments):
+    return {"function": {"name": tool_name, "arguments": arguments}}
 
 
 @pytest.mark.case("MEM-001", "a stated durable fact is committed to the brain (persisted)")
@@ -316,3 +339,108 @@ def test_recover_bare_name_prose(sandbox):
     result, _ = eng._run_tool(rec[0]["function"]["name"],
                               rec[0]["function"]["arguments"])
     assert "tier" in result.lower() or "config" in result.lower()
+
+
+@pytest.mark.case("MEM-019", "a rejected nested project-fact write retries "
+                              "against the uniquely resolved canonical note")
+def test_rejected_nested_project_fact_lands_before_reply(sandbox):
+    capture = []
+    eng = sandbox.service.engine
+    eng.vote_enabled = False
+    eng.ilog.log = lambda record: capture.append(record)
+    eng.model = _MemoryScriptModel([
+        {"content": "", "tool_calls": [_memory_call(
+            "write_brain",
+            path="projects/alpha_rig/frame_material.md",
+            content="- **Frame:** violet-anodized 2040 extrusion\n",
+            mode="create",
+            summary="Record the alpha rig frame material")]},
+        "That nested project-note write was rejected; I need clarification.",
+    ])
+
+    eng.respond(
+        "For the record: the alpha rig frame uses violet-anodized 2040 extrusion.")
+
+    assert "violet-anodized 2040 extrusion" in sandbox.note(
+        "projects/alpha_rig.md")
+    assert not (sandbox.brain.root / "projects" / "alpha_rig" /
+                "frame_material.md").exists()
+    assert capture[-1]["project_persistence_floor"] is True
+    landed = [tool for tool in capture[-1]["tools"]
+              if tool["tool"] == "write_brain"
+              and not str(tool["result"]).startswith("ERROR")]
+    assert len(landed) == 1
+
+
+@pytest.mark.case("MEM-020", "an explicit resolved project-status command "
+                              "lands before the main-turn done boundary")
+def test_explicit_project_status_lands_before_reply(sandbox):
+    capture = []
+    eng = sandbox.service.engine
+    eng.vote_enabled = False
+    eng.ilog.log = lambda record: capture.append(record)
+    eng.model = _MemoryScriptModel([
+        {"content": "", "tool_calls": [_memory_call(
+            "resolve_project", name="alpha rig")]},
+        "The project is active but has no folder. Should I create one?",
+    ])
+
+    eng.respond(
+        "The alpha rig project is wrapped up for good - set its status to archived.")
+
+    from core.project_meta import project_status
+    assert project_status(sandbox.note("projects/alpha_rig.md")) == "archived"
+    assert capture[-1]["project_persistence_floor"] is True
+    landed = [tool for tool in capture[-1]["tools"]
+              if tool["tool"] == "update_note_field"
+              and tool["args"].get("field") == "Status"
+              and not str(tool["result"]).startswith("ERROR")]
+    assert len(landed) == 1
+
+
+@pytest.mark.case("MEM-021", "an explicit project fact survives a resolve-only "
+                              "main turn without waiting for memory pass")
+def test_explicit_project_fact_lands_after_resolve_only(sandbox):
+    capture = []
+    eng = sandbox.service.engine
+    eng.vote_enabled = False
+    eng.ilog.log = lambda record: capture.append(record)
+    eng.model = _MemoryScriptModel([
+        {"content": "", "tool_calls": [_memory_call(
+            "resolve_project", name="alpha rig")]},
+        "The project is active but has no folder. Should I create one?",
+    ])
+
+    eng.respond(
+        "For the record: the alpha rig's frame is 2020 aluminum extrusion.")
+
+    assert "the alpha rig's frame is 2020 aluminum extrusion" in sandbox.note(
+        "projects/alpha_rig.md").casefold()
+    assert capture[-1]["project_persistence_floor"] is True
+
+
+@pytest.mark.case("MEM-022", "an incorrect native project-status write is "
+                              "corrected to the user's explicit value")
+def test_explicit_project_status_corrects_wrong_native_value(sandbox):
+    capture = []
+    eng = sandbox.service.engine
+    eng.vote_enabled = False
+    eng.ilog.log = lambda record: capture.append(record)
+    eng.model = _MemoryScriptModel([
+        {"content": "", "tool_calls": [_memory_call(
+            "update_note_field", path="projects/gamma_arm.md",
+            field="Status", value="reference")]},
+        "I updated gamma arm to reference.",
+    ])
+
+    eng.respond(
+        "The gamma arm project is wrapped up for good - set its status to archived.")
+
+    from core.project_meta import project_status
+    assert project_status(sandbox.note("projects/gamma_arm.md")) == "archived"
+    assert capture[-1]["project_persistence_floor"] is True
+    status_writes = [tool for tool in capture[-1]["tools"]
+                     if tool["tool"] == "update_note_field"
+                     and tool["args"].get("field") == "Status"]
+    assert [tool["args"]["value"] for tool in status_writes] == [
+        "reference", "archived"]

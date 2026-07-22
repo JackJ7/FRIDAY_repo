@@ -426,6 +426,66 @@ not promoted; baseline remains `2026-07-18_2346`; merged code is not reverted;
 M3.2/M3 stay OPEN; no second recheck, M3-X, architecture closeout, memory sync,
 or closure ran. Next decision: Fable/Jack.
 
+**M3.2l IMPLEMENTED / PRE-LIVE GREEN (Codex, 2026-07-21 ~02:16):** Jack
+authorized a plan and implementation to lift the STOP. Archived ilogs traced
+MEM-005 to the `on_done`-before-memory-pass kill window, MEM-001 to an
+unrecovered rejected nested-project write, and VOX-002 to the same enumerated
+`let me know if` closer on candidate and recheck; every task signal was
+disarmed, excluding M3.2k contact. Plan `3a4e79c` and implementation `e1a6a0e`
+on `codex/m3-2l` add narrow, resolver-grounded main-turn persistence recovery
+plus exact settled/streamed voice substitutions, both through existing safety
+boundaries and with additive ilog flags. New guards were RED→GREEN (memory 2/2,
+voice 17/17); focused compatibility passed 57/57; the exact-HEAD `--quick`
+passed 503/503 (`2026-07-21_0219`, 95 deselected, 6:20). Focused live MEM-001 + MEM-005[*] + VOX-002 must pass
+twice before a full frozen-code flight is licensed. Baseline remains
+`2026-07-18_2346`; `_1835` remains unpromoted; M3.2/M3 remain OPEN; no M3-X,
+memory sync, promotion, or closure has occurred.
+
+**M3.2l LIVE GATE PAUSED (Codex, 2026-07-21 ~02:19):** no suite lock existed,
+but Jack's live FRIDAY held port 47533 as PID 10744 (`pythonw.exe`). Per the
+hard single-GPU rule, no model-marked focused batch was launched and the live
+process was not stopped. Resume focused live x2 only after the instance closes
+or Jack explicitly authorizes a controlled shutdown; all STOP state above
+remains unchanged.
+
+**M3.2l LIVE-DISCOVERED FIX / REPEAT PAUSED (Codex, 2026-07-21 ~02:54):** an
+invalid `FRIDAY_TEST_SESSION=1` sandbox specimen was preserved at `_0229` and
+discarded from judgment. Corrected batch `_0234` exposed resolve-only explicit
+fact loss plus a wrong native status value. MEM-021/022 reproduced both RED;
+commit `8db71ef` closes them without inference. MEM-019..022 passed 4/4,
+late-seam compatibility 59/59, and exact-commit quick `_0242` passed 505/505.
+Focused batch `_0249` passed MEM-001, all four MEM-005 rows, and VOX-002 (6/6
+nodes; 8/8 voice prompts); 6/6 ilogs were archived, with zero task arming,
+active tasks, or task calls and only licensed persistence-floor fires. PID
+10744 then reacquired port 47533 before the mandatory repeat, so no second
+batch or full flight was launched and the process was not altered. L.5 and the
+original hard STOP remain open; baseline/promotion/M3-X/closure state is
+unchanged.
+
+**M3 CLOSEOUT CONTINUATION SIGNED (Codex, 2026-07-21 ~22:15):** Phase-0 audit
+matched the handoff exactly: `codex/m3-2l` `cc22645`, main `346d4c8`, only the
+six licensed branch files plus untouched untracked `.codex/`; all named
+reports/archives exist. `_0249` was independently re-audited 6/6 with 6/6
+ilogs, 13 main turns, zero task signals, and two licensed persistence-floor
+fires. The former runtime blocker has cleared (no port-47533 listener or suite
+lock; Ollama healthy/unloaded; GPU idle). The signed mechanical continuation
+is in `FRIDAY_jarvis_plan.md` §M3.2l C.1–C.7: one focused repeat → signed
+L.5/L.6 verdict → scoped merge/post-merge quick → frozen detached full flight
+vs `_2346` → every §M3.2-G + h/j/k/l bar → only then baseline promotion and
+M3-X. Long-run routine checks are capped at 45-minute cadence. Any registered
+STOP leaves M3 open and blocks promotion/M3-X/closure.
+
+**M3.2l L.5/L.6 FOCUSED GATE PASS (Codex, 2026-07-21 ~22:25):** repeat
+`2026-07-21_2221` passed MEM-001 + four MEM-005 rows + VOX-002 (6/6 nodes,
+8/8 voice prompts) on unchanged `8db71ef` code with `FRIDAY_TEST_SESSION`
+absent and pinned basetemp. All 6/6 ilogs are archived under that result.
+Audit: 13 main turns, zero task arming/active tasks/task calls/evidence
+refusals or task floors; exactly two licensed persistence fires and no needed
+voice fire. Together with `_0249`, the required focused batches are 2/2 PASS.
+M3.2l is now licensed to merge and run post-merge quick; the original STOP,
+baseline `_2346`, promotion, M3-X, and M3 closure remain unchanged until the
+frozen full candidate passes every registered bar.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,

@@ -975,10 +975,11 @@ auto-memory sync.
 | M3.2-G | Merge → flight vs `2346` → pre-registered gate applied → verdict block recorded | **STOP (Sonnet, 2026-07-19 ~15:45)** — flight completed clean (stamp `2026-07-19_1155`, 559 items, no wedge, 197 ilogs archived); bars 1–2 met, bars 3/4/6 FAILED: `create_task` fires unprompted on an unrelated skill-decomposition turn (SKL-004, real schema-dilution signature — the gate's own STOP list names this exactly), plus GT-A (D2 family) and two perfect boards (memory_persistence, memory_recall) dropped. Full evidence + read in the STOP verdict block above M3.2h's status. NOT self-adjudicated, NOT reverted; baseline stays `2026-07-18_2346`; escalated to Fable/Jack for a fix design (M3.2h-style envelope fix candidate: tighten `create_task`'s arming condition). |
 | M3.2i | Task-tool arming gate + TKA-001..006 + re-flight | **STOP (Codex, 2026-07-20 ~01:05)** — implementation commit `5e99fae`, merged to `main` as `f6145dd`; worktree and post-merge `--quick` 470/470; GT-J1 live batch met the ≥4/5 bar (five LOCKED passes; target scores 5/5, 5/5, 5/5, 4/5, 5/5). Candidate `2026-07-19_2059` completed 556/565 in 3:55:52 with 198 ilogs archived. The original SKL-004 leak was fixed (`task_tools_armed=False`, no task call there), but the new M3.2i hygiene row FAILED mechanically: GT-A's calendar/task cross-reference armed the family and called `task_status` with `tasks_active=0`, outside TKT/TCR/TKA/JOB/GT-J1. §M3.2-G bar 6 therefore also failed. No rechecks or M3-X run; baseline stays `2026-07-18_2346`. Full verdict at the end of §M3.2i. |
 | M3.2j | Intent-bearing task noun gate + TKA-007..009 + re-flight | **STOP AT GT-J1 BATCH (Codex, 2026-07-20 ~02:55)** — isolated branch `codex/m3-2j`, code commits `9f1bb66` + `34bc0ca`; cue fix TDD/targeted/quick green, allowed test-session ledger iteration TSK-013 red→green + affected consumers 52/52 + `--quick` 474/474. GT-J1: run 1 failed on the archive enumeration gap; run 2 passed LOCKED 3/3 (TARGET 4/5); run 3 then failed because T1 had `task_tools_armed=True` but the model called no tool and only narrated the plan. Two misses make the >=4/5 bar unreachable, so runs 4-5 were not spent. Nothing merged; no flight/M3-X. Baseline remains `2026-07-18_2346`. Full STOP verdict at end of §M3.2j. |
-| M3.2k | Explicit task-create landed floor + TCF guards + re-flight | **IMPLEMENTED; PRE-LIVE GATES GREEN (Codex, 2026-07-20 ~14:46)** — isolated `codex/m3-2k`; brought forward only the two licensed M3.2j commits, then landed floor commit `b2b283f` and edge-guard commit `692f08e`. TCF-001/002 red→green, all TCF 10/10, focused compatibility 62/62, worktree `--quick` 484/484. Fresh GT-J1 x5 is next; its one mechanical-fix allowance is unspent. Full evidence at the end of §M3.2k. |
+| M3.2k | Explicit task-create landed floor + TCF guards + re-flight | **MERGED; HARD STOP (Codex, signed 2026-07-20)** — main merge `c66f24e`; signed STOP `346d4c8`. Fresh GT-J1 passed 5/5 and task hygiene held, but candidate `2026-07-20_1835` scored 566 passed / 2 flaky / 11 failed: `memory_persistence` fell to 0.8333 and stayed non-perfect on the only useful recheck, while VOX-002 repeated. Baseline remains `2026-07-18_2346`; no promotion or downstream closeout is licensed. Full evidence at the end of §M3.2k. |
+| M3.2l | Hard-STOP repair: deterministic explicit-project persistence + banned-voice-tell floor | **L.5/L.6 PASS; READY TO MERGE (Codex, 2026-07-21 ~22:25)** — plan `3a4e79c`, code `e1a6a0e` + `8db71ef`, continuation `f78a698`. Deterministic evidence is MEM-019..022 4/4, focused 59/59, quick 505/505 (`_0242`). Both valid live batches (`_0249`, `_2221`) passed 6/6 nodes and VOX 8/8 with 6/6 ilogs each, zero task signals, and only licensed persistence fires. Scoped merge/post-merge quick is licensed; the full-flight STOP, baseline `_2346`, promotion, and M3-X remain blocked until §M3.2-G passes. Full evidence at the end of §M3.2l. |
 | M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
 | M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
-| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2k live gate / flight** — M3.2k's pre-live gates are green, but GT-J1, merge, detached flight, and §M3.2-G adjudication have not run. |
+| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2l validation / re-flight** — M3.2k merged and its flight reached a signed hard STOP. M3.2l is implemented with one useful focused pass, but two uncontended focused batches and a frozen-code full candidate are still required before §M3.2-G can be adjudicated again. |
 
 **Merge note (Sonnet, 2026-07-19):** M3.3/M3.4 are code-complete, fully
 tested, and committed on `m3` (`7b3cec7`, stacked on M3.1+M3.2's `1f3137e`)
@@ -1938,3 +1939,338 @@ acceptance, `ARCHITECTURE.md` closeout, memory sync, or roadmap closure ran.
 The next decision belongs to Fable/Jack.
 
 STOP adjudicated and recorded by Codex (GPT-5.6) — 2026-07-20.
+
+### M3.2l — deterministic persistence + voice floors (authorized 2026-07-21)
+
+> **For agentic workers:** implement this section inline, task by task, with
+> RED→GREEN evidence. The hard STOP above remains binding until the focused
+> live gates below pass; implementation alone cannot promote `_1835`, run
+> M3-X, or close M3.
+
+**Goal.** Remove the two mechanisms that made §M3.2-G impossible to pass:
+explicit project facts/status changes can miss the main-turn durability
+boundary, and the prompt-only voice layer can emit an enumerated chatbot tell.
+
+**Root-cause evidence.** In `_1835`, MEM-001 called `write_brain` on forbidden
+`projects/alpha_rig/frame_material.md`; the corrective was not obeyed and the
+memory pass wrote nothing. MEM-005[beta_probe] called only `resolve_project`;
+`FridayService` emitted `on_done`, the hard-kill landed, and the later memory
+pass never had a chance. Recheck `_2143` repeated that exact MEM-005 shape on
+alpha_rig. VOX-002 leaked `let me know if` twice in `_1835` and once in `_2143`.
+The task schemas/floors were disarmed on all of these turns, excluding M3.2k
+contact as the cause.
+
+**Chosen architecture.** Keep the model's normal tool loop first. At the late,
+post-script enforcement seam in `Engine.respond`, add two narrow local floors:
+
+1. A project-persistence floor may act only when the deterministic resolver
+   found exactly one existing project. It (a) executes an explicit
+   `set ... status to <value>` through existing `update_note_field` when disk
+   truth does not already match, or (b) retries a rejected nested
+   `projects/<resolved-slug>/...` fact write against the existing canonical
+   `projects/<resolved-slug>.md` note when Jack used an explicit record cue.
+   Both paths use `_run_tool`, preserve taint confirmation, append a real tool
+   receipt, and expose one additive `project_persistence_floor` ilog flag.
+   Ambiguity, missing content, a different slug, questions, and any already-
+   landed write stay untouched.
+2. A voice floor replaces only the exact phrases already enumerated as banned
+   in `brain/character/friday_voice.md` (for example `let me know if` →
+   `tell me if`). A small streaming wrapper applies the same substitutions to
+   emitted tokens, so the UI and `reply.content` agree and no banned draft
+   flickers. It is active only when the voice head was injected; explicit
+   output-format turns remain byte-untouched. Additive ilog flag:
+   `voice_tell_floor`.
+
+No registry/schema, Brain, service ordering, model weights, grader threshold,
+task arming, or baseline change is in scope.
+
+#### Implementation plan
+
+- [x] **L.1 — RED project-persistence guards.** In
+  `tests/pillar1/test_memory.py`, add scripted end-to-end guards for the exact
+  rejected nested-write and resolve-only status misses. Run only the two new
+  nodes and confirm they fail because the durable write/flag is absent.
+- [x] **L.2 — GREEN project floor.** In `core/engine.py`, add the conservative
+  parsers/recovery helper and invoke it after the output-script floor, before
+  streaming/on_done. Run the L.1 nodes plus the existing MEM-001/MEM-005
+  deterministic consumers; expected all green.
+- [x] **L.3 — RED/GREEN voice floor.** In `tests/pillar1/test_voice.py`, first
+  add a detector/substitution matrix guard and an end-to-end streamed-reply
+  guard, confirm RED, then add the stream sanitizer/final-content enforcement
+  in `core/engine.py`. Verify output-format bypass explicitly.
+- [x] **L.4 — focused compatibility.** Run the new guards plus existing
+  memory/voice/script/stream/task-floor suites that share the late seam. Then
+  run `python run_suite.py --quick` only if those focused tests are green.
+- [x] **L.5 — focused live gate.** With no suite/model process already owning
+  the GPU, run only `MEM-001`, all `MEM-005` parameters, and `VOX-002` on the
+  repaired commit using pinned basetemp and immediate ilog archival. Required:
+  memory rows 5/5 and VOX-002 prompts 8/8, both new flags confined to their
+  licensed turns, task schemas disarmed/no task calls. One repeat of this same
+  focused batch must also pass to prove the recurring failures are removed.
+- [x] **L.6 — verdict.** Record commits, commands, counts, stamps, flag audit,
+  and limitations here and in `FRIDAY_roadmap.md`. A full suite is required
+  only after the two focused live batches pass, because M3.2-G promotion still
+  requires a frozen-code full candidate compare against `2026-07-18_2346`.
+  Until that flight passes every registered bar: no promotion, M3-X, memory
+  sync, architecture closeout, or M3 closure.
+
+**Implementation / pre-live evidence (Codex, 2026-07-21 ~02:16).** Dedicated
+branch `codex/m3-2l`; plan commit `3a4e79c`; implementation commit `e1a6a0e`.
+MEM-019/020 failed on the intended missing writes, then passed 2/2 after the
+project floor. VOX-004/005 failed on the absent sanitizer / leaked stream, then
+passed 17/17 after implementation; the readability refactor re-passed all 19
+new guards. Shared-seam compatibility passed 57/57 (11 live-model tests
+deselected). The exact-HEAD quick candidate `2026-07-21_0219` passed 503/503
+with 95 deselected in 6:20. `.codex/` remained untouched and untracked. L.5 focused
+live x2 remains required before any full flight or gate-lifting claim.
+
+**L.5 launch pause (Codex, 2026-07-21 ~02:19).** Read-only ownership checks
+found no `results/SUITE_RUNNING.lock`, but port 47533 was LISTENING under PID
+10744 (`pythonw.exe`, started 01:13) — Jack's live FRIDAY instance. The standing
+single-GPU rule forbids overlap between a live instance and model-marked tests.
+The process was not stopped or altered. Focused live x2, full flight, and every
+downstream gate therefore remain unrun; resume L.5 after Jack closes the live
+instance or explicitly authorizes a controlled shutdown.
+
+**L.5 live-discovered correction and partial evidence (Codex, 2026-07-21
+~02:54).** When port 47533 temporarily had no listener, the first launch
+incorrectly inherited `FRIDAY_TEST_SESSION=1`; that invalid sandbox specimen
+(`2026-07-21_0229`) routed otherwise successful status writes to the archive
+overlay. Its 6/6 ilogs were preserved, but it does not count. With the variable
+absent, `2026-07-21_0234` exposed two genuine residual shapes: MEM-001 could
+resolve only with no rejected write to reuse, and MEM-005[gamma_arm] could land
+the wrong native status value. MEM-021/022 reproduced both RED. Commit
+`8db71ef` now persists only the literal text after an explicit record cue and
+corrects status to the explicit requested value even after a wrong native
+write. MEM-019..022 passed 4/4, shared late-seam compatibility passed 59/59,
+and exact-commit quick `2026-07-21_0242` passed 505/505 (95 deselected, 6:20).
+
+Focused batch `2026-07-21_0249` then passed all six selected nodes: MEM-001,
+four MEM-005 parameters, and VOX-002 (eight prompts). All 6/6 sandbox ilog
+files were archived immediately. Across 13 main-turn rows, task arming was
+0, nonzero `tasks_active` was 0, and task-tool calls were 0. The persistence
+floor fired only on its two licensed recovery turns; the voice floor did not
+need to fire and VOX-002 still passed. Before the required repeat, the same
+live FRIDAY PID 10744 reacquired port 47533, so the launch guard stopped the
+command. The process was not altered. Conservatively, L.5 remains incomplete;
+no full flight is licensed until Jack closes that instance (or explicitly
+authorizes controlled shutdown) and two uncontended focused batches pass.
+
+#### M3.2l continuation / M3 closeout plan (signed 2026-07-21)
+
+> **For agentic workers:** REQUIRED SUB-SKILL: execute this plan inline with
+> `superpowers:executing-plans`; do not delegate shared-brain/GPU work. Every
+> checkbox is conditional on the preceding registered gate. A failed gate is
+> recorded here and execution stops at that checkbox.
+
+**Goal:** finish L.5/L.6, integrate only the scoped M3.2l repair, and close M3
+only if the frozen full candidate and M3-X satisfy every registered mechanical
+bar.
+
+**Architecture / scope:** this is a continuation of the authorized M3.2l
+design, not a redesign. The model-visible delta remains limited to
+`core/engine.py`'s resolver-grounded main-turn persistence recovery and exact
+settled/streamed voice substitutions, with guards in `test_memory.py` and
+`test_voice.py`; the three owning documents carry plan/evidence only. No new
+dependency, schema, registry, model, prompt contract, gate threshold, task
+arming rule, or service ordering is licensed.
+
+**Reconciled start state (read-only audit, Codex, 2026-07-21 ~22:15 PDT).**
+Branch `codex/m3-2l` is exactly `cc22645`; `main` is `346d4c8`; the branch
+diff is the six licensed files (`ARCHITECTURE.md`, both owning plans,
+`core/engine.py`, `test_memory.py`, `test_voice.py`) and the only worktree
+status is the pre-existing untouched untracked `.codex/`. The suite lock and
+port 47533 listener are absent. Ollama's local API is healthy; qwen2.5:14b is
+present at digest `7cdf5a0187d5...`, `/api/ps` reports no resident model, and
+the RTX 5070 is idle at 2% / 1056 MiB. No active research run exists. Promised
+reports exist for `_0219`, `_0229`, `_0234`, `_0242`, `_0249`, `_1835`, and
+`_2143`; their archived-ilog counts are respectively 0, 6, 6, 0, 6, 195, and
+9. Re-audit of `_0249` confirms 6/6 nodes, 6/6 ilogs, 13 main-turn rows, zero
+task arming/active tasks/task calls/evidence refusals, and exactly two licensed
+`project_persistence_floor` fires. The documented state has not drifted; the
+only resolved condition is that Jack's former PID 10744 no longer owns the
+port.
+
+##### Closeout execution checklist
+
+- [x] **C.1 — finish L.5 with one uncontended repeat.** Re-check the suite
+  lock, port 47533, running pytest/FRIDAY owners, Ollama `/api/ps`, GPU load,
+  branch/HEAD, and tracked cleanliness once immediately before launch. Abort
+  if any owner is present; never stop it. Explicitly remove
+  `FRIDAY_TEST_SESSION`, then run the same six-node batch on frozen `cc22645`
+  with a unique pinned basetemp:
+
+  ```powershell
+  Remove-Item Env:FRIDAY_TEST_SESSION -ErrorAction SilentlyContinue
+  $runTag = Get-Date -Format 'yyyyMMdd_HHmmss'
+  $baseTemp = "C:\tmp\m32l_live2_$runTag"
+  $resultBefore = @(Get-ChildItem results -Directory | Select-Object -ExpandProperty Name)
+  C:\Users\jacko\AppData\Local\Programs\Python\Python313\python.exe `
+    run_suite.py --runs 1 -- `
+    "--basetemp=$baseTemp" `
+    -k "test_fact_written or test_hard_kill_durability or test_no_chatbot_tells"
+
+  $newResults = @(Get-ChildItem results -Directory |
+    Where-Object Name -NotIn $resultBefore | Sort-Object LastWriteTime)
+  if ($newResults.Count -ne 1) { throw "Expected one result, found $($newResults.Count)" }
+  $repeatStamp = $newResults[0].Name
+  $sourceIlogs = @(Get-ChildItem $baseTemp -Recurse -File -Filter '*.jsonl' |
+    Where-Object FullName -Match '[\\/]logs[\\/]interactions[\\/]')
+  if ($sourceIlogs.Count -ne 6) { throw "Expected six ilogs, found $($sourceIlogs.Count)" }
+  $archive = New-Item "results\$repeatStamp\sandbox_ilogs" -ItemType Directory -Force
+  for ($i = 0; $i -lt $sourceIlogs.Count; $i++) {
+    Copy-Item -LiteralPath $sourceIlogs[$i].FullName `
+      -Destination (Join-Path $archive ("repeat2_{0:D3}_{1}" -f ($i + 1), $sourceIlogs[$i].Name))
+  }
+  ```
+
+  This immediately copies every basetemp `logs\interactions\*.jsonl` into the
+  new repeat result's `sandbox_ilogs\` and verifies 6/6 files before any
+  other model call. PASS requires MEM-001 + four MEM-005 rows + VOX-002 =
+  6/6, VOX-002 prompt evidence 8/8, zero unlicensed floor fires, zero
+  `task_tools_armed`, zero nonzero `tasks_active`, zero task-tool calls, and
+  zero task-evidence refusals. Any miss is the registered STOP: archive,
+  record, and do not spend another specimen.
+
+- [x] **C.2 — record L.5/L.6 and freeze the integration candidate.** Record
+  both valid focused stamps (`2026-07-21_0249` plus the repeat), exact command,
+  commit, node/prompt counts, archive count, and full flag audit here and in
+  `FRIDAY_roadmap.md`; check L.5/L.6 only if C.1 passes. Verify
+  `git diff 8db71ef..HEAD -- '*.py'` is empty so the existing exact-code
+  deterministic evidence remains applicable: MEM-019..022 4/4, shared seam
+  59/59, and quick 505/505 at `_0242`. Run `git diff --check main..HEAD`,
+  `git diff --name-status main..HEAD`, and confirm `.codex/` has no diff.
+  Commit the focused verdict as a documentation-only Git boundary.
+
+- [ ] **C.3 — registered merge and post-merge deterministic gate.** Only from
+  the clean scoped branch after C.2, switch the owning checkout to `main`,
+  verify it is still `346d4c8`, and merge without rewriting either lineage:
+
+  ```powershell
+  git switch main
+  git merge --no-ff codex/m3-2l -m "Merge M3.2l persistence and voice floors"
+  C:\Users\jacko\AppData\Local\Programs\Python\Python313\python.exe run_suite.py --quick
+  ```
+
+  Record the merge commit and quick stamp/count. Any merge conflict, unexpected
+  file, main drift, or quick failure is a STOP; do not patch forward or start
+  the flight. Never overwrite/promote failed candidate `_1835`, and never
+  revert the previously merged M3.2k lineage as an adjudication shortcut.
+
+- [ ] **C.4 — frozen detached full candidate flight.** Freeze the exact merge
+  commit and verify tracked cleanliness, no suite lock, free port 47533, no
+  competing live/job/research/model process, healthy Ollama, and
+  `FRIDAY_TEST_SESSION` absent. Launch `run_suite.py` detached with a unique
+  pinned basetemp, redirected launch logs, and the detector-only watchdog in a
+  second
+  hidden detached process. Set watchdog `--poll-sec 2700` so routine health
+  sampling is at most once per 45 minutes; do not perform extra polling.
+  The registered command shape is:
+
+  ```powershell
+  Remove-Item Env:FRIDAY_TEST_SESSION -ErrorAction SilentlyContinue
+  $repo = 'C:\Users\jacko\Documents\FRIDAY'
+  $python = 'C:\Users\jacko\AppData\Local\Programs\Python\Python313\python.exe'
+  $runTag = Get-Date -Format 'yyyy-MM-dd_HHmmss'
+  $baseTemp = "C:\tmp\m32l_full_$runTag"
+  $outLog = "$repo\results\launch_logs\m32l_candidate_$runTag.out.log"
+  $errLog = "$repo\results\launch_logs\m32l_candidate_$runTag.err.log"
+  $suiteProcess = Start-Process -FilePath $python `
+    -ArgumentList @('run_suite.py', '--', "--basetemp=$baseTemp") `
+    -WorkingDirectory $repo -RedirectStandardOutput $outLog `
+    -RedirectStandardError $errLog -WindowStyle Hidden -PassThru
+  $watchLog = "$repo\results\launch_logs\watchdog_m32l_candidate_$runTag.log"
+  $watchErr = "$repo\results\launch_logs\watchdog_m32l_candidate_$runTag.err.log"
+  $watchdogProcess = Start-Process -FilePath $python `
+    -ArgumentList @('scripts\ollama_watchdog.py', '--log', $outLog,
+      '--pid', "$($suiteProcess.Id)", '--poll-sec', '2700') `
+    -WorkingDirectory $repo -RedirectStandardOutput $watchLog `
+    -RedirectStandardError $watchErr -WindowStyle Hidden -PassThru
+  ```
+
+  Preserve the exact launch command, PIDs, merge commit, config hash, model
+  name/digest, basetemp, and logs in this document. Let the suite finish
+  completely before inspecting results. A wedge/owner conflict is a STOP for
+  Jack, never authority to kill a process.
+
+- [ ] **C.5 — archive and mechanically adjudicate the flight.** Immediately
+  copy every full-basetemp interaction JSONL to
+  the candidate result's `sandbox_ilogs\`, prove unique source/destination counts,
+  verify report/scorecard provenance and frozen tracked code (distinguishing
+  untouched `.codex/`), then run:
+
+  ```powershell
+  $candidateStamp = (Get-ChildItem results -Directory |
+    Where-Object { Test-Path (Join-Path $_.FullName 'report.json') } |
+    Sort-Object LastWriteTime | Select-Object -Last 1).Name
+  C:\Users\jacko\AppData\Local\Programs\Python\Python313\python.exe `
+    run_suite.py --compare 2026-07-18_2346 $candidateStamp
+  ```
+
+  Apply §M3.2-G bars 1–7 and every M3.2h/j/k/l addendum mechanically: required
+  guards/post-merge quick/GT-J1; clean completion/no wedge/full ilog archive;
+  all five perfect boards at 1.000; the entire D2 family passing with
+  m1=m2=m3=m5=0; in-suite GT-J1 LOCKED/TARGET contract; surgical task/tool/
+  identifier/floor hygiene; and the exact same-day x2 churn rule for every
+  other down-delta. For M3.2l specifically, persistence/voice fires must be
+  licensed by the originating turn and no task hygiene may dilute. A perfect
+  board surviving its permitted recheck, any task leak/schema echo, uncovered
+  regression, failed D2/LOCKED contract, or unregistered outcome is a signed
+  hard STOP: no promotion, no M3-X, no closure.
+
+- [ ] **C.6 — promote only a passing candidate and run M3-X.** If and only if
+  C.5 passes every bar, record the IG.5-style verdict and make the successful
+  candidate stamp the new baseline. Then run M3-X (a)–(c) on the merged commit
+  with throwaway names and `--test-session` / `FRIDAY_TEST_SESSION=1`, keeping
+  all fabricated memories under `brain\test_archive\`; grade (d) from C.5.
+  For (a), prove a 3+-step local task completes unattended with per-step
+  evidence. For (b), prove an outbound step parks at explicit confirmation;
+  do not approve/send anything without Jack's direct involvement, then record
+  the remaining blocked state if he is unavailable. For (c), prove kill/restart
+  durability and resume from the ledger. Immediately archive the live M3-X
+  ilogs and quote the ledger/board evidence. Any failed acceptance item leaves
+  M3 open.
+
+- [ ] **C.7 — documentation and signed handoff.** Only after C.6 passes, update
+  `ARCHITECTURE.md`, this M3 table/section, `FRIDAY_roadmap.md` status/results,
+  baseline/candidate records, commands, commits, deltas, archives, limitations,
+  and exact M3-X evidence; commit each truthful boundary. External persistent
+  memory is explicitly outside this authorization and requires Jack's separate
+  direct request. Final status is `CLOSED` only with objective evidence for
+  every bar; otherwise it is `STOPPED` with the exact blocker and prohibited
+  downstream actions.
+
+**Rollback / prohibitions:** Git history is the rollback path; no hard reset,
+history rewrite, deletion of evidence, deletion of live-test memories, or
+mutation of `.codex/`. Never rerun a failed model-visible gate until it passes,
+soften a grader, treat a report-free run as evidence, overlap the shared brain/
+GPU/port, or infer permission to stop Jack's process.
+
+Continuation plan authored and signed by Codex (GPT-5.6) — 2026-07-21.
+
+**C.1/C.2 focused-gate verdict (Codex, 2026-07-21 ~22:25 PDT): PASS.**
+The preflight found no suite lock or port-47533 listener, Ollama had no
+resident model, GPU load was 1% / 1042 MiB, and
+`git diff 8db71ef..HEAD -- '*.py'` was empty. The exact command above ran with
+`FRIDAY_TEST_SESSION` removed and pinned basetemp
+`C:\tmp\m32l_live2_20260721_222149`; result `2026-07-21_2221` passed all six
+selected nodes in 171.75s: MEM-001, MEM-005[alpha_rig/beta_probe/gamma_arm/
+delta_sled], and VOX-002. VOX-002's evidence contains eight prompts, all
+`ok=True` with an empty banned-tell field (8/8). The six basetemp ilogs were
+copied immediately and uniquely to
+`results\2026-07-21_2221\sandbox_ilogs\` (6 source / 6 archive).
+
+Across 22 ilog rows / 13 main-turn rows: `task_tools_armed=True` 0;
+`tasks_active>0` 0; task-tool calls 0; task-evidence refusals 0;
+task-claim/task-creation fires 0. `project_persistence_floor` fired exactly
+twice, only for the licensed alpha-rig explicit fact and beta-probe explicit
+status recovery; `voice_tell_floor` fired 0 because all eight native replies
+already passed. Together with first valid batch `2026-07-21_0249` (same 6/6,
+8/8 voice, 6/6 ilogs, zero task signals, two licensed persistence fires), L.5
+is 2/2 uncontended PASS. L.6 is therefore PASS for the focused gate and the
+scoped merge/post-merge quick is licensed. Existing exact-code deterministic
+evidence remains 4/4 MEM-019..022, 59/59 shared seam, and 505/505 quick at
+`_0242`; no Python changed after `8db71ef`. The original M3.2-G STOP remains
+binding until the post-merge frozen full flight passes every bar.
+
+Focused gate adjudicated and signed by Codex (GPT-5.6) — 2026-07-21.

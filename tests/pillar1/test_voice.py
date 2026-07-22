@@ -11,6 +11,8 @@ import shutil
 
 import pytest
 
+from core.engine import Engine
+from core.model import ModelReply
 from helpers.harness import FRIDAY_ROOT, repeat_behavior
 
 # The enumerated tells from the spec — one regex so tests and future graders
@@ -27,6 +29,22 @@ TELLS = re.compile(
 def _install_voice(sandbox):
     shutil.copy(FRIDAY_ROOT / "brain/character/friday_voice.md",
                 sandbox.service.engine.brain.root / "character/friday_voice.md")
+
+
+class _VoiceScriptModel:
+    def __init__(self, *replies):
+        self.replies = list(replies)
+
+    def chat(self, messages, tools=None, on_token=None, format=None):
+        reply = ModelReply()
+        reply.content = self.replies.pop(0) if self.replies else ""
+        reply.eval_count = 5
+        if on_token and reply.content:
+            # Exercise phrase detection across token boundaries, not one blob.
+            midpoint = max(1, len(reply.content) // 2)
+            on_token(reply.content[:midpoint])
+            on_token(reply.content[midpoint:])
+        return reply
 
 
 @pytest.mark.case("VOX-001", "voice spec: structured, split-injected, and format contracts win")
@@ -107,3 +125,60 @@ def test_format_contract_beats_voice(sandbox, detail):
     ok, results = repeat_behavior(once, sandbox=sandbox, detail=detail)
     detail["runs"] = [str(r[1]) for r in results]
     assert ok, "a format contract lost to the voice layer"
+
+
+@pytest.mark.case("VOX-004", "every enumerated chatbot tell has a stable "
+                              "code-level voice substitution")
+@pytest.mark.parametrize("dirty", [
+    "As an AI, I can help.",
+    "As a language model, I can help.",
+    "I'd be happy to check.",
+    "I would be happy to check.",
+    "Happy to help with that.",
+    "Certainly! Here is the result.",
+    "Absolutely! Here is the result.",
+    "Of course! Here is the result.",
+    "Great question. The answer is 4.",
+    "Good question. The answer is 4.",
+    "Let me know if you want the trace.",
+    "Feel free to reach out.",
+    "Hope this helps.",
+    "Is there anything else to check?",
+    "I apologize for the confusion.",
+    "I apologize for the inconvenience.",
+])
+def test_voice_tell_substitution_matrix(dirty):
+    clean, changed = Engine._sanitize_voice_tells(dirty)
+    assert changed is True
+    assert TELLS.search(clean) is None, clean
+
+
+@pytest.mark.case("VOX-005", "banned tells are removed from both streamed and "
+                              "settled ordinary replies; format asks bypass")
+def test_voice_tell_floor_stream_and_format_bypass(sandbox):
+    _install_voice(sandbox)
+    eng = sandbox.service.engine
+    eng.vote_enabled = False
+    capture = []
+    eng.ilog.log = lambda record: capture.append(record)
+    dirty = "The pressure check is complete. Let me know if you want the trace."
+    eng.model = _VoiceScriptModel(dirty)
+    streamed = []
+
+    reply = eng.respond("status on the pressure check?", on_token=streamed.append)
+
+    assert TELLS.search("".join(streamed)) is None
+    assert TELLS.search(reply.content) is None
+    assert capture[-1]["voice_tell_floor"] is True
+
+    sandbox.fresh_conversation()
+    capture.clear()
+    exact = "Let me know if"
+    eng.model = _VoiceScriptModel(exact)
+    streamed = []
+    reply = eng.respond(
+        "Respond only with the exact words: Let me know if",
+        on_token=streamed.append)
+    assert reply.content == exact
+    assert "".join(streamed) == exact
+    assert capture[-1]["voice_tell_floor"] is False
