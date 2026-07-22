@@ -493,6 +493,19 @@ Model-visible code is now frozen for the detached full candidate against
 baseline `2026-07-18_2346`. No promotion, M3-X, or closure is licensed before
 the complete ilog archive and mechanical §M3.2-G + h/j/k/l adjudication.
 
+**M3.2l FULL-FLIGHT HARD STOP (Codex, 2026-07-22 ~01:55):** candidate
+`2026-07-21_2238` on frozen provenance `4b5e965` (model merge `b60f2a6`)
+completed 590/600 in 2:22:57 with no wedge and 199/199 ilogs archived. D2
+fully passed, GT-J1 was LOCKED 3/3 + TARGET 5/5, every task/floor signal was
+licensed, MEM-001 + all MEM-005 + VOX-002 passed, and the isolated GRW-004
+perfect-board miss repassed. However `quant_math` fell 0.957→0.870:
+PROP-011/012 were newly failing, and first registered recheck `_0108` passed
+GND-013/GRW-004/PROP-011 but **re-failed PROP-012** with the same x3600 energy
+slip. Bar 7's required x2 same-day repass is therefore impossible. No second
+recheck, promotion, M3-X, memory sync, or closure ran. Baseline stays
+`2026-07-18_2346`; main keeps the merge; M3 remains OPEN for Jack's next
+design decision. Full signed verdict is in `FRIDAY_jarvis_plan.md` §M3.2l.
+
 ### M4 — J2 proactive senses  ∥ mostly  (Track B)
 
 Sentinel framework + the three watcher families (email/calendar,

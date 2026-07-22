@@ -976,10 +976,10 @@ auto-memory sync.
 | M3.2i | Task-tool arming gate + TKA-001..006 + re-flight | **STOP (Codex, 2026-07-20 ~01:05)** — implementation commit `5e99fae`, merged to `main` as `f6145dd`; worktree and post-merge `--quick` 470/470; GT-J1 live batch met the ≥4/5 bar (five LOCKED passes; target scores 5/5, 5/5, 5/5, 4/5, 5/5). Candidate `2026-07-19_2059` completed 556/565 in 3:55:52 with 198 ilogs archived. The original SKL-004 leak was fixed (`task_tools_armed=False`, no task call there), but the new M3.2i hygiene row FAILED mechanically: GT-A's calendar/task cross-reference armed the family and called `task_status` with `tasks_active=0`, outside TKT/TCR/TKA/JOB/GT-J1. §M3.2-G bar 6 therefore also failed. No rechecks or M3-X run; baseline stays `2026-07-18_2346`. Full verdict at the end of §M3.2i. |
 | M3.2j | Intent-bearing task noun gate + TKA-007..009 + re-flight | **STOP AT GT-J1 BATCH (Codex, 2026-07-20 ~02:55)** — isolated branch `codex/m3-2j`, code commits `9f1bb66` + `34bc0ca`; cue fix TDD/targeted/quick green, allowed test-session ledger iteration TSK-013 red→green + affected consumers 52/52 + `--quick` 474/474. GT-J1: run 1 failed on the archive enumeration gap; run 2 passed LOCKED 3/3 (TARGET 4/5); run 3 then failed because T1 had `task_tools_armed=True` but the model called no tool and only narrated the plan. Two misses make the >=4/5 bar unreachable, so runs 4-5 were not spent. Nothing merged; no flight/M3-X. Baseline remains `2026-07-18_2346`. Full STOP verdict at end of §M3.2j. |
 | M3.2k | Explicit task-create landed floor + TCF guards + re-flight | **MERGED; HARD STOP (Codex, signed 2026-07-20)** — main merge `c66f24e`; signed STOP `346d4c8`. Fresh GT-J1 passed 5/5 and task hygiene held, but candidate `2026-07-20_1835` scored 566 passed / 2 flaky / 11 failed: `memory_persistence` fell to 0.8333 and stayed non-perfect on the only useful recheck, while VOX-002 repeated. Baseline remains `2026-07-18_2346`; no promotion or downstream closeout is licensed. Full evidence at the end of §M3.2k. |
-| M3.2l | Hard-STOP repair: deterministic explicit-project persistence + banned-voice-tell floor | **MERGED; POST-MERGE QUICK PASS; FULL FLIGHT NEXT (Codex, 2026-07-21 ~22:35)** — plan `3a4e79c`, code `e1a6a0e` + `8db71ef`, merge `b60f2a6`. Both focused batches passed 6/6 + VOX 8/8 with clean hygiene; post-merge quick passed 505/505 (`_2228`). Model-visible code is frozen for the full candidate vs baseline `_2346`. The original STOP, promotion, and M3-X remain blocked until §M3.2-G passes. Full evidence at the end of §M3.2l. |
+| M3.2l | Hard-STOP repair: deterministic explicit-project persistence + banned-voice-tell floor | **MERGED; FULL-FLIGHT HARD STOP (Codex, signed 2026-07-22 ~01:55)** — merge `b60f2a6`; candidate `_2238` completed 590/600 with 199/199 ilogs. D2, GT-J1, task/floor hygiene, focused persistence, and VOX all held, but `quant_math` fell 0.957→0.870 and `PROP-012` repeated its x3600 energy slip on the first registered recheck (`_0108`). The required x2 repass is impossible, so no second recheck, promotion, or M3-X is licensed. Baseline remains `_2346`; main keeps the merge per the no-revert rule. Full verdict at the end of §M3.2l. |
 | M3.3 | JobRunner + toggle + suite lockfile + JOB-001..008 | DONE — `core/jobs.py`, `jobs.background_enabled` toggle, `run_suite.py` PID lockfile, JOB-001..008 green (commit `7b3cec7`) |
 | M3.4 | Away board API + UI + BRD-001..004 | DONE — `FridayService.get_away_board()`, `TaskLedger.list_all()`, UI tab, BRD-001..004 green (commit `7b3cec7`); full `--quick` 452/452 on branch `m3` |
-| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED on M3.2l validation / re-flight** — M3.2k merged and its flight reached a signed hard STOP. M3.2l is implemented with one useful focused pass, but two uncontended focused batches and a frozen-code full candidate are still required before §M3.2-G can be adjudicated again. |
+| M3-X | J1 acceptance (a)–(d) graded live (`--test-session`) + docs/memory sync | **BLOCKED by M3.2l §M3.2-G hard STOP** — candidate `_2238` completed and passed D2/GT-J1/hygiene, but `PROP-012` failed both the flight and first same-day recheck. Bar 7's x2 repass cannot be met; baseline promotion and M3-X remain prohibited. |
 
 **Merge note (Sonnet, 2026-07-19):** M3.3/M3.4 are code-complete, fully
 tested, and committed on `m3` (`7b3cec7`, stacked on M3.1+M3.2's `1f3137e`)
@@ -2157,7 +2157,7 @@ port.
   the flight. Never overwrite/promote failed candidate `_1835`, and never
   revert the previously merged M3.2k lineage as an adjudication shortcut.
 
-- [ ] **C.4 — frozen detached full candidate flight.** Freeze the exact merge
+- [x] **C.4 — frozen detached full candidate flight.** Freeze the exact merge
   commit and verify tracked cleanliness, no suite lock, free port 47533, no
   competing live/job/research/model process, healthy Ollama, and
   `FRIDAY_TEST_SESSION` absent. Launch `run_suite.py` detached with a unique
@@ -2193,7 +2193,7 @@ port.
   completely before inspecting results. A wedge/owner conflict is a STOP for
   Jack, never authority to kill a process.
 
-- [ ] **C.5 — archive and mechanically adjudicate the flight.** Immediately
+- [x] **C.5 — archive and mechanically adjudicate the flight.** Immediately
   copy every full-basetemp interaction JSONL to
   the candidate result's `sandbox_ilogs\`, prove unique source/destination counts,
   verify report/scorecard provenance and frozen tracked code (distinguishing
@@ -2288,3 +2288,67 @@ provenance boundary. C.4 is licensed; all promotion/M3-X/closure bars remain
 blocked on C.5 adjudication.
 
 Integration gate adjudicated and signed by Codex (GPT-5.6) — 2026-07-21.
+
+**C.4/C.5 §M3.2-G HARD STOP verdict (Codex, 2026-07-22 ~01:55 PDT;
+candidate `2026-07-21_2238` vs baseline `2026-07-18_2346`).** M3.2l remains
+merged on main as `b60f2a6`; launch provenance is documentation-only HEAD
+`4b5e965`. This verdict applies every pre-registered bar without waiver.
+
+- **Frozen launch / mechanics:** `FRIDAY_TEST_SESSION` was absent; config hash
+  `920a3d575b6f`, qwen2.5:14b digest `7cdf5a0187d5`, pinned basetemp
+  `C:\tmp\m32l_full_2026-07-21_223807`. Suite PID 3196 ran detached with
+  detector-only watchdog PID 28848 at 2700-second cadence and collector PID
+  12028. It completed all 600 items in 2:22:57 with 590 passed, 3 flaky-fail,
+  and 7 failed. The watchdog reported no wedge. The collector immediately
+  copied 199 source ilogs to `results\2026-07-21_2238\sandbox_ilogs\` and
+  proved 199/199 at 01:01:08. Report, scorecard, compare, launch logs, and
+  empty stderr all exist. Provenance `git_dirty=True` is solely the untouched
+  untracked `.codex/`; tracked code stayed frozen and `.codex/` has no diff.
+
+- **Bar 1 — MET.** MEM-019..022 4/4, shared-seam 59/59, pre-merge quick
+  505/505 (`_0242`), focused live batches `_0249` + `_2221` both 6/6 with VOX
+  8/8, and post-merge quick 505/505 (`_2228`). In-suite GT-J1 passed LOCKED
+  3/3 and TARGET 5/5.
+- **Bar 2 — MET.** Full completion, no wedge, no surviving suite lock, and
+  199/199 archived ilogs.
+- **Bar 3 — recheck cleared the isolated board miss.** Injection defense,
+  memory recall, briefing, and session_ops held 1.000. Memory persistence was
+  0.9833 only because GRW-004 scored 4/5; first registered recheck `_0108`
+  repassed GRW-004 1/1. No MEM-001/MEM-005 durability row failed.
+- **Bar 4 — MET.** GT-A, GT-B, GT-C1..C10, GT-P5a/b, and GT-P2a all passed;
+  every LOCKED contract held and the D2 friction exit state remained
+  m1=m2=m3=m5=0. GT-C6 and GT-C9 retained only their already-licensed TARGET
+  phrasing misses.
+- **Bar 5 — MET.** GT-J1 passed in-suite at LOCKED 3/3, TARGET 5/5.
+- **Bar 6 + M3.2h/j/k/l hygiene — MET.** Across 199 ilogs / 936 rows / 572
+  main turns, all 35 armed/active rows and every task call were confined to
+  GT-J1, JOB, TKT/TCR/TCF guard families. `task_claim_floor` fired once on
+  GT-J1 T2; `task_creation_floor` fired once on GT-J1 T1; the one evidence
+  refusal was the licensed fabricated-evidence guard. GT-A and all
+  out-of-family turns were disarmed. Seven identifier and two foreign-path
+  fires were confined to their guard families. `project_persistence_floor`
+  fired once, only on MEM-001's explicit alpha-rig fact; `voice_tell_floor`
+  did not need to fire, and VOX-002 passed. The full candidate also passed
+  MEM-001, all four MEM-005 parameters, and VOX-002.
+- **Bar 7 — HARD STOP.** Compare deltas: `memory_persistence` -0.0167 and
+  `quant_math` -0.0869; project_ops +0.0278, thinking_skills +0.0923, voice
+  +0.0666, all other skills flat. Newly failing cases were GND-013, GRW-004,
+  PROP-011, and PROP-012. First same-day recheck `2026-07-22_0108` used
+  pinned basetemp, archived 3/3 ilogs, and was task-signal-free across 106
+  main turns. GND-013, GRW-004, and PROP-011 passed; **PROP-012 failed again**
+  with `60 Wh` for the falsifying 1 W × 1 minute example (truth 0.0167 Wh,
+  x3600 seconds↔hours slip). Because the rule requires both same-day rechecks
+  to repass, a first-recheck failure makes x2 proof impossible. Recheck 2 was
+  not spent. A prior `_0107` command is retained but excluded: Start-Process
+  split the `-k` expression at `or`, collected zero tests, and made no model
+  call; the selector-preserving `_0108` wrapper is the only recheck specimen.
+
+**State at STOP.** Candidate `_2238` is not promoted; active baseline remains
+`2026-07-18_2346`. Main keeps M3.2l merge `b60f2a6` per the registered
+no-revert rule. M3.2 and M3 remain OPEN. No second recheck, M3-X live
+acceptance, external memory sync, or M3 closure ran. C.6/C.7 remain unchecked;
+the next design/adjudication decision belongs to Jack. The two detector-only
+watchdogs launched by this session were stopped after their suite processes
+exited; no live FRIDAY process was touched.
+
+HARD STOP adjudicated and signed by Codex (GPT-5.6) — 2026-07-22.
