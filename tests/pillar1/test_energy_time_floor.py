@@ -136,3 +136,18 @@ def test_etm006_non_energy_ask_stays_silent(sandbox):
     assert reply.content == draft
     assert engine.model.calls == 1
     assert capture[-1]["energy_time_floor"] is False
+
+
+@pytest.mark.case("ETM-007", "without an ANSWER contract the stream is not "
+                             "held, so the post-reply floor stays silent")
+def test_etm007_non_contract_energy_ask_stays_silent(sandbox):
+    capture = []
+    prompt = "A 1 W load runs for 1 minute. How much energy is used?"
+    draft = "I made a unit slip and got 60 Wh."
+    engine = _engine(sandbox, [draft], capture)
+
+    reply = engine.respond(prompt)
+
+    assert reply.content == draft
+    assert engine.model.calls == 1
+    assert capture[-1]["energy_time_floor"] is False

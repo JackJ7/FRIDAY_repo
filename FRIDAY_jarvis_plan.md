@@ -2383,9 +2383,10 @@ arithmetic-engine failure: Pint returned the correct value before the stale
 second call displaced it.
 
 **Design decision.** Add an engine-side `energy_time_floor` beside the existing
-gear-direction cross-check. It arms only when Jack's message has exactly one
-power quantity in W/watts, exactly one duration in minutes, and an explicit
-energy ask. Code computes the one unambiguous Wh result from those stated
+gear-direction cross-check. It arms only on a held `ANSWER:`-contract turn
+where Jack's message has exactly one power quantity in W/watts, exactly one
+duration in minutes, and an explicit energy ask. Code computes the one
+unambiguous Wh result from those stated
 quantities and checks the final ANSWER quantity through the existing Pint/canon
 path. A correct compatible answer is untouched. A missing, dimensionally wrong,
 or >2% mismatching answer is replaced with a short deterministic explanation
@@ -2422,10 +2423,11 @@ its ilogs immediately. Never stop Jack's process.
   ETM-003 a correct answer is byte-
   untouched and flag-false; ETM-004 two power quantities stay untouched;
   ETM-005 two durations stay untouched; ETM-006 a non-energy ask stays
-  untouched. Run the new file and capture the expected RED caused by the
+  untouched; ETM-007 a non-contract energy ask stays untouched because its
+  stream is not held. Run the new file and capture the expected RED caused by the
   absent floor/ilog field, not by fixture or syntax failure.
 
-- [ ] **M.3 — minimal GREEN implementation.** Modify only `core/engine.py` for
+- [x] **M.3 — minimal GREEN implementation.** Modify only `core/engine.py` for
   the narrow regexes, deterministic cross-check/replacement, and additive ilog
   boolean. Keep it after the generic ANSWER floor and before the final script
   barrier. Update `ARCHITECTURE.md` with the new hard-check contract. Run the
@@ -2498,3 +2500,21 @@ syntax errors. This is the required RED and licenses M.3's minimal production
 edit; it does not license a model batch, merge, promotion, M3-X, or closure.
 
 RED boundary adjudicated and signed by Codex (GPT-5.6) — 2026-07-22.
+
+**M.3 GREEN evidence (Codex, 2026-07-22 ~08:15 PDT).** The minimal production
+delta is confined to `core/engine.py`: three narrow regexes, an ANSWER-contract
+energy cross-check after the generic ANSWER builder, deterministic full-reply
+replacement from Jack's exact W/minute inputs when absent/dimensionally wrong/
+>2% mismatched, and additive `energy_time_floor` observability.
+`ARCHITECTURE.md` records the contract. Initial ETM GREEN
+`2026-07-22_0811` passed 6/6; combined ETM + legacy ANSWER + gear floors
+`_0812` passed 18/18. Diff review then found that a non-contract energy turn
+would not hold its stream before post-reply replacement. ETM-007 captured that
+boundary RED at `_0813`; adding the existing `answer_ask` arm made the seven-
+case ETM file pass 7/7 and the combined compatibility gate pass 19/19 at
+`_0815` (15.78s). No production file outside `core/engine.py` changed, no new
+dependency/tool/schema/prompt was added, and no model/live test ran. M.4 is
+licensed; all model/merge/promotion/M3-X/closure gates remain blocked.
+
+Implementation boundary adjudicated and signed by Codex (GPT-5.6) —
+2026-07-22.

@@ -2422,6 +2422,49 @@ class Engine:
                         live_token("\n" + reply.content)
                     turn.append({"role": "assistant", "content": reply.content})
 
+        # M3.2m / PROP-012: a correct calc was being displaced by a SECOND
+        # call copied from calc's canned 40 W / 90 minute example.  The generic
+        # ANSWER floor rightly trusts the last successful calc because valid
+        # multi-step turns can correct an earlier call, so ordering cannot be
+        # changed globally.  This hard check instead acts only when Jack's own
+        # message makes the energy calculation unambiguous: one power, one
+        # minute duration, and an energy ask.  Anything broader stays with the
+        # model/calc loop rather than letting a regex guess the problem.
+        energy_time_fired = False
+        if reply is not None and answer_ask and not phantom_fired \
+                and self._ENERGY_ASK.search(user_input or ""):
+            power_hits = self._ENERGY_POWER.findall(user_input or "")
+            minute_hits = self._ENERGY_MINUTES.findall(user_input or "")
+            if len(power_hits) == 1 and len(minute_hits) == 1:
+                watts = float(power_hits[0])
+                minutes = float(minute_hits[0])
+                if watts > 0 and minutes > 0:
+                    expected = watts * minutes / 60.0
+                    try:
+                        value, unit = answer(reply.content or "")
+                        if not unit:
+                            raise NoAnswer("no unit")
+                        got = Q(value, normalize_unit(unit)).to("Wh").magnitude
+                        mismatched = (
+                            abs(got - expected) / abs(expected) > 0.02)
+                    except Exception:
+                        # A missing/unparseable line is safe to floor here:
+                        # unlike the generic contract path, every input needed
+                        # for this one quantity came directly from Jack.
+                        mismatched = True
+                    if mismatched:
+                        energy_time_fired = True
+                        minute_word = "minute" if minutes == 1 else "minutes"
+                        reply.content = (
+                            f"{watts:.6g} W for {minutes:.6g} {minute_word} "
+                            f"uses {expected:.6g} Wh.\n\n"
+                            f"ANSWER: {expected:.6g} Wh")
+                        reply.tool_calls = []
+                        if live_token:  # held on ANSWER turns; safe otherwise
+                            live_token("\n" + reply.content)
+                        turn.append({"role": "assistant",
+                                     "content": reply.content})
+
         # Gear-direction cross-check floor (armor QB.3, GOLD-gear-03). A
         # recheck band saw FOUR different wrong answers on the same reduction
         # problem — the 14B churns on direction (xR vs /R) and efficiency
@@ -2861,6 +2904,11 @@ class Engine:
             # dropping an explicit output contract, made countable. Additive;
             # the JSONL schema stays backward-compatible.
             "answer_floor_corrective": answer_floor_fired,
+            # M3.2m / PROP-012: the final energy answer disagreed with the
+            # deterministic one-power/one-minute-duration result grounded in
+            # Jack's message, or lacked a parseable quantity.  Additive so the
+            # full-flight audit can prove this floor stayed surgical.
+            "energy_time_floor": energy_time_fired,
             # Armor RF.3 (GND-011): True when the artifact-denial floor had to
             # re-ground a reply that denied having an artifact the session
             # ledger holds — the embodiment-denial residual, made countable.
@@ -4014,6 +4062,18 @@ class Engine:
     # after it would be the floor rewriting a produced answer — forbidden.
     _ANSWER_DIRECTIVE = re.compile(r"ANSWER:")
     _ANSWER_PRESENT = re.compile(r"ANSWER\s*:", re.IGNORECASE)
+
+    # ---- energy-time cross-check floor (M3.2m / PROP-012) -------------------
+    # Deliberately accepts only the measured, fully specified family.  In
+    # particular, `W` cannot consume the W in `Wh` because the word boundary
+    # fails there.  Multiple quantities remain ambiguous and keep the floor
+    # cold rather than forcing an interpretation.
+    _ENERGY_POWER = re.compile(
+        r"\b(\d+(?:\.\d+)?)\s*(?:W|watts?)\b", re.IGNORECASE)
+    _ENERGY_MINUTES = re.compile(
+        r"\b(\d+(?:\.\d+)?)\s*(?:min(?:ute)?s?)\b", re.IGNORECASE)
+    _ENERGY_ASK = re.compile(
+        r"\b(?:energy|watt[- ]?hours?|Wh)\b", re.IGNORECASE)
 
     # ---- gear-direction cross-check floor (armor QB.3) -----------------------
     # A reduction R:1 (with efficiency eta) unambiguously fixes output torque

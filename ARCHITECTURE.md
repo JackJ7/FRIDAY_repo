@@ -799,10 +799,15 @@ friday_documents\    her outbox
 
 1. Small local models fail calendar arithmetic, blind rewrites, numeric
    arithmetic, and "remembering" — so dates resolve in code, overwrites
-   require a prior read, tracker files are model-proof, quantitative answers
-   route through the units-aware `calc` tool (the x60 minutes/hours energy
-   slip was a live failure), and a post-reply memory pass (told what was
-   already saved) commits durable facts to the authoritative note.
+   require a prior read, tracker files are model-proof, and quantitative
+   answers route through the units-aware `calc` tool. M3.2m adds the matching
+   hard check for held ANSWER-contract turns in the one-power/one-minute-
+   duration energy family: when a stale canned-example calc displaced the
+   correct first result, the engine now verifies the final Wh answer from
+   Jack's unambiguous stated quantities and records `energy_time_floor` when
+   it corrects the reply. A post-reply
+   memory pass (told what was already saved) commits durable facts to the
+   authoritative note.
 2. Prompt rules are soft; code is hard. Every invariant that matters has a
    code-level enforcement, and prompts are the second layer, not the first.
 3. One fact, one place: corrections UPDATE notes (update_note_field), never
