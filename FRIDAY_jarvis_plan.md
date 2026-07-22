@@ -2440,7 +2440,7 @@ its ilogs immediately. Never stop Jack's process.
   duration, warning/failure state, Git status, and exact commit. Any failure is
   a STOP; do not launch a model batch.
 
-- [ ] **M.5 — focused live target x2.** On unchanged code, run PROP-012 alone
+- [x] **M.5 — focused live target x2.** On unchanged code, run PROP-012 alone
   in two independent registered batches (normal sandbox durability, so
   `FRIDAY_TEST_SESSION` absent). Each batch must pass the N=5/Hypothesis case,
   archive every ilog, and show: every eligible mismatch corrected only by
@@ -2534,3 +2534,28 @@ produced valid result `2026-07-22_0825`: 512/512 passed, 95 deselected, in
 merge, full candidate, promotion, M3-X, memory sync, and closure remain blocked.
 
 Focused/quick gate adjudicated and signed by Codex (GPT-5.6) — 2026-07-22.
+
+**M.5 focused live x2 verdict (Codex, 2026-07-22 ~10:00 PDT): PASS.** Both
+batches ran on exact branch HEAD `db11c0d` with model-visible code frozen at
+`677b0e2`, qwen2.5:14b digest `7cdf5a0187d5`, `FRIDAY_TEST_SESSION` absent,
+unique pinned basetemps, no lock/port/process contention, and the same N=5 /
+100-example PROP-012 contract.
+
+- Batch 1 `2026-07-22_0835` passed 1/1 (606 deselected) in 2429.46s. Its one
+  ilog was archived byte-for-byte (233,588 bytes). Audit: 200 rows / 100
+  energy turns, 0 numerically bad finals, 2 `energy_time_floor` fires, 98 cold
+  turns; zero task arming/active tasks/task calls/task floors and zero
+  persistence/voice fires.
+- Batch 2 `2026-07-22_0917` passed 1/1 (606 deselected) in 2316.61s. Its one
+  ilog was archived byte-for-byte (233,071 bytes). Audit: 200 rows / 100
+  energy turns, 0 numerically bad finals, 0 `energy_time_floor` fires, 100 cold
+  turns; the same zero task/persistence/voice contact.
+
+Combined focused evidence is 200/200 correct energy turns, 2 surgical
+corrections, 198 correct/cold turns, 2/2 complete ilog archives, and no task or
+unrelated-floor dilution. M.6's main-drift/scope/merge/post-merge-quick gate is
+licensed. The M3.2l STOP, baseline `_2346`, and all promotion/M3-X/closure
+prohibitions remain binding until a fresh frozen full candidate passes every
+registered bar.
+
+Focused live gate adjudicated and signed by Codex (GPT-5.6) — 2026-07-22.
