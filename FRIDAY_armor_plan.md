@@ -4327,3 +4327,28 @@ HARD STOP verdict signed by Codex (GPT-5.6) — 2026-07-22.
 Focused armor verdict signed by Codex (GPT-5.6) — 2026-07-22.
 
 Armor-leg record authored and signed by Codex (GPT-5.6) — 2026-07-22.
+
+### M3.2n quant-math armor leg — energy-floor qualifier veto (designed 2026-07-23)
+
+**Status: DESIGNED (Fable 5); implementer Sonnet; authoritative spec in
+`FRIDAY_jarvis_plan.md` §M3.2n.** Response to M3.2m's frozen-candidate hard
+STOP: the `energy_time_floor` fired on GOLD-budget-01 ("A 30 W winch runs
+5 minutes per cycle, 6 cycles per day...") because "one power + one minute
+duration + energy ask" is necessary but not sufficient for unambiguity — the
+bare count "6" matches neither quantity regex, so the floor recomputed one
+cycle and overwrote the model's correct 15 Wh with 2.5 Wh. The armor answer
+follows the gear-floor precedent (silence over interpretation): two
+deterministic vetoes join the arming condition in `core/engine.py` — a
+rate/repetition vocabulary veto (`per`, `each`, `every`, `cycle(s)`,
+`times`, `daily`, ... — calibrated to exclude `runs?` and `hours?`, which
+appear in legitimate PROP-012/watt-hours wording) and a stray-number veto
+(exactly two numeric tokens in the message: the power and the duration).
+Computing multiplicative qualifiers was rejected as the semantic-matcher
+path §M3.2m already declined; GOLD-budget-01 proves the model+calc handles
+that shape natively. Guards ETM-008..010 pin GOLD-budget-01 verbatim
+(untouched whether the draft is right OR wrong) and a vocabulary-free
+stray-count case. Gates: RED→GREEN, focused + `--quick`, PROP-012 x2 AND
+GOLD-budget-01 x2 live (zero fires licensed on the latter), `--no-ff`
+merge, one fresh frozen candidate vs `2026-07-18_2346`, full §M3.2-G +
+h/j/k/l/m/n mechanical adjudication with the same-day x2 rechecks SPENT.
+Baseline remains `2026-07-18_2346` until every bar holds.

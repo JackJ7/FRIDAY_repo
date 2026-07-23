@@ -2645,3 +2645,174 @@ that must reject or correctly account for multiplicative qualifiers such as
 cycles/repetitions/per-day before applying the simple W×time cross-check.
 
 HARD STOP adjudicated and signed by Codex (GPT-5.6) — 2026-07-22.
+
+### M3.2n — energy-floor multiplicative-qualifier veto (Fable 5's response to the M3.2m hard STOP, designed 2026-07-23; implementer: Sonnet)
+
+> **For agentic workers:** REQUIRED SUB-SKILL: execute this section inline
+> with `superpowers:executing-plans`; do not delegate or overlap
+> shared-brain/GPU work. Every checkbox is conditional on the preceding
+> registered gate. A failed registered gate is recorded here, stops execution
+> at that checkbox, and escalates to Fable/Jack. Unlike the Codex legs,
+> **this leg carries NO design discretion**: Sonnet implements exactly what
+> is written and may not invent, authorize, or start a further leg.
+
+**Authorization.** Jack asked Fable (2026-07-23) to design the next leg
+after reviewing all four Codex legs (M3.2i/j — see their sections — then
+M3.2k `_1835` STOP, M3.2l `_2238` STOP, M3.2m `_1012` STOP).
+
+**Where the ratchet actually stands — read this before treating anything as
+broken.** Each frozen flight fixed its predecessor's blocker, and every fix
+has HELD in all later flights:
+
+- Task-tool hygiene (M3.2i/j/k): zero out-of-family arms/calls/floors in
+  `_1835`, `_2238`, AND `_1012` (~1,100+ audited ilog rows per flight).
+  GT-A turn 5 disarmed every time. The original M3.2-G defect is dead.
+- Persistence + voice floors (M3.2l): MEM-001, all four MEM-005 parameters,
+  and VOX-002 passed in both `_2238` and `_1012`.
+- PROP-012 (M3.2m): 1.000 in `_1012`.
+
+The ONLY code-attributed defect remaining is M3.2m's own floor misfiring on
+GOLD-budget-01. The other `_1012` newly-failing cases (MEM-002, PRV-005,
+GT-A's single LOCKED miss, GND-012, GRW-005, SKL-004, SKL-006, calendar
+−0.250) are UNADJUDICATED — no rechecks were spent because the deterministic
+STOP made a passing candidate impossible — and several have documented churn
+history (MEM-002 and GND-012/013 repeatedly; SKL band drift). They are not
+presumed regressions; the fresh flight re-measures them and the x2 recheck
+rule adjudicates them properly this time.
+
+**Root cause (deterministic, from `_1012` + the case source).**
+GOLD-budget-01 (`tests/pillar2/golden/problems.yaml`): "A 30 W winch runs
+5 minutes per cycle, 6 cycles per day. Daily winch energy in watt-hours?"
+(truth 15 Wh). The M3.2m arming test — exactly one power hit, exactly one
+minutes hit, an energy ask — is satisfied (the bare count "6" matches
+neither quantity regex), yet the true computation multiplies by 6 cycles.
+The model's single `calc` correctly returned 15 Wh; the floor recomputed one
+cycle (30 × 5/60 = 2.5 Wh), saw a >2% "mismatch" against its own
+under-specified model of the problem, and deterministically overwrote a
+correct answer. "One power + one duration" is necessary but NOT sufficient
+for unambiguity: the message must also contain nothing that modifies the
+simple W×t product.
+
+**Design decision — veto, don't compute.** The floor stays cold whenever the
+message shows ANY sign of a rate/repetition structure. Rejected:
+(1) extending the floor to parse multiplicative qualifiers is the
+expression-to-prompt semantic matcher already rejected in §M3.2m's
+alternatives — and GOLD-budget-01 proves the model+calc handles that shape
+natively, so armor there would defend nothing measured; (2) prompt-side
+mitigation remains non-enforcing. This is the gear-floor precedent applied
+to the newly measured hole: anything not fully unambiguous stays silent.
+
+**Exact code change (`core/engine.py` ONLY; nothing else is licensed).**
+Two additional deterministic vetoes join the existing arming condition
+(one power, one minutes hit, energy ask, `answer_ask`, not
+`phantom_fired`). No change to the replacement text, the 2% threshold, the
+`energy_time_floor` ilog field, the generic ANSWER floor, the gear floor, or
+any other surface.
+
+1. Qualifier-vocabulary veto — new class constant beside `_ENERGY_ASK`:
+
+   ```python
+   _ENERGY_QUALIFIER = re.compile(
+       r"\b(?:per|each|every|cycles?|repetitions?|reps?|intervals?|"
+       r"sessions?|bursts?|times|twice|thrice|daily|weekly|monthly|"
+       r"hourly|nightly)\b", re.IGNORECASE)
+   ```
+
+   Calibration constraints, verified against the real case families and
+   binding on any wording tweak: the vocabulary MUST NOT contain `runs?`
+   (every PROP-012 prompt is "A {W} W load **runs** for {m} minutes...")
+   and MUST NOT contain `hours?` (a legitimate ask may say "watt-hours",
+   and the hyphen makes `hours` a standalone `\b` token there).
+
+2. Stray-number veto: the floor may fire only when the count of ALL numeric
+   tokens `\d+(?:\.\d+)?` in the user message is exactly 2 — the one power
+   and the one duration. GOLD-budget-01's bare "6" fails this even if its
+   vocabulary were rephrased. (`ANSWER_CONTRACT` appends no digits, so the
+   PROP-012 family keeps exactly two numeric tokens.)
+
+**TDD guards (append to `tests/pillar1/test_energy_time_floor.py`; existing
+ETM-001..007 stay byte-identical and green — the PROP-012 family has no
+qualifier tokens and exactly two numbers, so behavior there is unchanged).**
+
+- ETM-008 — GOLD-budget-01 prompt verbatim + `ANSWER_CONTRACT`, scripted
+  CORRECT draft ending `ANSWER: 15 Wh`: byte-untouched, one model call,
+  `energy_time_floor` False. RED on current main (floor overwrites with
+  2.5 Wh).
+- ETM-009 — same prompt, scripted WRONG draft ending `ANSWER: 2.5 Wh`:
+  ALSO byte-untouched, flag False. This is the invariant made explicit:
+  on a qualifier turn the floor never fires even when the answer is wrong —
+  multiplicative shapes belong to the model/calc loop, not this floor.
+- ETM-010 — vocabulary-free stray count, e.g. "A 2 W sensor takes
+  6 readings and runs for 30 minutes. How much energy is used?" +
+  contract, scripted wrong draft: untouched, flag False (the number-count
+  veto alone must carry this one). RED on current main (floor fires and
+  rewrites to 1 Wh).
+
+**Registered protocol N.1–N.8** (mirrors §M3.2m M.1–M.8; pinned Python
+`C:\Users\jacko\AppData\Local\Programs\Python\Python313\python.exe`; every
+model/live step requires: no `results\SUITE_RUNNING.lock`, port 47533 free,
+no competing FRIDAY/job/research/model process, healthy Ollama,
+`FRIDAY_TEST_SESSION` absent, unique pinned `--basetemp`, immediate ilog
+archival with verified counts; never stop Jack's process — an owner conflict
+is a pause, not authority):
+
+- [ ] **N.1 — reconcile and isolate.** On `main`, verify
+  `git log 7cae0ff..HEAD -- '*.py'` is empty (docs-only since the M3.2m
+  freeze; any Python drift is a STOP for Fable/Jack). Create worktree
+  `C:\tmp\FRIDAY-m32n`, branch `sonnet/m3-2n`, from the signed design
+  commit. Seed the ignored read-only harness brain files from the main
+  checkout (`brain/character/friday.md`, `brain/character/friday_voice.md`,
+  playbook/skill markdown — the `_0802`/`_0818` fresh-worktree lesson).
+  Baseline: existing ETM file must pass 7/7 pre-edit.
+- [ ] **N.2 — RED before production code.** Add ETM-008..010, run the ETM
+  file, record the expected RED (ETM-008/009/010 fail on the misfire, not
+  on fixtures/syntax/collection).
+- [ ] **N.3 — minimal GREEN.** Implement ONLY the two vetoes in
+  `core/engine.py`. ETM 10/10; then ETM + `test_answer_floor.py` +
+  `test_gear_check.py` together, all green. Update `ARCHITECTURE.md`'s
+  energy-floor contract sentence to name both vetoes.
+- [ ] **N.4 — focused pure-code compatibility.** The same consumer
+  selection as M.4 (calc, ANSWER, canonical-vote, ETM, gear, narrated-calc
+  recovery), then full `run_suite.py --quick` on exact branch HEAD. Any
+  failure not proven pre-existing on main is a STOP.
+- [ ] **N.5 — focused live, two independent batches EACH.**
+  (a) PROP-012 alone: `--runs 1 -- --basetemp <pinned> -k
+  test_energy_no_time_slip` — both batches must pass, every floor fire (if
+  any) must be a genuine numeric mismatch on an unambiguous turn, ilogs
+  archived byte-verified.
+  (b) GOLD-budget-01 alone by exact node id
+  `tests\pillar2\test_golden.py::test_golden[GOLD-budget-01]` — both
+  batches must pass with ZERO `energy_time_floor` fires. Before the first
+  run of each selector, prove collection count is exactly 1 via
+  `--collect-only` (the M3.2k `-k GT-J1` zero-collection lesson). All
+  batches: zero task arming/active/calls/floors, zero persistence/voice
+  contact. Any miss, ambiguous fire, or archive gap is a hard STOP.
+- [ ] **N.6 — integrate and freeze.** Signed focused verdict committed on
+  the branch; verify `main` unmoved and tracked-clean apart from untouched
+  untracked `.codex/`; `--no-ff` merge; post-merge `--quick`. Conflict,
+  drift, or quick failure is a STOP. The merge commit is the model-visible
+  freeze.
+- [ ] **N.7 — one fresh frozen detached full candidate** vs active baseline
+  `2026-07-18_2346`, using §M3.2l C.4's exact registered command shape with
+  `m32n`-tagged basetemp/log names, detector-only watchdog at ≥2700 s
+  cadence, complete immediate ilog archive with byte-verified counts. No
+  model-visible edits while it flies.
+- [ ] **N.8 — mechanical adjudication, rechecks SPENT.** Apply §M3.2-G bars
+  1–7 and every M3.2h/j/k/l/m addendum without waiver, plus the new M3.2n
+  row: `energy_time_floor` may fire only on a turn whose user message has
+  exactly one power, exactly one minutes-duration, an energy ask, no
+  qualifier-vocabulary hit, and exactly two numeric tokens; ANY fire on
+  GOLD-budget-01 or any qualifier/stray-number turn is a hard STOP.
+  PROP-012 must be 1.000 and GOLD-budget-01 must pass. **Unlike `_1012`,
+  the same-day x2 rechecks MUST be spent** for every task-signal-free
+  down-delta (bar-3 boards, bar-4 D2, bar-7 skills) on the frozen merge
+  before any verdict is signed; only an un-recheckable outcome (a case
+  failing either recheck, or a code-attributed failure) stops the leg.
+  Record the full bar audit here, in `FRIDAY_roadmap.md`, and in
+  `FRIDAY_armor_plan.md`. Gate met → promote the candidate as the new
+  baseline → run §M3-X (a)–(d) live under `--test-session` with throwaway
+  names → update `ARCHITECTURE.md`, both plans, and the roadmap → memory
+  sync → close M3. Any STOP: record, sign, escalate to Fable/Jack —
+  designing a further leg is explicitly NOT licensed.
+
+Design authored and signed by Fable 5 — 2026-07-23.

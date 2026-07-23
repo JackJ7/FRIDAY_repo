@@ -782,6 +782,25 @@ deltas, regression-prone prompt changes), never typing mistakes.
   M3-X, external memory sync, or closure ran. Main retains `7cae0ff` under the
   no-revert rule. Full signed bar audit: jarvis plan §M3.2m. Recorded and
   signed by Codex (GPT-5.6).
+- 2026-07-23: **M3.2n DESIGNED (Fable 5) — implementer: Sonnet.** Fable
+  reviewed all four Codex legs and confirmed the ratchet is converging:
+  every fix since M3.2i has HELD in later flights (task hygiene perfect in
+  `_1835`/`_2238`/`_1012`; M3.2l persistence/voice held twice; PROP-012
+  1.000 in `_1012`). The only remaining code-attributed defect is M3.2m's
+  own floor misfiring on GOLD-budget-01 ("6 cycles per day" ignored;
+  correct 15 Wh overwritten with one-cycle 2.5 Wh). M3.2n adds two
+  deterministic vetoes to the energy floor's arming condition in
+  `core/engine.py` — a rate/repetition vocabulary veto (calibrated: never
+  `runs?` or `hours?`) and an exactly-two-numeric-tokens veto — so the
+  floor stays cold on anything not a pure W×t problem. Guards
+  ETM-008..010 (GOLD-budget-01 verbatim pinned both correct-untouched and
+  wrong-still-untouched, plus a vocabulary-free stray-count case).
+  Protocol N.1–N.8 in jarvis plan §M3.2n mirrors M.1–M.8, adds the M3.2n
+  hygiene row (any fire on a qualifier/stray-number turn = hard STOP), and
+  REQUIRES spending the same-day x2 rechecks that `_1012` skipped. Sonnet
+  has zero design discretion; every STOP escalates to Fable/Jack. Gate met
+  → promote → M3-X (a)–(d) → close M3. Baseline remains `2026-07-18_2346`
+  until then.
 - 2026-07-18 midday: **M1 CLOSED (Fable 5)**. EM.6 adjudicated (EM.1/2
   ship F4-clean; floor was a no-op on the measured positional burial —
   EM.4 had verified a sub-metric, not the case fraction; in-leg EM.2.1
