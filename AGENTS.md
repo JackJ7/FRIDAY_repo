@@ -1,9 +1,10 @@
 # FRIDAY — standing rules for anyone (any model) working on this repo
 
 **Current open work:** `FRIDAY_roadmap.md` M3 status block →
-`FRIDAY_jarvis_plan.md` §M3.2i (task-tool arming gate) has the full
-design + step-by-step execution protocol. Follow it mechanically; any
-STOP condition means record state in that doc and halt for Fable/Jack.
+`FRIDAY_jarvis_plan.md` §M3.2n (energy-floor qualifier veto) has the full
+design + step-by-step execution protocol (N.1–N.8). Follow it
+mechanically; the implementer has no design discretion; any STOP
+condition means record state in that doc and halt for Fable/Jack.
 
 Read `ARCHITECTURE.md` before changing structure. The specs are
 `FRIDAY_spec.md` (Phases 0–2) and `FRIDAY_spec_experience.md` (Stages 1–4);
